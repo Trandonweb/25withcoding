@@ -10,15 +10,12 @@ font-family: Arial, sans-serif;
 margin: 0;
 padding: 0;
 min-height: 100vh;
-    color: #fff;
-    color: #000;
+color: #000;
 display: flex;
 flex-direction: column;
 align-items: center;
 text-align: center;
 position: relative;
-
-/* 데스크톱/태블릿 배경 */
 background-image: url("bg1.png");
 background-size: cover;
 background-position: center;
@@ -165,6 +162,17 @@ position: relative;
 </head>
 <body>
 
+<!-- 배경 음악 -->
+<audio id="bgMusic" src="music.mp3" loop autoplay></audio>
+
+<!-- 좌측 하단 스피커 버튼 (음소거 토글) -->
+<button id="musicBtn"
+  style="position: fixed; bottom: 20px; left: 20px; width:50px; height:50px;
+         border-radius:50%; border:none; background:url('speaker.png') no-repeat center/contain;
+         cursor:pointer; z-index:1000;"
+  onclick="toggleMusic()">
+</button>
+
 <div class="content">
 <!-- 데스크톱/태블릿 -->
 <span class="pc-text">
@@ -285,6 +293,15 @@ window.open(project.link, '_blank');
 }
 
 addClickEvents();
+
+// 음악 음소거 토글
+function toggleMusic() {
+    const music = document.getElementById('bgMusic');
+    const btn = document.getElementById('musicBtn');
+    music.muted = !music.muted; // 음소거 토글
+    btn.style.opacity = music.muted ? '0.5' : '1';
+}
 </script>
 
 </body>
+</html>
