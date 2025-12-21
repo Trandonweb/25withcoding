@@ -11,7 +11,7 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            background-color: #ffffff; /* 원하는 배경색 */
+            background-color: #fffff0; /* 원하는 배경색 */
             color: #333;
             display: flex;
             flex-direction: column;
