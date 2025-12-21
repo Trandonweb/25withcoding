@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2025 코딩과 함께라면 기념 사이트</title>
     <style>
+        /* 페이지 기본 설정 */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #f0f0f0; /* 원하는 배경색 */
             color: #333;
             display: flex;
             flex-direction: column;
@@ -19,7 +20,7 @@
             position: relative;
         }
 
-        /* 컨텐츠 위치: 화면 높이 1/6 지점 */
+        /* 제목과 이름 컨텐츠 위치: 화면 상단 1/6 지점 */
         .content {
             margin-top: 16.66vh; /* 화면 높이 1/6 */
         }
@@ -34,9 +35,9 @@
             letter-spacing: 2px;
         }
 
-        /* 로고: 화면 오른쪽 하단 고정 */
+        /* 오른쪽 하단 로고 */
         .logo {
-            position: fixed; /* 화면 고정 */
+            position: fixed; /* 화면에 고정 */
             bottom: 20px;    /* 화면 하단에서 20px 위 */
             right: 20px;     /* 화면 오른쪽에서 20px 안쪽 */
             width: 80px;     /* 크기 조절 가능 */
