@@ -29,15 +29,17 @@ body {
     margin: 0;
 }
 
-.content h1 {
-    font-size: 3em; /* 글자 크기 더 크게 */
+/* 데스크톱/태블릿 상단 제목 */
+.content h1.pc-title {
+    font-size: 3em; /* 글자 크기 크게 */
     font-weight: bold; /* 굵게 */
     margin-bottom: 0.5em;
 }
 
-.content p {
+/* 데스크톱/태블릿 이니셜 */
+.content p.pc-initial {
     font-size: 1.3em;
-    font-weight: normal; /* 이니셜은 얇게 */
+    font-weight: normal; /* 얇게 */
     margin-top: 0.5em;
     letter-spacing: 1px;
 }
@@ -108,13 +110,13 @@ body {
     .pc-text { display: none; }
     .mobile-text { display: block; }
     .mobile-text h1 {
-        font-size: 3em; /* 모바일 글자도 충분히 크게 */
-        font-weight: bold;  /* 굵게 */
+        font-size: 3em; /* 글자 크기 유지 */
+        font-weight: bold;  /* 제목 굵게 */
         margin-bottom: 0.3em;
     }
     .mobile-text p {
-        font-size: 1.3em;
-        font-weight: bold; /* 모바일 이니셜도 굵게 */
+        font-size: 1.3em; 
+        font-weight: normal; /* 모바일 이니셜 얇게 */
         margin-top: 0.5em;
     }
     .carousel-container {
@@ -139,8 +141,8 @@ body {
 <div class="content">
     <!-- 데스크톱/태블릿 -->
     <span class="pc-text">
-        <strong>2025 코딩과 함께라면 기념 사이트</strong><br>
-        JO Y.J. •  LEE J.H. •  SON S.H. •  JANG H.J. •  LEE S.Y. •  LIM J.W.
+        <h1 class="pc-title">2025 코딩과 함께라면 기념 사이트</h1>
+        <p class="pc-initial">JO Y.J. •  LEE J.H. •  SON S.H. •  JANG H.J. •  LEE S.Y. •  LIM J.W.</p>
     </span>
 
     <!-- 모바일 세로 -->
