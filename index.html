@@ -5,285 +5,179 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2025 코딩과 함께라면 기념 사이트</title>
 <style>
-body {
-    font-family: Arial, sans-serif;
+  /* 공통 스타일 */
+  body, html {
     margin: 0;
     padding: 0;
-    min-height: 100vh;
+    font-family: 'Arial', sans-serif;
+    background: url('bg1.png') no-repeat center/cover;
     color: #000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    position: relative;
+    overflow-x: hidden;
+  }
 
-    /* 데스크톱/태블릿 배경 */
-    background-image: url("bg1.png");
+  /* 상단 텍스트 (데스크톱/태블릿) */
+  .top-text {
+    text-align: center;
+    margin-top: 40px;
+    font-weight: bold;
+    font-size: 2.5rem;
+  }
+  .top-initials {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: normal;
+    font-size: 1.2rem;
+  }
+
+  /* 모바일 세로 */
+  @media screen and (max-width: 768px) {
+    body {
+      background: url('bg2.png') no-repeat center/cover;
+    }
+    .top-text {
+      font-size: 1.8rem;
+      margin-top: 20px;
+    }
+    .top-initials {
+      font-size: 1rem;
+      margin-top: 8px;
+      font-weight: normal;
+      line-height: 1.6;
+    }
+  }
+
+  /* 썸네일 컨테이너 */
+  .carousel {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin-top: 80px;
+    overflow: hidden;
+    position: relative;
+  }
+  .thumb {
+    width: 160px;
+    height: 90px; /* 16:9 비율 */
+    margin: 0 10px;
+    flex-shrink: 0;
     background-size: cover;
     background-position: center;
-}
+    transition: transform 0.5s ease;
+    cursor: pointer;
+  }
+  .thumb.big {
+    width: 320px;
+    height: 180px;
+  }
 
-/* 상단 글자 */
-.content {
-    margin-top: 15vh;
-    line-height: 1.8em;
-}
+  /* 모바일: 큰 썸네일만 표시 */
+  @media screen and (max-width: 768px) {
+    .carousel {
+      justify-content: center;
+      margin-top: 100px;
+    }
+    .thumb {
+      display: none;
+    }
+    .thumb.big {
+      display: block;
+    }
+  }
 
-.content h1, .content p {
-    margin: 0;
-}
-
-/* 데스크톱/태블릿 제목/이니셜 */
-.content h1.pc-title {
-    font-size: 3em;
-    font-weight: bold;
-    margin-bottom: 0.5em;
-}
-
-.content p.pc-initial {
-    font-size: 1.3em;
-    font-weight: normal;
-    margin-top: 0.5em;
-    letter-spacing: 1px;
-}
-
-.pc-text { display: block; }
-.mobile-text { display: none; }
-
-/* 로고 */
-.logo {
+  /* 스피커 버튼 */
+  #musicBtn {
     position: fixed;
     bottom: 20px;
-    right: 20px;
-    width: 80px;
-    height: auto;
-}
-
-/* 캐러셀 */
-.carousel-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 60px;
-    position: relative;
-}
-
-/* 버튼 */
-#prev, #next {
-    position: absolute;
-    background-color: rgba(0,0,0,0.5);
-    color: white;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
     border: none;
-    border-radius: 5px;
-    padding: 10px;
+    background: url('speaker.png') no-repeat center/contain;
     cursor: pointer;
-    z-index: 2;
-    font-size: 1.5em;
-}
+    z-index: 1000;
+  }
 
-#prev { left: -50px; top: 50%; transform: translateY(-50%); }
-#next { right: -50px; top: 50%; transform: translateY(-50%); }
-
-/* 썸네일 */
-.thumb {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border-radius: 10px;
-    position: relative;
-    cursor: pointer;
-}
-
-.thumb-info {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: rgba(0,0,0,0.6);
-    color: white;
+  /* 썸네일 제목 */
+  .thumb-title {
     text-align: center;
-    font-size: 16px;
-    padding: 5px 0;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.thumb.big:hover .thumb-info {
-    opacity: 1;
-}
-
-/* 작은/큰 썸네일 */
-.small { width: 160px; height: 90px; }
-.big { width: 320px; height: 180px; }
-
-/* 모바일 */
-@media screen and (max-width: 600px) and (orientation: portrait) {
-    body {
-        background-image: url("bg2.png");
-        background-size: cover;
-        background-position: center;
-    }
-
-    .content {
-        margin-top: 12vh;
-        line-height: 2em;
-    }
-    .pc-text { display: none; }
-    .mobile-text { display: block; }
-
-    .mobile-text h1 {
-        font-size: 2.5em;
-        font-weight: bold;
-        margin-bottom: 0.3em;
-    }
-    .mobile-text p {
-        font-size: 1.3em;
-        font-weight: normal;
-        margin-top: 0.5em;
-    }
-
-    .carousel-container {
-        flex-direction: column;
-        gap: 15px;
-        margin-top: 60px;
-    }
-    .small { display: none; }
-    .big {
-        width: 80vw;
-        height: calc(80vw * 9 / 16);
-        position: relative;
-    }
-
-    /* 버튼 중앙 겹치게 */
-    #prev { left: 10px; top: 50%; transform: translateY(-50%); display: block; }
-    #next { right: 10px; top: 50%; transform: translateY(-50%); display: block; }
-}
+    margin-top: 10px;
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
 
-<div class="content">
-    <!-- 데스크톱/태블릿 -->
-    <span class="pc-text">
-        <h1 class="pc-title">2025 코딩과 함께라면 기념 사이트</h1>
-        <p class="pc-initial">JO Y.J. •  LEE J.H. •  SON S.H. •  JANG H.J. •  LEE S.Y. •  LIM J.W.</p>
-    </span>
+<!-- 배경음악 -->
+<audio id="bgMusic" src="music.mp3" loop autoplay></audio>
 
-    <!-- 모바일 세로 -->
-    <span class="mobile-text">
-        <h1>2025 코딩과 함께라면</h1>
-        <h1>기념 사이트</h1>
-        <p>JO Y.J. • LEE J.H. • SON S.H.</p>
-        <p>JANG H.J. • LEE S.Y. • LIM J.W.</p>
-    </span>
+<!-- 좌측 하단 스피커 버튼 -->
+<button id="musicBtn" onclick="toggleMusic()"></button>
+
+<!-- 상단 텍스트 -->
+<div class="top-text">2025 코딩과 함께라면</div>
+<div class="top-text">기념 사이트</div>
+<div class="top-initials">
+  JO Y.J. • LEE J.H. • SON S.H. • JANG H.J. • LEE S.Y. • LIM J.W.
 </div>
 
-<div class="carousel-container">
-    <button id="prev">&lt;</button>
-    <div class="thumb small" id="left"><span class="thumb-info"></span></div>
-    <div class="thumb big" id="center"><span class="thumb-info"></span></div>
-    <div class="thumb small" id="right"><span class="thumb-info"></span></div>
-    <button id="next">&gt;</button>
+<!-- 썸네일 캐러셀 -->
+<div class="carousel" id="carousel">
+  <div class="thumb" id="thumb0" style="background-color:red;" onclick="goTo('https://naver.me/5M5Ke6YT')"></div>
+  <div class="thumb big" id="thumb1" style="background-color:blue;" onclick="goTo('https://naver.me/FPU7WpYv')"></div>
+  <div class="thumb" id="thumb2" style="background-color:green;" onclick="goTo('https://naver.me/GdlLfME3')"></div>
 </div>
-
-<img src="logo.png" alt="Logo" class="logo">
 
 <script>
 const thumbs = [
-  {img:'Thumbnail1.png', title:'CODE : STORGE', author:'JO Y.J.', link:'https://naver.me/5M5Ke6YT'},
-  {img:'Thumbnail2.png', title:'HIGH SCORE', author:'LEE J.H.', link:'https://naver.me/FPU7WpYv'},
-  {img:'Thumbnail3.png', title:'억까 게임', author:'SON S.H.', link:'https://naver.me/GdlLfME3'},
-  {img:'Thumbnail4.png', title:'SPEED GAME', author:'JANG H.J.', link:'https://naver.me/x4Gpy1ly'},
-  {img:'Thumbnail5.png', title:'몬스터 디펜스', author:'LEE S.Y.', link:'https://naver.me/GT6ZUHNa'},
-  {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.', link:'https://naver.me/xhl9LE6l'}
+  {color:'red', url:'https://naver.me/5M5Ke6YT'},
+  {color:'blue', url:'https://naver.me/FPU7WpYv'},
+  {color:'green', url:'https://naver.me/GdlLfME3'},
+  {color:'yellow', url:'https://naver.me/x4Gpy1ly'}
 ];
 
-// 랜덤 시작 인덱스
 let currentIndex = Math.floor(Math.random() * thumbs.length);
 
-const left = document.getElementById('left');
-const center = document.getElementById('center');
-const right = document.getElementById('right');
-
-function isMobilePortrait() {
-    return window.innerWidth <= 600 && window.innerHeight > window.innerWidth;
-}
+const carousel = document.getElementById('carousel');
 
 function updateCarousel() {
-    const len = thumbs.length;
-    if(isMobilePortrait()){
-        const c = thumbs[currentIndex % len];
-        center.style.backgroundImage = `url(${c.img})`;
-        center.style.backgroundSize = 'cover';
-        center.style.backgroundPosition = 'center';
-        center.querySelector('.thumb-info').textContent = `${c.title} - ${c.author}`;
+  const bigIndex = currentIndex;
+  const leftIndex = (currentIndex - 1 + thumbs.length) % thumbs.length;
+  const rightIndex = (currentIndex + 1) % thumbs.length;
+
+  carousel.innerHTML = `
+    <div class="thumb" style="background-color:${thumbs[leftIndex].color}" onclick="goTo('${thumbs[leftIndex].url}')"></div>
+    <div class="thumb big" style="background-color:${thumbs[bigIndex].color}" onclick="goTo('${thumbs[bigIndex].url}')"></div>
+    <div class="thumb" style="background-color:${thumbs[rightIndex].color}" onclick="goTo('${thumbs[rightIndex].url}')"></div>
+  `;
+}
+
+function nextThumb() {
+  currentIndex = (currentIndex + 1) % thumbs.length;
+  updateCarousel();
+}
+
+setInterval(nextThumb, 2000); // 2초마다 이동
+
+function goTo(url){
+  window.open(url, '_blank');
+}
+
+// 음악 토글
+function toggleMusic() {
+    const music = document.getElementById('bgMusic');
+    const btn = document.getElementById('musicBtn');
+    if (music.paused) {
+        music.play();
+        btn.style.opacity = '1';
     } else {
-        const r = thumbs[currentIndex % len];
-        const c = thumbs[(currentIndex + 1) % len];
-        const l = thumbs[(currentIndex + 2) % len];
-
-        left.style.backgroundImage = `url(${l.img})`;
-        left.style.backgroundSize = 'cover';
-        left.style.backgroundPosition = 'center';
-        left.querySelector('.thumb-info').textContent = `${l.title} - ${l.author}`;
-
-        center.style.backgroundImage = `url(${c.img})`;
-        center.style.backgroundSize = 'cover';
-        center.style.backgroundPosition = 'center';
-        center.querySelector('.thumb-info').textContent = `${c.title} - ${c.author}`;
-
-        right.style.backgroundImage = `url(${r.img})`;
-        right.style.backgroundSize = 'cover';
-        right.style.backgroundPosition = 'center';
-        right.querySelector('.thumb-info').textContent = `${r.title} - ${r.author}`;
+        music.pause();
+        btn.style.opacity = '0.5';
     }
 }
 
-function next(){
-    currentIndex++;
-    updateCarousel();
-}
-function prev(){
-    currentIndex--;
-    if(currentIndex<0) currentIndex=thumbs.length-1;
-    updateCarousel();
-}
-
+// 초기 캐러셀 세팅
 updateCarousel();
-let interval = setInterval(next,2000);
-
-document.getElementById('next').addEventListener('click', ()=>{
-    next();
-    clearInterval(interval);
-    interval = setInterval(next,2000);
-});
-document.getElementById('prev').addEventListener('click', ()=>{
-    prev();
-    clearInterval(interval);
-    interval = setInterval(next,2000);
-});
-
-// 썸네일 클릭 시 해당 링크 열기
-function addClickEvents() {
-    [left, center, right].forEach((el, idx) => {
-        el.onclick = () => {
-            let project = null;
-            const len = thumbs.length;
-            if(isMobilePortrait()){
-                project = thumbs[currentIndex % len];
-            } else {
-                if(idx === 0) project = thumbs[(currentIndex + 2) % len]; // left
-                else if(idx === 1) project = thumbs[(currentIndex + 1) % len]; // center
-                else project = thumbs[currentIndex % len]; // right
-            }
-            window.open(project.link, '_blank');
-        };
-    });
-}
-
-addClickEvents();
 </script>
 
 </body>
