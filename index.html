@@ -10,13 +10,17 @@ body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    background-color: #f0f0f0; /* 나중에 배경 이미지 가능 */
     color: #333;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     position: relative;
+
+    /* 기본 배경: 데스크톱/태블릿 가로 */
+    background-image: url("bg1.jpg");
+    background-size: cover;
+    background-position: center;
 }
 
 /* 상단 글자 */
@@ -116,12 +120,19 @@ body {
 
 /* 모바일 */
 @media screen and (max-width: 600px) and (orientation: portrait) {
+    body {
+        background-image: url("bg2.jpg"); /* 모바일 세로 배경 */
+        background-size: cover;
+        background-position: center;
+    }
+
     .content {
         margin-top: 12vh;
         line-height: 2em;
     }
     .pc-text { display: none; }
     .mobile-text { display: block; }
+
     .mobile-text h1 {
         font-size: 2.5em;
         font-weight: bold;
@@ -132,6 +143,7 @@ body {
         font-weight: normal;
         margin-top: 0.5em;
     }
+
     .carousel-container {
         flex-direction: column;
         gap: 15px;
@@ -143,9 +155,10 @@ body {
         height: calc(80vw * 9 / 16);
         position: relative;
     }
+
     /* 버튼 중앙 겹치게 */
-    #prev { left: 10px; top: 50%; transform: translateY(-50%); }
-    #next { right: 10px; top: 50%; transform: translateY(-50%); }
+    #prev { left: 10px; top: 50%; transform: translateY(-50%); display: block; }
+    #next { right: 10px; top: 50%; transform: translateY(-50%); display: block; }
 }
 </style>
 </head>
@@ -187,7 +200,9 @@ const thumbs = [
   {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.'}
 ];
 
-let currentIndex = 0;
+// 랜덤 시작 인덱스
+let currentIndex = Math.floor(Math.random() * thumbs.length);
+
 const left = document.getElementById('left');
 const center = document.getElementById('center');
 const right = document.getElementById('right');
