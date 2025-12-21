@@ -27,19 +27,19 @@ body {
 
 .content h1, .content p {
     margin: 0;
-    font-weight: bold; /* 굵게 */
 }
 
 .content h1 {
-    font-size: 2.5em;
-    margin-bottom: 0.3em;
+    font-size: 3em; /* 글자 크기 더 크게 */
+    font-weight: bold; /* 굵게 */
+    margin-bottom: 0.5em;
 }
 
 .content p {
-    font-size: 1.2em;
+    font-size: 1.3em;
+    font-weight: normal; /* 이니셜은 얇게 */
     margin-top: 0.5em;
     letter-spacing: 1px;
-    font-weight: bold; /* 글자 굵게 */
 }
 
 /* 데스크톱/태블릿용 한 줄 글자 */
@@ -108,12 +108,14 @@ body {
     .pc-text { display: none; }
     .mobile-text { display: block; }
     .mobile-text h1 {
-        font-size: 2.5em; /* 충분히 큰 글자 */
+        font-size: 3em; /* 모바일 글자도 충분히 크게 */
         font-weight: bold;  /* 굵게 */
+        margin-bottom: 0.3em;
     }
     .mobile-text p {
-        font-size: 1.2em;
-        font-weight: bold;
+        font-size: 1.3em;
+        font-weight: bold; /* 모바일 이니셜도 굵게 */
+        margin-top: 0.5em;
     }
     .carousel-container {
         flex-direction: column;
@@ -137,7 +139,7 @@ body {
 <div class="content">
     <!-- 데스크톱/태블릿 -->
     <span class="pc-text">
-        2025 코딩과 함께라면 기념 사이트<br>
+        <strong>2025 코딩과 함께라면 기념 사이트</strong><br>
         JO Y.J. •  LEE J.H. •  SON S.H. •  JANG H.J. •  LEE S.Y. •  LIM J.W.
     </span>
 
