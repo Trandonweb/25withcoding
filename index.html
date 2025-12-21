@@ -47,7 +47,7 @@ p {
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-top: 50px;
+    margin-top: 70px; /* 이전보다 조금 더 아래 */
 }
 
 button {
@@ -64,16 +64,17 @@ button {
     color: white;
     font-weight: bold;
     font-size: 24px;
+    border-radius: 8px;
 }
 
 .small {
-    width: 80px;
-    height: 80px;
+    width: 100px;   /* 직사각형 가로 길이 증가 */
+    height: 80px;   /* 세로 유지 */
 }
 
 .big {
-    width: 150px;
-    height: 150px;
+    width: 180px;   /* 직사각형 가로 길이 증가 */
+    height: 120px;  /* 세로 유지 */
 }
 </style>
 </head>
@@ -144,20 +145,20 @@ function prev() {
 // 초기 표시
 updateCarousel();
 
-// 자동 순환 (3초)
-let interval = setInterval(next, 3000);
+// 자동 순환 (2초)
+let interval = setInterval(next, 2000);
 
 // 버튼 클릭 시 순환 멈추고 즉시 이동
 document.getElementById('next').addEventListener('click', () => {
     next();
     clearInterval(interval);
-    interval = setInterval(next, 3000);
+    interval = setInterval(next, 2000);
 });
 
 document.getElementById('prev').addEventListener('click', () => {
     prev();
     clearInterval(interval);
-    interval = setInterval(next, 3000);
+    interval = setInterval(next, 2000);
 });
 </script>
 
