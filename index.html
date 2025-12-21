@@ -10,14 +10,14 @@ body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    color: #333;
+    color: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     position: relative;
 
-    /* 기본 배경: 데스크톱/태블릿 가로 */
+    /* 데스크톱/태블릿 배경 */
     background-image: url("bg1.png");
     background-size: cover;
     background-position: center;
@@ -26,7 +26,7 @@ body {
 /* 상단 글자 */
 .content {
     margin-top: 15vh;
-    line-height: 1.6em;
+    line-height: 1.8em;
 }
 
 .content h1, .content p {
@@ -121,7 +121,7 @@ body {
 /* 모바일 */
 @media screen and (max-width: 600px) and (orientation: portrait) {
     body {
-        background-image: url("bg2.png"); /* 모바일 세로 배경 */
+        background-image: url("bg2.png");
         background-size: cover;
         background-position: center;
     }
@@ -192,12 +192,12 @@ body {
 
 <script>
 const thumbs = [
-  {img:'Thumbnail1.png', title:'CODE : STORGE', author:'JO Y.J.'},
-  {img:'Thumbnail2.png', title:'HIGH SCORE', author:'LEE J.H.'},
-  {img:'Thumbnail3.png', title:'억까 게임', author:'SON S.H.'},
-  {img:'Thumbnail4.png', title:'SPEED GAME', author:'JANG H.J.'},
-  {img:'Thumbnail5.png', title:'몬스터 디펜스', author:'LEE S.Y.'},
-  {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.'}
+  {img:'Thumbnail1.png', title:'CODE : STORGE', author:'JO Y.J.', link:'https://naver.me/5M5Ke6YT'},
+  {img:'Thumbnail2.png', title:'HIGH SCORE', author:'LEE J.H.', link:'https://naver.me/FPU7WpYv'},
+  {img:'Thumbnail3.png', title:'억까 게임', author:'SON S.H.', link:'https://naver.me/GdlLfME3'},
+  {img:'Thumbnail4.png', title:'SPEED GAME', author:'JANG H.J.', link:'https://naver.me/x4Gpy1ly'},
+  {img:'Thumbnail5.png', title:'몬스터 디펜스', author:'LEE S.Y.', link:'https://naver.me/GT6ZUHNa'},
+  {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.', link:'https://naver.me/xhl9LE6l'}
 ];
 
 // 랜덤 시작 인덱스
@@ -264,6 +264,26 @@ document.getElementById('prev').addEventListener('click', ()=>{
     clearInterval(interval);
     interval = setInterval(next,2000);
 });
+
+// 썸네일 클릭 시 해당 링크 열기
+function addClickEvents() {
+    [left, center, right].forEach((el, idx) => {
+        el.onclick = () => {
+            let project = null;
+            const len = thumbs.length;
+            if(isMobilePortrait()){
+                project = thumbs[currentIndex % len];
+            } else {
+                if(idx === 0) project = thumbs[(currentIndex + 2) % len]; // left
+                else if(idx === 1) project = thumbs[(currentIndex + 1) % len]; // center
+                else project = thumbs[currentIndex % len]; // right
+            }
+            window.open(project.link, '_blank');
+        };
+    });
+}
+
+addClickEvents();
 </script>
 
 </body>
