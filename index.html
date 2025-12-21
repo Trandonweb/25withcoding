@@ -19,20 +19,20 @@ body {
     position: relative;
 }
 
-/* 상단 제목 */
+/* 상단 글자 */
 .content {
-    margin-top: 12vh;
-    line-height: 1.4em;
+    margin-top: 15vh; /* 전체 글자 아래로 */
+    line-height: 1.6em; /* 글자 간격 넓게 */
 }
 
 .content h1 {
     font-size: 2.5em;
-    margin: 0.2em 0;
+    margin: 0.3em 0;
 }
 
 .content p {
     font-size: 1.2em;
-    margin: 0.2em 0;
+    margin: 0.25em 0;
     letter-spacing: 1px;
 }
 
@@ -51,7 +51,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 20px;
-    margin-top: 50px;
+    margin-top: 60px; /* 화면 아래쪽 */
     position: relative;
 }
 
@@ -83,7 +83,7 @@ body {
     font-weight: bold;
     font-size: 36px;
     text-shadow: 1px 1px 2px black;
-    transition: transform 0.5s ease, background-color 0.5s ease;
+    position: relative; /* 모바일 버튼 겹치기 위해 */
 }
 
 .small {
@@ -99,12 +99,13 @@ body {
 /* 모바일 세로 대응 */
 @media screen and (max-width: 600px) and (orientation: portrait) {
     .content {
-        margin-top: 5vh; /* 글자를 위로 */
+        margin-top: 8vh; /* 모바일 글자 위로 조정 */
+        line-height: 1.5em;
     }
     .carousel-container {
         flex-direction: column;
         gap: 10px;
-        margin-top: 40px;
+        margin-top: 50px;
     }
     .small {
         display: none; /* 작은 썸네일 숨김 */
@@ -114,8 +115,9 @@ body {
         height: calc(80vw * 9 / 16);
         position: relative;
     }
-    #prev { left: 15px; top: 50%; transform: translateY(-50%); }
-    #next { right: 15px; top: 50%; transform: translateY(-50%); }
+    /* 버튼을 썸네일 안쪽에 겹치게 */
+    #prev { left: 10px; top: 50%; transform: translateY(-50%); }
+    #next { right: 10px; top: 50%; transform: translateY(-50%); }
 }
 </style>
 </head>
@@ -153,39 +155,44 @@ const left = document.getElementById('left');
 const center = document.getElementById('center');
 const right = document.getElementById('right');
 
+// PC/태블릿과 모바일 구분
+function isMobilePortrait() {
+    return window.innerWidth <= 600 && window.innerHeight > window.innerWidth;
+}
+
 // 오른쪽 → 중앙 → 왼쪽 순환
 function updateCarousel() {
     const len = thumbs.length;
 
-    const rightThumb = thumbs[currentIndex % len];        // 오른쪽 → 중앙
-    const centerThumb = thumbs[(currentIndex + 1) % len]; // 중앙
-    const leftThumb = thumbs[(currentIndex + 2) % len];   // 중앙 → 왼쪽
+    if(isMobilePortrait()) {
+        // 모바일: 큰 썸네일 1개만
+        const centerThumb = thumbs[currentIndex % len];
+        center.style.backgroundColor = centerThumb.color;
+        center.textContent = centerThumb.num;
+    } else {
+        // 데스크톱/태블릿: [작은][큰][작은]
+        const rightThumb = thumbs[currentIndex % len];
+        const centerThumb = thumbs[(currentIndex + 1) % len];
+        const leftThumb = thumbs[(currentIndex + 2) % len];
 
-    left.style.backgroundColor = leftThumb.color;
-    left.textContent = leftThumb.num;
+        left.style.backgroundColor = leftThumb.color;
+        left.textContent = leftThumb.num;
 
-    center.style.backgroundColor = centerThumb.color;
-    center.textContent = centerThumb.num;
+        center.style.backgroundColor = centerThumb.color;
+        center.textContent = centerThumb.num;
 
-    right.style.backgroundColor = rightThumb.color;
-    right.textContent = rightThumb.num;
-
-    left.style.transform = 'translateX(-20px)';
-    center.style.transform = 'translateY(0)';
-    right.style.transform = 'translateX(20px)';
-    setTimeout(() => {
-        left.style.transform = 'translateX(0)';
-        right.style.transform = 'translateX(0)';
-    }, 50);
+        right.style.backgroundColor = rightThumb.color;
+        right.textContent = rightThumb.num;
+    }
 }
 
-// 다음 (자동 및 버튼 클릭)
+// 다음
 function next() {
     currentIndex++;
     updateCarousel();
 }
 
-// 이전 (버튼 클릭)
+// 이전
 function prev() {
     currentIndex--;
     if(currentIndex < 0) currentIndex = thumbs.length - 1;
