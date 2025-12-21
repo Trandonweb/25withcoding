@@ -19,7 +19,7 @@
             position: relative;
         }
 
-        /* 컨텐츠 위치: 화면 높이 1/6 */
+        /* 컨텐츠 위치: 화면 높이 1/6 지점 */
         .content {
             margin-top: 16.66vh; /* 화면 높이 1/6 */
         }
@@ -34,9 +34,9 @@
             letter-spacing: 2px;
         }
 
-        /* 로고: 화면 오른쪽 아래 고정 */
+        /* 로고: 화면 오른쪽 하단 고정 */
         .logo {
-            position: fixed; /* 화면에 고정 */
+            position: fixed; /* 화면 고정 */
             bottom: 20px;    /* 화면 하단에서 20px 위 */
             right: 20px;     /* 화면 오른쪽에서 20px 안쪽 */
             width: 80px;     /* 크기 조절 가능 */
