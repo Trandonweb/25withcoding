@@ -10,7 +10,7 @@ body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    background-color: #f0f0f0; /* 나중에 이미지 배경 가능 */
+    background-color: #f0f0f0; /* 나중에 배경 이미지 가능 */
     color: #333;
     display: flex;
     flex-direction: column;
@@ -88,29 +88,25 @@ body {
     justify-content: center;
     overflow: hidden;
     border-radius: 10px;
-    color: white;
-    font-weight: bold;
-    font-size: 24px;
-    text-shadow: 1px 1px 2px black;
     position: relative;
+    cursor: pointer;
 }
 
-.thumb::after {
-    content: "";
+.thumb-info {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    padding: 5px;
+    background-color: rgba(0,0,0,0.6);
     color: white;
     text-align: center;
-    background-color: rgba(0,0,0,0.6);
     font-size: 16px;
+    padding: 5px 0;
     opacity: 0;
     transition: opacity 0.3s;
 }
 
-.thumb.big:hover::after {
+.thumb.big:hover .thumb-info {
     opacity: 1;
 }
 
@@ -173,9 +169,9 @@ body {
 
 <div class="carousel-container">
     <button id="prev">&lt;</button>
-    <div class="thumb small" id="left"></div>
-    <div class="thumb big" id="center"></div>
-    <div class="thumb small" id="right"></div>
+    <div class="thumb small" id="left"><span class="thumb-info"></span></div>
+    <div class="thumb big" id="center"><span class="thumb-info"></span></div>
+    <div class="thumb small" id="right"><span class="thumb-info"></span></div>
     <button id="next">&gt;</button>
 </div>
 
@@ -207,11 +203,7 @@ function updateCarousel() {
         center.style.backgroundImage = `url(${c.img})`;
         center.style.backgroundSize = 'cover';
         center.style.backgroundPosition = 'center';
-        center.textContent = "";
-        center.setAttribute('data-title', c.title);
-        center.setAttribute('data-author', c.author);
-        center.querySelector('::after')?.remove();
-        center.style.setProperty('--thumb-content', `"${c.title} - ${c.author}"`);
+        center.querySelector('.thumb-info').textContent = `${c.title} - ${c.author}`;
     } else {
         const r = thumbs[currentIndex % len];
         const c = thumbs[(currentIndex + 1) % len];
@@ -220,26 +212,17 @@ function updateCarousel() {
         left.style.backgroundImage = `url(${l.img})`;
         left.style.backgroundSize = 'cover';
         left.style.backgroundPosition = 'center';
-        left.textContent = "";
-        left.setAttribute('data-title', l.title);
-        left.setAttribute('data-author', l.author);
-        left.style.setProperty('--thumb-content', `"${l.title} - ${l.author}"`);
+        left.querySelector('.thumb-info').textContent = `${l.title} - ${l.author}`;
 
         center.style.backgroundImage = `url(${c.img})`;
         center.style.backgroundSize = 'cover';
         center.style.backgroundPosition = 'center';
-        center.textContent = "";
-        center.setAttribute('data-title', c.title);
-        center.setAttribute('data-author', c.author);
-        center.style.setProperty('--thumb-content', `"${c.title} - ${c.author}"`);
+        center.querySelector('.thumb-info').textContent = `${c.title} - ${c.author}`;
 
         right.style.backgroundImage = `url(${r.img})`;
         right.style.backgroundSize = 'cover';
         right.style.backgroundPosition = 'center';
-        right.textContent = "";
-        right.setAttribute('data-title', r.title);
-        right.setAttribute('data-author', r.author);
-        right.style.setProperty('--thumb-content', `"${r.title} - ${r.author}"`);
+        right.querySelector('.thumb-info').textContent = `${r.title} - ${r.author}`;
     }
 }
 
