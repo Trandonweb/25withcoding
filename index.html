@@ -56,8 +56,7 @@ p {
 /* 버튼 스타일 */
 #prev, #next {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
+    top: -50px;
     background-color: rgba(0,0,0,0.5);
     color: white;
     border: none;
@@ -67,14 +66,8 @@ p {
     z-index: 2;
 }
 
-#prev { left: -50px; }
-#next { right: -50px; }
-
-/* 모바일 세로 대응: 왼쪽 버튼 숨김 */
-@media screen and (max-width: 600px) and (orientation: portrait) {
-    #prev { display: none; }
-    #next { right: 10px; }
-}
+#prev { left: 30%; }
+#next { right: 30%; }
 
 /* 썸네일 스타일 */
 .thumb {
@@ -87,17 +80,35 @@ p {
     font-weight: bold;
     font-size: 36px;
     text-shadow: 1px 1px 2px black;
-    transition: transform 0.5s ease;
+    transition: transform 0.5s ease, background-color 0.5s ease;
 }
 
 .small {
-    width: 160px;   /* 16:9 비율 */
+    width: 160px;
     height: 90px;
 }
 
 .big {
-    width: 320px;   /* 16:9 비율 */
+    width: 320px;
     height: 180px;
+}
+
+/* 모바일 세로 대응 */
+@media screen and (max-width: 600px) and (orientation: portrait) {
+    .carousel-container {
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 80px;
+    }
+    .small {
+        display: none; /* 작은 썸네일 숨김 */
+    }
+    .big {
+        width: 80vw;
+        height: calc(80vw * 9 / 16); /* 16:9 비율 유지 */
+    }
+    #prev { left: 25%; top: -60px; }
+    #next { right: 25%; top: -60px; }
 }
 </style>
 </head>
@@ -119,7 +130,7 @@ p {
 <img src="logo.png" alt="Logo" class="logo">
 
 <script>
-// 색상+번호 테스트용 배열
+// 테스트용 색상+번호 배열
 const thumbs = [
     {num:1, color:'red'},
     {num:2, color:'blue'},
@@ -128,15 +139,18 @@ const thumbs = [
 ];
 
 let currentIndex = 0;
+
 const left = document.getElementById('left');
 const center = document.getElementById('center');
 const right = document.getElementById('right');
 
 function updateCarousel() {
     const len = thumbs.length;
-    const leftThumb = thumbs[currentIndex % len];
-    const centerThumb = thumbs[(currentIndex + 1) % len];
-    const rightThumb = thumbs[(currentIndex + 2) % len];
+
+    // 왼쪽 등장 → 중앙 → 오른쪽 퇴장
+    const leftThumb = thumbs[(currentIndex + 2) % len];
+    const centerThumb = thumbs[currentIndex % len];
+    const rightThumb = thumbs[(currentIndex + 1) % len];
 
     left.style.backgroundColor = leftThumb.color;
     left.textContent = leftThumb.num;
@@ -147,21 +161,23 @@ function updateCarousel() {
     right.style.backgroundColor = rightThumb.color;
     right.textContent = rightThumb.num;
 
-    // 간단한 transform 효과
-    left.style.transform = 'translateX(-10px)';
+    // transform 애니메이션
+    left.style.transform = 'translateX(-20px)';
     center.style.transform = 'translateY(0)';
-    right.style.transform = 'translateX(10px)';
+    right.style.transform = 'translateX(20px)';
     setTimeout(() => {
         left.style.transform = 'translateX(0)';
         right.style.transform = 'translateX(0)';
     }, 50);
 }
 
+// 다음 (자동 및 버튼 클릭)
 function next() {
     currentIndex++;
     updateCarousel();
 }
 
+// 이전 (버튼 클릭)
 function prev() {
     currentIndex--;
     if(currentIndex < 0) currentIndex = thumbs.length - 1;
