@@ -6,20 +6,28 @@
   <style>
     body {
       margin: 0;
+      padding: 0;
       font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+
+    /* 메인 타이틀 */
+    .main-title {
+      width: 100%;
       text-align: center;
+      margin-top: 40px;
+      font-size: 36px;
+      font-weight: 800;
     }
 
-    /* 상단 타이틀 */
-    .top-title {
-      margin-top: 30px;
-      font-size: 28px;
-      font-weight: bold;
-    }
-
-    .sub-text {
-      margin-top: 20px;
-      font-size: 18px;
+    /* 멤버 표기 */
+    .members {
+      width: 100%;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 15px;
+      color: #444;
+      letter-spacing: 0.5px;
     }
 
     /* 오른쪽 하단 로고 */
@@ -28,7 +36,7 @@
       right: 20px;
       bottom: 20px;
       width: 160px;
-      opacity: 0.9;
+      opacity: 0.95;
     }
 
     .logo-fixed img {
@@ -39,20 +47,17 @@
 </head>
 <body>
 
-  <!-- 사이트 상단 중앙 문구 -->
-  <div class="top-title">
+  <div class="main-title">
     2025 코딩과 함께라면 기념 사이트
   </div>
 
-  <div class="sub-text">
-    현재 제작 중입니다 🚀
+  <div class="members">
+    Jo Y.J. · Lee J.H. · Son S.H. · Jang H.J. · Lee S.Y. · Lim J.W.
   </div>
 
-  <!-- 오른쪽 하단 로고 -->
   <div class="logo-fixed">
     <img src="logo.png" alt="코딩과 함께라면 로고">
   </div>
 
 </body>
 </html>
-
