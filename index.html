@@ -12,16 +12,19 @@
 <img src="hamburgerbotton.png" id="menuBtn" alt="menu">
 
 <!-- 사이드 메뉴 -->
-<div id="sideMenu">
-  <a href="#">홈</a>
-  <a href="#">게임</a>
-</div>
+<nav id="sideMenu">
+  <a href="#" id="authLink">로그인</a>
+  <div class="menu-gap"></div>
+  <a href="/">홈</a>
+  <a href="/tree/">협동 나무</a>
+  <a href="/about/">소개</a>
+</nav>
 
 <!-- 배경 음악 -->
 <audio id="bgMusic" src="music.mp3" loop autoplay></audio>
 
 <!-- 음악 버튼 -->
-<button id="musicBtn" onclick="toggleMusic()"></button>
+<button id="musicBtn"></button>
 
 <div class="content">
   <span class="pc-text">
