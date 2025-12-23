@@ -43,6 +43,7 @@ body {
 
 #sideMenu a:hover {
   background: #dbdbdb;
+  color:#000;
 }
 
 #sideMenu.open {
