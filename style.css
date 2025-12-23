@@ -142,4 +142,11 @@ body { background-image: url("bg2.png"); }
 .pc-text { display: none; }
 .mobile-text { display: block; }
 }
+#menuBtn {
+  position: fixed !important;
+  top: 20px !important;
+  left: 20px !important;
+  bottom: auto !important;
+  z-index: 9999;
+}
 
