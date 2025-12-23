@@ -1,1 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2025 코딩과 함께라면 기념관</title>
+
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+
+<!-- 햄버거 버튼 -->
+<img src="../hamburgerbotton.png" id="menuBtn" alt="menu">
+
+<!-- 사이드 메뉴 -->
+<nav id="sideMenu">
+  <a href="/signin/" id="authLink">로그인</a>
+  <div class="menu-gap"></div>
+  <a href="/home/">홈</a>
+  <a href="/tree/">협동 나무</a>
+  <a href="/about/">소개</a>
+</nav>
+
+<!-- 배경 음악 -->
+<audio id="bgMusic" src="../music.mp3" loop autoplay></audio>
+
+<!-- 음악 버튼 -->
+<button id="musicBtn"></button>
+
+<!-- 상단 텍스트 -->
+<div class="content">
+  <span class="pc-text">
+    <h1 class="pc-title">2025 코딩과 함께라면 기념관</h1>
+    <p class="pc-initial">
+      JO Y.J. • LEE J.H. • SON S.H. • JANG H.J. • LEE S.Y. • LIM J.W.
+    </p>
+  </span>
+
+  <span class="mobile-text">
+    <h1>2025 코딩과 함께라면</h1>
+    <h1>기념관</h1>
+    <p>JO Y.J. • LEE J.H. • SON S.H.</p>
+    <p>JANG H.J. • LEE S.Y. • LIM J.W.</p>
+  </span>
+</div>
+
+<!-- 캐러셀 -->
+<div class="carousel-container">
+  <button id="prev">&lt;</button>
+  <div class="thumb small" id="left"><span class="thumb-info"></span></div>
+  <div class="thumb big" id="center"><span class="thumb-info"></span></div>
+  <div class="thumb small" id="right"><span class="thumb-info"></span></div>
+  <button id="next">&gt;</button>
+</div>
+
+<img src="../logo.png" class="logo">
+
+<script src="home.js"></script>
+</body>
+</html>
 
