@@ -33,21 +33,25 @@ body {
   z-index: 9999;
 }
 
+#sideMenu.open {
+  left: 0;
+}
+
 #sideMenu a {
   display: block;
   padding: 16px 24px;
-  color:#000;
+  color: #000;
   text-decoration: none;
   font-size: 18px;
 }
 
 #sideMenu a:hover {
   background: #dbdbdb;
-  color:#000;
+  color: #000;
 }
 
-#sideMenu.open {
-  left: 0;
+.menu-gap {
+  height: 24px;
 }
 
 /* 음악 버튼 */
