@@ -42,7 +42,7 @@ body {
 }
 
 #sideMenu a:hover {
-  background: #222;
+  background: #dbdbdb;
 }
 
 #sideMenu.open {
