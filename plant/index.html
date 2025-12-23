@@ -1,1 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>식물 가꾸기</title>
+  <link rel="stylesheet" href="plant.css">
+</head>
+<body>
+
+<h1 class="title">🌱 식물 가꾸기</h1>
+<p class="sub">모두의 클릭으로 식물을 키워요</p>
+
+<!-- 나무(식물) 영역 -->
+<div class="plant-area">
+  <img id="plantImg" src="../plant1.png" alt="plant">
+  <div id="plantInfo">🌳 Plant Lv.1</div>
+</div>
+
+<!-- 달성자 표시 -->
+<div id="achievement">
+  🌳 Plant Lv.1<br>
+  달성 : -
+</div>
+
+<!-- 순위 -->
+<div class="rank">
+  <h2>순위</h2>
+  <ol id="rankList">
+    <!-- JS로 채워짐 -->
+  </ol>
+</div>
+
+<!-- 성장 버튼 -->
+<button id="growBtn">
+  <img src="../growtree.png" alt="grow">
+</button>
+
+<script src="plant.js"></script>
+</body>
+</html>
 
