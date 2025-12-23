@@ -6,6 +6,22 @@ menuBtn.onclick = () => {
   sideMenu.classList.toggle("open");
 };
 
+/* 로그인 / 로그아웃 상태 */
+const authLink = document.getElementById("authLink");
+
+function updateAuth() {
+  const user = sessionStorage.getItem("user");
+  if (user) {
+    authLink.textContent = "로그아웃";
+    authLink.href = "/signout/";
+  } else {
+    authLink.textContent = "로그인";
+    authLink.href = "/signin/";
+  }
+}
+
+updateAuth();
+
 /* 음악 */
 function toggleMusic() {
   const music = document.getElementById("bgMusic");
@@ -15,6 +31,8 @@ function toggleMusic() {
     ? "url('sound2.png')"
     : "url('sound1.png')";
 }
+
+document.getElementById("musicBtn").onclick = toggleMusic;
 
 /* 캐러셀 */
 const thumbs = [
