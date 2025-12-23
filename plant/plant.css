@@ -8,56 +8,59 @@ body {
   align-items: center;
 }
 
-/* 상단 레벨 표시 */
+/* 🔥 상단 레벨 (아래로 + 크게 + 굵게) */
 .plant-status {
-  margin-top: 50px;
+  margin-top: 80px;   /* ↓ 내림 */
   text-align: center;
 }
 
 #plantLevel {
-  font-size: 2.6em;
-  font-weight: bold;
+  font-size: 3.2em;   /* 크게 */
+  font-weight: 900;   /* 굵게 */
 }
 
 #plantProgress {
-  font-size: 1.2em;
-  color: #555;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-top: 8px;
 }
 
-/* 식물 */
+/* 🌱 식물 (조금 축소) */
 .plant-area {
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
 #plantImg {
-  width: 220px;
+  width: 190px;       /* 기존 220 → 축소 */
   transition: transform 0.3s ease;
 }
 
-/* 좌우 정보 */
+/* 📦 좌우 영역 (더 바깥으로) */
 .info-area {
-  margin-top: 30px;
-  width: 90%;
-  max-width: 700px;
+  margin-top: 20px;
+  width: 100%;
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  padding: 0 60px;   /* ← 빈 공간 활용 */
+  box-sizing: border-box;
 }
 
+/* 달성자 (왼쪽 끝) */
 #achievement {
-  flex: 1;
+  width: 220px;
   background: #fff;
-  border-radius: 10px;
-  padding: 15px;
+  border-radius: 12px;
+  padding: 16px;
   text-align: center;
-  font-size: 1.1em;
+  font-size: 1.15em;
 }
 
+/* 랭킹 (오른쪽 끝) */
 .rank {
-  flex: 1;
+  width: 220px;
   background: #fff;
-  border-radius: 10px;
-  padding: 15px;
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .rank h2 {
@@ -65,19 +68,15 @@ body {
   text-align: center;
 }
 
-.rank ol {
-  padding-left: 20px;
-}
-
-/* 버튼 */
+/* 🌳 Grow 버튼 (위로 + 크게) */
 #growBtn {
-  margin-top: auto;
-  margin-bottom: 40px;
+  margin-top: 30px;     /* ↑ 위로 */
+  margin-bottom: 30px;
   border: none;
   background: none;
   cursor: pointer;
 }
 
 #growBtn img {
-  width: 140px;
+  width: 190px;        /* 크게 */
 }
