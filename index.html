@@ -6,10 +6,6 @@
 <title>2025 코딩과 함께라면 기념관</title>
 
 <link rel="icon" href="/2025withcoding_logo.png">
-<meta property="og:title" content="코딩과 함께라면">
-<meta property="og:description" content="2025 코딩과 함께라면 기념 사이트">
-<meta property="og:image" content="https://25withcoding.kr/2025withcoding_logo.png">
-<meta property="og:url" content="https://25withcoding.kr">
 
 <style>
 body {
@@ -17,18 +13,15 @@ body {
   font-family: Arial, sans-serif;
   min-height: 100vh;
   background: url("bg1.png") center/cover no-repeat;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 /* 햄버거 버튼 */
 .hamburger {
   position: fixed;
-  top: 20px;
-  left: 20px;
+  top: 18px;
+  left: 18px;
   width: 36px; /* 75% */
-  z-index: 2000;
+  z-index: 3000;
   cursor: pointer;
 }
 
@@ -41,29 +34,29 @@ body {
   height: 100vh;
   background: #f0f0f0;
   transition: 0.3s;
-  z-index: 1500;
+  z-index: 2000;
   display: flex;
   flex-direction: column;
 }
 
-.menu.open {
-  left: 0;
-}
+.menu.open { left: 0; }
 
-/* 메뉴 영역 비율 */
+/* 로고 영역 (위로 이동) */
 .menu-logo {
-  flex: 3;
+  height: 25%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 40px;
 }
 
 .menu-logo img {
   width: 120px;
 }
 
+/* 메뉴 버튼 공통 */
 .menu-item {
-  flex: 1;
+  height: 10%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,11 +74,17 @@ body {
   justify-content: center;
 }
 
-.menu-item a:hover {
-  background: rgba(0,0,0,0.08);
+/* 홈을 위로 */
+.menu-home {
+  margin-top: -10px;
 }
 
-/* 메인 텍스트 */
+/* 홈 ↔ 지원 사이 간격 (버튼의 1/2) */
+.menu-gap {
+  height: 5%;
+}
+
+/* 메인 콘텐츠 */
 .content {
   margin-top: 15vh;
   text-align: center;
@@ -100,16 +99,14 @@ body {
   letter-spacing: 1px;
 }
 
-.mobile-text {
-  display: none;
-}
+.mobile-text { display: none; }
 
 /* 캐러셀 */
 .carousel-container {
   margin-top: 60px;
   display: flex;
   gap: 20px;
-  align-items: center;
+  justify-content: center;
 }
 
 .thumb {
@@ -156,18 +153,25 @@ body {
 
 <!-- 사이드 메뉴 -->
 <div class="menu" id="menu">
+
   <div class="menu-logo">
     <img src="logo.png">
   </div>
-  <div class="menu-item">
+
+  <div class="menu-item menu-home">
     <a href="https://25withcoding.kr">홈</a>
   </div>
+
+  <div class="menu-gap"></div>
+
   <div class="menu-item">
     <a href="/apply">2기 지원</a>
   </div>
+
   <div class="menu-item">
     <a href="/result">결과 확인</a>
   </div>
+
 </div>
 
 <div class="content">
@@ -195,7 +199,7 @@ function toggleMenu(){
   document.getElementById('menu').classList.toggle('open');
 }
 
-/* 캐러셀 데이터 */
+/* 캐러셀 */
 const thumbs = [
 {img:'Thumbnail1.png', link:'https://naver.me/5M5Ke6YT'},
 {img:'Thumbnail2.png', link:'https://naver.me/FPU7WpYv'},
@@ -219,7 +223,9 @@ update();
 setInterval(()=>{idx++; update();},2000);
 
 [C,L,R].forEach((el,i)=>{
-  el.onclick=()=>window.open(thumbs[(idx+(i===0?2:i===1?1:0))%6].link);
+  el.onclick=()=>window.open(
+    thumbs[(idx+(i===0?2:i===1?1:0))%6].link
+  );
 });
 </script>
 
