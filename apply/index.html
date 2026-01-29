@@ -1,1 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2기 지원 | 코딩과 함께라면</title>
+
+<link rel="icon" href="/2025withcoding_logo.png" type="image/png">
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  background: #f7f7f7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 햄버거 버튼 */
+.hamburger {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 30px;        /* 75% 크기 */
+  height: 30px;
+  background: url("/hamburgerbotton.png") no-repeat center/contain;
+  border: none;
+  cursor: pointer;
+  z-index: 3000;
+}
+
+/* 사이드 메뉴 */
+.menu {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 260px;
+  height: 100vh;
+  background: #f0f0f0;
+  transition: left 0.3s ease;
+  z-index: 2500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.menu.active {
+  left: 0;
+}
+
+.menu .menu-logo {
+  margin-top: 10vh;
+  margin-bottom: 6vh;
+}
+
+.menu .menu-logo img {
+  width: 80px;
+}
+
+.menu a {
+  text-decoration: none;
+  color: #000;
+  font-weight: bold;
+  margin: 12px 0;
+  font-size: 1.1em;
+  text-align: center;
+}
+
+/* 신청 박스 */
+.apply-box {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  width: 85%;
+  max-width: 340px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  text-align: center;
+}
+
+.apply-box h2 {
+  margin-bottom: 20px;
+}
+
+.apply-box input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 1em;
+}
+
+.apply-box button {
+  width: 100%;
+  padding: 12px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 햄버거 버튼 -->
+<button class="hamburger" onclick="toggleMenu()"></button>
+
+<!-- 사이드 메뉴 -->
+<nav class="menu" id="sideMenu">
+  <div class="menu-logo">
+    <img src="/2025withcoding_logo.png" alt="logo">
+  </div>
+  <a href="/" onclick="closeMenu()">홈</a>
+  <a href="/apply" onclick="closeMenu()">2기 지원</a>
+  <a href="/result" onclick="closeMenu()">결과 확인</a>
+</nav>
+
+<!-- 신청 박스 -->
+<div class="apply-box">
+  <h2>2기 지원</h2>
+
+  <input type="text" id="name" placeholder="이름">
+  <input type="text" id="number" placeholder="학번">
+
+  <button onclick="submitForm()">제출하기</button>
+</div>
+
+<script>
+function toggleMenu(){
+  document.getElementById("sideMenu").classList.toggle("active");
+}
+function closeMenu(){
+  document.getElementById("sideMenu").classList.remove("active");
+}
+
+function submitForm(){
+  const name = document.getElementById("name").value.trim();
+  const number = document.getElementById("number").value.trim();
+
+  if(!name || !number){
+    alert("이름과 학번을 입력하세요.");
+    return;
+  }
+
+  if(!confirm("신청하시겠습니까?")) return;
+
+  const url =
+    "https://docs.google.com/forms/d/e/1FAIpQLScCTt2QrJ9dgBgDjHRXBkYtZkn2bA0Aa5gMwmwmUppiIEtJ3A/formResponse" +
+    "?entry.436690331=" + encodeURIComponent(name) +
+    "&entry.930905451=" + encodeURIComponent(number) +
+    "&submit=Submit";
+
+  fetch(url, { mode: "no-cors" });
+
+  alert("신청이 완료되었습니다.");
+  document.getElementById("name").value = "";
+  document.getElementById("number").value = "";
+}
+</script>
+
+</body>
+</html>
 
