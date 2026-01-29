@@ -5,228 +5,287 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2025 코딩과 함께라면 기념관</title>
 
-<link rel="icon" href="/2025withcoding_logo.png">
+<link rel="icon" href="/2025withcoding_logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/2025withcoding_logo.png">
+
+<meta property="og:title" content="코딩과 함께라면">
+<meta property="og:description" content="2025 코딩과 함께라면 기념 사이트">
+<meta property="og:image" content="https://25withcoding.kr/2025withcoding_logo.png">
+<meta property="og:url" content="https://25withcoding.kr">
+<meta property="og:type" content="website">
 
 <style>
 body {
-  margin: 0;
   font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
   min-height: 100vh;
-  background: url("bg1.png") center/cover no-repeat;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  background-image: url("bg1.png");
+  background-size: cover;
+  background-position: center;
 }
 
 /* 햄버거 버튼 */
 .hamburger {
   position: fixed;
-  top: 18px;
-  left: 18px;
-  width: 36px; /* 75% */
-  z-index: 3000;
+  top: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  background: url("hamburgerbotton.png") no-repeat center/contain;
+  border: none;
   cursor: pointer;
+  z-index: 3000;
 }
 
 /* 사이드 메뉴 */
 .menu {
   position: fixed;
   top: 0;
-  left: -70%;
-  width: 70%;
+  left: -260px;
+  width: 260px;
   height: 100vh;
   background: #f0f0f0;
-  transition: 0.3s;
-  z-index: 2000;
-  display: flex;
-  flex-direction: column;
+  padding-top: 80px;
+  transition: left 0.3s ease;
+  z-index: 2500;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.2);
 }
 
-.menu.open { left: 0; }
-
-/* 로고 영역 (위로 이동) */
-.menu-logo {
-  height: 25%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 40px;
+.menu.active {
+  left: 0;
 }
 
-.menu-logo img {
-  width: 120px;
-}
-
-/* 메뉴 버튼 공통 */
-.menu-item {
-  height: 10%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1.2em;
-}
-
-.menu-item a {
-  text-decoration: none;
+.menu a {
+  display: block;
+  padding: 16px 24px;
   color: #000;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-decoration: none;
+  font-size: 1.1em;
+  text-align: left;
 }
 
-/* 홈을 위로 */
-.menu-home {
-  margin-top: -10px;
+.menu a:hover {
+  background: rgba(0,0,0,0.06);
 }
 
-/* 홈 ↔ 지원 사이 간격 (버튼의 1/2) */
-.menu-gap {
-  height: 5%;
-}
-
-/* 메인 콘텐츠 */
+/* 상단 텍스트 */
 .content {
   margin-top: 15vh;
-  text-align: center;
+  line-height: 1.8em;
 }
 
-.pc-text h1 {
-  font-size: 3em;
-  margin-bottom: 10px;
-}
-
-.pc-text p {
-  letter-spacing: 1px;
-}
-
+.pc-text { display: block; }
 .mobile-text { display: none; }
+
+/* 로고 */
+.logo {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 80px;
+}
 
 /* 캐러셀 */
 .carousel-container {
-  margin-top: 60px;
   display: flex;
-  gap: 20px;
+  align-items: center;
   justify-content: center;
+  gap: 20px;
+  margin-top: 60px;
+  position: relative;
 }
+
+#prev, #next {
+  position: absolute;
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 1.5em;
+  z-index: 2;
+}
+
+#prev { left: -50px; }
+#next { right: -50px; }
 
 .thumb {
   border-radius: 10px;
-  overflow: hidden;
   cursor: pointer;
+  position: relative;
+}
+
+.thumb-info {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 5px 0;
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.thumb.big:hover .thumb-info {
+  opacity: 1;
 }
 
 .small { width: 160px; height: 90px; }
 .big { width: 320px; height: 180px; }
 
-.logo {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  width: 80px;
-}
-
 /* 모바일 */
-@media (max-width:600px) {
+@media screen and (max-width: 600px) {
   body { background-image: url("bg2.png"); }
-
-  .pc-text { display:none; }
-  .mobile-text { display:block; }
-
-  .carousel-container {
-    flex-direction: column;
-  }
-
-  .big {
-    width: 80vw;
-    height: calc(80vw * 9 / 16);
-  }
-
-  .small { display:none; }
+  .pc-text { display: none; }
+  .mobile-text { display: block; }
+  .carousel-container { flex-direction: column; }
+  .small { display: none; }
+  .big { width: 80vw; height: calc(80vw * 9 / 16); }
+  #prev { left: 10px; }
+  #next { right: 10px; }
 }
 </style>
 </head>
 
 <body>
 
-<!-- 햄버거 -->
-<img src="hamburgerbotton.png" class="hamburger" onclick="toggleMenu()">
+<!-- 햄버거 버튼 -->
+<button class="hamburger" onclick="toggleMenu()"></button>
 
 <!-- 사이드 메뉴 -->
-<div class="menu" id="menu">
+<nav class="menu" id="sideMenu">
+  <div class="menu-inner">
 
-  <div class="menu-logo">
-    <img src="logo.png">
+    <div class="menu-logo">
+      <img src="logo.png" alt="logo">
+    </div>
+
+    <a class="menu-home" href="/" onclick="closeMenu()">홈</a>
+
+    <div class="menu-gap"></div>
+
+    <a href="/apply" onclick="closeMenu()">2기 지원</a>
+    <a href="/result" onclick="closeMenu()">결과 확인</a>
+
   </div>
+</nav>
 
-  <div class="menu-item menu-home">
-    <a href="https://25withcoding.kr">홈</a>
-  </div>
 
-  <div class="menu-gap"></div>
+<!-- 배경 음악 -->
+<audio id="bgMusic" src="music.mp3" loop autoplay></audio>
 
-  <div class="menu-item">
-    <a href="/apply">2기 지원</a>
-  </div>
+<!-- 음악 버튼 -->
+<button id="musicBtn"
+  style="position: fixed; bottom: 20px; left: 20px; width:50px; height:50px;
+  border:none; background:url('sound1.png') no-repeat center/contain;
+  cursor:pointer; z-index:2000;"
+  onclick="toggleMusic()">
+</button>
 
-  <div class="menu-item">
-    <a href="/result">결과 확인</a>
-  </div>
-
+<!-- 제목 -->
+<div class="content pc-text">
+  <h1>2025 코딩과 함께라면 기념관</h1>
+  <p>JO Y.J. • LEE J.H. • SON S.H. • JANG H.J. • LEE S.Y. • LIM J.W.</p>
 </div>
 
-<div class="content">
-  <div class="pc-text">
-    <h1>2025 코딩과 함께라면 기념관</h1>
-    <p>JO Y.J. • LEE J.H. • SON S.H. • JANG H.J. • LEE S.Y. • LIM J.W.</p>
-  </div>
-
-  <div class="mobile-text">
-    <h1>2025 코딩과 함께라면</h1>
-    <h1>기념관</h1>
-  </div>
+<div class="content mobile-text">
+  <h1>2025 코딩과 함께라면</h1>
+  <h1>기념관</h1>
+  <p>JO Y.J. • LEE J.H. • SON S.H.</p>
+  <p>JANG H.J. • LEE S.Y. • LIM J.W.</p>
 </div>
 
+<!-- 캐러셀 -->
 <div class="carousel-container">
-  <div class="thumb small" id="left"></div>
-  <div class="thumb big" id="center"></div>
-  <div class="thumb small" id="right"></div>
+  <button id="prev">&lt;</button>
+  <div class="thumb small" id="left"><span class="thumb-info"></span></div>
+  <div class="thumb big" id="center"><span class="thumb-info"></span></div>
+  <div class="thumb small" id="right"><span class="thumb-info"></span></div>
+  <button id="next">&gt;</button>
 </div>
 
 <img src="logo.png" class="logo">
 
 <script>
-function toggleMenu(){
-  document.getElementById('menu').classList.toggle('open');
-}
-
-/* 캐러셀 */
 const thumbs = [
-{img:'Thumbnail1.png', link:'https://naver.me/5M5Ke6YT'},
-{img:'Thumbnail2.png', link:'https://naver.me/FPU7WpYv'},
-{img:'Thumbnail3.png', link:'https://naver.me/GdlLfME3'},
-{img:'Thumbnail4.png', link:'https://naver.me/x4Gpy1ly'},
-{img:'Thumbnail5.png', link:'https://naver.me/GT6ZUHNa'},
-{img:'Thumbnail6.png', link:'https://naver.me/xhl9LE6l'}
+  {img:'Thumbnail1.png', title:'CODE : STORGE', author:'JO Y.J.', link:'https://naver.me/5M5Ke6YT'},
+  {img:'Thumbnail2.png', title:'HIGH SCORE', author:'LEE J.H.', link:'https://naver.me/FPU7WpYv'},
+  {img:'Thumbnail3.png', title:'억까 게임', author:'SON S.H.', link:'https://naver.me/GdlLfME3'},
+  {img:'Thumbnail4.png', title:'SPEED GAME', author:'JANG H.J.', link:'https://naver.me/x4Gpy1ly'},
+  {img:'Thumbnail5.png', title:'몬스터 디펜스', author:'LEE S.Y.', link:'https://naver.me/GT6ZUHNa'},
+  {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.', link:'https://naver.me/xhl9LE6l'}
 ];
 
-let idx = 0;
-const L = document.getElementById('left');
-const C = document.getElementById('center');
-const R = document.getElementById('right');
+let currentIndex = Math.floor(Math.random() * thumbs.length);
+const left = document.getElementById('left');
+const center = document.getElementById('center');
+const right = document.getElementById('right');
 
-function update(){
-  L.style.background = `url(${thumbs[(idx+2)%6].img}) center/cover`;
-  C.style.background = `url(${thumbs[(idx+1)%6].img}) center/cover`;
-  R.style.background = `url(${thumbs[idx%6].img}) center/cover`;
+function isMobilePortrait() {
+  return window.innerWidth <= 600 && window.innerHeight > window.innerWidth;
 }
-update();
-setInterval(()=>{idx++; update();},2000);
 
-[C,L,R].forEach((el,i)=>{
-  el.onclick=()=>window.open(
-    thumbs[(idx+(i===0?2:i===1?1:0))%6].link
-  );
+function updateCarousel() {
+  const len = thumbs.length;
+  if (isMobilePortrait()) {
+    const c = thumbs[currentIndex % len];
+    center.style.backgroundImage = `url(${c.img})`;
+    center.style.backgroundSize = 'cover';
+    center.querySelector('.thumb-info').textContent = `${c.title} - ${c.author}`;
+  } else {
+    const r = thumbs[currentIndex % len];
+    const c = thumbs[(currentIndex + 1) % len];
+    const l = thumbs[(currentIndex + 2) % len];
+
+    [left,l],[center,c],[right,r];
+    left.style.backgroundImage = `url(${l.img})`;
+    center.style.backgroundImage = `url(${c.img})`;
+    right.style.backgroundImage = `url(${r.img})`;
+
+    left.querySelector('.thumb-info').textContent = `${l.title} - ${l.author}`;
+    center.querySelector('.thumb-info').textContent = `${c.title} - ${c.author}`;
+    right.querySelector('.thumb-info').textContent = `${r.title} - ${r.author}`;
+  }
+}
+
+function next(){ currentIndex++; updateCarousel(); }
+function prev(){ currentIndex = (currentIndex-1+thumbs.length)%thumbs.length; updateCarousel(); }
+
+updateCarousel();
+setInterval(next,2000);
+
+[left,center,right].forEach((el,idx)=>{
+  el.onclick=()=>{
+    const len=thumbs.length;
+    let p=isMobilePortrait()?thumbs[currentIndex%len]:
+      idx===0?thumbs[(currentIndex+2)%len]:
+      idx===1?thumbs[(currentIndex+1)%len]:
+      thumbs[currentIndex%len];
+    window.open(p.link,'_blank');
+  }
 });
+
+function toggleMenu(){
+  document.getElementById("sideMenu").classList.toggle("active");
+}
+function closeMenu(){
+  document.getElementById("sideMenu").classList.remove("active");
+}
+
+function toggleMusic(){
+  const m=document.getElementById("bgMusic");
+  const b=document.getElementById("musicBtn");
+  m.muted=!m.muted;
+  b.style.backgroundImage=m.muted?"url('sound2.png')":"url('sound1.png')";
+}
 </script>
 
 </body>
