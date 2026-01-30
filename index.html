@@ -169,6 +169,17 @@ body {
   text-align: center;
   font-weight: bold;
 }
+#musicBtn {
+  position: fixed;
+  top: 20px;        /* 햄버거랑 같은 높이 */
+  left: 70px;       /* 햄버거 오른쪽 */
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: url('sound1.png') no-repeat center / contain;
+  cursor: pointer;
+  z-index: 2000;
+}
 
 </style>
 </head>
@@ -177,6 +188,7 @@ body {
 
 <!-- 햄버거 버튼 -->
 <button class="hamburger" onclick="toggleMenu()"></button>
+<button id="musicBtn" onclick="toggleMusic()"></button>
 
 <!-- 사이드 메뉴 -->
 <nav class="menu" id="sideMenu">
