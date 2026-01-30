@@ -8,12 +8,6 @@
 <link rel="icon" href="/2025withcoding_logo.png" type="image/png">
 <link rel="apple-touch-icon" href="/2025withcoding_logo.png">
 
-<meta property="og:title" content="코딩과 함께라면">
-<meta property="og:description" content="2025 코딩과 함께라면 기념 사이트">
-<meta property="og:image" content="https://25withcoding.kr/2025withcoding_logo.png">
-<meta property="og:url" content="https://25withcoding.kr">
-<meta property="og:type" content="website">
-
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -36,12 +30,25 @@ body {
   position: fixed;
   top: 20px;
   left: 20px;
-  width: 40px;
-  height: 40px;
+  width: 30px;   /* 75% 크기 */
+  height: 30px;
   background: url("hamburgerbotton.png") no-repeat center/contain;
   border: none;
   cursor: pointer;
   z-index: 3000;
+}
+
+/* 음소거 버튼 */
+#musicBtn {
+  position: fixed;
+  top: 20px;
+  left: 70px; /* 햄버거 오른쪽 */
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: url('sound1.png') no-repeat center / contain;
+  cursor: pointer;
+  z-index: 2000;
 }
 
 /* 사이드 메뉴 */
@@ -56,10 +63,12 @@ body {
   transition: left 0.3s ease;
   z-index: 2500;
   box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+  pointer-events: none; /* 메뉴 닫힘시 클릭 안먹도록 */
 }
 
 .menu.active {
   left: 0;
+  pointer-events: auto; /* 메뉴 열리면 클릭 가능 */
 }
 
 .menu a {
@@ -68,11 +77,19 @@ body {
   color: #000;
   text-decoration: none;
   font-size: 1.1em;
-  text-align: left;
+  text-align: center;   /* 중앙정렬 */
+  font-weight: bold;    /* 글자 굵게 */
 }
 
 .menu a:hover {
   background: rgba(0,0,0,0.06);
+}
+
+.menu-logo img {
+  width: 90px;
+  max-width: 90px;
+  height: auto;
+  margin-bottom: 20px;
 }
 
 /* 상단 텍스트 */
@@ -117,11 +134,12 @@ body {
 #prev { left: -50px; }
 #next { right: -50px; }
 
+/* 썸네일 */
 .thumb {
   border-radius: 10px;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* ← 썸네일 안에서만 나타나게 */
 }
 
 .thumb-info {
@@ -133,7 +151,7 @@ body {
   padding: 5px 0;
   opacity: 0;
   transition: 0.3s;
-  text-align: center;
+  text-align: center; /* ← 중앙 정렬 */
 }
 
 .thumb.big:hover .thumb-info {
@@ -154,35 +172,6 @@ body {
   #prev { left: 10px; }
   #next { right: 10px; }
 }
-/* 사이드 메뉴 로고 크기 제한 */
-.menu-logo img {
-  width: 90px;
-  max-width: 90px;
-  height: auto;
-}
-/* 햄버거 버튼 크기 75% */
-.hamburger {
-  width: 30px;
-  height: 30px;
-}
-
-/* 사이드 메뉴 글자 중앙 + 굵게 */
-.menu a {
-  text-align: center;
-  font-weight: bold;
-}
-#musicBtn {
-  position: fixed;
-  top: 20px;        /* 햄버거랑 같은 높이 */
-  left: 70px;       /* 햄버거 오른쪽 */
-  width: 38px;
-  height: 38px;
-  border: none;
-  background: url('sound1.png') no-repeat center / contain;
-  cursor: pointer;
-  z-index: 2000;
-}
-
 </style>
 </head>
 
@@ -195,26 +184,18 @@ body {
 <!-- 사이드 메뉴 -->
 <nav class="menu" id="sideMenu">
   <div class="menu-inner">
-
     <div class="menu-logo">
       <img src="logo.png" alt="logo">
     </div>
-
     <a class="menu-home" href="/" onclick="closeMenu()">홈</a>
-
     <div class="menu-gap"></div>
-
     <a href="/apply" onclick="closeMenu()">2기 지원</a>
     <a href="/result" onclick="closeMenu()">결과 확인</a>
-
   </div>
 </nav>
 
-
 <!-- 배경 음악 -->
 <audio id="bgMusic" src="music.mp3" loop autoplay></audio>
-
-
 
 <!-- 제목 -->
 <div class="content pc-text">
@@ -271,7 +252,6 @@ function updateCarousel() {
     const c = thumbs[(currentIndex + 1) % len];
     const l = thumbs[(currentIndex + 2) % len];
 
-    [left,l],[center,c],[right,r];
     left.style.backgroundImage = `url(${l.img})`;
     center.style.backgroundImage = `url(${c.img})`;
     right.style.backgroundImage = `url(${r.img})`;
@@ -299,13 +279,8 @@ setInterval(next,2000);
   }
 });
 
-function toggleMenu(){
-  document.getElementById("sideMenu").classList.toggle("active");
-}
-function closeMenu(){
-  document.getElementById("sideMenu").classList.remove("active");
-}
-
+function toggleMenu(){ document.getElementById("sideMenu").classList.toggle("active"); }
+function closeMenu(){ document.getElementById("sideMenu").classList.remove("active"); }
 function toggleMusic(){
   const m=document.getElementById("bgMusic");
   const b=document.getElementById("musicBtn");
