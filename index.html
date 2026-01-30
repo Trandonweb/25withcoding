@@ -147,15 +147,22 @@ body {
 
 .thumb-info {
   position: absolute;
-  bottom: 0;
-  width: 100%;
+  bottom: 0;             /* 썸네일 바로 아래 */
+  left: 0;               /* 왼쪽 끝 */
+  width: 100%;           /* 썸네일 폭과 동일 */
   background: rgba(0,0,0,0.6);
   color: white;
   padding: 5px 0;
   opacity: 0;
+  text-align: center;    /* 글자 중앙 정렬 */
+  box-sizing: border-box; /* padding 때문에 튀어나오지 않게 */
   transition: 0.3s;
-  text-align: center; /* ← 중앙 정렬 */
 }
+
+.thumb.big:hover .thumb-info {
+  opacity: 1;
+}
+
 
 .thumb.big:hover .thumb-info {
   opacity: 1;
