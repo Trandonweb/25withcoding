@@ -283,9 +283,10 @@ function updateCarousel() {
     const c = thumbs[(currentIndex + 1) % len];
     const l = thumbs[(currentIndex + 2) % len];
 
-    left.style.backgroundImage = `url(${l.img})`;
-    center.style.backgroundImage = `url(${c.img})`;
-    right.style.backgroundImage = `url(${r.img})`;
+    left.querySelector('img').src = l.img;
+    center.querySelector('img').src = c.img;
+    right.querySelector('img').src = r.img;
+
 
     left.querySelector('.thumb-info').textContent = `${l.title} - ${l.author}`;
     center.querySelector('.thumb-info').textContent = `${c.title} - ${c.author}`;
