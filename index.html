@@ -167,7 +167,11 @@ body {
 .thumb.big:hover .thumb-info {
   opacity: 1;
 }
-
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 이미지 비율 유지, 잘림 방지 */
+}
 .small { width: 160px; height: 90px; }
 .big { width: 320px; height: 180px; }
 
