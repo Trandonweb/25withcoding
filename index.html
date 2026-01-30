@@ -321,6 +321,8 @@ function toggleMusic(){
   m.muted=!m.muted;
   b.style.backgroundImage=m.muted?"url('sound2.png')":"url('sound1.png')";
 }
+document.getElementById("next").addEventListener("click", next);
+document.getElementById("prev").addEventListener("click", prev);
 </script>
 
 </body>
