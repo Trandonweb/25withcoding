@@ -12,7 +12,7 @@ html, body {
   height: 100%;
 }
 
-/* 🔥 배경 */
+/* 배경 (기존 유지) */
 body {
   font-family: Arial, sans-serif;
   background: url("/bg1.png") no-repeat center center fixed;
@@ -20,7 +20,7 @@ body {
   min-height: 100vh;
 }
 
-/* 📱 모바일 배경 */
+/* 모바일 배경 */
 @media screen and (max-width: 600px) {
   body {
     background: url("/bg2.png") no-repeat center center fixed;
@@ -28,67 +28,54 @@ body {
   }
 }
 
-/* 🔥 햄버거 버튼 (기념관 스타일) */
-.menu-btn {
+/* ===================== */
+/* 햄버거 버튼 */
+.hamburger {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  width: 44px;
-  height: 44px;
+  top: 22px;
+  left: 22px;
+  font-size: 30px;
+  font-weight: bold;
   cursor: pointer;
-  z-index: 1000;
-  transition: 0.3s;
+  z-index: 1001;
+  color: black;
 }
 
-.menu-btn img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.menu-btn:hover {
-  transform: scale(1.1);
-}
-
-/* 🌟 사이드 메뉴 - 기념관 스타일 */
-.side-menu {
+/* ===================== */
+/* 사이드바 */
+.sidebar {
   position: fixed;
   top: 0;
   left: -260px;
-  width: 240px;
+  width: 260px;
   height: 100%;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(10px);
-  transition: 0.4s ease;
-  padding-top: 120px;
-  z-index: 999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  background: #e9e9e9; /* 밝은 회색 (기념관과 동일 톤) */
+  transition: 0.3s ease;
+  padding-top: 100px;
+  z-index: 1000;
 }
 
 /* 열렸을 때 */
-.side-menu.open {
+.sidebar.open {
   left: 0;
 }
 
-/* 메뉴 링크 */
-.side-menu a {
-  padding: 15px 25px;
-  color: white;
+/* 메뉴 항목 */
+.sidebar a {
+  display: block;
+  padding: 20px 40px;
+  font-size: 20px;
+  font-weight: 700;
+  color: black;
   text-decoration: none;
-  font-size: 18px;
-  letter-spacing: 1px;
-  transition: 0.3s;
 }
 
-/* 호버 효과 */
-.side-menu a:hover {
-  background: rgba(255,255,255,0.15);
-  padding-left: 35px;
+.sidebar a:hover {
+  background: #dcdcdc;
 }
 
-/* 중앙 정렬 */
+/* ===================== */
+/* 중앙 박스 */
 .wrapper {
   min-height: 100vh;
   display: flex;
@@ -96,7 +83,6 @@ body {
   align-items: center;
 }
 
-/* 메인 박스 */
 .container {
   width: 90%;
   max-width: 420px;
@@ -107,10 +93,6 @@ body {
   text-align: center;
 }
 
-h2 {
-  margin-bottom: 25px;
-}
-
 input {
   width: 100%;
   padding: 14px;
@@ -118,7 +100,6 @@ input {
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  box-sizing: border-box;
 }
 
 button {
@@ -131,7 +112,6 @@ button {
   background: #111;
   color: white;
   cursor: pointer;
-  transition: 0.3s;
 }
 
 button:hover {
@@ -148,13 +128,11 @@ button:hover {
 
 <body>
 
-<!-- 🔥 햄버거 -->
-<div class="menu-btn" onclick="toggleMenu()">
-  <img src="/hamburgerbotton.png" alt="menu">
-</div>
+<!-- 햄버거 -->
+<div class="hamburger" id="hamburger">☰</div>
 
-<!-- 🌟 사이드 메뉴 -->
-<div class="side-menu" id="sideMenu">
+<!-- 사이드바 -->
+<div class="sidebar" id="sidebar">
   <a href="/">홈</a>
   <a href="/apply">2기 지원</a>
   <a href="/result">결과 확인</a>
@@ -177,18 +155,34 @@ button:hover {
 </div>
 
 <script>
+const sidebar = document.getElementById("sidebar");
+const hamburger = document.getElementById("hamburger");
+
+/* 햄버거 클릭 (다시 누르면 닫힘) */
+hamburger.addEventListener("click", function(e){
+  e.stopPropagation();
+  sidebar.classList.toggle("open");
+});
+
+/* 사이드바 안 클릭 시 안 닫힘 */
+sidebar.addEventListener("click", function(e){
+  e.stopPropagation();
+});
+
+/* 바깥 클릭 시 닫기 */
+document.addEventListener("click", function(){
+  sidebar.classList.remove("open");
+});
+
+/* ===== 결과 확인 로직 유지 ===== */
 const releaseDate = new Date("2026-01-01T00:00:00");
-const sheetURL = "YOUR_CSV_LINK_HERE"; // 🔥 CSV 공개 링크 넣기
+const sheetURL = "YOUR_CSV_LINK_HERE";
 
 if(new Date() < releaseDate){
   document.getElementById("beforeMessage").style.display = "block";
   document.getElementById("beforeMessage").innerText =
     "2026년 1월 1일까지는 결과 확인 기간이 아닙니다.";
   document.getElementById("formArea").style.display = "none";
-}
-
-function toggleMenu(){
-  document.getElementById("sideMenu").classList.toggle("open");
 }
 
 async function checkResult(){
