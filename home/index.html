@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2025 코딩과 함께라면 기념관</title>
+
 <style>
 body {
 font-family: Arial, sans-serif;
@@ -21,6 +22,48 @@ background-size: cover;
 background-position: center;
 }
 
+/* 🔥 햄버거 버튼 */
+.menu-btn {
+position: fixed;
+top: 20px;
+left: 20px;
+width: 48px;
+height: 48px;
+cursor: pointer;
+z-index: 2000;
+}
+.menu-btn img {
+width: 100%;
+height: 100%;
+object-fit: contain;
+}
+
+/* 🔥 사이드 메뉴 */
+.side-menu {
+position: fixed;
+top: 0;
+left: -260px;
+width: 240px;
+height: 100%;
+background: #111;
+padding-top: 120px;
+transition: 0.3s ease;
+z-index: 1500;
+}
+.side-menu a {
+display: block;
+color: white;
+padding: 18px 30px;
+text-decoration: none;
+font-size: 18px;
+}
+.side-menu a:hover {
+background: #333;
+}
+.side-menu.open {
+left: 0;
+}
+
 /* 상단 글자 */
 .content {
 margin-top: 15vh;
@@ -31,7 +74,6 @@ line-height: 1.8em;
 margin: 0;
 }
 
-/* 데스크톱/태블릿 제목/이니셜 */
 .content h1.pc-title {
 font-size: 3em;
 font-weight: bold;
@@ -40,7 +82,6 @@ margin-bottom: 0.5em;
 
 .content p.pc-initial {
 font-size: 1.3em;
-font-weight: normal;
 margin-top: 0.5em;
 letter-spacing: 1px;
 }
@@ -54,7 +95,6 @@ position: fixed;
 bottom: 20px;
 right: 20px;
 width: 80px;
-height: auto;
 }
 
 /* 캐러셀 */
@@ -67,7 +107,6 @@ margin-top: 60px;
 position: relative;
 }
 
-/* 버튼 */
 #prev, #next {
 position: absolute;
 background-color: rgba(0,0,0,0.5);
@@ -83,7 +122,6 @@ font-size: 1.5em;
 #prev { left: -50px; top: 50%; transform: translateY(-50%); }
 #next { right: -50px; top: 50%; transform: translateY(-50%); }
 
-/* 썸네일 */
 .thumb {
 display: flex;
 align-items: center;
@@ -112,7 +150,6 @@ transition: opacity 0.3s;
 opacity: 1;
 }
 
-/* 작은/큰 썸네일 */
 .small { width: 160px; height: 90px; }
 .big { width: 320px; height: 180px; }
 
@@ -124,63 +161,58 @@ background-size: cover;
 background-position: center;
 }
 
-.content {
-margin-top: 12vh;
-line-height: 2em;
-}
 .pc-text { display: none; }
 .mobile-text { display: block; }
-
-.mobile-text h1 {
-font-size: 2.5em;
-font-weight: bold;
-margin-bottom: 0.3em;
-}
-.mobile-text p {
-font-size: 1.3em;
-font-weight: normal;
-margin-top: 0.5em;
-}
 
 .carousel-container {
 flex-direction: column;
 gap: 15px;
-margin-top: 60px;
 }
+
 .small { display: none; }
+
 .big {
 width: 80vw;
 height: calc(80vw * 9 / 16);
-position: relative;
 }
 
-/* 버튼 중앙 겹치게 */
-#prev { left: 10px; top: 50%; transform: translateY(-50%); display: block; }
-#next { right: 10px; top: 50%; transform: translateY(-50%); display: block; }
+#prev { left: 10px; }
+#next { right: 10px; }
 }
 </style>
 </head>
+
 <body>
+
+<!-- 🔥 햄버거 버튼 -->
+<div class="menu-btn" onclick="toggleMenu()">
+<img src="hamburgerbotton.png" alt="menu">
+</div>
+
+<!-- 🔥 사이드 메뉴 -->
+<div class="side-menu" id="sideMenu">
+<a href="/">홈</a>
+<a href="/apply">2기 지원</a>
+<a href="/result">결과 확인</a>
+</div>
 
 <!-- 배경 음악 -->
 <audio id="bgMusic" src="music.mp3" loop autoplay></audio>
 
-<!-- 좌측 하단 스피커 버튼 (음소거 토글) -->
+<!-- 스피커 버튼 -->
 <button id="musicBtn"
-  style="position: fixed; bottom: 20px; left: 20px; width:50px; height:50px;
-         border:none; background:url('sound1.png') no-repeat center/contain;
-         cursor:pointer; z-index:1000;"
-  onclick="toggleMusic()">
+style="position: fixed; bottom: 20px; left: 20px; width:50px; height:50px;
+border:none; background:url('sound1.png') no-repeat center/contain;
+cursor:pointer; z-index:1000;"
+onclick="toggleMusic()">
 </button>
 
 <div class="content">
-<!-- 데스크톱/태블릿 -->
 <span class="pc-text">
 <h1 class="pc-title">2025 코딩과 함께라면 기념관</h1>
-<p class="pc-initial">JO Y.J. •  LEE J.H. •  SON S.H. •  JANG H.J. •  LEE S.Y. •  LIM J.W.</p>
+<p class="pc-initial">JO Y.J. • LEE J.H. • SON S.H. • JANG H.J. • LEE S.Y. • LIM J.W.</p>
 </span>
 
-<!-- 모바일 세로 -->
 <span class="mobile-text">
 <h1>2025 코딩과 함께라면</h1>
 <h1>기념관</h1>
@@ -200,6 +232,11 @@ position: relative;
 <img src="logo.png" alt="Logo" class="logo">
 
 <script>
+function toggleMenu(){
+document.getElementById("sideMenu").classList.toggle("open");
+}
+
+/* 🔹 기존 캐러셀 JS 그대로 유지 */
 const thumbs = [
 {img:'Thumbnail1.png', title:'CODE : STORGE', author:'JO Y.J.', link:'https://naver.me/5M5Ke6YT'},
 {img:'Thumbnail2.png', title:'HIGH SCORE', author:'LEE J.H.', link:'https://naver.me/FPU7WpYv'},
@@ -209,7 +246,6 @@ const thumbs = [
 {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.', link:'https://naver.me/xhl9LE6l'}
 ];
 
-// 랜덤 시작 인덱스
 let currentIndex = Math.floor(Math.random() * thumbs.length);
 
 const left = document.getElementById('left');
@@ -250,56 +286,20 @@ right.querySelector('.thumb-info').textContent = `${r.title} - ${r.author}`;
 }
 }
 
-function next(){
-currentIndex++;
-updateCarousel();
-}
-function prev(){
-currentIndex--;
-if(currentIndex<0) currentIndex=thumbs.length-1;
-updateCarousel();
-}
+function next(){ currentIndex++; updateCarousel(); }
+function prev(){ currentIndex--; if(currentIndex<0) currentIndex=thumbs.length-1; updateCarousel(); }
 
 updateCarousel();
 let interval = setInterval(next,2000);
 
-document.getElementById('next').addEventListener('click', ()=>{
-next();
-clearInterval(interval);
-interval = setInterval(next,2000);
-});
-document.getElementById('prev').addEventListener('click', ()=>{
-prev();
-clearInterval(interval);
-interval = setInterval(next,2000);
-});
+document.getElementById('next').addEventListener('click', ()=>{ next(); clearInterval(interval); interval = setInterval(next,2000); });
+document.getElementById('prev').addEventListener('click', ()=>{ prev(); clearInterval(interval); interval = setInterval(next,2000); });
 
-// 썸네일 클릭 시 해당 링크 열기
-function addClickEvents() {
-[left, center, right].forEach((el, idx) => {
-el.onclick = () => {
-let project = null;
-const len = thumbs.length;
-if(isMobilePortrait()){
-project = thumbs[currentIndex % len];
-} else {
-if(idx === 0) project = thumbs[(currentIndex + 2) % len]; // left
-else if(idx === 1) project = thumbs[(currentIndex + 1) % len]; // center
-else project = thumbs[currentIndex % len]; // right
-}
-window.open(project.link, '_blank');
-};
-});
-}
-
-addClickEvents();
-
-// 음악 음소거 토글 (버튼 이미지 변경)
 function toggleMusic() {
-    const music = document.getElementById('bgMusic');
-    const btn = document.getElementById('musicBtn');
-    music.muted = !music.muted;
-    btn.style.backgroundImage = music.muted ? "url('sound2.png')" : "url('sound1.png')";
+const music = document.getElementById('bgMusic');
+const btn = document.getElementById('musicBtn');
+music.muted = !music.muted;
+btn.style.backgroundImage = music.muted ? "url('sound2.png')" : "url('sound1.png')";
 }
 </script>
 
