@@ -8,32 +8,51 @@
 <style>
 body{
   font-family: Arial, sans-serif;
-  text-align:center;
-  padding:40px;
-  background:#f5f5f5;
+  margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#f2f2f2;
 }
 
 .container{
+  width:90%;
   max-width:400px;
-  margin:0 auto;
   background:white;
-  padding:30px;
-  border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.1);
+  padding:40px 30px;
+  border-radius:12px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.15);
+  text-align:center;
+}
+
+h2{
+  margin-bottom:25px;
 }
 
 input{
   width:100%;
-  padding:10px;
+  padding:12px;
   margin:10px 0;
   font-size:16px;
+  border:1px solid #ccc;
+  border-radius:6px;
 }
 
 button{
   width:100%;
-  padding:10px;
+  padding:12px;
+  margin-top:10px;
   font-size:16px;
+  border:none;
+  border-radius:6px;
+  background:#222;
+  color:white;
   cursor:pointer;
+}
+
+button:hover{
+  background:#444;
 }
 
 .result{
@@ -41,31 +60,39 @@ button{
   font-weight:bold;
   font-size:18px;
 }
+
+.success{
+  color:green;
+}
+
+.fail{
+  color:red;
+}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-<h2>2026 코딩과 함께라면 2기 결과 확인</h2>
+  <h2>2026 코딩과 함께라면 2기 결과 확인</h2>
 
-<div id="beforeMessage" style="display:none; font-weight:bold;"></div>
+  <div id="beforeMessage" style="display:none; font-weight:bold;"></div>
 
-<div id="formArea">
-  <input type="text" id="studentId" placeholder="학번 입력">
-  <input type="text" id="name" placeholder="이름 입력">
-  <button onclick="checkResult()">결과 확인</button>
-</div>
+  <div id="formArea">
+    <input type="text" id="studentId" placeholder="학번 입력">
+    <input type="text" id="name" placeholder="이름 입력">
+    <button onclick="checkResult()">결과 확인</button>
+  </div>
 
-<div class="result" id="result"></div>
+  <div class="result" id="result"></div>
 </div>
 
 <script>
 
-// 🔥 결과 공개 날짜 설정 (2026년 1월 1일)
+// 🔥 결과 공개 날짜 설정 (2026년 1월 1일 00:00)
 const releaseDate = new Date("2026-01-01T00:00:00");
 
-// 🔥 CSV 링크 넣기
+// 🔥 여기에 CSV 공개 링크 넣기
 const sheetURL = "YOUR_CSV_LINK_HERE";
 
 const now = new Date();
@@ -83,6 +110,8 @@ async function checkResult(){
   const name = document.getElementById("name").value.trim();
   const resultBox = document.getElementById("result");
 
+  resultBox.className = "result";
+
   if(!studentId || !name){
     resultBox.innerText = "학번과 이름을 모두 입력하세요.";
     return;
@@ -92,7 +121,7 @@ async function checkResult(){
     const response = await fetch(sheetURL);
     const data = await response.text();
 
-    const rows = data.split("\n").slice(1); // 첫 줄(헤더) 제외
+    const rows = data.split("\n").slice(1); // 헤더 제외
 
     let found = false;
 
@@ -105,7 +134,14 @@ async function checkResult(){
 
       if(sheetStudentId === studentId && sheetName === name){
         found = true;
-        resultBox.innerText = "결과: " + status;
+
+        if(status === "합격"){
+          resultBox.innerText = "🎉 합격입니다!";
+          resultBox.classList.add("success");
+        } else {
+          resultBox.innerText = "아쉽지만 불합격입니다.";
+          resultBox.classList.add("fail");
+        }
         break;
       }
     }
