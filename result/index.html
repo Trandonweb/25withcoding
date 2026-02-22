@@ -1,166 +1,3 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 코딩과 함께라면 2기 결과 확인</title>
-
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background: url("/bg1.png") no-repeat center center fixed;
-  background-size: cover;
-  min-height: 100vh;
-}
-
-/* 모바일 배경 */
-@media screen and (max-width: 600px) {
-  body {
-    background: url("/bg2.png") no-repeat center center fixed;
-    background-size: cover;
-  }
-}
-
-/* ===================== */
-/* 햄버거 버튼 */
-.hamburger {
-  position: fixed;
-  top: 12px;
-  left: 10px; /* 더 바깥쪽 */
-  font-size: 42px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 1001;
-  color: black;
-  transform: scaleX(1.2); /* 살짝 가로로 길쭉 */
-}
-
-/* ===================== */
-/* 사이드바 */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: -260px;
-  width: 260px;
-  height: 100%;
-  background: #e9e9e9;
-  transition: 0.3s ease;
-  padding-top: 90px; /* 전체 아래로 이동 */
-  z-index: 1000;
-  text-align: center;
-}
-
-.sidebar.open {
-  left: 0;
-}
-
-/* 로고 */
-.sidebar .logo {
-  width: 96px;
-  margin-bottom: 30px;
-}
-
-/* 메뉴 항목 */
-.sidebar a {
-  display: block;
-  padding: 14px 0; /* 간격 줄임 */
-  font-size: 20px;
-  font-weight: 700;
-  color: black;
-  text-decoration: none;
-}
-
-.sidebar a:hover {
-  background: #dcdcdc;
-}
-
-/* ===================== */
-/* 중앙 박스 */
-.wrapper {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.container {
-  width: 90%;
-  max-width: 420px;
-  background: rgba(255,255,255,0.95);
-  padding: 40px 30px;
-  border-radius: 15px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-  text-align: center;
-}
-
-input {
-  width: 100%;
-  padding: 14px;
-  margin: 10px 0;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  font-size: 16px;
-  border: none;
-  border-radius: 8px;
-  background: #111;
-  color: white;
-  cursor: pointer;
-  box-sizing: border-box;
-}
-
-button:hover {
-  background: #333;
-}
-
-.result {
-  margin-top: 20px;
-  font-weight: bold;
-  font-size: 18px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="hamburger" id="hamburger">☰</div>
-
-<div class="sidebar" id="sidebar">
-  <img src="/logo.png" alt="logo" class="logo">
-  <a href="/">홈</a>
-  <a href="/apply">2기 지원</a>
-  <a href="/result">결과 확인</a>
-</div>
-
-<div class="wrapper">
-  <div class="container">
-    <h2>2026 코딩과 함께라면 2기 결과 확인</h2>
-
-    <div id="beforeMessage" style="display:none; font-weight:bold;"></div>
-
-    <div id="formArea">
-      <input type="text" id="studentId" placeholder="학번 입력">
-      <input type="text" id="name" placeholder="이름 입력">
-      <button onclick="checkResult()">결과 확인</button>
-    </div>
-
-    <div class="result" id="result"></div>
-  </div>
-</div>
-
 <script>
 const sidebar = document.getElementById("sidebar");
 const hamburger = document.getElementById("hamburger");
@@ -178,9 +15,14 @@ document.addEventListener("click", function(){
   sidebar.classList.remove("open");
 });
 
-/* 결과 확인 로직 유지 */
+/* ===================== */
+/* 결과 확인 로직 */
+
 const releaseDate = new Date("2026-01-01T00:00:00");
-const sheetURL = "YOUR_CSV_LINK_HERE";
+
+/* 🔥 실제 CSV 링크 + 캐시 방지용 기본 URL */
+const sheetURL =
+"https://docs.google.com/spreadsheets/d/1UN0VBv_xf6ZA8i66MsVExqVysarT44hwg_Gqqk1EZT4/export?format=csv&gid=0";
 
 if(new Date() < releaseDate){
   document.getElementById("beforeMessage").style.display = "block";
@@ -200,7 +42,10 @@ async function checkResult(){
   }
 
   try{
-    const response = await fetch(sheetURL);
+
+    /* 🔥 캐시 방지 (완전 실시간 보장) */
+    const response = await fetch(sheetURL + "&t=" + new Date().getTime());
+
     const data = await response.text();
     const rows = data.split("\n").slice(1);
 
@@ -224,11 +69,9 @@ async function checkResult(){
       resultBox.innerText = "일치하는 정보가 없습니다.";
     }
 
-  }catch{
+  }catch(error){
     resultBox.innerText = "데이터를 불러오는 중 오류가 발생했습니다.";
+    console.error(error);
   }
 }
 </script>
-
-</body>
-</html>
