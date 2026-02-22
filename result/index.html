@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 코딩과 함께라면 결과 확인</title>
+<title>2026 코딩과 함께라면 2기 결과 확인</title>
 
 <style>
 html, body {
@@ -12,28 +12,22 @@ html, body {
   height: 100%;
 }
 
+/* 🔥 body는 배경만 담당 */
 body {
   font-family: Arial, sans-serif;
-  min-height: 100svh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  /* 💻 기본 배경 (PC) */
-  background-image: url("bg1.png");
+  background: url("bg1.png") no-repeat center center fixed;
   background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 /* 📱 모바일 배경 */
 @media screen and (max-width: 600px) {
   body {
-    background-image: url("bg2.png");
+    background: url("bg2.png") no-repeat center center fixed;
+    background-size: cover;
   }
 }
 
-/* 배경 위 어둡게 */
+/* 어둡게 */
 .overlay {
   position: fixed;
   inset: 0;
@@ -41,9 +35,57 @@ body {
   z-index: 0;
 }
 
-.container {
+/* 햄버거 */
+.menu-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  font-size: 28px;
+  color: white;
+  cursor: pointer;
+  z-index: 3;
+}
+
+/* 사이드 메뉴 */
+.side-menu {
+  position: fixed;
+  top: 0;
+  right: -240px;
+  width: 220px;
+  height: 100%;
+  background: #111;
+  padding-top: 80px;
+  transition: 0.3s;
+  z-index: 2;
+}
+
+.side-menu a {
+  display: block;
+  color: white;
+  padding: 15px 25px;
+  text-decoration: none;
+}
+
+.side-menu a:hover {
+  background: #333;
+}
+
+.side-menu.open {
+  right: 0;
+}
+
+/* 🔥 가운데 정렬용 래퍼 */
+.wrapper {
   position: relative;
   z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 메인 박스 */
+.container {
   width: 90%;
   max-width: 420px;
   background: rgba(255,255,255,0.95);
@@ -53,10 +95,6 @@ body {
   text-align: center;
 }
 
-h2 {
-  margin-bottom: 25px;
-}
-
 input {
   width: 100%;
   padding: 12px;
@@ -64,7 +102,7 @@ input {
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  box-sizing: border-box; /* 🔥 좌우 정확히 맞춤 */
+  box-sizing: border-box;
 }
 
 button {
@@ -77,26 +115,12 @@ button {
   background: #111;
   color: white;
   cursor: pointer;
-  box-sizing: border-box;
-  transition: 0.3s;
-}
-
-button:hover {
-  background: #333;
 }
 
 .result {
   margin-top: 20px;
   font-weight: bold;
   font-size: 18px;
-}
-
-.success {
-  color: #1e8e3e;
-}
-
-.fail {
-  color: #d93025;
 }
 </style>
 </head>
@@ -105,86 +129,44 @@ button:hover {
 
 <div class="overlay"></div>
 
-<div class="container">
-  <h2>2026 코딩과 함께라면 2기 결과 확인</h2>
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
 
-  <div id="beforeMessage" style="display:none; font-weight:bold;"></div>
+<div class="side-menu" id="sideMenu">
+  <a href="/">홈</a>
+  <a href="/apply">2기 지원</a>
+  <a href="/result">결과 확인</a>
+</div>
 
-  <div id="formArea">
-    <input type="text" id="studentId" placeholder="학번 입력">
-    <input type="text" id="name" placeholder="이름 입력">
-    <button onclick="checkResult()">결과 확인</button>
+<div class="wrapper">
+  <div class="container">
+    <h2>2026 코딩과 함께라면 2기 결과 확인</h2>
+
+    <div id="beforeMessage" style="display:none; font-weight:bold;"></div>
+
+    <div id="formArea">
+      <input type="text" id="studentId" placeholder="학번 입력">
+      <input type="text" id="name" placeholder="이름 입력">
+      <button onclick="checkResult()">결과 확인</button>
+    </div>
+
+    <div class="result" id="result"></div>
   </div>
-
-  <div class="result" id="result"></div>
 </div>
 
 <script>
-
-// 🔥 결과 공개 날짜 (원하는 날짜로 수정 가능)
 const releaseDate = new Date("2026-01-01T00:00:00");
-
-// 🔥 여기에 CSV 공개 링크 넣기
 const sheetURL = "YOUR_CSV_LINK_HERE";
 
-const now = new Date();
-
-if(now < releaseDate){
+if(new Date() < releaseDate){
   document.getElementById("beforeMessage").style.display = "block";
   document.getElementById("beforeMessage").innerText =
   "2026년 1월 1일까지는 결과 확인 기간이 아닙니다.";
   document.getElementById("formArea").style.display = "none";
 }
 
-async function checkResult(){
-
-  const studentId = document.getElementById("studentId").value.trim();
-  const name = document.getElementById("name").value.trim();
-  const resultBox = document.getElementById("result");
-
-  resultBox.className = "result";
-
-  if(!studentId || !name){
-    resultBox.innerText = "학번과 이름을 모두 입력하세요.";
-    return;
-  }
-
-  try{
-    const response = await fetch(sheetURL);
-    const data = await response.text();
-    const rows = data.split("\n").slice(1); // 헤더 제외
-
-    let found = false;
-
-    for(let row of rows){
-      const cols = row.split(",");
-      const sheetStudentId = cols[1]?.trim(); // B열
-      const sheetName = cols[2]?.trim(); // C열
-      const status = cols[4]?.trim(); // E열
-
-      if(sheetStudentId === studentId && sheetName === name){
-        found = true;
-
-        if(status === "합격"){
-          resultBox.innerText = "🎉 합격입니다!";
-          resultBox.classList.add("success");
-        } else {
-          resultBox.innerText = "아쉽지만 불합격입니다.";
-          resultBox.classList.add("fail");
-        }
-        break;
-      }
-    }
-
-    if(!found){
-      resultBox.innerText = "일치하는 정보가 없습니다.";
-    }
-
-  }catch(error){
-    resultBox.innerText = "데이터를 불러오는 중 오류가 발생했습니다.";
-  }
+function toggleMenu(){
+  document.getElementById("sideMenu").classList.toggle("open");
 }
-
 </script>
 
 </body>
