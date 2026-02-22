@@ -12,7 +12,7 @@ html, body {
   height: 100%;
 }
 
-/* 🔥 배경 (루트 기준 경로) */
+/* 🔥 배경 (어두운 레이어 없음) */
 body {
   font-family: Arial, sans-serif;
   background: url("/bg1.png") no-repeat center center fixed;
@@ -28,14 +28,6 @@ body {
   }
 }
 
-/* 어둡게 */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  z-index: 0;
-}
-
 /* 🔥 햄버거 버튼 (왼쪽 상단 크게) */
 .menu-btn {
   position: fixed;
@@ -44,7 +36,7 @@ body {
   width: 60px;
   height: 60px;
   cursor: pointer;
-  z-index: 3;
+  z-index: 10;
 }
 
 .menu-btn img {
@@ -63,7 +55,7 @@ body {
   background: #111;
   padding-top: 120px;
   transition: 0.3s ease;
-  z-index: 2;
+  z-index: 9;
 }
 
 .side-menu a {
@@ -84,22 +76,20 @@ body {
 
 /* 중앙 정렬 */
 .wrapper {
-  position: relative;
-  z-index: 1;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* 박스 */
+/* 메인 박스 */
 .container {
   width: 90%;
   max-width: 420px;
   background: rgba(255,255,255,0.95);
   padding: 40px 30px;
   border-radius: 15px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
   text-align: center;
 }
 
@@ -144,9 +134,7 @@ button:hover {
 
 <body>
 
-<div class="overlay"></div>
-
-<!-- 🔥 이미지 햄버거 -->
+<!-- 🔥 햄버거 -->
 <div class="menu-btn" onclick="toggleMenu()">
   <img src="/hamburgerbotton.png" alt="menu">
 </div>
@@ -175,12 +163,12 @@ button:hover {
 
 <script>
 const releaseDate = new Date("2026-01-01T00:00:00");
-const sheetURL = "YOUR_CSV_LINK_HERE";
+const sheetURL = "YOUR_CSV_LINK_HERE"; // 🔥 여기에 CSV 공개 링크 넣기
 
 if(new Date() < releaseDate){
   document.getElementById("beforeMessage").style.display = "block";
   document.getElementById("beforeMessage").innerText =
-  "2026년 1월 1일까지는 결과 확인 기간이 아닙니다.";
+    "2026년 1월 1일까지는 결과 확인 기간이 아닙니다.";
   document.getElementById("formArea").style.display = "none";
 }
 
@@ -207,9 +195,9 @@ async function checkResult(){
 
     for(let row of rows){
       const cols = row.split(",");
-      const sheetStudentId = cols[1]?.trim();
-      const sheetName = cols[2]?.trim();
-      const status = cols[4]?.trim();
+      const sheetStudentId = cols[1]?.trim(); // B열
+      const sheetName = cols[2]?.trim();      // C열
+      const status = cols[4]?.trim();         // E열
 
       if(sheetStudentId === studentId && sheetName === name){
         found = true;
