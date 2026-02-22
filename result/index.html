@@ -14,19 +14,30 @@ html, body {
 
 body {
   font-family: Arial, sans-serif;
-  min-height: 100svh; /* 🔥 모바일 정확 중앙 핵심 */
+  min-height: 100svh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #1f1f1f, #2d2d2d);
+
+  /* 💻 기본 배경 (PC) */
+  background-image: url("bg1.png");
   background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-/* 배경 위 반투명 효과 */
+/* 📱 모바일 배경 */
+@media screen and (max-width: 600px) {
+  body {
+    background-image: url("bg2.png");
+  }
+}
+
+/* 배경 위 어둡게 */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.55);
   z-index: 0;
 }
 
@@ -38,7 +49,7 @@ body {
   background: rgba(255,255,255,0.95);
   padding: 40px 30px;
   border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   text-align: center;
 }
 
@@ -53,7 +64,7 @@ input {
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  box-sizing: border-box;
+  box-sizing: border-box; /* 🔥 좌우 정확히 맞춤 */
 }
 
 button {
@@ -66,8 +77,8 @@ button {
   background: #111;
   color: white;
   cursor: pointer;
-  transition: 0.3s;
   box-sizing: border-box;
+  transition: 0.3s;
 }
 
 button:hover {
@@ -110,7 +121,10 @@ button:hover {
 
 <script>
 
+// 🔥 결과 공개 날짜 (원하는 날짜로 수정 가능)
 const releaseDate = new Date("2026-01-01T00:00:00");
+
+// 🔥 여기에 CSV 공개 링크 넣기
 const sheetURL = "YOUR_CSV_LINK_HERE";
 
 const now = new Date();
@@ -138,15 +152,15 @@ async function checkResult(){
   try{
     const response = await fetch(sheetURL);
     const data = await response.text();
-    const rows = data.split("\n").slice(1);
+    const rows = data.split("\n").slice(1); // 헤더 제외
 
     let found = false;
 
     for(let row of rows){
       const cols = row.split(",");
-      const sheetStudentId = cols[1]?.trim();
-      const sheetName = cols[2]?.trim();
-      const status = cols[4]?.trim();
+      const sheetStudentId = cols[1]?.trim(); // B열
+      const sheetName = cols[2]?.trim(); // C열
+      const status = cols[4]?.trim(); // E열
 
       if(sheetStudentId === studentId && sheetName === name){
         found = true;
