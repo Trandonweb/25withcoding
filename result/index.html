@@ -6,72 +6,91 @@
 <title>2026 코딩과 함께라면 결과 확인</title>
 
 <style>
-body{
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
   font-family: Arial, sans-serif;
-  margin:0;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:#f2f2f2;
+  min-height: 100svh; /* 🔥 모바일 정확 중앙 핵심 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1f1f1f, #2d2d2d);
+  background-size: cover;
 }
 
-.container{
-  width:90%;
-  max-width:400px;
-  background:white;
-  padding:40px 30px;
-  border-radius:12px;
-  box-shadow:0 5px 20px rgba(0,0,0,0.15);
-  text-align:center;
+/* 배경 위 반투명 효과 */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 0;
 }
 
-h2{
-  margin-bottom:25px;
+.container {
+  position: relative;
+  z-index: 1;
+  width: 90%;
+  max-width: 420px;
+  background: rgba(255,255,255,0.95);
+  padding: 40px 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  text-align: center;
 }
 
-input{
-  width:100%;
-  padding:12px;
-  margin:10px 0;
-  font-size:16px;
-  border:1px solid #ccc;
-  border-radius:6px;
+h2 {
+  margin-bottom: 25px;
 }
 
-button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  font-size:16px;
-  border:none;
-  border-radius:6px;
-  background:#222;
-  color:white;
-  cursor:pointer;
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
-button:hover{
-  background:#444;
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  background: #111;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
-.result{
-  margin-top:20px;
-  font-weight:bold;
-  font-size:18px;
+button:hover {
+  background: #333;
 }
 
-.success{
-  color:green;
+.result {
+  margin-top: 20px;
+  font-weight: bold;
+  font-size: 18px;
 }
 
-.fail{
-  color:red;
+.success {
+  color: #1e8e3e;
+}
+
+.fail {
+  color: #d93025;
 }
 </style>
 </head>
 
 <body>
+
+<div class="overlay"></div>
 
 <div class="container">
   <h2>2026 코딩과 함께라면 2기 결과 확인</h2>
@@ -89,10 +108,7 @@ button:hover{
 
 <script>
 
-// 🔥 결과 공개 날짜 설정 (2026년 1월 1일 00:00)
 const releaseDate = new Date("2026-01-01T00:00:00");
-
-// 🔥 여기에 CSV 공개 링크 넣기
 const sheetURL = "YOUR_CSV_LINK_HERE";
 
 const now = new Date();
@@ -120,17 +136,15 @@ async function checkResult(){
   try{
     const response = await fetch(sheetURL);
     const data = await response.text();
-
-    const rows = data.split("\n").slice(1); // 헤더 제외
+    const rows = data.split("\n").slice(1);
 
     let found = false;
 
     for(let row of rows){
       const cols = row.split(",");
-
-      const sheetStudentId = cols[1]?.trim(); // B열
-      const sheetName = cols[2]?.trim(); // C열
-      const status = cols[4]?.trim(); // E열
+      const sheetStudentId = cols[1]?.trim();
+      const sheetName = cols[2]?.trim();
+      const status = cols[4]?.trim();
 
       if(sheetStudentId === studentId && sheetName === name){
         found = true;
