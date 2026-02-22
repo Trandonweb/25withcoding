@@ -29,12 +29,12 @@ body {
 }
 
 /* ===================== */
-/* 햄버거 버튼 (125% 크게) */
+/* 햄버거 버튼 (기존 38px → 110% 증가) */
 .hamburger {
   position: fixed;
   top: 22px;
   left: 22px;
-  font-size: 38px; /* 기존 30px → 125% */
+  font-size: 42px; /* 38px × 1.1 ≈ 42px */
   font-weight: bold;
   cursor: pointer;
   z-index: 1001;
@@ -53,17 +53,16 @@ body {
   transition: 0.3s ease;
   padding-top: 60px;
   z-index: 1000;
-  text-align: center; /* 가운데 정렬 */
+  text-align: center;
 }
 
-/* 열렸을 때 */
 .sidebar.open {
   left: 0;
 }
 
-/* 로고 */
+/* 로고 (80% 축소) */
 .sidebar .logo {
-  width: 120px;
+  width: 96px; /* 기존 120px → 80% */
   margin-bottom: 40px;
 }
 
@@ -100,6 +99,7 @@ body {
   text-align: center;
 }
 
+/* 🔥 입력칸 정렬 정확히 맞춤 */
 input {
   width: 100%;
   padding: 14px;
@@ -107,8 +107,10 @@ input {
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 8px;
+  box-sizing: border-box; /* 핵심 */
 }
 
+/* 버튼도 동일 정렬 */
 button {
   width: 100%;
   padding: 14px;
@@ -119,6 +121,7 @@ button {
   background: #111;
   color: white;
   cursor: pointer;
+  box-sizing: border-box; /* 정렬 맞춤 */
 }
 
 button:hover {
@@ -182,7 +185,7 @@ document.addEventListener("click", function(){
   sidebar.classList.remove("open");
 });
 
-/* 결과 확인 로직 유지 */
+/* 결과 확인 로직 */
 const releaseDate = new Date("2026-01-01T00:00:00");
 const sheetURL = "YOUR_CSV_LINK_HERE";
 
