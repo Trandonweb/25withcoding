@@ -12,17 +12,18 @@ html, body {
   height: 100%;
 }
 
-/* 🔥 body는 배경만 담당 */
+/* 🔥 배경 (루트 기준 경로) */
 body {
   font-family: Arial, sans-serif;
-  background: url("bg1.png") no-repeat center center fixed;
+  background: url("/bg1.png") no-repeat center center fixed;
   background-size: cover;
+  min-height: 100vh;
 }
 
 /* 📱 모바일 배경 */
 @media screen and (max-width: 600px) {
   body {
-    background: url("bg2.png") no-repeat center center fixed;
+    background: url("/bg2.png") no-repeat center center fixed;
     background-size: cover;
   }
 }
@@ -35,35 +36,42 @@ body {
   z-index: 0;
 }
 
-/* 햄버거 */
+/* 🔥 햄버거 버튼 (왼쪽 상단 크게) */
 .menu-btn {
   position: fixed;
   top: 20px;
-  right: 20px;
-  font-size: 28px;
-  color: white;
+  left: 20px;
+  width: 60px;
+  height: 60px;
   cursor: pointer;
   z-index: 3;
+}
+
+.menu-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* 사이드 메뉴 */
 .side-menu {
   position: fixed;
   top: 0;
-  right: -240px;
-  width: 220px;
+  left: -260px;
+  width: 240px;
   height: 100%;
   background: #111;
-  padding-top: 80px;
-  transition: 0.3s;
+  padding-top: 120px;
+  transition: 0.3s ease;
   z-index: 2;
 }
 
 .side-menu a {
   display: block;
   color: white;
-  padding: 15px 25px;
+  padding: 18px 30px;
   text-decoration: none;
+  font-size: 18px;
 }
 
 .side-menu a:hover {
@@ -71,10 +79,10 @@ body {
 }
 
 .side-menu.open {
-  right: 0;
+  left: 0;
 }
 
-/* 🔥 가운데 정렬용 래퍼 */
+/* 중앙 정렬 */
 .wrapper {
   position: relative;
   z-index: 1;
@@ -84,37 +92,46 @@ body {
   align-items: center;
 }
 
-/* 메인 박스 */
+/* 박스 */
 .container {
   width: 90%;
   max-width: 420px;
   background: rgba(255,255,255,0.95);
   padding: 40px 30px;
   border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.5);
   text-align: center;
+}
+
+h2 {
+  margin-bottom: 25px;
 }
 
 input {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   margin: 10px 0;
   font-size: 16px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 8px;
   box-sizing: border-box;
 }
 
 button {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   margin-top: 10px;
   font-size: 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #111;
   color: white;
   cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #333;
 }
 
 .result {
@@ -129,7 +146,10 @@ button {
 
 <div class="overlay"></div>
 
-<div class="menu-btn" onclick="toggleMenu()">☰</div>
+<!-- 🔥 이미지 햄버거 -->
+<div class="menu-btn" onclick="toggleMenu()">
+  <img src="/hamburgerbotton.png" alt="menu">
+</div>
 
 <div class="side-menu" id="sideMenu">
   <a href="/">홈</a>
@@ -166,6 +186,46 @@ if(new Date() < releaseDate){
 
 function toggleMenu(){
   document.getElementById("sideMenu").classList.toggle("open");
+}
+
+async function checkResult(){
+  const studentId = document.getElementById("studentId").value.trim();
+  const name = document.getElementById("name").value.trim();
+  const resultBox = document.getElementById("result");
+
+  if(!studentId || !name){
+    resultBox.innerText = "학번과 이름을 모두 입력하세요.";
+    return;
+  }
+
+  try{
+    const response = await fetch(sheetURL);
+    const data = await response.text();
+    const rows = data.split("\n").slice(1);
+
+    let found = false;
+
+    for(let row of rows){
+      const cols = row.split(",");
+      const sheetStudentId = cols[1]?.trim();
+      const sheetName = cols[2]?.trim();
+      const status = cols[4]?.trim();
+
+      if(sheetStudentId === studentId && sheetName === name){
+        found = true;
+        resultBox.innerText =
+          status === "합격" ? "🎉 합격입니다!" : "아쉽지만 불합격입니다.";
+        break;
+      }
+    }
+
+    if(!found){
+      resultBox.innerText = "일치하는 정보가 없습니다.";
+    }
+
+  }catch{
+    resultBox.innerText = "데이터를 불러오는 중 오류가 발생했습니다.";
+  }
 }
 </script>
 
