@@ -1,1 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 코딩과 함께라면 결과 확인</title>
 
+<style>
+body{
+  font-family: Arial, sans-serif;
+  text-align:center;
+  padding:40px;
+  background:#f5f5f5;
+}
+
+.container{
+  max-width:400px;
+  margin:0 auto;
+  background:white;
+  padding:30px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  font-size:16px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  font-size:16px;
+  cursor:pointer;
+}
+
+.result{
+  margin-top:20px;
+  font-weight:bold;
+  font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>2026 코딩과 함께라면 2기 결과 확인</h2>
+
+<div id="beforeMessage" style="display:none; font-weight:bold;"></div>
+
+<div id="formArea">
+  <input type="text" id="studentId" placeholder="학번 입력">
+  <input type="text" id="name" placeholder="이름 입력">
+  <button onclick="checkResult()">결과 확인</button>
+</div>
+
+<div class="result" id="result"></div>
+</div>
+
+<script>
+
+// 🔥 결과 공개 날짜 설정 (2026년 1월 1일)
+const releaseDate = new Date("2026-01-01T00:00:00");
+
+// 🔥 CSV 링크 넣기
+const sheetURL = "YOUR_CSV_LINK_HERE";
+
+const now = new Date();
+
+if(now < releaseDate){
+  document.getElementById("beforeMessage").style.display = "block";
+  document.getElementById("beforeMessage").innerText =
+  "2026년 1월 1일까지는 결과 확인 기간이 아닙니다.";
+  document.getElementById("formArea").style.display = "none";
+}
+
+async function checkResult(){
+
+  const studentId = document.getElementById("studentId").value.trim();
+  const name = document.getElementById("name").value.trim();
+  const resultBox = document.getElementById("result");
+
+  if(!studentId || !name){
+    resultBox.innerText = "학번과 이름을 모두 입력하세요.";
+    return;
+  }
+
+  try{
+    const response = await fetch(sheetURL);
+    const data = await response.text();
+
+    const rows = data.split("\n").slice(1); // 첫 줄(헤더) 제외
+
+    let found = false;
+
+    for(let row of rows){
+      const cols = row.split(",");
+
+      const sheetStudentId = cols[1]?.trim(); // B열
+      const sheetName = cols[2]?.trim(); // C열
+      const status = cols[4]?.trim(); // E열
+
+      if(sheetStudentId === studentId && sheetName === name){
+        found = true;
+        resultBox.innerText = "결과: " + status;
+        break;
+      }
+    }
+
+    if(!found){
+      resultBox.innerText = "일치하는 정보가 없습니다.";
+    }
+
+  }catch(error){
+    resultBox.innerText = "데이터를 불러오는 중 오류가 발생했습니다.";
+  }
+}
+
+</script>
+
+</body>
+</html>
