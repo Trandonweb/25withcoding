@@ -12,7 +12,7 @@ html, body {
   height: 100%;
 }
 
-/* 🔥 배경 (어두운 레이어 없음) */
+/* 🔥 배경 */
 body {
   font-family: Arial, sans-serif;
   background: url("/bg1.png") no-repeat center center fixed;
@@ -20,7 +20,7 @@ body {
   min-height: 100vh;
 }
 
-/* 📱 모바일 배경 */
+/* 📱 모바일 */
 @media screen and (max-width: 600px) {
   body {
     background: url("/bg2.png") no-repeat center center fixed;
@@ -28,13 +28,13 @@ body {
   }
 }
 
-/* 🔥 햄버거 버튼 (왼쪽 상단 크게) */
+/* 🔥 햄버거 버튼 (기존 60px → 48px = 80%) */
 .menu-btn {
   position: fixed;
   top: 20px;
   left: 20px;
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   cursor: pointer;
   z-index: 10;
 }
@@ -163,7 +163,7 @@ button:hover {
 
 <script>
 const releaseDate = new Date("2026-01-01T00:00:00");
-const sheetURL = "YOUR_CSV_LINK_HERE"; // 🔥 여기에 CSV 공개 링크 넣기
+const sheetURL = "YOUR_CSV_LINK_HERE"; // 🔥 CSV 공개 링크 넣기
 
 if(new Date() < releaseDate){
   document.getElementById("beforeMessage").style.display = "block";
@@ -195,9 +195,9 @@ async function checkResult(){
 
     for(let row of rows){
       const cols = row.split(",");
-      const sheetStudentId = cols[1]?.trim(); // B열
-      const sheetName = cols[2]?.trim();      // C열
-      const status = cols[4]?.trim();         // E열
+      const sheetStudentId = cols[1]?.trim();
+      const sheetName = cols[2]?.trim();
+      const status = cols[4]?.trim();
 
       if(sheetStudentId === studentId && sheetName === name){
         found = true;
