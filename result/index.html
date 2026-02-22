@@ -12,7 +12,6 @@ html, body {
   height: 100%;
 }
 
-/* 배경 유지 */
 body {
   font-family: Arial, sans-serif;
   background: url("/bg1.png") no-repeat center center fixed;
@@ -29,16 +28,17 @@ body {
 }
 
 /* ===================== */
-/* 햄버거 버튼 (기존 38px → 110% 증가) */
+/* 햄버거 버튼 */
 .hamburger {
   position: fixed;
   top: 22px;
-  left: 22px;
-  font-size: 42px; /* 38px × 1.1 ≈ 42px */
+  left: 10px; /* 더 바깥쪽 */
+  font-size: 42px;
   font-weight: bold;
   cursor: pointer;
   z-index: 1001;
   color: black;
+  transform: scaleX(1.2); /* 살짝 가로로 길쭉 */
 }
 
 /* ===================== */
@@ -51,7 +51,7 @@ body {
   height: 100%;
   background: #e9e9e9;
   transition: 0.3s ease;
-  padding-top: 60px;
+  padding-top: 90px; /* 전체 아래로 이동 */
   z-index: 1000;
   text-align: center;
 }
@@ -60,16 +60,16 @@ body {
   left: 0;
 }
 
-/* 로고 (80% 축소) */
+/* 로고 */
 .sidebar .logo {
-  width: 96px; /* 기존 120px → 80% */
-  margin-bottom: 40px;
+  width: 96px;
+  margin-bottom: 30px;
 }
 
 /* 메뉴 항목 */
 .sidebar a {
   display: block;
-  padding: 20px 0;
+  padding: 14px 0; /* 간격 줄임 */
   font-size: 20px;
   font-weight: 700;
   color: black;
@@ -99,7 +99,6 @@ body {
   text-align: center;
 }
 
-/* 🔥 입력칸 정렬 정확히 맞춤 */
 input {
   width: 100%;
   padding: 14px;
@@ -107,10 +106,9 @@ input {
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  box-sizing: border-box; /* 핵심 */
+  box-sizing: border-box;
 }
 
-/* 버튼도 동일 정렬 */
 button {
   width: 100%;
   padding: 14px;
@@ -121,7 +119,7 @@ button {
   background: #111;
   color: white;
   cursor: pointer;
-  box-sizing: border-box; /* 정렬 맞춤 */
+  box-sizing: border-box;
 }
 
 button:hover {
@@ -138,10 +136,8 @@ button:hover {
 
 <body>
 
-<!-- 햄버거 -->
 <div class="hamburger" id="hamburger">☰</div>
 
-<!-- 사이드바 -->
 <div class="sidebar" id="sidebar">
   <img src="/logo.png" alt="logo" class="logo">
   <a href="/">홈</a>
@@ -169,23 +165,20 @@ button:hover {
 const sidebar = document.getElementById("sidebar");
 const hamburger = document.getElementById("hamburger");
 
-/* 햄버거 클릭 (다시 누르면 닫힘) */
 hamburger.addEventListener("click", function(e){
   e.stopPropagation();
   sidebar.classList.toggle("open");
 });
 
-/* 사이드바 안 클릭 시 안 닫힘 */
 sidebar.addEventListener("click", function(e){
   e.stopPropagation();
 });
 
-/* 바깥 클릭 시 닫기 */
 document.addEventListener("click", function(){
   sidebar.classList.remove("open");
 });
 
-/* 결과 확인 로직 */
+/* 결과 확인 로직 유지 */
 const releaseDate = new Date("2026-01-01T00:00:00");
 const sheetURL = "YOUR_CSV_LINK_HERE";
 
