@@ -98,7 +98,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 🔥 관리자 상태 유지
+// 🔥 관리자 유지
 let isAdmin = localStorage.getItem("isAdmin") === "true";
 
 function checkAdmin() {
@@ -122,28 +122,36 @@ function logoutAdmin() {
   alert("로그아웃됨");
 }
 
-// 관리자 패널
+// 관리자 UI
 function toggleAdmin() {
   const p = document.getElementById("adminPanel");
   p.style.display = p.style.display === "none" ? "block" : "none";
 }
 
-// 🔥 결과 상태 (DB)
+// 🔥 상태 변수
 let showResult = false;
+let candidatesData = {};
 
+// 🔥 결과 상태 (실시간)
 db.ref("settings/" + voteType + "/showResult")
 .on("value", snap => {
   showResult = snap.val() || false;
+  render(); // 🔥 핵심
 });
 
-// 후보 렌더링
+// 🔥 후보 데이터 (실시간)
 db.ref("votes/" + voteType + "/candidates")
 .on("value", snap => {
-  const data = snap.val() || {};
+  candidatesData = snap.val() || {};
+  render(); // 🔥 핵심
+});
+
+// 🔥 렌더 함수
+function render() {
   const div = document.getElementById("candidates");
   div.innerHTML = "";
 
-  for (let name in data) {
+  for (let name in candidatesData) {
     const card = document.createElement("div");
     card.className = "card";
 
@@ -151,7 +159,9 @@ db.ref("votes/" + voteType + "/candidates")
     title.innerText = name;
 
     const score = document.createElement("p");
-    score.innerText = showResult ? "득표: " + data[name] : "투표 진행중";
+    score.innerText = showResult 
+      ? "득표: " + candidatesData[name]
+      : "투표 진행중";
 
     const voteBtn = document.createElement("button");
     voteBtn.innerText = "투표";
@@ -168,7 +178,7 @@ db.ref("votes/" + voteType + "/candidates")
 
     div.appendChild(card);
   }
-});
+}
 
 // 투표
 function vote(name) {
@@ -211,12 +221,9 @@ function deleteCandidate(name) {
 function resetVotes() {
   if (!checkAdmin()) return;
 
-  db.ref("votes/" + voteType + "/candidates").once("value", snap => {
-    const data = snap.val();
-    for (let n in data) {
-      db.ref("votes/" + voteType + "/candidates/" + n).set(0);
-    }
-  });
+  for (let name in candidatesData) {
+    db.ref("votes/" + voteType + "/candidates/" + name).set(0);
+  }
 }
 
 // 투표권 초기화
