@@ -1,1 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>1학년 부장 투표</title>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<style>
+body {
+  font-family: sans-serif;
+  text-align: center;
+  background: #111;
+  color: white;
+}
+h1 {
+  margin-top: 30px;
+}
+button {
+  margin: 10px;
+  padding: 12px 25px;
+  font-size: 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+input {
+  margin: 5px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>1학년 부장 투표</h1>
+
+<h3>학번 입력</h3>
+<input type="text" id="studentId" placeholder="예: 20623">
+
+<div id="candidates"></div>
+
+<hr>
+
+<h3>후보 추가 (관리자)</h3>
+<input type="text" id="name" placeholder="이름">
+<input type="password" id="key" placeholder="암호">
+<button onclick="addCandidate()">추가</button>
+
+<script>
+
+// 🔥 설정
+const voteType = "vote1";
+const adminKey = "zheldrhkgkaRpfkaus";
+
+// 🔥 허용 학번 리스트
+const validStudents = [
+"20623","20417","20522","20524","20813","20921",
+"10814","10810","10805","10206","10212","10403"
+];
+
+// 🔥 Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCWRXgzbdMRzGw_uG66OqCkc0zoa9Iyx4c",
+  authDomain: "withcoding-ff116.firebaseapp.com",
+  databaseURL: "https://withcoding-ff116-default-rtdb.firebaseio.com",
+  projectId: "withcoding-ff116",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// 🔥 후보 불러오기 (실시간)
+db.ref("votes/" + voteType + "/candidates")
+  .on("value", snapshot => {
+    const data = snapshot.val() || {};
+    const div = document.getElementById("candidates");
+    div.innerHTML = "";
+
+    for (let name in data) {
+      const btn = document.createElement("button");
+      btn.innerText = name + " (" + data[name] + ")";
+      btn.onclick = () => vote(name);
+      div.appendChild(btn);
+    }
+  });
+
+// 🔥 투표 함수
+function vote(name) {
+  const studentId = document.getElementById("studentId").value.trim();
+
+  if (!studentId) {
+    alert("학번 입력해라");
+    return;
+  }
+
+  if (!validStudents.includes(studentId)) {
+    alert("허용된 학번이 아니다");
+    return;
+  }
+
+  const voterRef = db.ref("voters/" + voteType + "/" + studentId);
+
+  voterRef.get().then(snapshot => {
+    if (snapshot.exists()) {
+      alert("이미 투표했다");
+      return;
+    }
+
+    const voteRef = db.ref("votes/" + voteType + "/candidates/" + name);
+    voteRef.transaction(current => (current || 0) + 1);
+
+    voterRef.set(true);
+
+    alert("투표 완료");
+  });
+}
+
+// 🔥 후보 추가
+function addCandidate() {
+  const name = document.getElementById("name").value;
+  const key = document.getElementById("key").value;
+
+  if (key !== adminKey) {
+    alert("암호 틀림");
+    return;
+  }
+
+  if (!name) {
+    alert("이름 입력");
+    return;
+  }
+
+  db.ref("votes/" + voteType + "/candidates/" + name).set(0);
+
+  alert("추가 완료");
+}
+
+</script>
+
+</body>
+</html>
