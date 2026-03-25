@@ -15,42 +15,36 @@ body {
   color: white;
 }
 
-h1 { margin-top: 30px; }
+input {
+  padding: 15px;
+  font-size: 20px;
+  width: 260px;
+  margin: 10px;
+  border-radius: 10px;
+}
+
+.card {
+  background: #222;
+  margin: 15px auto;
+  padding: 15px;
+  width: 300px;
+  border-radius: 15px;
+}
 
 button {
-  margin: 10px;
-  padding: 14px 30px;
-  font-size: 18px;
+  margin: 5px;
+  padding: 10px 20px;
   border-radius: 10px;
-  border: none;
   cursor: pointer;
 }
 
-/* 🔥 입력칸 크게 */
-input {
-  margin: 10px;
-  padding: 15px;
-  font-size: 20px;
-  width: 250px;
-  border-radius: 10px;
-  border: none;
-}
-
-/* 후보 */
-.candidate {
-  margin: 15px;
-}
-
-/* 관리자 버튼 */
 #adminToggle {
   position: fixed;
   bottom: 10px;
   right: 10px;
-  font-size: 14px;
   opacity: 0.3;
 }
 
-/* 관리자 패널 */
 #adminPanel {
   display: none;
   position: fixed;
@@ -59,7 +53,6 @@ input {
   background: #222;
   padding: 15px;
   border-radius: 10px;
-  width: 250px;
 }
 </style>
 </head>
@@ -68,29 +61,25 @@ input {
 
 <h1>1학년 부장 투표</h1>
 
-<h3>학번 입력</h3>
-<input type="text" id="studentId" placeholder="예: 20623">
+<input id="studentId" placeholder="학번 입력">
 
 <div id="candidates"></div>
 
-<!-- 관리자 버튼 -->
 <button id="adminToggle" onclick="toggleAdmin()">⚙</button>
 
-<!-- 관리자 패널 -->
 <div id="adminPanel">
-  <h3>관리자</h3>
-  <input type="text" id="name" placeholder="이름">
-  <input type="password" id="key" placeholder="암호"><br>
+  <input id="name" placeholder="이름">
+  <input id="key" type="password" placeholder="암호"><br>
 
   <button onclick="addCandidate()">후보 추가</button>
   <button onclick="resetVotes()">투표 초기화</button>
   <button onclick="resetVoters()">투표권 초기화</button>
   <button onclick="toggleResult()">결과 공개/숨김</button>
+  <button onclick="logoutAdmin()">관리자 로그아웃</button>
 </div>
 
 <script>
 
-// 설정
 const voteType = "vote1";
 const adminKey = "zheldrhkgkaRpfkaus";
 
@@ -109,54 +98,89 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// 🔥 관리자 상태 유지
+let isAdmin = localStorage.getItem("isAdmin") === "true";
+
+function checkAdmin() {
+  if (isAdmin) return true;
+
+  const key = prompt("관리자 암호");
+  if (key === adminKey) {
+    isAdmin = true;
+    localStorage.setItem("isAdmin", "true");
+    alert("관리자 인증됨");
+    return true;
+  }
+
+  alert("암호 틀림");
+  return false;
+}
+
+function logoutAdmin() {
+  isAdmin = false;
+  localStorage.removeItem("isAdmin");
+  alert("로그아웃됨");
+}
+
 // 관리자 패널
 function toggleAdmin() {
   const p = document.getElementById("adminPanel");
   p.style.display = p.style.display === "none" ? "block" : "none";
 }
 
-// 결과 상태
+// 🔥 결과 상태 (DB)
 let showResult = false;
 
-// 후보 표시
+db.ref("settings/" + voteType + "/showResult")
+.on("value", snap => {
+  showResult = snap.val() || false;
+});
+
+// 후보 렌더링
 db.ref("votes/" + voteType + "/candidates")
-.on("value", snapshot => {
-  const data = snapshot.val() || {};
+.on("value", snap => {
+  const data = snap.val() || {};
   const div = document.getElementById("candidates");
   div.innerHTML = "";
 
   for (let name in data) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "candidate";
+    const card = document.createElement("div");
+    card.className = "card";
 
-    const btn = document.createElement("button");
-    btn.innerText = showResult 
-      ? name + " (" + data[name] + ")" 
-      : name;
+    const title = document.createElement("h2");
+    title.innerText = name;
 
-    btn.onclick = () => vote(name);
+    const score = document.createElement("p");
+    score.innerText = showResult ? "득표: " + data[name] : "투표 진행중";
 
-    const del = document.createElement("button");
-    del.innerText = "❌";
-    del.onclick = () => deleteCandidate(name);
+    const voteBtn = document.createElement("button");
+    voteBtn.innerText = "투표";
+    voteBtn.onclick = () => vote(name);
 
-    wrapper.appendChild(btn);
-    wrapper.appendChild(del);
-    div.appendChild(wrapper);
+    const delBtn = document.createElement("button");
+    delBtn.innerText = "삭제";
+    delBtn.onclick = () => deleteCandidate(name);
+
+    card.appendChild(title);
+    card.appendChild(score);
+    card.appendChild(voteBtn);
+    card.appendChild(delBtn);
+
+    div.appendChild(card);
   }
 });
 
 // 투표
 function vote(name) {
-  const studentId = document.getElementById("studentId").value.trim();
+  const id = document.getElementById("studentId").value.trim();
 
-  if (!studentId) return alert("학번 입력해라");
-  if (!validStudents.includes(studentId)) return alert("허용된 학번이 아니다");
+  if (!id) return alert("학번 입력");
+  if (!validStudents.includes(id)) return alert("허용된 학번 아님");
 
-  const voterRef = db.ref("voters/" + voteType + "/" + studentId);
+  const voterRef = db.ref("voters/" + voteType + "/" + id);
 
   voterRef.get().then(s => {
-    if (s.exists()) return alert("이미 투표했다");
+    if (s.exists()) return alert("이미 투표");
 
     db.ref("votes/" + voteType + "/candidates/" + name)
       .transaction(c => (c || 0) + 1);
@@ -168,10 +192,9 @@ function vote(name) {
 
 // 후보 추가
 function addCandidate() {
-  const name = document.getElementById("name").value;
-  const key = document.getElementById("key").value;
+  if (!checkAdmin()) return;
 
-  if (key !== adminKey) return alert("암호 틀림");
+  const name = document.getElementById("name").value;
   if (!name) return alert("이름 입력");
 
   db.ref("votes/" + voteType + "/candidates/" + name).set(0);
@@ -179,47 +202,36 @@ function addCandidate() {
 
 // 삭제
 function deleteCandidate(name) {
-  const key = prompt("관리자 암호");
-
-  if (key !== adminKey) return alert("암호 틀림");
+  if (!checkAdmin()) return;
 
   db.ref("votes/" + voteType + "/candidates/" + name).remove();
 }
 
-// 🔥 투표 초기화
+// 투표 초기화
 function resetVotes() {
-  const key = prompt("관리자 암호");
-  if (key !== adminKey) return alert("암호 틀림");
+  if (!checkAdmin()) return;
 
   db.ref("votes/" + voteType + "/candidates").once("value", snap => {
-    const data = snap.val() || {};
-    for (let name in data) {
-      db.ref("votes/" + voteType + "/candidates/" + name).set(0);
+    const data = snap.val();
+    for (let n in data) {
+      db.ref("votes/" + voteType + "/candidates/" + n).set(0);
     }
   });
-
-  alert("투표 초기화 완료");
 }
 
-// 🔥 투표권 초기화
+// 투표권 초기화
 function resetVoters() {
-  const key = prompt("관리자 암호");
-  if (key !== adminKey) return alert("암호 틀림");
+  if (!checkAdmin()) return;
 
   db.ref("voters/" + voteType).remove();
-  alert("투표권 초기화 완료");
 }
 
-// 🔥 결과 공개/숨김
+// 결과 공개/숨김
 function toggleResult() {
-  const key = prompt("관리자 암호");
-  if (key !== adminKey) return alert("암호 틀림");
+  if (!checkAdmin()) return;
 
-  showResult = !showResult;
-  alert(showResult ? "결과 공개됨" : "결과 숨김됨");
-
-  // 강제 새로고침 느낌
-  db.ref("votes/" + voteType + "/candidates").once("value");
+  db.ref("settings/" + voteType + "/showResult")
+    .set(!showResult);
 }
 
 </script>
