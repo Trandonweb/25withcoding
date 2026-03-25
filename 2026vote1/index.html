@@ -14,9 +14,9 @@ body {
   background: #111;
   color: white;
 }
-h1 {
-  margin-top: 30px;
-}
+
+h1 { margin-top: 30px; }
+
 button {
   margin: 10px;
   padding: 12px 25px;
@@ -25,12 +25,31 @@ button {
   border: none;
   cursor: pointer;
 }
-input {
-  margin: 5px;
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 5px;
-  border: none;
+
+/* 후보 카드 */
+.candidate {
+  display: inline-block;
+  margin: 10px;
+}
+
+/* 관리자 버튼 (구석탱이) */
+#adminToggle {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  font-size: 12px;
+  opacity: 0.3;
+}
+
+/* 관리자 패널 */
+#adminPanel {
+  display: none;
+  position: fixed;
+  bottom: 50px;
+  right: 10px;
+  background: #222;
+  padding: 15px;
+  border-radius: 10px;
 }
 </style>
 </head>
@@ -44,12 +63,17 @@ input {
 
 <div id="candidates"></div>
 
-<hr>
+<!-- 🔥 관리자 버튼 -->
+<button id="adminToggle" onclick="toggleAdmin()">⚙</button>
 
-<h3>후보 추가 (관리자)</h3>
-<input type="text" id="name" placeholder="이름">
-<input type="password" id="key" placeholder="암호">
-<button onclick="addCandidate()">추가</button>
+<!-- 🔥 관리자 패널 -->
+<div id="adminPanel">
+  <h3>관리자</h3>
+  <input type="text" id="name" placeholder="이름">
+  <input type="password" id="key" placeholder="암호">
+  <br>
+  <button onclick="addCandidate()">추가</button>
+</div>
 
 <script>
 
@@ -57,13 +81,11 @@ input {
 const voteType = "vote1";
 const adminKey = "zheldrhkgkaRpfkaus";
 
-// 🔥 허용 학번 리스트
 const validStudents = [
 "20623","20417","20522","20524","20813","20921",
 "10814","10810","10805","10206","10212","10403"
 ];
 
-// 🔥 Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCWRXgzbdMRzGw_uG66OqCkc0zoa9Iyx4c",
   authDomain: "withcoding-ff116.firebaseapp.com",
@@ -74,7 +96,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 🔥 후보 불러오기 (실시간)
+// 🔥 관리자 패널 토글
+function toggleAdmin() {
+  const panel = document.getElementById("adminPanel");
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+}
+
+// 🔥 후보 불러오기
 db.ref("votes/" + voteType + "/candidates")
   .on("value", snapshot => {
     const data = snapshot.val() || {};
@@ -82,40 +110,41 @@ db.ref("votes/" + voteType + "/candidates")
     div.innerHTML = "";
 
     for (let name in data) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "candidate";
+
       const btn = document.createElement("button");
       btn.innerText = name + " (" + data[name] + ")";
       btn.onclick = () => vote(name);
-      div.appendChild(btn);
+
+      // 🔥 삭제 버튼
+      const del = document.createElement("button");
+      del.innerText = "❌";
+      del.style.fontSize = "12px";
+      del.onclick = () => deleteCandidate(name);
+
+      wrapper.appendChild(btn);
+      wrapper.appendChild(del);
+      div.appendChild(wrapper);
     }
   });
 
-// 🔥 투표 함수
+// 🔥 투표
 function vote(name) {
   const studentId = document.getElementById("studentId").value.trim();
 
-  if (!studentId) {
-    alert("학번 입력해라");
-    return;
-  }
-
-  if (!validStudents.includes(studentId)) {
-    alert("허용된 학번이 아니다");
-    return;
-  }
+  if (!studentId) return alert("학번 입력해라");
+  if (!validStudents.includes(studentId)) return alert("허용된 학번이 아니다");
 
   const voterRef = db.ref("voters/" + voteType + "/" + studentId);
 
   voterRef.get().then(snapshot => {
-    if (snapshot.exists()) {
-      alert("이미 투표했다");
-      return;
-    }
+    if (snapshot.exists()) return alert("이미 투표했다");
 
-    const voteRef = db.ref("votes/" + voteType + "/candidates/" + name);
-    voteRef.transaction(current => (current || 0) + 1);
+    db.ref("votes/" + voteType + "/candidates/" + name)
+      .transaction(current => (current || 0) + 1);
 
     voterRef.set(true);
-
     alert("투표 완료");
   });
 }
@@ -125,19 +154,21 @@ function addCandidate() {
   const name = document.getElementById("name").value;
   const key = document.getElementById("key").value;
 
-  if (key !== adminKey) {
-    alert("암호 틀림");
-    return;
-  }
-
-  if (!name) {
-    alert("이름 입력");
-    return;
-  }
+  if (key !== adminKey) return alert("암호 틀림");
+  if (!name) return alert("이름 입력");
 
   db.ref("votes/" + voteType + "/candidates/" + name).set(0);
-
   alert("추가 완료");
+}
+
+// 🔥 후보 삭제
+function deleteCandidate(name) {
+  const key = prompt("관리자 암호 입력");
+
+  if (key !== adminKey) return alert("암호 틀림");
+
+  db.ref("votes/" + voteType + "/candidates/" + name).remove();
+  alert("삭제 완료");
 }
 
 </script>
