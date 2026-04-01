@@ -9,7 +9,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const supabase = createClient(
   'https://puioibuxdbpzlxcfgvep.supabase.co',
-  'YOUR_KEY'
+  '여기에_publishable_key'
 )
 
 window.supabase = supabase
@@ -22,32 +22,45 @@ body {
   background: #111;
   color: white;
 }
+
 input {
   padding: 15px;
-  font-size: 18px;
-  width: 250px;
+  font-size: 20px;
+  width: 260px;
   margin: 10px;
   border-radius: 10px;
 }
+
 .card {
   background: #222;
-  margin: 10px auto;
+  margin: 15px auto;
   padding: 15px;
-  width: 280px;
+  width: 300px;
   border-radius: 15px;
 }
+
 button {
   margin: 5px;
-  padding: 10px 15px;
+  padding: 10px 20px;
   border-radius: 10px;
+  cursor: pointer;
 }
+
+#adminToggle {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  opacity: 0.3;
+}
+
 #adminPanel {
-  display:none;
-  position:fixed;
-  bottom:10px;
-  right:10px;
-  background:#222;
-  padding:10px;
+  display: none;
+  position: fixed;
+  bottom: 60px;
+  right: 10px;
+  background: #222;
+  padding: 15px;
+  border-radius: 10px;
 }
 </style>
 </head>
@@ -59,93 +72,133 @@ button {
 <input id="studentId" placeholder="학번 입력">
 <div id="candidates"></div>
 
-<button onclick="toggleAdmin()">⚙</button>
+<button id="adminToggle" onclick="toggleAdmin()">⚙</button>
 
 <div id="adminPanel">
-  <input id="name" placeholder="후보 이름">
-  <button onclick="addCandidate()">추가</button>
-  <button onclick="resetVotes()">초기화</button>
-  <button onclick="toggleResult()">결과 보기</button>
+  <input id="name" placeholder="이름">
+  <button onclick="addCandidate()">후보 추가</button>
+  <button onclick="resetVotes()">투표 초기화</button>
+  <button onclick="toggleResult()">결과 공개/숨김</button>
 </div>
 
 <script>
 
-const adminKey = "1234"; // 바꿔
-let showResult = false;
+const adminKey = "zheldrhkgkaRpfkaus";
 
 const validStudents = [
 "20623","20417","20522","20524","20813","20921",
 "10814","10810","10805","10206","10212","10403"
 ];
 
-// 🔥 데이터 로드
+let isAdmin = localStorage.getItem("isAdmin") === "true";
+let showResult = false;
+let candidatesData = {};
+
+function checkAdmin() {
+  if (isAdmin) return true;
+  const key = prompt("관리자 암호");
+  if (key === adminKey) {
+    isAdmin = true;
+    localStorage.setItem("isAdmin", "true");
+    alert("관리자 인증됨");
+    return true;
+  }
+  alert("암호 틀림");
+  return false;
+}
+
+function toggleAdmin() {
+  const p = document.getElementById("adminPanel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
+}
+
+// 🔥 데이터 불러오기 (핵심 수정)
 async function loadData() {
 
-  const { data: candidates } = await supabase
+  // 후보 불러오기
+  const { data: candidates, error: e1 } = await supabase
     .from('candidates')
     .select('*')
 
-  const { data: votes } = await supabase
+  // 투표 불러오기
+  const { data: votes, error: e2 } = await supabase
     .from('votes')
     .select('*')
 
-  let map = {}
+  if (e1 || e2) {
+    alert("데이터 불러오기 실패")
+    return
+  }
 
+  const newData = {}
+
+  // 후보 먼저 넣기
   candidates.forEach(c => {
-    map[c.name] = 0
+    newData[c.name] = 0
   })
 
+  // 투표 집계
   votes.forEach(v => {
     const name = v.choice?.trim()
-    if (map[name] !== undefined) {
-      map[name]++
+    if (!name) return
+
+    if (newData[name] !== undefined) {
+      newData[name]++
     }
   })
 
-  render(map)
+  candidatesData = newData
+
+  render()
 }
 
 // 🔥 렌더
-function render(data) {
-  const div = document.getElementById("candidates")
-  div.innerHTML = ""
+function render() {
+  const div = document.getElementById("candidates");
+  div.innerHTML = "";
 
-  for (let name in data) {
-    const card = document.createElement("div")
-    card.className = "card"
+  for (let name in candidatesData) {
+    const card = document.createElement("div");
+    card.className = "card";
 
-    const h = document.createElement("h2")
-    h.innerText = name
+    const title = document.createElement("h2");
+    title.innerText = name;
 
-    const p = document.createElement("p")
-    p.innerText = showResult ? "득표: " + data[name] : "투표 진행중"
+    const score = document.createElement("p");
+    score.innerText = showResult 
+      ? "득표: " + candidatesData[name]
+      : "투표 진행중";
 
-    const btn = document.createElement("button")
-    btn.innerText = "투표"
-    btn.onclick = () => vote(name)
+    const voteBtn = document.createElement("button");
+    voteBtn.innerText = "투표";
+    voteBtn.onclick = () => vote(name);
 
-    card.appendChild(h)
-    card.appendChild(p)
-    card.appendChild(btn)
+    const delBtn = document.createElement("button");
+    delBtn.innerText = "삭제";
+    delBtn.onclick = () => deleteCandidate(name);
 
-    div.appendChild(card)
+    card.appendChild(title);
+    card.appendChild(score);
+    card.appendChild(voteBtn);
+    card.appendChild(delBtn);
+
+    div.appendChild(card);
   }
 }
 
 // 🔥 투표
 async function vote(name) {
+  const id = document.getElementById("studentId").value.trim();
 
-  const id = document.getElementById("studentId").value.trim()
-
-  if (!id) return alert("학번 입력")
-  if (!validStudents.includes(id)) return alert("허용된 학번 아님")
+  if (!id) return alert("학번 입력");
+  if (!validStudents.includes(id)) return alert("허용된 학번 아님");
 
   const { data: existing } = await supabase
     .from('votes')
     .select('*')
     .eq('user_id', id)
 
-  if (existing.length > 0) return alert("이미 투표함")
+  if (existing.length > 0) return alert("이미 투표");
 
   const { error } = await supabase.from('votes').insert([
     { user_id: id, choice: name.trim() }
@@ -156,18 +209,16 @@ async function vote(name) {
     return
   }
 
-  alert("투표 완료")
+  alert("투표 완료");
   loadData()
 }
 
-// 🔥 후보 추가
+// 🔥 후보 추가 (DB 저장됨)
 async function addCandidate() {
+  if (!checkAdmin()) return;
 
-  const key = prompt("관리자 암호")
-  if (key !== adminKey) return alert("암호 틀림")
-
-  const name = document.getElementById("name").value.trim()
-  if (!name) return alert("이름 입력")
+  const name = document.getElementById("name").value.trim();
+  if (!name) return alert("이름 입력");
 
   const { error } = await supabase.from('candidates').insert([
     { name }
@@ -181,28 +232,27 @@ async function addCandidate() {
   loadData()
 }
 
+// 🔥 삭제 (DB에서도 삭제)
+async function deleteCandidate(name) {
+  if (!checkAdmin()) return;
+
+  await supabase.from('candidates').delete().eq('name', name)
+  loadData()
+}
+
 // 🔥 초기화
 async function resetVotes() {
+  if (!checkAdmin()) return;
 
-  const key = prompt("관리자 암호")
-  if (key !== adminKey) return alert("암호 틀림")
-
-  await supabase.from('votes').delete().neq('id', 0)
-
-  alert("초기화 완료")
+  await supabase.from('votes').delete().neq('id', 0);
   loadData()
 }
 
-// 🔥 결과 보기
+// 🔥 결과 공개
 function toggleResult() {
-  showResult = !showResult
-  loadData()
-}
-
-// 🔥 관리자 패널
-function toggleAdmin() {
-  const p = document.getElementById("adminPanel")
-  p.style.display = p.style.display === "none" ? "block" : "none"
+  if (!checkAdmin()) return;
+  showResult = !showResult;
+  render()
 }
 
 // 시작
