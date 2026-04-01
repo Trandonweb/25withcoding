@@ -117,34 +117,25 @@ window.logoutAdmin = function () {
   alert("로그아웃됨");
 }
 
-// 🔥 후보 추가 (디버깅 추가)
-window.addCandidate = async function () {
-  if (!checkAdmin()) return;
-
-  const name = document.getElementById("name").value.trim();
-  if (!name) return alert("이름 입력");
-
-  const { data, error } = await supabase
+// 🔥 데이터 불러오기
+async function loadData() {
+  const { data: candidateList, error: cError } = await supabase
     .from('candidates')
-    .insert([{ name }])
+    .select('*')
 
-  console.log("insert result:", data, error);
-
-  if (error) {
-    alert("에러: " + error.message);
+  if (cError) {
+    alert("불러오기 에러: " + cError.message);
     return;
   }
 
-  alert("추가됨");
-}
-
-async function loadData() {
-  const { data: candidateList } = await supabase.from('candidates').select('*')
-  const { data: votes } = await supabase.from('votes').select('*')
+  const { data: votes } = await supabase
+    .from('votes')
+    .select('*')
 
   const newData = {}
 
   (candidateList || []).forEach(c => {
+    if (!c.name) return;
     newData[c.name] = 0
   })
 
@@ -159,40 +150,114 @@ async function loadData() {
   render()
 }
 
+// 🔥 렌더
 function render() {
   const div = document.getElementById("candidates");
   div.innerHTML = "";
 
   for (let name in candidatesData) {
     const card = document.createElement("div");
+    card.className = "card";
 
     const title = document.createElement("h2");
     title.innerText = name;
+
+    const score = document.createElement("p");
+    score.innerText = showResult 
+      ? "득표: " + candidatesData[name]
+      : "투표 진행중";
 
     const voteBtn = document.createElement("button");
     voteBtn.innerText = "투표";
     voteBtn.onclick = () => vote(name);
 
+    const delBtn = document.createElement("button");
+    delBtn.innerText = "삭제";
+    delBtn.onclick = () => deleteCandidate(name);
+
     card.appendChild(title);
+    card.appendChild(score);
     card.appendChild(voteBtn);
+    card.appendChild(delBtn);
+
     div.appendChild(card);
   }
 }
 
+// 🔥 투표
 window.vote = async function (name) {
   const id = document.getElementById("studentId").value.trim();
 
-  if (!validStudents.includes(id)) return alert("학번 오류");
+  if (!id) return alert("학번 입력");
+  if (!validStudents.includes(id)) return alert("허용된 학번 아님");
 
   const { error } = await supabase.from('votes').insert([
     { user_id: id, choice: name }
   ])
 
-  if (error) alert(error.message)
-  else alert("투표 완료");
+  if (error) {
+    if ((error.message || "").includes("unique")) {
+      alert("이미 투표함")
+    } else {
+      alert("에러: " + error.message)
+    }
+    return
+  }
+
+  alert("투표 완료");
+  loadData();
 }
 
+// 🔥 후보 추가 (핵심 수정 포함)
+window.addCandidate = async function () {
+  if (!checkAdmin()) return;
+
+  const name = document.getElementById("name").value.trim();
+  if (!name) return alert("이름 입력");
+
+  const { error } = await supabase
+    .from('candidates')
+    .insert([{ name }])
+
+  if (error) {
+    alert("에러: " + error.message);
+    return;
+  }
+
+  alert("추가됨");
+  await loadData(); // 🔥 핵심 (바로 화면 갱신)
+}
+
+// 🔥 삭제
+window.deleteCandidate = async function (name) {
+  if (!checkAdmin()) return;
+
+  await supabase.from('candidates').delete().eq('name', name)
+  loadData();
+}
+
+// 🔥 초기화
+window.resetVotes = async function () {
+  if (!checkAdmin()) return;
+
+  await supabase.from('votes').delete().neq('id', 0);
+  loadData();
+}
+
+window.resetVoters = function () {
+  alert("Supabase에서는 자동 처리됨");
+}
+
+// 🔥 결과 공개
+window.toggleResult = function () {
+  if (!checkAdmin()) return;
+  showResult = !showResult;
+  render()
+}
+
+// 시작
 loadData()
+
 </script>
 
 </body>
