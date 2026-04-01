@@ -87,6 +87,245 @@ button {
 
 <script>
 
+const supabase = window.supabase; // 🔥 핵심 수정
+
+const voteType = "vote1";
+const adminKey = "zheldrhkgkaRpfkaus";
+
+const validStudents = [
+"20623","20417","20522","20524","20813","20921",
+"10814","10810","10805","10206","10212","10403"
+];
+
+let isAdmin = localStorage.getItem("isAdmin") === "true";
+let showResult = false;
+let candidatesData = {};
+
+function checkAdmin() {
+  if (isAdmin) return true;
+  const key = prompt("관리자 암호");
+  if (key === adminKey) {
+    isAdmin = true;
+    localStorage.setItem("isAdmin", "true");
+    alert("관리자 인증됨");
+    return true;
+  }
+  alert("암호 틀림");
+  return false;
+}
+
+function logoutAdmin() {
+  isAdmin = false;
+  localStorage.removeItem("isAdmin");
+  alert("로그아웃됨");
+}
+
+function toggleAdmin() {
+  const p = document.getElementById("adminPanel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
+}
+
+// 🔥 데이터 불러오기 (에러 방지 추가)
+async function loadData() {
+
+  const { data: candidateList, error: cError } = await supabase
+    .from('candidates')
+    .select('*')
+
+  const { data: votes, error: vError } = await supabase
+    .from('votes')
+    .select('*')
+
+  if (cError || vError) {
+    console.error(cError || vError)
+    return
+  }
+
+  const newData = {}
+
+  (candidateList || []).forEach(c => {
+    newData[c.name] = 0
+  })
+
+  (votes || []).forEach(v => {
+    const name = v.choice?.trim()
+    if (!name) return
+
+    if (newData[name] !== undefined) {
+      newData[name]++
+    }
+  })
+
+  candidatesData = newData
+
+  render()
+}
+
+// 🔥 렌더
+function render() {
+  const div = document.getElementById("candidates");
+  div.innerHTML = "";
+
+  for (let name in candidatesData) {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const title = document.createElement("h2");
+    title.innerText = name;
+
+    const score = document.createElement("p");
+    score.innerText = showResult 
+      ? "득표: " + candidatesData[name]
+      : "투표 진행중";
+
+    const voteBtn = document.createElement("button");
+    voteBtn.innerText = "투표";
+    voteBtn.onclick = () => vote(name);
+
+    const delBtn = document.createElement("button");
+    delBtn.innerText = "삭제";
+    delBtn.onclick = () => deleteCandidate(name);
+
+    card.appendChild(title);
+    card.appendChild(score);
+    card.appendChild(voteBtn);
+    card.appendChild(delBtn);
+
+    div.appendChild(card);
+  }
+}
+
+// 🔥 투표 (에러 처리 강화)
+async function vote(name) {
+  const id = document.getElementById("studentId").value.trim();
+
+  if (!id) return alert("학번 입력");
+  if (!validStudents.includes(id)) return alert("허용된 학번 아님");
+
+  const { error } = await supabase.from('votes').insert([
+    { user_id: id, choice: name.trim() }
+  ])
+
+  if (error) {
+    const msg = error.message || ""
+
+    if (msg.includes("unique")) {
+      alert("이미 투표함")
+    } else {
+      alert("에러: " + msg)
+    }
+    return
+  }
+
+  alert("투표 완료");
+}
+
+// 🔥 후보 추가
+async function addCandidate() {
+  if (!checkAdmin()) return;
+
+  const name = document.getElementById("name").value.trim();
+  if (!name) return alert("이름 입력");
+
+  const { error } = await supabase.from('candidates').insert([
+    { name }
+  ])
+
+  if (error) {
+    alert("이미 존재하거나 오류")
+    return
+  }
+}
+
+// 🔥 삭제
+async function deleteCandidate(name) {
+  if (!checkAdmin()) return;
+
+  await supabase.from('candidates').delete().eq('name', name)
+}
+
+// 🔥 초기화
+async function resetVotes() {
+  if (!checkAdmin()) return;
+
+  await supabase.from('votes').delete().neq('id', 0);
+}
+
+function resetVoters() {
+  alert("Supabase에서는 자동 처리됨");
+}
+
+// 🔥 결과 공개
+function toggleResult() {
+  if (!checkAdmin()) return;
+  showResult = !showResult;
+  render()
+}
+
+// 🔥 realtime (supabase 체크)
+if (supabase) {
+
+  supabase
+    .channel('realtime votes')
+    .on('postgres_changes', 
+      { event: '*', schema: 'public', table: 'votes' },
+      () => loadData()
+    )
+    .subscribe()
+
+  supabase
+    .channel('realtime candidates')
+    .on('postgres_changes', 
+      { event: '*', schema: 'public', table: 'candidates' },
+      () => loadData()
+    )
+    .subscribe()
+
+}
+
+// 🔥 로딩 타이밍 수정
+window.addEventListener("load", () => {
+  loadData()
+})
+
+</script>
+
+</body>
+</html>
+#adminPanel {
+  display: none;
+  position: fixed;
+  bottom: 60px;
+  right: 10px;
+  background: #222;
+  padding: 15px;
+  border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>1학년 부장 투표</h1>
+
+<input id="studentId" placeholder="학번 입력">
+<div id="candidates"></div>
+
+<button id="adminToggle" onclick="toggleAdmin()">⚙</button>
+
+<div id="adminPanel">
+  <input id="name" placeholder="이름">
+  <input id="key" type="password" placeholder="암호"><br>
+
+  <button onclick="addCandidate()">후보 추가</button>
+  <button onclick="resetVotes()">투표 초기화</button>
+  <button onclick="resetVoters()">투표권 초기화</button>
+  <button onclick="toggleResult()">결과 공개/숨김</button>
+  <button onclick="logoutAdmin()">관리자 로그아웃</button>
+</div>
+
+<script>
+
 const voteType = "vote1";
 const adminKey = "zheldrhkgkaRpfkaus";
 
