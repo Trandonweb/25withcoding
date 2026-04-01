@@ -76,13 +76,18 @@ button {
 
 <div id="adminPanel">
   <input id="name" placeholder="이름">
+  <input id="key" type="password" placeholder="암호"><br>
+
   <button onclick="addCandidate()">후보 추가</button>
   <button onclick="resetVotes()">투표 초기화</button>
+  <button onclick="resetVoters()">투표권 초기화</button>
   <button onclick="toggleResult()">결과 공개/숨김</button>
+  <button onclick="logoutAdmin()">관리자 로그아웃</button>
 </div>
 
 <script>
 
+const voteType = "vote1";
 const adminKey = "zheldrhkgkaRpfkaus";
 
 const validStudents = [
@@ -107,37 +112,34 @@ function checkAdmin() {
   return false;
 }
 
+function logoutAdmin() {
+  isAdmin = false;
+  localStorage.removeItem("isAdmin");
+  alert("로그아웃됨");
+}
+
 function toggleAdmin() {
   const p = document.getElementById("adminPanel");
   p.style.display = p.style.display === "none" ? "block" : "none";
 }
 
-// 🔥 데이터 불러오기 (핵심 수정)
+// 🔥 데이터 불러오기
 async function loadData() {
 
-  // 후보 불러오기
-  const { data: candidates, error: e1 } = await supabase
+  const { data: candidateList } = await supabase
     .from('candidates')
     .select('*')
 
-  // 투표 불러오기
-  const { data: votes, error: e2 } = await supabase
+  const { data: votes } = await supabase
     .from('votes')
     .select('*')
 
-  if (e1 || e2) {
-    alert("데이터 불러오기 실패")
-    return
-  }
-
   const newData = {}
 
-  // 후보 먼저 넣기
-  candidates.forEach(c => {
+  candidateList.forEach(c => {
     newData[c.name] = 0
   })
 
-  // 투표 집계
   votes.forEach(v => {
     const name = v.choice?.trim()
     if (!name) return
@@ -193,27 +195,23 @@ async function vote(name) {
   if (!id) return alert("학번 입력");
   if (!validStudents.includes(id)) return alert("허용된 학번 아님");
 
-  const { data: existing } = await supabase
-    .from('votes')
-    .select('*')
-    .eq('user_id', id)
-
-  if (existing.length > 0) return alert("이미 투표");
-
   const { error } = await supabase.from('votes').insert([
     { user_id: id, choice: name.trim() }
   ])
 
   if (error) {
-    alert("에러: " + error.message)
+    if (error.message.includes("unique")) {
+      alert("이미 투표함")
+    } else {
+      alert("에러: " + error.message)
+    }
     return
   }
 
   alert("투표 완료");
-  loadData()
 }
 
-// 🔥 후보 추가 (DB 저장됨)
+// 🔥 후보 추가
 async function addCandidate() {
   if (!checkAdmin()) return;
 
@@ -228,16 +226,13 @@ async function addCandidate() {
     alert("이미 존재하거나 오류")
     return
   }
-
-  loadData()
 }
 
-// 🔥 삭제 (DB에서도 삭제)
+// 🔥 삭제
 async function deleteCandidate(name) {
   if (!checkAdmin()) return;
 
   await supabase.from('candidates').delete().eq('name', name)
-  loadData()
 }
 
 // 🔥 초기화
@@ -245,7 +240,10 @@ async function resetVotes() {
   if (!checkAdmin()) return;
 
   await supabase.from('votes').delete().neq('id', 0);
-  loadData()
+}
+
+function resetVoters() {
+  alert("Supabase에서는 자동 처리됨");
 }
 
 // 🔥 결과 공개
@@ -254,6 +252,24 @@ function toggleResult() {
   showResult = !showResult;
   render()
 }
+
+// 🔥 실시간 반영 (투표)
+supabase
+  .channel('realtime votes')
+  .on('postgres_changes', 
+    { event: '*', schema: 'public', table: 'votes' },
+    () => loadData()
+  )
+  .subscribe()
+
+// 🔥 실시간 반영 (후보)
+supabase
+  .channel('realtime candidates')
+  .on('postgres_changes', 
+    { event: '*', schema: 'public', table: 'candidates' },
+    () => loadData()
+  )
+  .subscribe()
 
 // 시작
 loadData()
