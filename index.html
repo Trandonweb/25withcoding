@@ -37,7 +37,30 @@ body {
   cursor: pointer;
   z-index: 3000;
 }
-
+/* 투표 버튼1 */
+.VOTE_1 {
+  position: fixed;
+  top: 20px;
+  left: 160px;
+  width: 110px;
+  height: 40px;
+  border: none;
+  background: url('VOTE 1.png') no-repeat center / contain;
+  cursor: pointer;
+  z-index: 2000:
+}
+/* 투표 버튼2 */
+.VOTE_2 {
+  position: fixed;
+  top: 20px;
+  left: 300px;
+  width: 110px;
+  height: 40px;
+  border: none;
+  background: url('VOTE 2.png') no-repeat center / contain;
+  cursor: pointer;
+  z-index: 2000:
+}
 /* 음소거 버튼 */
 #musicBtn {
   position: fixed;
@@ -262,6 +285,8 @@ const thumbs = [
   {img:'Thumbnail4.png', title:'SPEED GAME', author:'JANG H.J.', link:'https://naver.me/x4Gpy1ly'},
   {img:'Thumbnail5.png', title:'몬스터 디펜스', author:'LEE S.Y.', link:'https://naver.me/GT6ZUHNa'},
   {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.', link:'https://naver.me/xhl9LE6l'}
+  {img:'VOTE 1.png', link:'https://25withcoding.kr/2026vote1'}
+  {img:'VOTE 2.png', link:'https://25withcoding.kr/2026vote2'}
 ];
 
 let currentIndex = Math.floor(Math.random() * thumbs.length);
