@@ -4,8 +4,16 @@
 <meta charset="UTF-8">
 <title>1학년 부장 투표</title>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const supabase = createClient(
+  'https://puioibuxdbpzlxcfgvep.supabase.co',
+  '여기에_publishable_key'
+)
+
+window.supabase = supabase
+</script>
 
 <style>
 body {
@@ -62,7 +70,6 @@ button {
 <h1>1학년 부장 투표</h1>
 
 <input id="studentId" placeholder="학번 입력">
-
 <div id="candidates"></div>
 
 <button id="adminToggle" onclick="toggleAdmin()">⚙</button>
@@ -88,22 +95,12 @@ const validStudents = [
 "10814","10810","10805","10206","10212","10403"
 ];
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCWRXgzbdMRzGw_uG66OqCkc0zoa9Iyx4c",
-  authDomain: "withcoding-ff116.firebaseapp.com",
-  databaseURL: "https://withcoding-ff116-default-rtdb.firebaseio.com",
-  projectId: "withcoding-ff116",
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// 🔥 관리자 유지
 let isAdmin = localStorage.getItem("isAdmin") === "true";
+let showResult = false;
+let candidatesData = {};
 
 function checkAdmin() {
   if (isAdmin) return true;
-
   const key = prompt("관리자 암호");
   if (key === adminKey) {
     isAdmin = true;
@@ -111,7 +108,6 @@ function checkAdmin() {
     alert("관리자 인증됨");
     return true;
   }
-
   alert("암호 틀림");
   return false;
 }
@@ -122,31 +118,26 @@ function logoutAdmin() {
   alert("로그아웃됨");
 }
 
-// 관리자 UI
 function toggleAdmin() {
   const p = document.getElementById("adminPanel");
   p.style.display = p.style.display === "none" ? "block" : "none";
 }
 
-// 🔥 상태 변수
-let showResult = false;
-let candidatesData = {};
+// 🔥 데이터 불러오기
+async function loadData() {
+  const { data: candidates } = await supabase
+    .from('votes')
+    .select('*')
 
-// 🔥 결과 상태 (실시간)
-db.ref("settings/" + voteType + "/showResult")
-.on("value", snap => {
-  showResult = snap.val() || false;
-  render(); // 🔥 핵심
-});
+  candidatesData = {}
+  candidates.forEach(c => {
+    candidatesData[c.choice] = (candidatesData[c.choice] || 0) + 1
+  })
 
-// 🔥 후보 데이터 (실시간)
-db.ref("votes/" + voteType + "/candidates")
-.on("value", snap => {
-  candidatesData = snap.val() || {};
-  render(); // 🔥 핵심
-});
+  render()
+}
 
-// 🔥 렌더 함수
+// 🔥 렌더
 function render() {
   const div = document.getElementById("candidates");
   div.innerHTML = "";
@@ -180,66 +171,69 @@ function render() {
   }
 }
 
-// 투표
-function vote(name) {
+// 🔥 투표
+async function vote(name) {
   const id = document.getElementById("studentId").value.trim();
 
   if (!id) return alert("학번 입력");
   if (!validStudents.includes(id)) return alert("허용된 학번 아님");
 
-  const voterRef = db.ref("voters/" + voteType + "/" + id);
+  const { data: existing } = await supabase
+    .from('votes')
+    .select('*')
+    .eq('user_id', id)
 
-  voterRef.get().then(s => {
-    if (s.exists()) return alert("이미 투표");
+  if (existing.length > 0) return alert("이미 투표");
 
-    db.ref("votes/" + voteType + "/candidates/" + name)
-      .transaction(c => (c || 0) + 1);
+  await supabase.from('votes').insert([
+    { user_id: id, choice: name }
+  ])
 
-    voterRef.set(true);
-    alert("투표 완료");
-  });
+  alert("투표 완료");
+  loadData()
 }
 
-// 후보 추가
-function addCandidate() {
+// 후보 추가 (단순 리스트용)
+async function addCandidate() {
   if (!checkAdmin()) return;
 
   const name = document.getElementById("name").value;
   if (!name) return alert("이름 입력");
 
-  db.ref("votes/" + voteType + "/candidates/" + name).set(0);
+  candidatesData[name] = 0;
+  render()
 }
 
 // 삭제
 function deleteCandidate(name) {
   if (!checkAdmin()) return;
 
-  db.ref("votes/" + voteType + "/candidates/" + name).remove();
+  delete candidatesData[name];
+  render()
 }
 
-// 투표 초기화
-function resetVotes() {
+// 초기화
+async function resetVotes() {
   if (!checkAdmin()) return;
 
-  for (let name in candidatesData) {
-    db.ref("votes/" + voteType + "/candidates/" + name).set(0);
-  }
+  await supabase.from('votes').delete().neq('id', 0);
+  loadData()
 }
 
-// 투표권 초기화
+// 투표권 초기화 → DB 구조상 필요 없음
 function resetVoters() {
-  if (!checkAdmin()) return;
-
-  db.ref("voters/" + voteType).remove();
+  alert("Supabase에서는 자동 처리됨");
 }
 
-// 결과 공개/숨김
+// 결과 공개
 function toggleResult() {
   if (!checkAdmin()) return;
-
-  db.ref("settings/" + voteType + "/showResult")
-    .set(!showResult);
+  showResult = !showResult;
+  render()
 }
+
+// 시작
+loadData()
 
 </script>
 
