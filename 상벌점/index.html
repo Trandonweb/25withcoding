@@ -6,9 +6,49 @@
   <title>상벌점 시스템 관리자</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 50px; }
-    input, select, button { margin: 5px; padding: 5px; }
-    h1 { margin-bottom: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #loginDiv, #dashboardDiv {
+      background-color: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 320px;
+    }
+    input, select, button {
+      margin: 10px 0;
+      padding: 10px;
+      width: 90%;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    h1 {
+      margin-bottom: 25px;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -17,38 +57,35 @@
   <div id="loginDiv">
     <h1>관리자 로그인</h1>
     <input type="password" id="adminPassword" placeholder="비밀번호">
-    <button onclick="adminLogin()">로그인</button>
+    <button type="button" onclick="adminLogin()">로그인</button>
   </div>
 
   <!-- 관리자 대시보드 화면 -->
   <div id="dashboardDiv" style="display:none;">
     <h1>관리자 대시보드</h1>
-    <label>사용자 선택:</label>
     <select id="userSelect">
-      <option value="">선택</option>
+      <option value="">사용자 선택</option>
     </select>
-    <br>
     <input type="number" id="scoreInput" placeholder="점수 입력">
     <input type="text" id="reasonInput" placeholder="사유 입력">
-    <button onclick="addScore()">점수 추가</button>
+    <button type="button" onclick="addScore()">점수 추가</button>
     <p id="status"></p>
   </div>
 
   <script>
     // Supabase 설정
-    const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co"; // 본인 프로젝트 URL로 변경
+    const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co"; // 본인 프로젝트 URL
     const SUPABASE_ANON_KEY = "sb_publishable_RpNZKmYfi_mvYgLjjhAgpw_hQkk4641";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 관리자 비밀번호 (하드코딩)
     const ADMIN_PASSWORD = "zheldrhkgkaRpffkaus";
 
     // 로그인 함수
     function adminLogin() {
-      const pw = document.getElementById('adminPassword').value;
+      const pw = document.getElementById("adminPassword").value;
       if (pw === ADMIN_PASSWORD) {
-        document.getElementById('loginDiv').style.display = 'none';
-        document.getElementById('dashboardDiv').style.display = 'block';
+        document.getElementById("loginDiv").style.display = "none";
+        document.getElementById("dashboardDiv").style.display = "block";
         loadUsers();
       } else {
         alert("비밀번호가 틀렸습니다.");
@@ -63,7 +100,7 @@
         return;
       }
       const select = document.getElementById('userSelect');
-      select.innerHTML = '<option value="">선택</option>'; // 초기화
+      select.innerHTML = '<option value="">사용자 선택</option>'; // 초기화
       data.forEach(user => {
         const option = document.createElement('option');
         option.value = user.id;
