@@ -1,1 +1,62 @@
+<!DOCTYPE html>
+<html>
+<body>
 
+<h2>메인</h2>
+
+<p id="info"></p>
+
+<input id="target" placeholder="대상 학번">
+<button onclick="add()">+1</button>
+<button onclick="minus()">-1</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain: "points2026-f5e50.firebaseapp.com",
+  projectId: "points2026-f5e50"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const myId = localStorage.getItem("userId");
+
+const snap = await getDoc(doc(db, "users", myId));
+const data = snap.data();
+
+document.getElementById("info").innerText =
+  data.name + " / 점수: " + data.score + " / 역할: " + data.role;
+
+window.add = async () => {
+  if(data.role === "student"){
+    alert("권한 없음");
+    return;
+  }
+
+  const t = document.getElementById("target").value;
+
+  await updateDoc(doc(db, "users", t), {
+    score: increment(1)
+  });
+}
+
+window.minus = async () => {
+  if(data.role === "student"){
+    alert("권한 없음");
+    return;
+  }
+
+  const t = document.getElementById("target").value;
+
+  await updateDoc(doc(db, "users", t), {
+    score: increment(-1)
+  });
+}
+</script>
+
+</body>
+</html>
