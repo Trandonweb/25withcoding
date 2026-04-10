@@ -6,7 +6,7 @@
     body {
       font-family: sans-serif;
       padding: 20px;
-      background-color: #f0f0f0; /* 🔥 배경색 */
+      background-color: #ac9cff;
     }
 
     .top-bar {
@@ -16,16 +16,47 @@
     }
 
     button {
-      padding: 8px 12px;
+      padding: 10px 14px;
       margin: 5px;
+      border-radius: 12px;
+      border: none;
+      background-color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #e0e0e0;
     }
 
     .card {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 10px;
       background-color: white;
+      padding: 15px;
+      border-radius: 20px;
+      margin-top: 10px;
+    }
+
+    .user-list {
+      margin-top: 10px;
+    }
+
+    .user-item {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 12px;
+      background-color: #f5f5f5;
+      cursor: pointer;
+    }
+
+    .user-item.selected {
+      background-color: #d0c2ff;
+      font-weight: bold;
+    }
+
+    input {
+      padding: 10px;
+      border-radius: 12px;
+      border: none;
+      width: 150px;
     }
 
     .loading-inline {
@@ -60,20 +91,20 @@
 
 <h2>코딩과 함께라면</h2>
 
-<!-- 🔥 내 정보 (로딩 개선) -->
+<!-- 내 정보 -->
 <div class="card" id="myInfo">
-  <div class="loading-inline" id="loadingText">
+  <div class="loading-inline">
     <span>불러오는 중...</span>
     <div class="spinner"></div>
   </div>
 </div>
 
-<hr>
+<!-- 대상 리스트 -->
+<div class="card user-list" id="userList"></div>
 
-<select id="userList"></select>
-<br><br>
+<br>
 
-<input id="scoreInput" type="text" placeholder="점수 입력 (+3, -2)">
+<input id="scoreInput" type="text" placeholder="상벌점을 입력하세요.">
 <button onclick="apply()">적용</button>
 
 <script type="module">
@@ -89,6 +120,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+let selectedUser = null;
+
 const myId = localStorage.getItem("userId");
 
 if(!myId){
@@ -96,7 +129,7 @@ if(!myId){
   location.href = "index.html";
 }
 
-// 🔥 내 정보 로드
+// 🔥 내 정보
 const mySnap = await getDoc(doc(db, "users", myId));
 const myData = mySnap.data();
 
@@ -105,16 +138,24 @@ document.getElementById("myInfo").innerText =
   " / 점수: " + myData.score +
   " / 역할: " + myData.role;
 
-// 🔥 목록 불러오기
+// 🔥 리스트 UI 생성
+const listDiv = document.getElementById("userList");
 const querySnapshot = await getDocs(collection(db, "users"));
-const select = document.getElementById("userList");
 
 querySnapshot.forEach((docu) => {
   const d = docu.data();
-  const option = document.createElement("option");
-  option.value = docu.id;
-  option.text = docu.id + " - " + d.name;
-  select.appendChild(option);
+
+  const div = document.createElement("div");
+  div.className = "user-item";
+  div.innerText = docu.id + " - " + d.name + " (" + d.score + ")";
+
+  div.onclick = () => {
+    document.querySelectorAll(".user-item").forEach(el => el.classList.remove("selected"));
+    div.classList.add("selected");
+    selectedUser = docu.id;
+  };
+
+  listDiv.appendChild(div);
 });
 
 // 🔥 점수 적용
@@ -124,15 +165,19 @@ window.apply = async () => {
     return;
   }
 
-  const target = select.value;
-  const val = Number(document.getElementById("scoreInput").value);
-
-  if(isNaN(val)){
-    alert("숫자 입력 (+3, -2)");
+  if(!selectedUser){
+    alert("대상 선택");
     return;
   }
 
-  await updateDoc(doc(db, "users", target), {
+  const val = Number(document.getElementById("scoreInput").value);
+
+  if(isNaN(val)){
+    alert("숫자 입력");
+    return;
+  }
+
+  await updateDoc(doc(db, "users", selectedUser), {
     score: increment(val)
   });
 
