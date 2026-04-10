@@ -6,6 +6,8 @@
 
 <input id="id" placeholder="학번">
 <input id="pw" type="password" placeholder="비밀번호">
+<button onclick="togglePw()">👁</button>
+<br><br>
 <button onclick="login()">로그인</button>
 
 <script type="module">
@@ -21,12 +23,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+window.togglePw = () => {
+  const pw = document.getElementById("pw");
+  pw.type = pw.type === "password" ? "text" : "password";
+};
+
 window.login = async () => {
   const id = document.getElementById("id").value;
   const pw = document.getElementById("pw").value;
 
   const snap = await getDoc(doc(db, "users", id));
-
   if(!snap.exists()){
     alert("계정 없음");
     return;
@@ -46,7 +52,7 @@ window.login = async () => {
   } else {
     location.href = "main.html";
   }
-}
+};
 </script>
 
 </body>
