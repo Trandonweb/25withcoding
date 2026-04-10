@@ -131,14 +131,14 @@
 <!-- 내 정보 -->
 <div class="card" id="myInfo">
   <div class="loading-inline">
-    <span>불러오는 중...</span>
+    <span>정보를 불러오는 중...</span>
     <div class="spinner"></div>
   </div>
 </div>
 
 <!-- 컨트롤 -->
 <button onclick="selectAll()">모두 선택</button>
-<button onclick="clearAll()">선택 해제</button>
+<button onclick="clearAll()">모두 해제</button>
 
 <!-- 리스트 -->
 <div class="card" id="userList"></div>
@@ -170,7 +170,7 @@ let selectedUsers = new Set();
 const myId = localStorage.getItem("userId");
 
 if(!myId){
-  alert("로그인 필요");
+  alert("로그인이 필요합니다.");
   location.href = "index.html";
 }
 
@@ -181,7 +181,7 @@ const myData = mySnap.data();
 document.getElementById("myInfo").innerText =
   "이름: " + myData.name +
   " / 점수: " + myData.score +
-  " / 역할: " + myData.role;
+  " / 권한: " + myData.role;
 
 // 리스트 생성
 const listDiv = document.getElementById("userList");
@@ -228,7 +228,7 @@ window.selectAll = () => {
   });
 };
 
-// 선택 해제
+// 모두 해제
 window.clearAll = () => {
   selectedUsers.clear();
   document.querySelectorAll(".user-item").forEach(el => {
@@ -239,25 +239,46 @@ window.clearAll = () => {
 
 // 점수 적용
 window.apply = async () => {
+
   if(myData.role === "student"){
-    alert("권한 없음");
+    alert("권한이 없습니다.");
     return;
   }
 
   const val = Number(document.getElementById("scoreInput").value);
 
   if(isNaN(val)){
-    alert("숫자 입력");
+    alert("숫자를 입력해주세요.");
     return;
   }
 
   for(const id of selectedUsers){
+
+    // 🔥 부회장 제한
+    if(myData.role === "vice"){
+
+      // 자기 자신 금지
+      if(id === myId){
+        alert("자기 자신에게 부여 불가");
+        continue;
+      }
+
+      // 회장 금지
+      const targetSnap = await getDoc(doc(db, "users", id));
+      const targetData = targetSnap.data();
+
+      if(targetData.role === "president"){
+        alert("회장에게 부여 불가");
+        continue;
+      }
+    }
+
     await updateDoc(doc(db, "users", id), {
       score: increment(val)
     });
   }
 
-  alert("적용 완료");
+  alert("적용 완료!");
   location.reload();
 };
 
