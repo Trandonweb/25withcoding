@@ -6,10 +6,14 @@
 
 <p id="info"></p>
 
+<button onclick="logout()">로그아웃</button>
+
+<hr>
+
 <select id="userList"></select>
 <br><br>
 
-<input id="scoreInput" type="number" placeholder="점수 입력 (+/-)">
+<input id="scoreInput" type="text" placeholder="점수 입력 (+3, -2)">
 <button onclick="apply()">적용</button>
 
 <script type="module">
@@ -26,11 +30,18 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const myId = localStorage.getItem("userId");
+
+if(!myId){
+  alert("로그인 필요");
+  location.href = "index.html";
+}
+
+// 🔥 내 정보 먼저 가져오기
 const mySnap = await getDoc(doc(db, "users", myId));
 const myData = mySnap.data();
 
 document.getElementById("info").innerText =
-  myData.name + " / 점수: " + myData.score + " / 역할: " + myData.role;
+  "내 정보 → " + myData.name + " / 점수: " + myData.score + " / 역할: " + myData.role;
 
 // 🔥 목록 불러오기
 const querySnapshot = await getDocs(collection(db, "users"));
@@ -44,6 +55,7 @@ querySnapshot.forEach((docu) => {
   select.appendChild(option);
 });
 
+// 🔥 점수 적용
 window.apply = async () => {
   if(myData.role === "student"){
     alert("권한 없음");
@@ -51,10 +63,17 @@ window.apply = async () => {
   }
 
   const target = select.value;
-  const val = parseInt(document.getElementById("scoreInput").value);
+  const raw = document.getElementById("scoreInput").value.trim();
+
+  if(raw === ""){
+    alert("값 입력");
+    return;
+  }
+
+  const val = Number(raw);
 
   if(isNaN(val)){
-    alert("숫자 입력");
+    alert("숫자만 입력 (+3, -2)");
     return;
   }
 
@@ -63,6 +82,13 @@ window.apply = async () => {
   });
 
   alert("적용 완료");
+  location.reload(); // 새로고침으로 점수 갱신
+};
+
+// 🔥 로그아웃
+window.logout = () => {
+  localStorage.removeItem("userId");
+  location.href = "index.html";
 };
 </script>
 
