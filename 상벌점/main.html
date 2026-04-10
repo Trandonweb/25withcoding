@@ -18,45 +18,47 @@
     button {
       padding: 10px 14px;
       margin: 5px;
-      border-radius: 12px;
+      border-radius: 14px;
       border: none;
-      background-color: white;
+      background-color: #ffffffcc;
       cursor: pointer;
     }
 
     button:hover {
-      background-color: #e0e0e0;
+      background-color: #ffffff;
     }
 
     .card {
-      background-color: white;
+      background-color: #ffffffcc;
       padding: 15px;
       border-radius: 20px;
-      margin-top: 10px;
-    }
-
-    .user-list {
       margin-top: 10px;
     }
 
     .user-item {
       padding: 10px;
       margin: 5px 0;
-      border-radius: 12px;
-      background-color: #f5f5f5;
+      border-radius: 14px;
+      background-color: #f7f5ff;
       cursor: pointer;
+      transition: 0.2s;
     }
 
     .user-item.selected {
-      background-color: #d0c2ff;
+      background-color: #dcd3ff;
       font-weight: bold;
+    }
+
+    .user-item:hover {
+      background-color: #ece7ff;
     }
 
     input {
       padding: 10px;
-      border-radius: 12px;
+      border-radius: 14px;
       border: none;
-      width: 150px;
+      background-color: #ffffffcc;
+      width: 160px;
     }
 
     .loading-inline {
@@ -79,6 +81,14 @@
       100% { transform: rotate(360deg); }
     }
 
+    .footer {
+      position: fixed;
+      bottom: 10px;
+      right: 15px;
+      font-size: 12px;
+      color: #333;
+      opacity: 0.7;
+    }
   </style>
 </head>
 
@@ -89,7 +99,7 @@
   <button onclick="logout()">로그아웃</button>
 </div>
 
-<h2>코딩과 함께라면</h2>
+<h2>2026 코딩과 함께라면 상벌점 시스템</h2>
 
 <!-- 내 정보 -->
 <div class="card" id="myInfo">
@@ -99,13 +109,17 @@
   </div>
 </div>
 
-<!-- 대상 리스트 -->
-<div class="card user-list" id="userList"></div>
+<!-- 리스트 -->
+<div class="card" id="userList"></div>
 
 <br>
 
 <input id="scoreInput" type="text" placeholder="상벌점을 입력하세요.">
 <button onclick="apply()">적용</button>
+
+<div class="footer">
+  *이 시스템은 학교 내 그린마일리지와는 무관합니다.*
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -121,6 +135,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let selectedUser = null;
+let selectedElement = null;
 
 const myId = localStorage.getItem("userId");
 
@@ -138,7 +153,7 @@ document.getElementById("myInfo").innerText =
   " / 점수: " + myData.score +
   " / 역할: " + myData.role;
 
-// 🔥 리스트 UI 생성
+// 🔥 리스트 생성
 const listDiv = document.getElementById("userList");
 const querySnapshot = await getDocs(collection(db, "users"));
 
@@ -150,9 +165,19 @@ querySnapshot.forEach((docu) => {
   div.innerText = docu.id + " - " + d.name + " (" + d.score + ")";
 
   div.onclick = () => {
+    // 🔥 같은 거 다시 누르면 취소
+    if(selectedUser === docu.id){
+      div.classList.remove("selected");
+      selectedUser = null;
+      selectedElement = null;
+      return;
+    }
+
     document.querySelectorAll(".user-item").forEach(el => el.classList.remove("selected"));
+
     div.classList.add("selected");
     selectedUser = docu.id;
+    selectedElement = div;
   };
 
   listDiv.appendChild(div);
