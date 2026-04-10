@@ -1,1 +1,55 @@
+<!DOCTYPE html>
+<html>
+<body>
 
+<h2>비밀번호 변경</h2>
+
+<input id="newpw" type="password" placeholder="새 비밀번호">
+<button onclick="change()">변경</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain: "points2026-f5e50.firebaseapp.com",
+  projectId: "points2026-f5e50"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+function valid(pw){
+  const hasEng = /[a-zA-Z]/.test(pw);
+  const hasNum = /[0-9]/.test(pw);
+  const hasSpec = /[^a-zA-Z0-9]/.test(pw);
+
+  let count = 0;
+  if(hasEng) count++;
+  if(hasNum) count++;
+  if(hasSpec) count++;
+
+  return pw.length >= 6 && count >= 2;
+}
+
+window.change = async () => {
+  const id = localStorage.getItem("userId");
+  const newpw = document.getElementById("newpw").value;
+
+  if(!valid(newpw)){
+    alert("6자리 이상 + 2종류 이상");
+    return;
+  }
+
+  await updateDoc(doc(db, "users", id), {
+    password: newpw
+  });
+
+  alert("변경 완료");
+  location.href = "main.html";
+}
+</script>
+
+</body>
+</html>
