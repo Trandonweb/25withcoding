@@ -6,7 +6,7 @@
     body {
       font-family: sans-serif;
       padding: 20px;
-      background-color: #ac9cff;
+      background-color: #f0f0f0;
     }
 
     .top-bar {
@@ -20,45 +20,80 @@
       margin: 5px;
       border-radius: 14px;
       border: none;
-      background-color: #ffffffcc;
+      background-color: #ffffff;
       cursor: pointer;
     }
 
     button:hover {
-      background-color: #ffffff;
+      background-color: #e6e6e6;
+    }
+
+    .home-icon {
+      width: 24px;
+      height: 24px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .home-icon::before {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 14px;
+      background: black;
+      bottom: 0;
+      left: 2px;
+    }
+
+    .home-icon::after {
+      content: "";
+      position: absolute;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-bottom: 12px solid black;
+      top: -2px;
+      left: 0;
     }
 
     .card {
-      background-color: #ffffffcc;
+      background-color: white;
       padding: 15px;
       border-radius: 20px;
       margin-top: 10px;
     }
 
     .user-item {
+      display: flex;
+      align-items: center;
       padding: 10px;
       margin: 5px 0;
       border-radius: 14px;
-      background-color: #f7f5ff;
+      background-color: #f9f9f9;
       cursor: pointer;
-      transition: 0.2s;
     }
 
     .user-item.selected {
-      background-color: #dcd3ff;
-      font-weight: bold;
+      background-color: #dcdcdc;
     }
 
-    .user-item:hover {
-      background-color: #ece7ff;
+    .user-item input {
+      margin-right: 10px;
     }
 
-    input {
+    input[type="text"] {
       padding: 10px;
       border-radius: 14px;
       border: none;
-      background-color: #ffffffcc;
-      width: 160px;
+      background-color: white;
+      width: 180px;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 10px;
+      right: 15px;
+      font-size: 12px;
+      color: #555;
     }
 
     .loading-inline {
@@ -81,21 +116,13 @@
       100% { transform: rotate(360deg); }
     }
 
-    .footer {
-      position: fixed;
-      bottom: 10px;
-      right: 15px;
-      font-size: 12px;
-      color: #333;
-      opacity: 0.7;
-    }
   </style>
 </head>
 
 <body>
 
 <div class="top-bar">
-  <button onclick="goHome()">🏠 홈</button>
+  <button onclick="goHome()"><div class="home-icon"></div></button>
   <button onclick="logout()">로그아웃</button>
 </div>
 
@@ -108,6 +135,10 @@
     <div class="spinner"></div>
   </div>
 </div>
+
+<!-- 컨트롤 -->
+<button onclick="selectAll()">모두 선택</button>
+<button onclick="clearAll()">선택 해제</button>
 
 <!-- 리스트 -->
 <div class="card" id="userList"></div>
@@ -134,8 +165,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let selectedUser = null;
-let selectedElement = null;
+let selectedUsers = new Set();
 
 const myId = localStorage.getItem("userId");
 
@@ -144,7 +174,7 @@ if(!myId){
   location.href = "index.html";
 }
 
-// 🔥 내 정보
+// 내 정보
 const mySnap = await getDoc(doc(db, "users", myId));
 const myData = mySnap.data();
 
@@ -153,7 +183,7 @@ document.getElementById("myInfo").innerText =
   " / 점수: " + myData.score +
   " / 역할: " + myData.role;
 
-// 🔥 리스트 생성
+// 리스트 생성
 const listDiv = document.getElementById("userList");
 const querySnapshot = await getDocs(collection(db, "users"));
 
@@ -162,36 +192,55 @@ querySnapshot.forEach((docu) => {
 
   const div = document.createElement("div");
   div.className = "user-item";
-  div.innerText = docu.id + " - " + d.name + " (" + d.score + ")";
 
-  div.onclick = () => {
-    // 🔥 같은 거 다시 누르면 취소
-    if(selectedUser === docu.id){
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+
+  const text = document.createElement("span");
+  text.innerText = docu.id + " - " + d.name + " (" + d.score + ")";
+
+  checkbox.onchange = () => {
+    if(checkbox.checked){
+      selectedUsers.add(docu.id);
+      div.classList.add("selected");
+    } else {
+      selectedUsers.delete(docu.id);
       div.classList.remove("selected");
-      selectedUser = null;
-      selectedElement = null;
-      return;
     }
-
-    document.querySelectorAll(".user-item").forEach(el => el.classList.remove("selected"));
-
-    div.classList.add("selected");
-    selectedUser = docu.id;
-    selectedElement = div;
   };
 
+  div.onclick = () => {
+    checkbox.checked = !checkbox.checked;
+    checkbox.onchange();
+  };
+
+  div.appendChild(checkbox);
+  div.appendChild(text);
   listDiv.appendChild(div);
 });
 
-// 🔥 점수 적용
+// 모두 선택
+window.selectAll = () => {
+  document.querySelectorAll(".user-item").forEach((el, i) => {
+    const cb = el.querySelector("input");
+    cb.checked = true;
+    cb.onchange();
+  });
+};
+
+// 선택 해제
+window.clearAll = () => {
+  selectedUsers.clear();
+  document.querySelectorAll(".user-item").forEach(el => {
+    el.classList.remove("selected");
+    el.querySelector("input").checked = false;
+  });
+};
+
+// 점수 적용
 window.apply = async () => {
   if(myData.role === "student"){
     alert("권한 없음");
-    return;
-  }
-
-  if(!selectedUser){
-    alert("대상 선택");
     return;
   }
 
@@ -202,21 +251,23 @@ window.apply = async () => {
     return;
   }
 
-  await updateDoc(doc(db, "users", selectedUser), {
-    score: increment(val)
-  });
+  for(const id of selectedUsers){
+    await updateDoc(doc(db, "users", id), {
+      score: increment(val)
+    });
+  }
 
   alert("적용 완료");
   location.reload();
 };
 
-// 🔥 로그아웃
+// 로그아웃
 window.logout = () => {
   localStorage.removeItem("userId");
   location.href = "index.html";
 };
 
-// 🔥 홈 이동
+// 홈 이동
 window.goHome = () => {
   location.href = "https://25withcoding.kr";
 };
