@@ -1,138 +1,52 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>상벌점 시스템 관리자</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f2f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
-  #loginDiv, #dashboardDiv {
-    background-color: white;
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    text-align: center;
-    width: 320px;
-  }
-  input, select, button {
-    margin: 10px 0;
-    padding: 10px;
-    width: 90%;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-  }
-  button {
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    transition: 0.3s;
-  }
-  button:hover {
-    background-color: #45a049;
-  }
-  h1 { margin-bottom: 25px; }
-  #status {
-    margin-top: 15px;
-    font-weight: bold;
-    color: #333;
-  }
-</style>
-</head>
+<html>
 <body>
 
-<div id="loginDiv">
-  <h1>관리자 로그인</h1>
-  <input type="password" id="adminPassword" placeholder="비밀번호">
-  <button id="loginBtn">로그인</button>
-</div>
+<h2>로그인</h2>
 
-<div id="dashboardDiv" style="display:none;">
-  <h1>관리자 대시보드</h1>
-  <select id="userSelect">
-    <option value="">사용자 선택</option>
-  </select>
-  <input type="number" id="scoreInput" placeholder="점수 입력">
-  <input type="text" id="reasonInput" placeholder="사유 입력">
-  <button id="addScoreBtn">점수 추가</button>
-  <p id="status"></p>
-</div>
+<input id="id" placeholder="학번">
+<input id="pw" type="password" placeholder="비밀번호">
+<button onclick="login()">로그인</button>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co"; // 본인 프로젝트 URL
-  const SUPABASE_ANON_KEY = "sb_publishable_RpNZKmYfi_mvYgLjjhAgpw_hQkk4641";
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-  const ADMIN_PASSWORD = "zheldrhkgkaRpffkaus";
+const firebaseConfig = {
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain: "points2026-f5e50.firebaseapp.com",
+  projectId: "points2026-f5e50"
+};
 
-  const loginDiv = document.getElementById('loginDiv');
-  const dashboardDiv = document.getElementById('dashboardDiv');
-  const loginBtn = document.getElementById('loginBtn');
-  const addScoreBtn = document.getElementById('addScoreBtn');
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  loginBtn.addEventListener('click', () => {
-    const pw = document.getElementById('adminPassword').value;
-    if (pw === ADMIN_PASSWORD) {
-      loginDiv.style.display = 'none';
-      dashboardDiv.style.display = 'block';
-      loadUsers();
-    } else {
-      alert("비밀번호가 틀렸습니다.");
-    }
-  });
+window.login = async () => {
+  const id = document.getElementById("id").value;
+  const pw = document.getElementById("pw").value;
 
-  async function loadUsers() {
-    try {
-      const { data, error } = await supabase.from('users').select('*').order('name');
-      if (error) throw error;
-      const select = document.getElementById('userSelect');
-      select.innerHTML = '<option value="">사용자 선택</option>';
-      data.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user.id;
-        option.text = user.name;
-        select.add(option);
-      });
-    } catch(err) {
-      console.error("사용자 불러오기 실패:", err.message);
-    }
+  const snap = await getDoc(doc(db, "users", id));
+
+  if(!snap.exists()){
+    alert("계정 없음");
+    return;
   }
 
-  addScoreBtn.addEventListener('click', async () => {
-    const userId = document.getElementById('userSelect').value;
-    const score = document.getElementById('scoreInput').value;
-    const reason = document.getElementById('reasonInput').value;
-    const status = document.getElementById('status');
+  const data = snap.data();
 
-    if (!userId || !score || !reason) {
-      alert("모든 항목을 입력해주세요.");
-      return;
-    }
+  if(pw !== data.password){
+    alert("비밀번호 틀림");
+    return;
+  }
 
-    try {
-      const { error } = await supabase.from('score_logs').insert([
-        { user_id: userId, score: parseInt(score), reason: reason, admin_id: null }
-      ]);
-      if (error) throw error;
-      status.textContent = "점수 추가 완료!";
-      document.getElementById('scoreInput').value = '';
-      document.getElementById('reasonInput').value = '';
-    } catch(err) {
-      status.textContent = "점수 추가 실패: " + err.message;
-    }
-  });
-});
+  localStorage.setItem("userId", id);
+
+  if(data.password === data.birth || data.password === "qwer1234!"){
+    location.href = "change.html";
+  } else {
+    location.href = "main.html";
+  }
+}
 </script>
 
 </body>
