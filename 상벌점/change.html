@@ -4,7 +4,10 @@
 
 <h2>비밀번호 변경</h2>
 
-<input id="newpw" type="password" placeholder="새 비밀번호">
+<input id="pw1" type="password" placeholder="새 비밀번호">
+<input id="pw2" type="password" placeholder="비밀번호 확인">
+<button onclick="toggle()">👁</button>
+<br><br>
 <button onclick="change()">변경</button>
 
 <script type="module">
@@ -33,22 +36,36 @@ function valid(pw){
   return pw.length >= 6 && count >= 2;
 }
 
+window.toggle = () => {
+  const p1 = document.getElementById("pw1");
+  const p2 = document.getElementById("pw2");
+  const type = p1.type === "password" ? "text" : "password";
+  p1.type = type;
+  p2.type = type;
+};
+
 window.change = async () => {
   const id = localStorage.getItem("userId");
-  const newpw = document.getElementById("newpw").value;
+  const pw1 = document.getElementById("pw1").value;
+  const pw2 = document.getElementById("pw2").value;
 
-  if(!valid(newpw)){
-    alert("6자리 이상 + 2종류 이상");
+  if(pw1 !== pw2){
+    alert("비밀번호 불일치");
+    return;
+  }
+
+  if(!valid(pw1)){
+    alert("조건 안 맞음");
     return;
   }
 
   await updateDoc(doc(db, "users", id), {
-    password: newpw
+    password: pw1
   });
 
   alert("변경 완료");
   location.href = "main.html";
-}
+};
 </script>
 
 </body>
