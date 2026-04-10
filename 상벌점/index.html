@@ -41,6 +41,24 @@
       background: #f5f5f5;
     }
 
+    .pw-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toggle {
+      cursor: pointer;
+      font-size: 16px;
+      opacity: 0.5;
+      margin-left: 5px;
+      transition: 0.2s;
+    }
+
+    .toggle:hover {
+      opacity: 1;
+    }
+
     button {
       padding: 10px;
       margin-top: 10px;
@@ -53,18 +71,6 @@
 
     button:hover {
       background: #ccc;
-    }
-
-    .pw-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .toggle {
-      margin-left: 5px;
-      cursor: pointer;
-      font-size: 12px;
     }
   </style>
 </head>
@@ -79,7 +85,7 @@
 
   <div class="pw-wrap">
     <input id="pw" type="password" placeholder="비밀번호를 입력하세요.">
-    <span class="toggle" onclick="togglePw()">보기</span>
+    <span class="toggle" onclick="togglePw()">👁</span>
   </div>
 
   <button onclick="login()">로그인</button>
@@ -123,7 +129,8 @@ window.login = async () => {
 
   localStorage.setItem("userId", id);
 
-  if(data.password === data.birth || data.password === "qwer1234!"){
+  // 🔥 기본 비번이면 강제 변경
+  if(data.password === "qwer1234!"){
     location.href = "change.html";
   } else {
     location.href = "main.html";
