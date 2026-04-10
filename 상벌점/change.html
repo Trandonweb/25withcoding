@@ -1,14 +1,83 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>비밀번호 변경</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f0f0f0;
+      font-family: sans-serif;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      text-align: center;
+      width: 260px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    h2 {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #555;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 12px;
+      border: none;
+      background: #f5f5f5;
+    }
+
+    button {
+      padding: 10px;
+      margin-top: 10px;
+      width: 100%;
+      border-radius: 12px;
+      border: none;
+      background: #ddd;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #ccc;
+    }
+
+    .toggle {
+      font-size: 12px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+
 <body>
 
-<h2>비밀번호 변경</h2>
+<div class="card">
+  <h1>비밀번호 변경</h1>
+  <h2>새로운 비밀번호를 설정하세요</h2>
 
-<input id="pw1" type="password" placeholder="새 비밀번호">
-<input id="pw2" type="password" placeholder="비밀번호 확인">
-<button onclick="toggle()">👁</button>
-<br><br>
-<button onclick="change()">변경</button>
+  <input id="pw1" type="password" placeholder="새 비밀번호">
+
+  <div>
+    <input id="pw2" type="password" placeholder="비밀번호 확인">
+    <span class="toggle" onclick="toggle()">보기</span>
+  </div>
+
+  <button onclick="change()">변경하기</button>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -23,22 +92,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function valid(pw){
-  const hasEng = /[a-zA-Z]/.test(pw);
-  const hasNum = /[0-9]/.test(pw);
-  const hasSpec = /[^a-zA-Z0-9]/.test(pw);
-
-  let count = 0;
-  if(hasEng) count++;
-  if(hasNum) count++;
-  if(hasSpec) count++;
-
-  return pw.length >= 6 && count >= 2;
-}
-
 window.toggle = () => {
   const p1 = document.getElementById("pw1");
   const p2 = document.getElementById("pw2");
+
   const type = p1.type === "password" ? "text" : "password";
   p1.type = type;
   p2.type = type;
@@ -51,11 +108,6 @@ window.change = async () => {
 
   if(pw1 !== pw2){
     alert("비밀번호 불일치");
-    return;
-  }
-
-  if(!valid(pw1)){
-    alert("조건 안 맞음");
     return;
   }
 
