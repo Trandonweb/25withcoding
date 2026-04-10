@@ -6,13 +6,15 @@
 
 <p id="info"></p>
 
-<input id="target" placeholder="대상 학번">
-<button onclick="add()">+1</button>
-<button onclick="minus()">-1</button>
+<select id="userList"></select>
+<br><br>
+
+<input id="scoreInput" type="number" placeholder="점수 입력 (+/-)">
+<button onclick="apply()">적용</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
@@ -24,38 +26,44 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const myId = localStorage.getItem("userId");
-
-const snap = await getDoc(doc(db, "users", myId));
-const data = snap.data();
+const mySnap = await getDoc(doc(db, "users", myId));
+const myData = mySnap.data();
 
 document.getElementById("info").innerText =
-  data.name + " / 점수: " + data.score + " / 역할: " + data.role;
+  myData.name + " / 점수: " + myData.score + " / 역할: " + myData.role;
 
-window.add = async () => {
-  if(data.role === "student"){
+// 🔥 목록 불러오기
+const querySnapshot = await getDocs(collection(db, "users"));
+const select = document.getElementById("userList");
+
+querySnapshot.forEach((docu) => {
+  const d = docu.data();
+  const option = document.createElement("option");
+  option.value = docu.id;
+  option.text = docu.id + " - " + d.name;
+  select.appendChild(option);
+});
+
+window.apply = async () => {
+  if(myData.role === "student"){
     alert("권한 없음");
     return;
   }
 
-  const t = document.getElementById("target").value;
+  const target = select.value;
+  const val = parseInt(document.getElementById("scoreInput").value);
 
-  await updateDoc(doc(db, "users", t), {
-    score: increment(1)
-  });
-}
-
-window.minus = async () => {
-  if(data.role === "student"){
-    alert("권한 없음");
+  if(isNaN(val)){
+    alert("숫자 입력");
     return;
   }
 
-  const t = document.getElementById("target").value;
-
-  await updateDoc(doc(db, "users", t), {
-    score: increment(-1)
+  await updateDoc(doc(db, "users", target), {
+    score: increment(val)
   });
-}
+
+  alert("적용 완료");
+};
 </script>
 
 </body>
