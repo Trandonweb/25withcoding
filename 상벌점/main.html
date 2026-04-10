@@ -6,6 +6,7 @@
     body {
       font-family: sans-serif;
       padding: 20px;
+      background-color: #f0f0f0; /* 🔥 배경색 */
     }
 
     .top-bar {
@@ -19,19 +20,27 @@
       margin: 5px;
     }
 
-    #loading {
-      display: none;
-      margin-top: 20px;
+    .card {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 10px;
+      background-color: white;
+    }
+
+    .loading-inline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .spinner {
-      border: 5px solid #ddd;
-      border-top: 5px solid black;
+      border: 4px solid #ddd;
+      border-top: 4px solid black;
       border-radius: 50%;
-      width: 30px;
-      height: 30px;
+      width: 18px;
+      height: 18px;
       animation: spin 1s linear infinite;
-      margin: auto;
     }
 
     @keyframes spin {
@@ -39,12 +48,6 @@
       100% { transform: rotate(360deg); }
     }
 
-    .card {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 10px;
-    }
   </style>
 </head>
 
@@ -57,22 +60,21 @@
 
 <h2>코딩과 함께라면</h2>
 
-<!-- 🔥 내 정보 -->
-<div class="card" id="myInfo">불러오는 중...</div>
+<!-- 🔥 내 정보 (로딩 개선) -->
+<div class="card" id="myInfo">
+  <div class="loading-inline" id="loadingText">
+    <span>불러오는 중...</span>
+    <div class="spinner"></div>
+  </div>
+</div>
 
 <hr>
 
-<!-- 🔥 대상 선택 -->
 <select id="userList"></select>
 <br><br>
 
 <input id="scoreInput" type="text" placeholder="점수 입력 (+3, -2)">
 <button onclick="apply()">적용</button>
-
-<!-- 🔥 로딩 -->
-<div id="loading">
-  <div class="spinner"></div>
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -87,12 +89,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const loading = document.getElementById("loading");
-
-function showLoading(state){
-  loading.style.display = state ? "block" : "none";
-}
-
 const myId = localStorage.getItem("userId");
 
 if(!myId){
@@ -100,9 +96,7 @@ if(!myId){
   location.href = "index.html";
 }
 
-showLoading(true);
-
-// 🔥 내 정보 먼저 로드
+// 🔥 내 정보 로드
 const mySnap = await getDoc(doc(db, "users", myId));
 const myData = mySnap.data();
 
@@ -123,8 +117,6 @@ querySnapshot.forEach((docu) => {
   select.appendChild(option);
 });
 
-showLoading(false);
-
 // 🔥 점수 적용
 window.apply = async () => {
   if(myData.role === "student"){
@@ -139,8 +131,6 @@ window.apply = async () => {
     alert("숫자 입력 (+3, -2)");
     return;
   }
-
-  showLoading(true);
 
   await updateDoc(doc(db, "users", target), {
     score: increment(val)
