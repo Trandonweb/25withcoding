@@ -9,6 +9,9 @@
 <link rel="apple-touch-icon" href="/2025withcoding_logo.png">
 
 <style>
+.VOTE_1, .VOTE_2 {
+  mix-blend-mode: multiply;
+}
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -30,46 +33,42 @@ body {
   position: fixed;
   top: 20px;
   left: 20px;
-  width: 30px;
+  width: 30px;   /* 75% 크기 */
   height: 30px;
   background: url("hamburgerbotton.png") no-repeat center/contain;
   border: none;
   cursor: pointer;
   z-index: 3000;
 }
-
-/* 상벌점 버튼 (텍스트) */
-.POINT_BTN {
+/* 투표 버튼1 */
+.VOTE_1 {
   position: fixed;
   top: 20px;
   left: 110px;
-  padding: 10px 16px;
+  width: 110px;
+  height: 40px;
   border: none;
-  background: #222;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px;
+  background: url('VOTE 1.png') no-repeat center / contain;
   cursor: pointer;
   z-index: 2000;
-  transition: 0.2s;
 }
-
-/* hover 효과 */
-.POINT_BTN:hover {
-  background: #444;
-  transform: scale(1.05);
+/* 투표 버튼2 */
+.VOTE_2 {
+  position: fixed;
+  top: 20px;
+  left: 180px;
+  width: 110px;
+  height: 40px;
+  border: none;
+  background: url('VOTE 2.png') no-repeat center / contain;
+  cursor: pointer;
+  z-index: 2000;
 }
-
-/* 클릭 느낌 */
-.POINT_BTN:active {
-  transform: scale(0.95);
-}
-
 /* 음소거 버튼 */
 #musicBtn {
   position: fixed;
   top: 20px;
-  left: 70px;
+  left: 70px; /* 햄버거 오른쪽 */
   width: 38px;
   height: 38px;
   border: none;
@@ -90,12 +89,12 @@ body {
   transition: left 0.3s ease;
   z-index: 2500;
   box-shadow: 2px 0 10px rgba(0,0,0,0.2);
-  pointer-events: none;
+  pointer-events: none; /* 메뉴 닫힘시 클릭 안먹도록 */
 }
 
 .menu.active {
   left: 0;
-  pointer-events: auto;
+  pointer-events: auto; /* 메뉴 열리면 클릭 가능 */
 }
 
 .menu a {
@@ -104,8 +103,8 @@ body {
   color: #000;
   text-decoration: none;
   font-size: 1.1em;
-  text-align: center;
-  font-weight: bold;
+  text-align: center;   /* 중앙정렬 */
+  font-weight: bold;    /* 글자 굵게 */
 }
 
 .menu a:hover {
@@ -121,11 +120,12 @@ body {
 
 /* 상단 텍스트 */
 .content {
-  margin: 15vh auto 0 auto;
-  max-width: 900px;
+  margin: 15vh auto 0 auto;   /* 좌우 중앙 정렬 */
+  max-width: 900px;           /* 최대 너비 제한 */
   line-height: 1.8em;
-  text-align: center;
+  text-align: center;         /* 글자 중앙 */
 }
+
 
 .pc-text { display: block; }
 .mobile-text { display: none; }
@@ -163,25 +163,27 @@ body {
 #prev { left: -50px; }
 #next { right: -50px; }
 
+
+
 /* 썸네일 */
 .thumb {
   border-radius: 10px;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* ← 썸네일 안에서만 나타나게 */
 }
 
 .thumb-info {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
+  bottom: 0;             /* 썸네일 바로 아래 */
+  left: 0;               /* 왼쪽 끝 */
+  width: 100%;           /* 썸네일 폭과 동일 */
   background: rgba(0,0,0,0.6);
   color: white;
   padding: 5px 0;
   opacity: 0;
-  text-align: center;
-  box-sizing: border-box;
+  text-align: center;    /* 글자 중앙 정렬 */
+  box-sizing: border-box; /* padding 때문에 튀어나오지 않게 */
   transition: 0.3s;
 }
 
@@ -189,12 +191,15 @@ body {
   opacity: 1;
 }
 
+
+.thumb.big:hover .thumb-info {
+  opacity: 1;
+}
 .thumb img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: contain; /* 이미지 비율 유지, 잘림 방지 */
 }
-
 .small { width: 160px; height: 90px; }
 .big { width: 320px; height: 180px; }
 
@@ -209,24 +214,145 @@ body {
   #prev { left: 10px; }
   #next { right: 10px; }
 }
-
+  /* 모바일에서 소개 텍스트 중앙 정렬 */
 .mobile-text {
-  margin: 12vh auto 0 auto;
-  max-width: 90vw;
-  text-align: center;
+  margin: 12vh auto 0 auto;  /* 위쪽 여백 + 좌우 중앙 */
+  max-width: 90vw;           /* 화면 가로폭 제한 */
+  text-align: center;        /* 글자 중앙 */
 }
+
 </style>
 </head>
 
 <body>
-
-<!-- 상벌점 버튼 -->
+<!-- 상벌점 시스템 버튼 -->
 <button class="POINT_BTN" onclick="window.open('https://25withcoding.kr/상벌점')">
   상벌점 시스템
 </button>
-
-<!-- 햄버거 + 음악 -->
+<!-- 햄버거 버튼 -->
 <button class="hamburger" onclick="toggleMenu()"></button>
 <button id="musicBtn" onclick="toggleMusic()"></button>
 
-<!-- 나머지 코드는 그대로 유지 -->
+<!-- 사이드 메뉴 -->
+<nav class="menu" id="sideMenu">
+  <div class="menu-inner">
+    <div class="menu-logo">
+      <img src="logo.png" alt="logo">
+    </div>
+    <a class="menu-home" href="/" onclick="closeMenu()">홈</a>
+    <div class="menu-gap"></div>
+    <a href="/apply" onclick="closeMenu()">2기 지원</a>
+    <a href="/result" onclick="closeMenu()">결과 확인</a>
+  </div>
+</nav>
+
+<!-- 배경 음악 -->
+<audio id="bgMusic" src="music.mp3" loop autoplay></audio>
+
+<!-- 제목 -->
+<div class="content pc-text">
+  <h1>2025 코딩과 함께라면 기념관</h1>
+  <p>JO Y.J. • LEE J.H. • SON S.H. • JANG H.J. • LEE S.Y. • LIM J.W.</p>
+</div>
+
+<div class="content mobile-text">
+  <h1>2025 코딩과 함께라면</h1>
+  <h1>기념관</h1>
+  <p>JO Y.J. • LEE J.H. • SON S.H.</p>
+  <p>JANG H.J. • LEE S.Y. • LIM J.W.</p>
+</div>
+
+<!-- 캐러셀 -->
+<div class="carousel-container">
+  <button id="prev">&lt;</button>
+<div class="thumb small" id="left">
+  <img src="" alt="left-thumb">
+  <span class="thumb-info"></span>
+</div>
+<div class="thumb big" id="center">
+  <img src="" alt="center-thumb">
+  <span class="thumb-info"></span>
+</div>
+<div class="thumb small" id="right">
+  <img src="" alt="right-thumb">
+  <span class="thumb-info"></span>
+</div>
+
+  <button id="next">&gt;</button>
+</div>
+
+<img src="logo.png" class="logo">
+
+<script>
+const thumbs = [
+  {img:'Thumbnail1.png', title:'CODE : STORGE', author:'JO Y.J.', link:'https://naver.me/5M5Ke6YT'},
+  {img:'Thumbnail2.png', title:'HIGH SCORE', author:'LEE J.H.', link:'https://naver.me/FPU7WpYv'},
+  {img:'Thumbnail3.png', title:'억까 게임', author:'SON S.H.', link:'https://naver.me/GdlLfME3'},
+  {img:'Thumbnail4.png', title:'SPEED GAME', author:'JANG H.J.', link:'https://naver.me/x4Gpy1ly'},
+  {img:'Thumbnail5.png', title:'몬스터 디펜스', author:'LEE S.Y.', link:'https://naver.me/GT6ZUHNa'},
+  {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.', link:'https://naver.me/xhl9LE6l'}
+];
+
+let currentIndex = Math.floor(Math.random() * thumbs.length);
+const left = document.getElementById('left');
+const center = document.getElementById('center');
+const right = document.getElementById('right');
+
+function isMobilePortrait() {
+  return window.innerWidth <= 600 && window.innerHeight > window.innerWidth;
+}
+
+function updateCarousel() {
+  const len = thumbs.length;
+  if (isMobilePortrait()) {
+    const c = thumbs[currentIndex % len];
+    center.style.backgroundImage = `url(${c.img})`;
+    center.style.backgroundSize = 'cover';
+    center.querySelector('.thumb-info').textContent = `${c.title} - ${c.author}`;
+  } else {
+    const r = thumbs[currentIndex % len];
+    const c = thumbs[(currentIndex + 1) % len];
+    const l = thumbs[(currentIndex + 2) % len];
+
+    left.querySelector('img').src = l.img;
+    center.querySelector('img').src = c.img;
+    right.querySelector('img').src = r.img;
+
+
+    left.querySelector('.thumb-info').textContent = `${l.title} - ${l.author}`;
+    center.querySelector('.thumb-info').textContent = `${c.title} - ${c.author}`;
+    right.querySelector('.thumb-info').textContent = `${r.title} - ${r.author}`;
+  }
+}
+
+function next(){ currentIndex++; updateCarousel(); }
+function prev(){ currentIndex = (currentIndex-1+thumbs.length)%thumbs.length; updateCarousel(); }
+
+updateCarousel();
+setInterval(next,2000);
+
+[left,center,right].forEach((el,idx)=>{
+  el.onclick=()=>{
+    const len=thumbs.length;
+    let p=isMobilePortrait()?thumbs[currentIndex%len]:
+      idx===0?thumbs[(currentIndex+2)%len]:
+      idx===1?thumbs[(currentIndex+1)%len]:
+      thumbs[currentIndex%len];
+    window.open(p.link,'_blank');
+  }
+});
+
+function toggleMenu(){ document.getElementById("sideMenu").classList.toggle("active"); }
+function closeMenu(){ document.getElementById("sideMenu").classList.remove("active"); }
+function toggleMusic(){
+  const m=document.getElementById("bgMusic");
+  const b=document.getElementById("musicBtn");
+  m.muted=!m.muted;
+  b.style.backgroundImage=m.muted?"url('sound2.png')":"url('sound1.png')";
+}
+document.getElementById("next").addEventListener("click", next);
+document.getElementById("prev").addEventListener("click", prev);
+</script>
+
+</body>
+</html>
