@@ -82,7 +82,7 @@
       margin-right: 10px;
     }
 
-    input[type="number"] {
+    input[type="number"], input[type="text"] {
       padding: 10px;
       border-radius: 14px;
       border: none;
@@ -117,6 +117,23 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* ⭐ 점수 색상 */
+    .plus {
+      color: blue;
+      font-weight: bold;
+    }
+
+    .minus {
+      color: red;
+      font-weight: bold;
+    }
+
+    .zero {
+      color: black;
+      font-weight: bold;
+    }
+
   </style>
 </head>
 
@@ -132,7 +149,6 @@
 
 <h2>2026 코딩과 함께라면 상벌점 시스템</h2>
 
-<!-- 내 정보 -->
 <div class="card" id="myInfo">
   <div class="loading-inline">
     <span>정보를 불러오는 중...</span>
@@ -140,16 +156,14 @@
   </div>
 </div>
 
-<!-- 컨트롤 -->
 <button onclick="selectAll()">모두 선택</button>
 <button onclick="clearAll()">모두 해제</button>
 
-<!-- 사용자 리스트 -->
 <div class="card" id="userList"></div>
 
 <br>
 
-<input id="scoreInput" type="number" placeholder="상벌점을 입력하세요.">
+<input id="scoreInput" type="text" placeholder="+10 / -5 / 0">
 <button onclick="apply()">적용</button>
 
 <div class="footer">
@@ -159,7 +173,6 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-
 import {
   getFirestore,
   collection,
@@ -180,7 +193,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let selectedUsers = new Set();
-
 const myId = localStorage.getItem("userId");
 
 if (!myId) {
@@ -188,7 +200,6 @@ if (!myId) {
   location.href = "index.html";
 }
 
-// 내 정보 불러오기
 const mySnap = await getDoc(doc(db, "users", myId));
 
 if (!mySnap.exists()) {
@@ -199,13 +210,23 @@ if (!mySnap.exists()) {
 
 const myData = mySnap.data();
 
-// 내 정보 표시
-document.getElementById("myInfo").innerText =
+/* ⭐ 점수 색상 함수 */
+function formatScore(score) {
+  let cls = "zero";
+
+  if (score > 0) cls = "plus";
+  else if (score < 0) cls = "minus";
+
+  return `<span class="${cls}">${score}</span>`;
+}
+
+/* 내 정보 */
+document.getElementById("myInfo").innerHTML =
   "이름: " + myData.name +
-  " / 점수: " + myData.score +
+  " / 점수: " + formatScore(myData.score) +
   " / 권한: " + myData.role;
 
-// 사용자 목록
+/* 유저 리스트 */
 const listDiv = document.getElementById("userList");
 
 const querySnapshot = await getDocs(collection(db, "users"));
@@ -221,14 +242,12 @@ querySnapshot.forEach((docu) => {
   checkbox.type = "checkbox";
 
   const text = document.createElement("span");
-  text.innerText =
+  text.innerHTML =
     docu.id + " - " +
     d.name +
-    " (" + d.score + ")";
+    " (" + formatScore(d.score) + ")";
 
-  // 선택 상태 업데이트 함수
   function updateSelection() {
-
     if (checkbox.checked) {
       selectedUsers.add(docu.id);
       div.classList.add("selected");
@@ -236,20 +255,11 @@ querySnapshot.forEach((docu) => {
       selectedUsers.delete(docu.id);
       div.classList.remove("selected");
     }
-
   }
 
-  // 체크박스 클릭 시 버블링 방지
-  checkbox.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
+  checkbox.addEventListener("click", (e) => e.stopPropagation());
+  checkbox.addEventListener("change", updateSelection);
 
-  // 체크 상태 변경
-  checkbox.addEventListener("change", () => {
-    updateSelection();
-  });
-
-  // div 클릭
   div.addEventListener("click", () => {
     checkbox.checked = !checkbox.checked;
     updateSelection();
@@ -257,49 +267,34 @@ querySnapshot.forEach((docu) => {
 
   div.appendChild(checkbox);
   div.appendChild(text);
-
   listDiv.appendChild(div);
-
 });
 
-// 모두 선택
+/* 전체 선택 */
 window.selectAll = () => {
+  selectedUsers.clear();
 
   document.querySelectorAll(".user-item").forEach((el) => {
-
     const cb = el.querySelector("input");
-
     cb.checked = true;
-
     el.classList.add("selected");
 
+    const id = el.querySelector("span").innerText.split(" - ")[0];
+    selectedUsers.add(id);
   });
-
-  // Set 초기화 후 다시 추가
-  selectedUsers.clear();
-
-  querySnapshot.forEach((docu) => {
-    selectedUsers.add(docu.id);
-  });
-
 };
 
-// 모두 해제
+/* 전체 해제 */
 window.clearAll = () => {
-
   selectedUsers.clear();
 
   document.querySelectorAll(".user-item").forEach((el) => {
-
     el.classList.remove("selected");
-
     el.querySelector("input").checked = false;
-
   });
-
 };
 
-// 점수 적용
+/* 적용 */
 window.apply = async () => {
 
   if (myData.role === "student") {
@@ -312,8 +307,7 @@ window.apply = async () => {
     return;
   }
 
-  const val =
-    Number(document.getElementById("scoreInput").value);
+  const val = Number(document.getElementById("scoreInput").value);
 
   if (isNaN(val)) {
     alert("숫자를 입력해주세요.");
@@ -321,67 +315,28 @@ window.apply = async () => {
   }
 
   try {
-
     for (const id of selectedUsers) {
-
-      // 부회장 제한
-      if (myData.role === "vice") {
-
-        // 자기 자신 금지
-        if (id === myId) {
-          alert("자기 자신에게 부여 불가");
-          continue;
-        }
-
-        // 대상 정보 가져오기
-        const targetSnap =
-          await getDoc(doc(db, "users", id));
-
-        const targetData = targetSnap.data();
-
-        // 회장 금지
-        if (targetData.role === "president") {
-          alert("회장에게 부여 불가");
-          continue;
-        }
-
-      }
-
-      // 점수 업데이트
       await updateDoc(doc(db, "users", id), {
         score: increment(val)
       });
-
     }
 
     alert("적용 완료!");
-
     location.reload();
 
   } catch (err) {
-
     console.error(err);
-
     alert("오류 발생");
-
   }
-
 };
 
-// 로그아웃
 window.logout = () => {
-
   localStorage.removeItem("userId");
-
   location.href = "index.html";
-
 };
 
-// 홈 이동
 window.goHome = () => {
-
   location.href = "https://25withcoding.kr";
-
 };
 
 </script>
