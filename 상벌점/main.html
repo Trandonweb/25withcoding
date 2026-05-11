@@ -82,6 +82,16 @@
       margin-right: 10px;
     }
 
+    /* 🔥 회장 비활성화 UI */
+    .user-item.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .user-item.disabled input {
+      pointer-events: none;
+    }
+
     input[type="text"] {
       padding: 10px;
       border-radius: 14px;
@@ -98,39 +108,10 @@
       color: #555;
     }
 
-    .loading-inline {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .spinner {
-      border: 4px solid #ddd;
-      border-top: 4px solid black;
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* 점수 색상 */
     .plus { color: blue; font-weight: bold; }
     .minus { color: red; font-weight: bold; }
     .zero { color: black; font-weight: bold; }
 
-    .user-item.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.user-item.disabled input {
-  pointer-events: none;
-}
   </style>
 </head>
 
@@ -146,9 +127,7 @@
 
 <h2>2026 코딩과 함께라면 상벌점 시스템</h2>
 
-<div class="card" id="myInfo">
-  로딩중...
-</div>
+<div class="card" id="myInfo">로딩중...</div>
 
 <button onclick="selectAll()">모두 선택</button>
 <button onclick="clearAll()">모두 해제</button>
@@ -217,7 +196,7 @@ document.getElementById("myInfo").innerHTML =
   " / 점수: " + formatScore(myData.score) +
   " / 권한: " + roleToText(myData.role);
 
-/* 유저 목록 */
+/* 유저 리스트 */
 const listDiv = document.getElementById("userList");
 
 const querySnapshot = await getDocs(collection(db, "users"));
@@ -225,12 +204,14 @@ const querySnapshot = await getDocs(collection(db, "users"));
 querySnapshot.forEach((docu) => {
 
   const d = docu.data();
+  const isPresident = d.role === "president";
 
   const div = document.createElement("div");
-  div.className = "user-item";
+  div.className = "user-item" + (isPresident ? " disabled" : "");
 
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
+  checkbox.disabled = isPresident;
 
   const text = document.createElement("span");
   text.innerHTML =
@@ -252,6 +233,8 @@ querySnapshot.forEach((docu) => {
   checkbox.addEventListener("change", updateSelection);
 
   div.addEventListener("click", () => {
+    if (isPresident) return;
+
     checkbox.checked = !checkbox.checked;
     updateSelection();
   });
@@ -267,6 +250,8 @@ window.selectAll = () => {
 
   document.querySelectorAll(".user-item").forEach(el => {
     const cb = el.querySelector("input");
+    if (cb.disabled) return;
+
     cb.checked = true;
     el.classList.add("selected");
 
@@ -281,7 +266,8 @@ window.clearAll = () => {
 
   document.querySelectorAll(".user-item").forEach(el => {
     el.classList.remove("selected");
-    el.querySelector("input").checked = false;
+    const cb = el.querySelector("input");
+    if (!cb.disabled) cb.checked = false;
   });
 };
 
@@ -302,25 +288,17 @@ window.apply = async () => {
 
   for (const id of selectedUsers) {
 
-    const targetRef = doc(db, "users", id);
-    const targetSnap = await getDoc(targetRef);
-    const targetData = targetSnap.data();
+    const ref = doc(db, "users", id);
+    const snap = await getDoc(ref);
+    const data = snap.data();
 
     /* vice 제한 */
     if (myData.role === "vice") {
-
-      if (id === myId) {
-        alert("자기 자신 불가");
-        continue;
-      }
-
-      if (targetData.role === "president") {
-        alert("회장 불가");
-        continue;
-      }
+      if (id === myId) continue;
+      if (data.role === "president") continue;
     }
 
-    await updateDoc(targetRef, {
+    await updateDoc(ref, {
       score: increment(val)
     });
   }
