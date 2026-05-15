@@ -14,8 +14,9 @@
     .top-bar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     button {
@@ -112,30 +113,6 @@
     나중에 Firebase로 교체 가능
   */
 
-  if (!localStorage.getItem("notes")) {
-
-    localStorage.setItem("notes", JSON.stringify([
-      {
-        id: "sample1",
-        title: "파이썬 정리",
-        content: "print('hello')",
-        pin: "1234",
-        author: "2310",
-        deleted: false,
-        createdAt: "2026-05-16"
-      },
-      {
-        id: "sample2",
-        title: "발표 준비",
-        content: "안녕하세요",
-        pin: "1111",
-        author: "2407",
-        deleted: false,
-        createdAt: "2026-05-16"
-      }
-    ]));
-
-  }
 
   function getNotes() {
 
