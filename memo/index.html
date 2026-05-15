@@ -1,1 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>메모</title>
 
+  <style>
+
+    body {
+      font-family: sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 14px;
+      background: white;
+      cursor: pointer;
+      margin: 3px;
+    }
+
+    button:hover {
+      background: #e6e6e6;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 20px;
+      margin-top: 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 14px;
+      background: white;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+
+    .memo-item {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .memo-item:hover {
+      background: #ececec;
+    }
+
+    .memo-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .memo-info {
+      color: gray;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .empty {
+      text-align: center;
+      color: gray;
+      padding: 30px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="top-bar">
+
+  <div>
+    <button onclick="goHome()">홈</button>
+    <button onclick="goTrash()">휴지통</button>
+  </div>
+
+  <button onclick="goCreate()">새 메모</button>
+
+</div>
+
+<input
+  id="searchInput"
+  placeholder="메모 검색..."
+  oninput="renderMemos()"
+/>
+
+<div id="memoList"></div>
+
+<script>
+
+  /*
+    임시 localStorage 구조
+    나중에 Firebase로 교체 가능
+  */
+
+  if (!localStorage.getItem("notes")) {
+
+    localStorage.setItem("notes", JSON.stringify([
+      {
+        id: "sample1",
+        title: "파이썬 정리",
+        content: "print('hello')",
+        pin: "1234",
+        author: "2310",
+        deleted: false,
+        createdAt: "2026-05-16"
+      },
+      {
+        id: "sample2",
+        title: "발표 준비",
+        content: "안녕하세요",
+        pin: "1111",
+        author: "2407",
+        deleted: false,
+        createdAt: "2026-05-16"
+      }
+    ]));
+
+  }
+
+  function getNotes() {
+
+    return JSON.parse(localStorage.getItem("notes")) || [];
+
+  }
+
+  function renderMemos() {
+
+    const memoList =
+      document.getElementById("memoList");
+
+    const search =
+      document.getElementById("searchInput")
+      .value
+      .toLowerCase();
+
+    const notes =
+      getNotes()
+      .filter(note => !note.deleted);
+
+    memoList.innerHTML = "";
+
+    const filtered =
+      notes.filter(note =>
+        note.title.toLowerCase().includes(search)
+      );
+
+    if (filtered.length === 0) {
+
+      memoList.innerHTML = `
+        <div class="card empty">
+          메모가 없습니다.
+        </div>
+      `;
+
+      return;
+    }
+
+    filtered.forEach(note => {
+
+      const div =
+        document.createElement("div");
+
+      div.className = "memo-item";
+
+      div.innerHTML = `
+        <div class="memo-title">
+          📄 ${note.title}
+        </div>
+
+        <div class="memo-info">
+          👤 ${note.author}
+          ·
+          🕒 ${note.createdAt}
+        </div>
+      `;
+
+      div.onclick = () => {
+
+        location.href =
+          "view.html?id=" + note.id;
+
+      };
+
+      memoList.appendChild(div);
+
+    });
+
+  }
+
+  function goCreate() {
+
+    location.href = "create.html";
+
+  }
+
+  function goTrash() {
+
+    location.href = "trash.html";
+
+  }
+
+  function goHome() {
+
+    location.href = "../main.html";
+
+  }
+
+  renderMemos();
+
+</script>
+
+</body>
+</html>
