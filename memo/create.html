@@ -1,1 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>메모 생성</title>
 
+  <style>
+
+    body {
+      font-family: sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 14px;
+      background: white;
+      cursor: pointer;
+      margin: 3px;
+    }
+
+    button:hover {
+      background: #e6e6e6;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+      background: #f5f5f5;
+      font-family: sans-serif;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 300px;
+      font-family: monospace;
+    }
+
+    .label {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .bottom {
+      margin-top: 20px;
+      text-align: right;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="top-bar">
+
+  <button onclick="goBack()">
+    뒤로가기
+  </button>
+
+</div>
+
+<div class="card">
+
+  <h2>📄 새 메모</h2>
+
+  <div class="label">
+    제목
+  </div>
+
+  <input
+    id="titleInput"
+    placeholder="제목을 입력하세요."
+  >
+
+  <div class="label">
+    PIN (4자리)
+  </div>
+
+  <input
+    id="pinInput"
+    type="password"
+    maxlength="4"
+    inputmode="numeric"
+    placeholder="PIN 입력"
+  >
+
+  <div class="label">
+    내용
+  </div>
+
+  <textarea
+    id="contentInput"
+    placeholder="내용을 입력하세요."
+  ></textarea>
+
+  <div class="bottom">
+
+    <button onclick="saveMemo()">
+      저장
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+  function getNotes() {
+
+    return JSON.parse(
+      localStorage.getItem("notes")
+    ) || [];
+
+  }
+
+  function generateId() {
+
+    return Math.random()
+      .toString(36)
+      .substring(2, 10);
+
+  }
+
+  function saveMemo() {
+
+    const title =
+      document.getElementById("titleInput")
+      .value
+      .trim();
+
+    const pin =
+      document.getElementById("pinInput")
+      .value
+      .trim();
+
+    const content =
+      document.getElementById("contentInput")
+      .value;
+
+    if (!title) {
+
+      alert("제목을 입력해주세요.");
+      return;
+
+    }
+
+    if (!pin) {
+
+      alert("PIN을 입력해주세요.");
+      return;
+
+    }
+
+    if (!/^[0-9]+$/.test(pin)) {
+
+      alert("PIN은 숫자만 가능합니다.");
+      return;
+
+    }
+
+    if (pin.length !== 4) {
+
+      alert("PIN은 4자리여야 합니다.");
+      return;
+
+    }
+
+    const notes = getNotes();
+
+    const newNote = {
+
+      id: generateId(),
+
+      title: title,
+
+      pin: pin,
+
+      content: content,
+
+      author:
+        localStorage.getItem("userId")
+        || "unknown",
+
+      deleted: false,
+
+      createdAt:
+        new Date().toLocaleDateString()
+
+    };
+
+    notes.unshift(newNote);
+
+    localStorage.setItem(
+      "notes",
+      JSON.stringify(notes)
+    );
+
+    alert("저장 완료!");
+
+    location.href = "index.html";
+
+  }
+
+  function goBack() {
+
+    location.href = "index.html";
+
+  }
+
+</script>
+
+</body>
+</html>
