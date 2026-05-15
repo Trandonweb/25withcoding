@@ -145,7 +145,14 @@
 <br>
 
 <input id="scoreInput" type="text" placeholder="점수를 입력하세요.">
-<button onclick="apply()">적용</button>
+<button id="applyBtn" onclick="apply()">적용</button>
+
+<div id="loadingBox" style="display:none; margin-top:10px;">
+  <div class="loading-inline">
+    <span>적용 중...</span>
+    <div class="spinner"></div>
+  </div>
+</div>
 
 <div class="footer">
   *이 시스템은 학교 내 그린마일리지와는 무관합니다.*
@@ -397,7 +404,8 @@ window.apply = async () => {
   }
 
   try {
-
+    document.getElementById("applyBtn").style.display = "none";
+    document.getElementById("loadingBox").style.display = "block";
     for (const id of selectedUsers) {
 
       await updateDoc(doc(db, "users", id), {
