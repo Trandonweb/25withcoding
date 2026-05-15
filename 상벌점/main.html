@@ -82,14 +82,9 @@
       margin-right: 10px;
     }
 
-    /* 🔥 회장 비활성화 UI */
     .user-item.disabled {
-      opacity: 0.4;
+      opacity: 0.5;
       cursor: not-allowed;
-    }
-
-    .user-item.disabled input {
-      pointer-events: none;
     }
 
     input[type="text"] {
@@ -108,9 +103,20 @@
       color: #555;
     }
 
-    .plus { color: blue; font-weight: bold; }
-    .minus { color: red; font-weight: bold; }
-    .zero { color: black; font-weight: bold; }
+    .plus {
+      color: blue;
+      font-weight: bold;
+    }
+
+    .minus {
+      color: red;
+      font-weight: bold;
+    }
+
+    .zero {
+      color: black;
+      font-weight: bold;
+    }
 
   </style>
 </head>
@@ -127,7 +133,9 @@
 
 <h2>2026 코딩과 함께라면 상벌점 시스템</h2>
 
-<div class="card" id="myInfo">로딩중...</div>
+<div class="card" id="myInfo">
+  로딩중...
+</div>
 
 <button onclick="selectAll()">모두 선택</button>
 <button onclick="clearAll()">모두 해제</button>
@@ -146,6 +154,7 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -166,6 +175,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let selectedUsers = new Set();
+
 const myId = localStorage.getItem("userId");
 
 if (!myId) {
@@ -174,29 +184,45 @@ if (!myId) {
 }
 
 const mySnap = await getDoc(doc(db, "users", myId));
+
+if (!mySnap.exists()) {
+  alert("사용자 정보를 찾을 수 없습니다.");
+  localStorage.removeItem("userId");
+  location.href = "index.html";
+}
+
 const myData = mySnap.data();
 
 /* 점수 색상 */
 function formatScore(score) {
-  if (score > 0) return `<span class="plus">${score}</span>`;
-  if (score < 0) return `<span class="minus">${score}</span>`;
+
+  if (score > 0) {
+    return `<span class="plus">${score}</span>`;
+  }
+
+  if (score < 0) {
+    return `<span class="minus">${score}</span>`;
+  }
+
   return `<span class="zero">${score}</span>`;
 }
 
-/* 권한 변환 */
+/* 권한 한글화 */
 function roleToText(role) {
+
   if (role === "president") return "회장";
   if (role === "vice") return "부회장";
+
   return "학생";
 }
 
-/* 내 정보 */
+/* 내 정보 표시 */
 document.getElementById("myInfo").innerHTML =
   "이름: " + myData.name +
   " / 점수: " + formatScore(myData.score) +
   " / 권한: " + roleToText(myData.role);
 
-/* 유저 리스트 */
+/* 유저 목록 */
 const listDiv = document.getElementById("userList");
 
 const querySnapshot = await getDocs(collection(db, "users"));
@@ -204,74 +230,152 @@ const querySnapshot = await getDocs(collection(db, "users"));
 querySnapshot.forEach((docu) => {
 
   const d = docu.data();
-  const isPresident = d.role === "president";
 
-  const div = document.createElement("div");
-  div.className = "user-item" + (isPresident ? " disabled" : "");
+  const isMe = docu.id === myId;
 
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  checkbox.disabled = isPresident;
+  /* 권한별 제한 */
+  let disabled = false;
 
-  const text = document.createElement("span");
-  text.innerHTML =
-    docu.id + " - " +
-    d.name +
-    " (" + formatScore(d.score) + ") [" + roleToText(d.role) + "]";
+  // 학생은 전부 막힘
+  if (myData.role === "student") {
+    disabled = true;
+  }
 
-  function updateSelection() {
-    if (checkbox.checked) {
-      selectedUsers.add(docu.id);
-      div.classList.add("selected");
-    } else {
-      selectedUsers.delete(docu.id);
-      div.classList.remove("selected");
+  // 부회장 제한
+  if (myData.role === "vice") {
+
+    // 자기 자신 금지
+    if (isMe) {
+      disabled = true;
+    }
+
+    // 회장 금지
+    if (d.role === "president") {
+      disabled = true;
     }
   }
 
-  checkbox.addEventListener("click", e => e.stopPropagation());
-  checkbox.addEventListener("change", updateSelection);
+  const div = document.createElement("div");
+
+  div.className =
+    "user-item" + (disabled ? " disabled" : "");
+
+  const checkbox = document.createElement("input");
+
+  checkbox.type = "checkbox";
+
+  checkbox.disabled = disabled;
+
+  const text = document.createElement("span");
+
+  text.innerHTML =
+    docu.id + " - " +
+    d.name +
+    " (" + formatScore(d.score) + ") " +
+    "[" + roleToText(d.role) + "]";
+
+  function updateSelection() {
+
+    if (checkbox.checked) {
+
+      selectedUsers.add(docu.id);
+
+      div.classList.add("selected");
+
+    } else {
+
+      selectedUsers.delete(docu.id);
+
+      div.classList.remove("selected");
+
+    }
+  }
+
+  checkbox.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  checkbox.addEventListener("change", () => {
+    updateSelection();
+  });
 
   div.addEventListener("click", () => {
-    if (isPresident) return;
+
+    if (disabled) return;
 
     checkbox.checked = !checkbox.checked;
+
     updateSelection();
+
   });
 
   div.appendChild(checkbox);
   div.appendChild(text);
+
   listDiv.appendChild(div);
+
 });
 
-/* 전체 선택 */
+/* 모두 선택 */
 window.selectAll = () => {
+
   selectedUsers.clear();
 
-  document.querySelectorAll(".user-item").forEach(el => {
+  document.querySelectorAll(".user-item").forEach((el) => {
+
     const cb = el.querySelector("input");
+
     if (cb.disabled) return;
 
     cb.checked = true;
+
     el.classList.add("selected");
 
-    const id = el.querySelector("span").innerText.split(" - ")[0];
-    selectedUsers.add(id);
   });
+
+  querySnapshot.forEach((docu) => {
+
+    const d = docu.data();
+
+    const isMe = docu.id === myId;
+
+    let disabled = false;
+
+    if (myData.role === "student") {
+      disabled = true;
+    }
+
+    if (myData.role === "vice") {
+
+      if (isMe) disabled = true;
+
+      if (d.role === "president") disabled = true;
+    }
+
+    if (!disabled) {
+      selectedUsers.add(docu.id);
+    }
+
+  });
+
 };
 
-/* 전체 해제 */
+/* 모두 해제 */
 window.clearAll = () => {
+
   selectedUsers.clear();
 
-  document.querySelectorAll(".user-item").forEach(el => {
+  document.querySelectorAll(".user-item").forEach((el) => {
+
     el.classList.remove("selected");
-    const cb = el.querySelector("input");
-    if (!cb.disabled) cb.checked = false;
+
+    el.querySelector("input").checked = false;
+
   });
+
 };
 
-/* 적용 */
+/* 점수 적용 */
 window.apply = async () => {
 
   if (myData.role === "student") {
@@ -279,43 +383,57 @@ window.apply = async () => {
     return;
   }
 
-  const val = Number(document.getElementById("scoreInput").value);
+  if (selectedUsers.size === 0) {
+    alert("대상을 선택해주세요.");
+    return;
+  }
+
+  const val =
+    Number(document.getElementById("scoreInput").value);
 
   if (isNaN(val)) {
     alert("숫자를 입력해주세요.");
     return;
   }
 
-  for (const id of selectedUsers) {
+  try {
 
-    const ref = doc(db, "users", id);
-    const snap = await getDoc(ref);
-    const data = snap.data();
+    for (const id of selectedUsers) {
 
-    /* vice 제한 */
-    if (myData.role === "vice") {
-      if (id === myId) continue;
-      if (data.role === "president") continue;
+      await updateDoc(doc(db, "users", id), {
+        score: increment(val)
+      });
+
     }
 
-    await updateDoc(ref, {
-      score: increment(val)
-    });
+    alert("적용 완료!");
+
+    location.reload();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("오류 발생");
+
   }
 
-  alert("적용 완료!");
-  location.reload();
 };
 
 /* 로그아웃 */
 window.logout = () => {
+
   localStorage.removeItem("userId");
+
   location.href = "index.html";
+
 };
 
-/* 홈 */
+/* 홈 이동 */
 window.goHome = () => {
+
   location.href = "https://25withcoding.kr";
+
 };
 
 </script>
