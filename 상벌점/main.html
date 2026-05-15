@@ -124,14 +124,24 @@
 <body>
 
 <div class="top-bar">
-  <button onclick="goHome()">
-    <div class="home-icon"></div>
-  </button>
+
+  <div>
+    <button onclick="goHome()">
+      <div class="home-icon"></div>
+    </button>
+
+    <!-- 관리자 버튼 -->
+    <button id="adminBtn"
+      onclick="goAdmin()"
+      style="display:none;">
+      관리자
+    </button>
+  </div>
 
   <button onclick="logout()">로그아웃</button>
+
 </div>
 
-<h2>2026 코딩과 함께라면 상벌점 시스템</h2>
 
 <div class="card" id="myInfo">
   로딩중...
@@ -199,7 +209,11 @@ if (!mySnap.exists()) {
 }
 
 const myData = mySnap.data();
-
+  
+if (myData.role === "president") {
+  document.getElementById("adminBtn").style.display = "inline-block";
+}
+  
 /* 점수 색상 */
 function formatScore(score) {
 
@@ -444,6 +458,9 @@ window.goHome = () => {
 
 };
 
+window.goAdmin = () => {
+  location.href = "admin.html";
+};
 </script>
 
 </body>
