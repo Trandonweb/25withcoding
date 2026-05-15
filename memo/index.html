@@ -87,12 +87,15 @@
 
   <div>
     <button onclick="goHome()">홈</button>
-    <button onclick="goTrash()">휴지통</button>
+  
+    <button onclick="goTrash()">
+      휴지통
+    </button>
+  
+    <button onclick="resetAllNotes()">
+      초기화
+    </button>
   </div>
-
-  <button onclick="goCreate()">새 메모</button>
-
-</div>
 
 <input
   id="searchInput"
@@ -224,6 +227,22 @@
 
   renderMemos();
 
+function resetAllNotes() {
+
+  const ok = confirm(
+    "모든 메모를 삭제할까요?"
+  );
+
+  if (!ok) return;
+
+  localStorage.removeItem("notes");
+
+  alert("초기화 완료!");
+
+  location.reload();
+
+}
+  
 </script>
 
 </body>
