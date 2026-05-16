@@ -94,10 +94,10 @@
   import {
     getFirestore,
     collection,
-    addDoc,
-    serverTimestamp
+    addDoc
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+  // 🔥 Firebase 설정
   const firebaseConfig = {
     apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
     authDomain: "memo-5123c.firebaseapp.com",
@@ -110,10 +110,12 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  // 🔥 ID 생성
   function generateId() {
     return Math.random().toString(36).substring(2, 10);
   }
 
+  // 🔥 저장
   async function saveMemo() {
     const title = document.getElementById("titleInput").value.trim();
     const pin = document.getElementById("pinInput").value.trim();
@@ -140,12 +142,12 @@
     }
 
     try {
-      await addDoc(collection(db, "memo"), {
+      await addDoc(collection(db, "notes"), {
         id: generateId(),
         title: title,
         pin: pin,
         content: content,
-        author: localStorage.getItem("userId") || "unknown",
+        authorName: localStorage.getItem("userId") || "unknown",
         deleted: false,
         createdAt: Date.now()
       });
@@ -163,7 +165,7 @@
     location.href = "index.html";
   }
 
-  // 🔥 module이라 window 연결 필수
+  // 🔥 module 대응 (필수)
   window.saveMemo = saveMemo;
   window.goBack = goBack;
 </script>
