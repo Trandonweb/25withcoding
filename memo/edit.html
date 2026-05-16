@@ -1,108 +1,106 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>메모 수정</title>
 
   <style>
-
     body {
       font-family: sans-serif;
       background: #f0f0f0;
-      margin: 0;
       padding: 20px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 14px;
+      background: white;
+      cursor: pointer;
     }
 
     .card {
       background: white;
-      max-width: 700px;
-      margin: auto;
       padding: 20px;
-      border-radius: 16px;
+      border-radius: 20px;
     }
 
     input, textarea {
       width: 100%;
       box-sizing: border-box;
+      border: none;
+      border-radius: 14px;
       padding: 12px;
       margin-top: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-family: sans-serif;
+      background: #f5f5f5;
     }
 
     textarea {
-      height: 200px;
-      resize: none;
+      min-height: 300px;
+      font-family: monospace;
     }
 
-    button {
+    .label {
       margin-top: 15px;
-      padding: 10px 14px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin-right: 8px;
+      font-weight: bold;
     }
 
-    .save {
-      background: #111;
-      color: white;
+    .bottom {
+      margin-top: 20px;
+      text-align: right;
     }
-
-    .back {
-      background: #ddd;
-    }
-
   </style>
 </head>
 
 <body>
 
+<div class="top-bar">
+  <button onclick="goBack()">뒤로가기</button>
+</div>
+
 <div class="card">
+  <h2>✏ 메모 수정</h2>
 
-  <h2>✏️ 메모 수정</h2>
+  <div class="label">제목</div>
+  <input id="titleInput">
 
-  <input id="title" placeholder="제목">
+  <div class="label">내용</div>
+  <textarea id="contentInput"></textarea>
 
-  <textarea id="content" placeholder="내용"></textarea>
-
-  <br>
-
-  <button class="save" onclick="saveEdit()">저장</button>
-  <button class="back" onclick="goBack()">취소</button>
-
+  <div class="bottom">
+    <button onclick="saveEdit()">저장</button>
+  </div>
 </div>
 
 <script type="module">
-
-import { db } from "/js/firebase.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
+  getFirestore,
   doc,
   getDoc,
   updateDoc
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const params =
-  new URLSearchParams(location.search);
+const app = initializeApp({
+  apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
+  authDomain: "memo-5123c.firebaseapp.com",
+  projectId: "memo-5123c"
+});
 
-const id =
-  params.get("id");
+const db = getFirestore(app);
 
-let memoRef;
+const id = new URLSearchParams(location.search).get("id");
 
-async function loadMemo() {
+let noteData = null;
 
-  if (!id) {
-    alert("잘못된 접근");
-    location.href = "index.html";
-    return;
-  }
-
-  memoRef = doc(db, "notes", id);
-
-  const snap = await getDoc(memoRef);
+/* 🔥 데이터 불러오기 */
+async function load() {
+  const snap = await getDoc(doc(db, "notes", id));
 
   if (!snap.exists()) {
     alert("메모 없음");
@@ -110,37 +108,29 @@ async function loadMemo() {
     return;
   }
 
-  const data = snap.data();
+  noteData = snap.data();
 
-  document.getElementById("title").value =
-    data.title;
-
-  document.getElementById("content").value =
-    data.content;
-
+  document.getElementById("titleInput").value = noteData.title;
+  document.getElementById("contentInput").value = noteData.content;
 }
 
+/* 🔥 저장 */
 async function saveEdit() {
+  const title = document.getElementById("titleInput").value.trim();
+  const content = document.getElementById("contentInput").value;
 
-  const title =
-    document.getElementById("title").value;
-
-  const content =
-    document.getElementById("content").value;
-
-  if (!title || !content) {
-    alert("제목/내용 입력");
+  if (!title) {
+    alert("제목을 입력해주세요.");
     return;
   }
 
-  await updateDoc(memoRef, {
+  await updateDoc(doc(db, "notes", id), {
     title: title,
-    content: content,
-    updatedAt: new Date().toISOString()
+    content: content
   });
 
+  alert("수정 완료!");
   location.href = "view.html?id=" + id;
-
 }
 
 function goBack() {
@@ -150,8 +140,7 @@ function goBack() {
 window.saveEdit = saveEdit;
 window.goBack = goBack;
 
-loadMemo();
-
+load();
 </script>
 
 </body>
