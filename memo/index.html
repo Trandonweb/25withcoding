@@ -4,7 +4,6 @@
   <title>메모</title>
 
   <style>
-
     body {
       font-family: sans-serif;
       background: #f0f0f0;
@@ -78,256 +77,112 @@
       color: gray;
       padding: 30px;
     }
-
   </style>
 </head>
 
 <body>
 
 <div class="top-bar">
-
   <div>
-
     <button onclick="goHome()">홈</button>
     <button onclick="goTrash()">휴지통</button>
-    <button onclick="resetAllNotes()">초기화</button>
-
   </div>
 
   <button onclick="goCreate()">새 메모</button>
-
 </div>
 
-<input
-  id="searchInput"
-  placeholder="메모 검색..."
-  oninput="renderMemos()"
-/>
+<input id="searchInput" placeholder="메모 검색..." oninput="renderMemos()" />
 
 <div id="memoList"></div>
 
-<!-- ===================== -->
-<!-- Firebase 추가 부분 -->
-<!-- ===================== -->
-
 <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    query,
+    orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  deleteDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+  // 🔥 Firebase 설정
+  const firebaseConfig = {
+    apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
+    authDomain: "memo-5123c.firebaseapp.com",
+    projectId: "memo-5123c",
+    storageBucket: "memo-5123c.firebasestorage.app",
+    messagingSenderId: "984347291633",
+    appId: "1:984347291633:web:e80fd3f599f62c46a11e50"
+  };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
-  authDomain: "memo-5123c.firebaseapp.com",
-  projectId: "memo-5123c",
-  storageBucket: "memo-5123c.firebasestorage.app",
-  messagingSenderId: "984347291633",
-  appId: "1:984347291633:web:e80fd3f599f62c46a11e50"
-};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  let notes = [];
 
-// =====================
-// 기존 localStorage 함수
-// =====================
+  // 🔥 Firestore에서 가져오기
+  async function loadNotes() {
+    const q = query(collection(db, "memo"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
 
-async function renderMemos() {
+    notes = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
-  const memoList =
-    document.getElementById("memoList");
+    renderMemos();
+  }
 
-  const search =
-    document.getElementById("searchInput")
-    .value
-    .toLowerCase();
+  function renderMemos() {
+    const memoList = document.getElementById("memoList");
+    const search = document.getElementById("searchInput").value.toLowerCase();
 
-  memoList.innerHTML = "로딩중...";
+    const filtered = notes
+      .filter(n => !n.deleted)
+      .filter(n => n.title.toLowerCase().includes(search));
 
-  const snap =
-    await getDocs(collection(db, "notes"));
+    memoList.innerHTML = "";
 
-  const notes = [];
+    if (filtered.length === 0) {
+      memoList.innerHTML = `
+        <div class="card empty">메모가 없습니다.</div>
+      `;
+      return;
+    }
 
-  snap.forEach(docu => {
-    const data = docu.data();
+    filtered.forEach(note => {
+      const div = document.createElement("div");
+      div.className = "memo-item";
 
-    if (data.deleted) return;
+      div.innerHTML = `
+        <div class="memo-title">📄 ${note.title}</div>
+        <div class="memo-info">
+          👤 ${note.author || "unknown"}
+          · 🕒 ${new Date(note.createdAt).toLocaleString()}
+        </div>
+      `;
 
-    notes.push({
-      id: docu.id,
-      ...data
+      div.onclick = () => {
+        location.href = "view.html?id=" + note.id;
+      };
+
+      memoList.appendChild(div);
     });
-  });
-
-  const filtered =
-    notes.filter(note =>
-      note.title.toLowerCase().includes(search)
-    );
-
-  memoList.innerHTML = "";
-
-  if (filtered.length === 0) {
-    memoList.innerHTML = `
-      <div class="card empty">
-        메모가 없습니다.
-      </div>
-    `;
-    return;
   }
 
-  filtered.forEach(note => {
-
-    const div =
-      document.createElement("div");
-
-    div.className = "memo-item";
-
-    div.innerHTML = `
-      <div class="memo-title">
-        📄 ${note.title}
-      </div>
-
-      <div class="memo-info">
-        👤 ${note.author}
-        ·
-        🕒 ${note.createdAt}
-      </div>
-    `;
-
-    div.onclick = () => {
-      location.href =
-        "view.html?id=" + note.id;
-    };
-
-    memoList.appendChild(div);
-
-  });
-
-}
-
-// =====================
-// 메모 렌더링 (그대로 유지)
-// =====================
-
-function renderMemos() {
-
-  const memoList =
-    document.getElementById("memoList");
-
-  const search =
-    document.getElementById("searchInput")
-    .value
-    .toLowerCase();
-
-  const notes =
-    getNotes()
-    .filter(note => !note.deleted);
-
-  memoList.innerHTML = "";
-
-  const filtered =
-    notes.filter(note =>
-      note.title.toLowerCase().includes(search)
-    );
-
-  if (filtered.length === 0) {
-
-    memoList.innerHTML = `
-      <div class="card empty">
-        메모가 없습니다.
-      </div>
-    `;
-
-    return;
+  function goCreate() {
+    location.href = "create.html";
   }
 
-  filtered.forEach(note => {
+  function goTrash() {
+    location.href = "trash.html";
+  }
 
-    const div =
-      document.createElement("div");
+  function goHome() {
+    location.href = "https://25withcoding.kr";
+  }
 
-    div.className = "memo-item";
-
-    div.innerHTML = `
-      <div class="memo-title">
-        📄 ${note.title}
-      </div>
-
-      <div class="memo-info">
-        👤 ${note.author}
-        ·
-        🕒 ${note.createdAt}
-      </div>
-    `;
-
-    div.onclick = () => {
-      location.href =
-        "view.html?id=" + note.id;
-    };
-
-    memoList.appendChild(div);
-
-  });
-
-}
-
-// =====================
-// 페이지 이동
-// =====================
-
-function goCreate() {
-  location.href = "create.html";
-}
-
-function goTrash() {
-  location.href = "trash.html";
-}
-
-function goHome() {
-  location.href = "https://25withcoding.kr";
-}
-
-// =====================
-// Firebase 초기화 기능만 추가
-// =====================
-
-async function resetAllNotes() {
-
-  const ok =
-    confirm("모든 메모를 삭제할까요?");
-
-  if (!ok) return;
-
-  const snap =
-    await getDocs(collection(db, "notes"));
-
-  snap.forEach(async (d) => {
-    await deleteDoc(doc(db, "notes", d.id));
-  });
-
-  alert("초기화 완료!");
-  location.reload();
-
-}
-
-// =====================
-// 실행
-// =====================
-
-renderMemos();
-
-window.renderMemos = renderMemos;
-window.goCreate = goCreate;
-window.goTrash = goTrash;
-window.goHome = goHome;
-window.resetAllNotes = resetAllNotes;
-
+  loadNotes();
 </script>
 
 </body>
