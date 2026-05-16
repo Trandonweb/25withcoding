@@ -2,11 +2,9 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>메모 보기</title>
 
   <style>
-
     body {
       font-family: sans-serif;
       background: #f0f0f0;
@@ -15,11 +13,13 @@
     }
 
     .card {
-      background: white;
       max-width: 700px;
       margin: auto;
+      background: white;
       padding: 20px;
       border-radius: 16px;
+      position: relative;
+      min-height: 400px;
     }
 
     h2 {
@@ -27,32 +27,43 @@
     }
 
     .meta {
-      color: #666;
-      font-size: 14px;
+      font-size: 13px;
+      color: gray;
       margin-bottom: 15px;
     }
 
     .content {
       white-space: pre-wrap;
       line-height: 1.6;
-      margin-bottom: 20px;
+      display: none;
+    }
+
+    .pin-box {
+      text-align: center;
+      margin-top: 80px;
+    }
+
+    input {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      width: 150px;
     }
 
     button {
-      padding: 10px 14px;
+      padding: 10px 12px;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      margin-right: 8px;
+      margin-left: 5px;
     }
 
-    .back {
-      background: #ddd;
-    }
-
-    .delete {
-      background: #ff4d4d;
-      color: white;
+    .actions {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      display: none;
+      gap: 8px;
     }
 
     .edit {
@@ -60,6 +71,10 @@
       color: white;
     }
 
+    .delete {
+      background: #ff4d4d;
+      color: white;
+    }
   </style>
 </head>
 
@@ -67,46 +82,52 @@
 
 <div class="card">
 
-  <button class="back" onclick="goBack()">← 목록</button>
-
   <h2 id="title">로딩중...</h2>
-
   <div class="meta" id="meta"></div>
 
+  <!-- PIN 입력 -->
+  <div class="pin-box" id="pinBox">
+    <p>PIN 입력</p>
+    <input id="pinInput" type="password" maxlength="4">
+    <button onclick="checkPin()">확인</button>
+  </div>
+
+  <!-- 내용 -->
   <div class="content" id="content"></div>
 
-  <button class="edit" onclick="editMemo()">수정</button>
-  <button class="delete" onclick="deleteMemo()">삭제</button>
+  <!-- 버튼 -->
+  <div class="actions" id="actions">
+    <button class="edit" onclick="goEdit()">수정</button>
+    <button class="delete" onclick="deleteMemo()">삭제</button>
+  </div>
 
 </div>
 
 <script type="module">
-
-import { db } from "/js/firebase.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
+  getFirestore,
   doc,
   getDoc,
   updateDoc
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const params =
-  new URLSearchParams(location.search);
+const firebaseConfig = {
+  apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
+  authDomain: "memo-5123c.firebaseapp.com",
+  projectId: "memo-5123c"
+};
 
-const id =
-  params.get("id");
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const id = new URLSearchParams(location.search).get("id");
 
 let memoRef;
+let memoData;
 
-async function loadMemo() {
-
-  if (!id) {
-    alert("잘못된 접근");
-    location.href = "index.html";
-    return;
-  }
-
+async function load() {
   memoRef = doc(db, "notes", id);
-
   const snap = await getDoc(memoRef);
 
   if (!snap.exists()) {
@@ -115,27 +136,29 @@ async function loadMemo() {
     return;
   }
 
-  const data = snap.data();
+  memoData = snap.data();
 
-  if (data.deleted) {
-    alert("삭제된 메모");
-    location.href = "index.html";
+  document.getElementById("title").innerText = memoData.title;
+  document.getElementById("meta").innerText =
+    `작성자: ${memoData.authorName || "unknown"} · ${new Date(memoData.createdAt).toLocaleString()}`;
+}
+
+function checkPin() {
+  const pin = document.getElementById("pinInput").value;
+
+  if (pin !== memoData.pin) {
+    alert("PIN 틀림");
     return;
   }
 
-  document.getElementById("title").innerText =
-    data.title;
+  document.getElementById("pinBox").style.display = "none";
+  document.getElementById("content").style.display = "block";
+  document.getElementById("actions").style.display = "flex";
 
-  document.getElementById("content").innerText =
-    data.content;
-
-  document.getElementById("meta").innerText =
-    `작성자: ${data.author} | 작성일: ${data.createdAt}`;
-
+  document.getElementById("content").innerText = memoData.content;
 }
 
 async function deleteMemo() {
-
   if (!confirm("삭제할까?")) return;
 
   await updateDoc(memoRef, {
@@ -143,23 +166,17 @@ async function deleteMemo() {
   });
 
   location.href = "index.html";
-
 }
 
-function goBack() {
-  location.href = "index.html";
-}
-
-function editMemo() {
+function goEdit() {
   location.href = "edit.html?id=" + id;
 }
 
+window.checkPin = checkPin;
 window.deleteMemo = deleteMemo;
-window.goBack = goBack;
-window.editMemo = editMemo;
+window.goEdit = goEdit;
 
-loadMemo();
-
+load();
 </script>
 
 </body>
