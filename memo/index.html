@@ -3,53 +3,83 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>메모 목록</title>
+  <title>25withcoding HUB - Memo</title>
 
   <style>
 
     body {
-      font-family: sans-serif;
-      background: #f0f0f0;
       margin: 0;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
     }
 
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
+    header {
+      background: #111;
+      color: white;
+      padding: 18px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
     }
 
-    button {
-      padding: 10px 14px;
-      border: none;
-      border-radius: 12px;
-      background: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #e6e6e6;
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 15px;
     }
 
     .card {
       background: white;
+      padding: 18px;
+      margin: 12px 0;
+      border-radius: 14px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+      user-select: none;
+    }
+
+    .card:hover {
+      transform: scale(1.03);
+      background: #eee;
+    }
+
+    .login-box {
+      background: white;
       padding: 15px;
-      border-radius: 16px;
+      border-radius: 14px;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    input {
+      padding: 10px;
+      width: 80%;
+      border-radius: 10px;
+      border: 1px solid #ccc;
       margin-top: 10px;
     }
 
-    .memo {
-      background: #f9f9f9;
-      padding: 12px;
-      border-radius: 12px;
-      margin: 8px 0;
+    button {
+      padding: 10px 14px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #111;
+      color: white;
       cursor: pointer;
     }
 
-    .memo:hover {
-      background: #eee;
+    button:hover {
+      background: #333;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
     }
 
   </style>
@@ -57,74 +87,122 @@
 
 <body>
 
-<div class="top-bar">
+<header>
+  📝 25withcoding Memo HUB
+</header>
 
-  <button onclick="goHome()">홈</button>
+<div class="container">
 
-  <button onclick="goCreate()">새 메모</button>
+  <!-- 로그인 -->
+  <div class="login-box">
+
+    <div id="status">로그인 안됨</div>
+
+    <input id="userId" placeholder="학번 입력">
+
+    <br>
+
+    <button onclick="login()">로그인</button>
+    <button onclick="logout()">로그아웃</button>
+
+  </div>
+
+  <!-- 서비스 버튼 -->
+  <div class="card" onclick="location.href='/'">
+    🏠 홈
+  </div>
+
+  <div class="card" onclick="location.href='/memo/create.html'">
+    📝 메모 추가
+  </div>
+
+  <div class="card" onclick="location.href='/memo/trash.html'">
+    🗑 휴지통
+  </div>
+
+  <div class="card" onclick="resetMemos()">
+    🔄 메모 초기화
+  </div>
 
 </div>
 
-<h2>📝 메모 목록</h2>
-
-<div class="card" id="list">
-  로딩중...
-</div>
-
+<!-- Firebase 초기화 -->
 <script type="module">
 
 import { db } from "/js/firebase.js";
 import {
   collection,
-  getDocs
+  getDocs,
+  deleteDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-const listDiv =
-  document.getElementById("list");
 
-async function loadMemos() {
+// =======================
+// 로그인 (localStorage)
+// =======================
+
+function login() {
+
+  const id =
+    document.getElementById("userId").value;
+
+  if (!id) {
+    alert("학번 입력");
+    return;
+  }
+
+  localStorage.setItem("userId", id);
+
+  updateUI();
+
+}
+
+function logout() {
+
+  localStorage.removeItem("userId");
+
+  updateUI();
+
+}
+
+function updateUI() {
+
+  const user =
+    localStorage.getItem("userId");
+
+  document.getElementById("status").innerText =
+    user ? "로그인됨: " + user : "로그인 안됨";
+
+}
+
+updateUI();
+
+
+// =======================
+// 메모 전체 초기화
+// =======================
+
+window.resetMemos = async function() {
+
+  if (!confirm("⚠ 진짜 모든 메모 삭제?")) return;
 
   const snap =
     await getDocs(collection(db, "notes"));
 
-  listDiv.innerHTML = "";
-
-  snap.forEach(docu => {
-
-    const data = docu.data();
-
-    if (data.deleted) return;
-
-    const div =
-      document.createElement("div");
-
-    div.className = "memo";
-
-    div.innerHTML = `
-      <b>${data.title}</b><br>
-      <small>${data.author}</small>
-    `;
-
-    div.onclick = () => {
-      location.href =
-        "view.html?id=" + docu.id;
-    };
-
-    listDiv.appendChild(div);
-
+  snap.forEach(async (d) => {
+    await deleteDoc(doc(db, "notes", d.id));
   });
 
+  alert("초기화 완료");
+  location.reload();
+
 }
 
-function goHome() {
-  location.href = "/";
-}
 
-function goCreate() {
-  location.href = "create.html";
-}
-
-loadMemos();
+// window 연결
+window.login = login;
+window.logout = logout;
 
 </script>
 
