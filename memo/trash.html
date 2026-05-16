@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>휴지통</title>
 
   <style>
@@ -8,63 +10,51 @@
     body {
       font-family: sans-serif;
       background: #f0f0f0;
+      margin: 0;
       padding: 20px;
     }
 
-    .top-bar {
+    .top {
       display: flex;
       justify-content: space-between;
-      align-items: center;
       margin-bottom: 15px;
     }
 
     button {
       padding: 10px 14px;
       border: none;
-      border-radius: 14px;
-      background: white;
+      border-radius: 10px;
       cursor: pointer;
-      margin: 3px;
+      background: white;
     }
 
     button:hover {
-      background: #e6e6e6;
+      background: #eee;
     }
 
     .card {
       background: white;
       padding: 15px;
-      border-radius: 20px;
-      margin-top: 10px;
-    }
-
-    .memo-item {
-      background: #f9f9f9;
-      padding: 15px;
       border-radius: 16px;
       margin-top: 10px;
     }
 
-    .memo-title {
-      font-size: 18px;
-      font-weight: bold;
+    .memo {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 12px;
+      margin: 8px 0;
+      cursor: pointer;
     }
 
-    .memo-info {
-      margin-top: 5px;
-      color: gray;
-      font-size: 13px;
-    }
-
-    .actions {
-      margin-top: 10px;
-      text-align: right;
+    .memo:hover {
+      background: #eee;
     }
 
     .empty {
-      text-align: center;
       color: gray;
-      padding: 30px;
+      text-align: center;
+      margin-top: 30px;
     }
 
   </style>
@@ -72,136 +62,83 @@
 
 <body>
 
-<div class="top-bar">
+<div class="top">
 
-  <button onclick="goBack()">
-    뒤로가기
-  </button>
+  <button onclick="goHome()">홈</button>
+
+  <button onclick="goList()">← 목록</button>
 
 </div>
 
 <h2>🗑 휴지통</h2>
 
-<div id="trashList"></div>
+<div class="card" id="list">
+  로딩중...
+</div>
 
-<script>
+<script type="module">
 
-  function getNotes() {
+import { db } from "/js/firebase.js";
+import {
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-    return JSON.parse(
-      localStorage.getItem("notes")
-    ) || [];
+const listDiv =
+  document.getElementById("list");
 
+async function loadTrash() {
+
+  const snap =
+    await getDocs(collection(db, "notes"));
+
+  listDiv.innerHTML = "";
+
+  let hasData = false;
+
+  snap.forEach(docu => {
+
+    const data = docu.data();
+
+    if (!data.deleted) return;
+
+    hasData = true;
+
+    const div =
+      document.createElement("div");
+
+    div.className = "memo";
+
+    div.innerHTML = `
+      <b>${data.title}</b><br>
+      <small>${data.author}</small>
+    `;
+
+    div.onclick = () => {
+      location.href =
+        "view.html?id=" + docu.id;
+    };
+
+    listDiv.appendChild(div);
+
+  });
+
+  if (!hasData) {
+    listDiv.innerHTML =
+      "<div class='empty'>휴지통이 비어있음</div>";
   }
 
-  let notes = getNotes();
+}
 
-  function renderTrash() {
+function goHome() {
+  location.href = "/";
+}
 
-    const trashList =
-      document.getElementById("trashList");
+function goList() {
+  location.href = "index.html";
+}
 
-    trashList.innerHTML = "";
-
-    const deletedNotes =
-      notes.filter(n => n.deleted);
-
-    if (deletedNotes.length === 0) {
-
-      trashList.innerHTML = `
-        <div class="card empty">
-          휴지통이 비어있습니다.
-        </div>
-      `;
-
-      return;
-
-    }
-
-    deletedNotes.forEach(note => {
-
-      const div =
-        document.createElement("div");
-
-      div.className = "memo-item";
-
-      div.innerHTML = `
-
-        <div class="memo-title">
-          📄 ${note.title}
-        </div>
-
-        <div class="memo-info">
-          👤 ${note.author}
-          ·
-          🕒 ${note.createdAt}
-        </div>
-
-        <div class="actions">
-
-          <button onclick="restoreNote('${note.id}')">
-            복구
-          </button>
-
-          <button onclick="deleteForever('${note.id}')">
-            영구삭제
-          </button>
-
-        </div>
-
-      `;
-
-      trashList.appendChild(div);
-
-    });
-
-  }
-
-  function restoreNote(id) {
-
-    const note =
-      notes.find(n => n.id === id);
-
-    if (!note) return;
-
-    note.deleted = false;
-
-    localStorage.setItem(
-      "notes",
-      JSON.stringify(notes)
-    );
-
-    renderTrash();
-
-  }
-
-  function deleteForever(id) {
-
-    const ok =
-      confirm("영구 삭제할까요?");
-
-    if (!ok) return;
-
-    notes =
-      notes.filter(n => n.id !== id);
-
-    localStorage.setItem(
-      "notes",
-      JSON.stringify(notes)
-    );
-
-    renderTrash();
-
-  }
-
-  function goBack() {
-
-    location.href = "index.html";
-
-  }
-
-  renderTrash();
-  
+loadTrash();
 
 </script>
 
