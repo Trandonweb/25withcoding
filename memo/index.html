@@ -13,69 +13,32 @@
     .top-bar {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      flex-wrap: wrap;
+      margin-bottom: 10px;
     }
 
     button {
       padding: 10px 14px;
       border: none;
-      border-radius: 14px;
+      border-radius: 12px;
       background: white;
       cursor: pointer;
-      margin: 3px;
     }
 
-    button:hover {
-      background: #e6e6e6;
-    }
-
-    .card {
+    .memo {
       background: white;
       padding: 15px;
-      border-radius: 20px;
       margin-top: 10px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 14px;
-      background: white;
-      box-sizing: border-box;
-      margin-bottom: 10px;
-    }
-
-    .memo-item {
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 16px;
-      margin-top: 10px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: 0.2s;
     }
 
-    .memo-item:hover {
-      background: #ececec;
-    }
-
-    .memo-title {
-      font-size: 18px;
+    .title {
       font-weight: bold;
     }
 
-    .memo-info {
+    .info {
+      font-size: 12px;
       color: gray;
-      font-size: 13px;
-      margin-top: 5px;
-    }
-
-    .empty {
-      text-align: center;
-      color: gray;
-      padding: 30px;
     }
   </style>
 </head>
@@ -83,120 +46,92 @@
 <body>
 
 <div class="top-bar">
-  <div>
-    <button onclick="goHome()">홈</button>
-    <button onclick="goTrash()">휴지통</button>
-  </div>
-
-  <button onclick="goCreate()">새 메모</button>
+  <button onclick="goTrash()">휴지통</button>
+  <button onclick="goCreate()">+ 새 메모</button>
 </div>
 
-<input id="searchInput" placeholder="메모 검색..." oninput="renderMemos()" />
+<input id="search" placeholder="검색..." oninput="render()" style="width:100%; padding:10px;">
 
-<div id="memoList"></div>
+<div id="list"></div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    getDocs,
-    query,
-    orderBy
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  // 🔥 Firebase 설정
-  const firebaseConfig = {
-    apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
-    authDomain: "memo-5123c.firebaseapp.com",
-    projectId: "memo-5123c",
-    storageBucket: "memo-5123c.firebasestorage.app",
-    messagingSenderId: "984347291633",
-    appId: "1:984347291633:web:e80fd3f599f62c46a11e50"
-  };
+const app = initializeApp({
+  apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
+  authDomain: "memo-5123c.firebaseapp.com",
+  projectId: "memo-5123c"
+});
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const db = getFirestore(app);
 
-  let notes = [];
+let notes = [];
 
-  // 🔥 Firestore에서 가져오기
-  async function loadNotes() {
-    const q = query(collection(db, "memo"), orderBy("createdAt", "desc"));
-    const snap = await getDocs(q);
+async function load() {
+  const q = query(collection(db, "notes"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
 
-    notes = snap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+  notes = snap.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
 
-    renderMemos();
+  render();
+}
+
+function render() {
+  const search = document.getElementById("search").value.toLowerCase();
+  const list = document.getElementById("list");
+
+  list.innerHTML = "";
+
+  const filtered = notes
+    .filter(n => !n.deleted)
+    .filter(n => n.title.toLowerCase().includes(search));
+
+  if (filtered.length === 0) {
+    list.innerHTML = "<div>메모 없음</div>";
+    return;
   }
 
-  function renderMemos() {
-    const memoList = document.getElementById("memoList");
-    const search = document.getElementById("searchInput").value.toLowerCase();
+  filtered.forEach(n => {
+    const div = document.createElement("div");
+    div.className = "memo";
 
-    const filtered = notes
-      .filter(n => !n.deleted)
-      .filter(n => n.title.toLowerCase().includes(search));
+    div.innerHTML = `
+      <div class="title">📄 ${n.title}</div>
+      <div class="info">
+        👤 ${n.authorName || "unknown"} · 🕒 ${new Date(n.createdAt).toLocaleString()}
+      </div>
+    `;
 
-    memoList.innerHTML = "";
+    div.onclick = () => {
+      location.href = "view.html?id=" + n.id;
+    };
 
-    if (filtered.length === 0) {
-      memoList.innerHTML = `
-        <div class="card empty">메모가 없습니다.</div>
-      `;
-      return;
-    }
+    list.appendChild(div);
+  });
+}
 
-    filtered.forEach(note => {
-      const div = document.createElement("div");
-      div.className = "memo-item";
-
-      div.innerHTML = `
-        <div class="memo-title">📄 ${note.title}</div>
-        <div class="memo-info">
-          👤 ${note.author || "unknown"}
-          · 🕒 ${new Date(note.createdAt).toLocaleString()}
-        </div>
-      `;
-
-      div.onclick = () => {
-        location.href = "view.html?id=" + note.id;
-      };
-
-      memoList.appendChild(div);
-    });
-  }
-
-  function goCreate() {
-    location.href = "create.html";
-  }
-
-  function goTrash() {
-    location.href = "trash.html";
-  }
-
-  function goHome() {
-    location.href = "https://25withcoding.kr";
-  }
-
-  loadNotes();
-
-  // 🔥 버튼 복구 (필수)
-window.goCreate = () => {
+function goCreate() {
   location.href = "create.html";
-};
+}
 
-window.goTrash = () => {
+function goTrash() {
   location.href = "trash.html";
-};
+}
 
-window.goHome = () => {
-  location.href = "https://25withcoding.kr";
-};
-  
+window.goCreate = goCreate;
+window.goTrash = goTrash;
+
+load();
 </script>
 
 </body>
