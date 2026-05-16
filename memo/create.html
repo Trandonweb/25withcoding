@@ -1,68 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <title>메모 생성</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>메모 작성</title>
 
   <style>
 
     body {
       font-family: sans-serif;
       background: #f0f0f0;
+      margin: 0;
       padding: 20px;
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    button {
-      padding: 10px 14px;
-      border: none;
-      border-radius: 14px;
-      background: white;
-      cursor: pointer;
-      margin: 3px;
-    }
-
-    button:hover {
-      background: #e6e6e6;
     }
 
     .card {
       background: white;
       padding: 20px;
-      border-radius: 20px;
+      border-radius: 16px;
+      max-width: 600px;
+      margin: auto;
     }
 
-    input,
-    textarea {
+    input, textarea {
       width: 100%;
       box-sizing: border-box;
-      border: none;
-      border-radius: 14px;
       padding: 12px;
       margin-top: 10px;
-      background: #f5f5f5;
+      border-radius: 10px;
+      border: 1px solid #ccc;
       font-family: sans-serif;
     }
 
     textarea {
-      resize: vertical;
-      min-height: 300px;
-      font-family: monospace;
+      height: 200px;
+      resize: none;
     }
 
-    .label {
+    button {
       margin-top: 15px;
-      font-weight: bold;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      background: #111;
+      color: white;
+      cursor: pointer;
     }
 
-    .bottom {
-      margin-top: 20px;
-      text-align: right;
+    button:hover {
+      background: #333;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
     }
 
   </style>
@@ -70,161 +62,69 @@
 
 <body>
 
-<div class="top-bar">
-
-  <button onclick="goBack()">
-    뒤로가기
-  </button>
-
-</div>
-
 <div class="card">
 
-  <h2>📄 새 메모</h2>
-
-  <div class="label">
-    제목
+  <div class="top">
+    <button onclick="goBack()">← 뒤로</button>
+    <h3>📝 메모 작성</h3>
+    <div></div>
   </div>
 
-  <input
-    id="titleInput"
-    placeholder="제목을 입력하세요."
-  >
+  <input id="title" placeholder="제목">
 
-  <div class="label">
-    PIN (4자리)
-  </div>
+  <textarea id="content" placeholder="내용"></textarea>
 
-  <input
-    id="pinInput"
-    type="password"
-    maxlength="4"
-    inputmode="numeric"
-    placeholder="PIN 입력"
-  >
-
-  <div class="label">
-    내용
-  </div>
-
-  <textarea
-    id="contentInput"
-    placeholder="내용을 입력하세요."
-  ></textarea>
-
-  <div class="bottom">
-
-    <button onclick="saveMemo()">
-      저장
-    </button>
-
-  </div>
+  <button onclick="saveMemo()">저장</button>
 
 </div>
 
-<script>
+<script type="module">
 
-  function getNotes() {
+import { db } from "/js/firebase.js";
+import {
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-    return JSON.parse(
-      localStorage.getItem("notes")
-    ) || [];
+function getUser() {
+  return localStorage.getItem("userId") || "unknown";
+}
 
+async function saveMemo() {
+
+  const title =
+    document.getElementById("title").value;
+
+  const content =
+    document.getElementById("content").value;
+
+  if (!title || !content) {
+    alert("제목/내용 입력");
+    return;
   }
 
-  function generateId() {
+  const user = getUser();
 
-    return Math.random()
-      .toString(36)
-      .substring(2, 10);
+  await addDoc(collection(db, "notes"), {
 
-  }
+    title: title,
+    content: content,
+    author: user,
+    deleted: false,
+    createdAt: new Date().toISOString()
 
-  function saveMemo() {
+  });
 
-    const title =
-      document.getElementById("titleInput")
-      .value
-      .trim();
+  location.href = "index.html";
 
-    const pin =
-      document.getElementById("pinInput")
-      .value
-      .trim();
+}
 
-    const content =
-      document.getElementById("contentInput")
-      .value;
+function goBack() {
+  location.href = "index.html";
+}
 
-    if (!title) {
-
-      alert("제목을 입력해주세요.");
-      return;
-
-    }
-
-    if (!pin) {
-
-      alert("PIN을 입력해주세요.");
-      return;
-
-    }
-
-    if (!/^[0-9]+$/.test(pin)) {
-
-      alert("PIN은 숫자만 가능합니다.");
-      return;
-
-    }
-
-    if (pin.length !== 4) {
-
-      alert("PIN은 4자리여야 합니다.");
-      return;
-
-    }
-
-    const notes = getNotes();
-
-    const newNote = {
-
-      id: generateId(),
-
-      title: title,
-
-      pin: pin,
-
-      content: content,
-
-      author:
-        localStorage.getItem("userId")
-        || "unknown",
-
-      deleted: false,
-
-      createdAt:
-        new Date().toLocaleDateString()
-
-    };
-
-    notes.unshift(newNote);
-
-    localStorage.setItem(
-      "notes",
-      JSON.stringify(notes)
-    );
-
-    alert("저장 완료!");
-
-    location.href = "index.html";
-
-  }
-
-  function goBack() {
-
-    location.href = "index.html";
-
-  }
+window.saveMemo = saveMemo;
+window.goBack = goBack;
 
 </script>
 
