@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>메모 수정</title>
 
   <style>
@@ -8,61 +10,49 @@
     body {
       font-family: sans-serif;
       background: #f0f0f0;
+      margin: 0;
       padding: 20px;
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    button {
-      padding: 10px 14px;
-      border: none;
-      border-radius: 14px;
-      background: white;
-      cursor: pointer;
-      margin: 3px;
-    }
-
-    button:hover {
-      background: #e6e6e6;
     }
 
     .card {
       background: white;
+      max-width: 700px;
+      margin: auto;
       padding: 20px;
-      border-radius: 20px;
+      border-radius: 16px;
     }
 
-    input,
-    textarea {
+    input, textarea {
       width: 100%;
       box-sizing: border-box;
-      border: none;
-      border-radius: 14px;
       padding: 12px;
       margin-top: 10px;
-      background: #f5f5f5;
+      border-radius: 10px;
+      border: 1px solid #ccc;
       font-family: sans-serif;
     }
 
     textarea {
-      resize: vertical;
-      min-height: 300px;
-      font-family: monospace;
+      height: 200px;
+      resize: none;
     }
 
-    .label {
+    button {
       margin-top: 15px;
-      font-weight: bold;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-right: 8px;
     }
 
-    .bottom {
-      margin-top: 20px;
-      text-align: right;
+    .save {
+      background: #111;
+      color: white;
+    }
+
+    .back {
+      background: #ddd;
     }
 
   </style>
@@ -70,126 +60,97 @@
 
 <body>
 
-<div class="top-bar">
-
-  <button onclick="goBack()">
-    뒤로가기
-  </button>
-
-</div>
-
 <div class="card">
 
-  <h2>✏ 메모 수정</h2>
+  <h2>✏️ 메모 수정</h2>
 
-  <div class="label">
-    제목
-  </div>
+  <input id="title" placeholder="제목">
 
-  <input
-    id="titleInput"
-    placeholder="제목"
-  >
+  <textarea id="content" placeholder="내용"></textarea>
 
-  <div class="label">
-    내용
-  </div>
+  <br>
 
-  <textarea
-    id="contentInput"
-    placeholder="내용"
-  ></textarea>
-
-  <div class="bottom">
-
-    <button onclick="saveEdit()">
-      저장
-    </button>
-
-  </div>
+  <button class="save" onclick="saveEdit()">저장</button>
+  <button class="back" onclick="goBack()">취소</button>
 
 </div>
 
-<script>
+<script type="module">
 
-  const params =
-    new URLSearchParams(location.search);
+import { db } from "/js/firebase.js";
+import {
+  doc,
+  getDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-  const noteId =
-    params.get("id");
+const params =
+  new URLSearchParams(location.search);
 
-  function getNotes() {
+const id =
+  params.get("id");
 
-    return JSON.parse(
-      localStorage.getItem("notes")
-    ) || [];
+let memoRef;
 
-  }
+async function loadMemo() {
 
-  const notes = getNotes();
-
-  const note =
-    notes.find(n => n.id === noteId);
-
-  if (!note) {
-
-    alert("메모를 찾을 수 없습니다.");
-
+  if (!id) {
+    alert("잘못된 접근");
     location.href = "index.html";
-
+    return;
   }
 
-  /* 기존 데이터 채우기 */
+  memoRef = doc(db, "notes", id);
 
-  document.getElementById("titleInput")
-    .value = note.title;
+  const snap = await getDoc(memoRef);
 
-  document.getElementById("contentInput")
-    .value = note.content;
-
-  /* 저장 */
-
-  function saveEdit() {
-
-    const title =
-      document.getElementById("titleInput")
-      .value
-      .trim();
-
-    const content =
-      document.getElementById("contentInput")
-      .value;
-
-    if (!title) {
-
-      alert("제목을 입력해주세요.");
-
-      return;
-
-    }
-
-    note.title = title;
-
-    note.content = content;
-
-    localStorage.setItem(
-      "notes",
-      JSON.stringify(notes)
-    );
-
-    alert("수정 완료!");
-
-    location.href =
-      "view.html?id=" + noteId;
-
+  if (!snap.exists()) {
+    alert("메모 없음");
+    location.href = "index.html";
+    return;
   }
 
-  function goBack() {
+  const data = snap.data();
 
-    location.href =
-      "view.html?id=" + noteId;
+  document.getElementById("title").value =
+    data.title;
 
+  document.getElementById("content").value =
+    data.content;
+
+}
+
+async function saveEdit() {
+
+  const title =
+    document.getElementById("title").value;
+
+  const content =
+    document.getElementById("content").value;
+
+  if (!title || !content) {
+    alert("제목/내용 입력");
+    return;
   }
+
+  await updateDoc(memoRef, {
+    title: title,
+    content: content,
+    updatedAt: new Date().toISOString()
+  });
+
+  location.href = "view.html?id=" + id;
+
+}
+
+function goBack() {
+  location.href = "view.html?id=" + id;
+}
+
+window.saveEdit = saveEdit;
+window.goBack = goBack;
+
+loadMemo();
 
 </script>
 
