@@ -1,31 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <title>메모</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>메모 목록</title>
 
   <style>
 
     body {
       font-family: sans-serif;
       background: #f0f0f0;
+      margin: 0;
       padding: 20px;
     }
 
     .top-bar {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 15px;
     }
 
     button {
       padding: 10px 14px;
       border: none;
-      border-radius: 14px;
+      border-radius: 12px;
       background: white;
       cursor: pointer;
-      margin: 3px;
     }
 
     button:hover {
@@ -35,48 +36,20 @@
     .card {
       background: white;
       padding: 15px;
-      border-radius: 20px;
-      margin-top: 10px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 14px;
-      background: white;
-      box-sizing: border-box;
-      margin-bottom: 10px;
-    }
-
-    .memo-item {
-      background: #f9f9f9;
-      padding: 15px;
       border-radius: 16px;
       margin-top: 10px;
+    }
+
+    .memo {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 12px;
+      margin: 8px 0;
       cursor: pointer;
-      transition: 0.2s;
     }
 
-    .memo-item:hover {
-      background: #ececec;
-    }
-
-    .memo-title {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .memo-info {
-      color: gray;
-      font-size: 13px;
-      margin-top: 5px;
-    }
-
-    .empty {
-      text-align: center;
-      color: gray;
-      padding: 30px;
+    .memo:hover {
+      background: #eee;
     }
 
   </style>
@@ -86,151 +59,73 @@
 
 <div class="top-bar">
 
-  <div>
+  <button onclick="goHome()">홈</button>
 
-    <button onclick="goHome()">
-      홈
-    </button>
-
-    <button onclick="goTrash()">
-      휴지통
-    </button>
-
-    <button onclick="resetAllNotes()">
-      초기화
-    </button>
-
-  </div>
-
-  <button onclick="goCreate()">
-    새 메모
-  </button>
+  <button onclick="goCreate()">새 메모</button>
 
 </div>
 
-<input
-  id="searchInput"
-  placeholder="메모 검색..."
-  oninput="renderMemos()"
-/>
+<h2>📝 메모 목록</h2>
 
-<div id="memoList"></div>
+<div class="card" id="list">
+  로딩중...
+</div>
 
-<script>
+<script type="module">
 
-  /*
-    임시 localStorage 구조
-    나중에 Firebase로 교체 가능
-  */
+import { db } from "/js/firebase.js";
+import {
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
+const listDiv =
+  document.getElementById("list");
 
-  function getNotes() {
+async function loadMemos() {
 
-    return JSON.parse(localStorage.getItem("notes")) || [];
+  const snap =
+    await getDocs(collection(db, "notes"));
 
-  }
+  listDiv.innerHTML = "";
 
-  function renderMemos() {
+  snap.forEach(docu => {
 
-    const memoList =
-      document.getElementById("memoList");
+    const data = docu.data();
 
-    const search =
-      document.getElementById("searchInput")
-      .value
-      .toLowerCase();
+    if (data.deleted) return;
 
-    const notes =
-      getNotes()
-      .filter(note => !note.deleted);
+    const div =
+      document.createElement("div");
 
-    memoList.innerHTML = "";
+    div.className = "memo";
 
-    const filtered =
-      notes.filter(note =>
-        note.title.toLowerCase().includes(search)
-      );
+    div.innerHTML = `
+      <b>${data.title}</b><br>
+      <small>${data.author}</small>
+    `;
 
-    if (filtered.length === 0) {
+    div.onclick = () => {
+      location.href =
+        "view.html?id=" + docu.id;
+    };
 
-      memoList.innerHTML = `
-        <div class="card empty">
-          메모가 없습니다.
-        </div>
-      `;
+    listDiv.appendChild(div);
 
-      return;
-    }
-
-    filtered.forEach(note => {
-
-      const div =
-        document.createElement("div");
-
-      div.className = "memo-item";
-
-      div.innerHTML = `
-        <div class="memo-title">
-          📄 ${note.title}
-        </div>
-
-        <div class="memo-info">
-          👤 ${note.author}
-          ·
-          🕒 ${note.createdAt}
-        </div>
-      `;
-
-      div.onclick = () => {
-
-        location.href =
-          "view.html?id=" + note.id;
-
-      };
-
-      memoList.appendChild(div);
-
-    });
-
-  }
-
-  function goCreate() {
-
-    location.href = "create.html";
-
-  }
-
-  function goTrash() {
-
-    location.href = "trash.html";
-
-  }
-
-  function goHome() {
-  
-    location.href =
-      "https://25withcoding.kr";
-  
-  }
-
-  renderMemos();
-
-function resetAllNotes() {
-
-  const ok = confirm(
-    "모든 메모를 삭제할까요?"
-  );
-
-  if (!ok) return;
-
-  localStorage.removeItem("notes");
-
-  alert("초기화 완료!");
-
-  location.reload();
+  });
 
 }
-  
+
+function goHome() {
+  location.href = "/";
+}
+
+function goCreate() {
+  location.href = "create.html";
+}
+
+loadMemos();
+
 </script>
 
 </body>
