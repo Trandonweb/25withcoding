@@ -4,7 +4,6 @@
   <title>메모 생성</title>
 
   <style>
-
     body {
       font-family: sans-serif;
       background: #f0f0f0;
@@ -64,22 +63,16 @@
       margin-top: 20px;
       text-align: right;
     }
-
   </style>
 </head>
 
 <body>
 
 <div class="top-bar">
-
-  <button onclick="goBack()">
-    뒤로가기
-  </button>
-
+  <button onclick="goBack()">뒤로가기</button>
 </div>
 
 <div class="card">
-
   <h2>📄 새 메모</h2>
 
   <div class="label">제목</div>
@@ -94,118 +87,85 @@
   <div class="bottom">
     <button onclick="saveMemo()">저장</button>
   </div>
-
 </div>
 
-<!-- ===================== -->
-<!-- Firebase 추가 -->
-<!-- ===================== -->
-
 <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
-  authDomain: "memo-5123c.firebaseapp.com",
-  projectId: "memo-5123c",
-  storageBucket: "memo-5123c.firebasestorage.app",
-  messagingSenderId: "984347291633",
-  appId: "1:984347291633:web:e80fd3f599f62c46a11e50"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// =====================
-// 기존 그대로 유지
-// =====================
-
-function getNotes() {
-  return JSON.parse(localStorage.getItem("notes")) || [];
-}
-
-function generateId() {
-  return Math.random().toString(36).substring(2, 10);
-}
-
-// =====================
-// 저장 (localStorage + Firebase 같이)
-// =====================
-
-async function saveMemo() {
-
-  const title =
-    document.getElementById("titleInput").value.trim();
-
-  const pin =
-    document.getElementById("pinInput").value.trim();
-
-  const content =
-    document.getElementById("contentInput").value;
-
-  if (!title) {
-    alert("제목을 입력해주세요.");
-    return;
-  }
-
-  if (!pin) {
-    alert("PIN을 입력해주세요.");
-    return;
-  }
-
-  if (!/^[0-9]+$/.test(pin)) {
-    alert("PIN은 숫자만 가능합니다.");
-    return;
-  }
-
-  if (pin.length !== 4) {
-    alert("PIN은 4자리여야 합니다.");
-    return;
-  }
-
-  const newNote = {
-    id: generateId(),
-    title: title,
-    pin: pin,
-    content: content,
-    author: localStorage.getItem("userId") || "unknown",
-    deleted: false,
-    createdAt: new Date().toLocaleDateString()
+  const firebaseConfig = {
+    apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
+    authDomain: "memo-5123c.firebaseapp.com",
+    projectId: "memo-5123c",
+    storageBucket: "memo-5123c.firebasestorage.app",
+    messagingSenderId: "984347291633",
+    appId: "1:984347291633:web:e80fd3f599f62c46a11e50"
   };
 
-  // =====================
-  // localStorage 저장 (기존 유지)
-  // =====================
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-  const notes = getNotes();
-  notes.unshift(newNote);
+  function generateId() {
+    return Math.random().toString(36).substring(2, 10);
+  }
 
-  localStorage.setItem("notes", JSON.stringify(notes));
+  async function saveMemo() {
+    const title = document.getElementById("titleInput").value.trim();
+    const pin = document.getElementById("pinInput").value.trim();
+    const content = document.getElementById("contentInput").value;
 
-  // =====================
-  // Firebase 저장 (추가)
-  // =====================
+    if (!title) {
+      alert("제목을 입력해주세요.");
+      return;
+    }
 
-  await addDoc(collection(db, "notes"), newNote);
+    if (!pin) {
+      alert("PIN을 입력해주세요.");
+      return;
+    }
 
-  alert("저장 완료!");
+    if (!/^[0-9]+$/.test(pin)) {
+      alert("PIN은 숫자만 가능합니다.");
+      return;
+    }
 
-  location.href = "index.html";
-}
+    if (pin.length !== 4) {
+      alert("PIN은 4자리여야 합니다.");
+      return;
+    }
 
-function goBack() {
-  location.href = "index.html";
-}
+    try {
+      await addDoc(collection(db, "memo"), {
+        id: generateId(),
+        title: title,
+        pin: pin,
+        content: content,
+        author: localStorage.getItem("userId") || "unknown",
+        deleted: false,
+        createdAt: Date.now()
+      });
 
-window.saveMemo = saveMemo;
-window.goBack = goBack;
+      alert("저장 완료!");
+      location.href = "index.html";
 
+    } catch (e) {
+      console.error(e);
+      alert("저장 실패!");
+    }
+  }
+
+  function goBack() {
+    location.href = "index.html";
+  }
+
+  // 🔥 module이라 window 연결 필수
+  window.saveMemo = saveMemo;
+  window.goBack = goBack;
 </script>
 
 </body>
