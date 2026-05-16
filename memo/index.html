@@ -137,8 +137,78 @@ const db = getFirestore(app);
 // 기존 localStorage 함수
 // =====================
 
-function getNotes() {
-  return JSON.parse(localStorage.getItem("notes")) || [];
+async function renderMemos() {
+
+  const memoList =
+    document.getElementById("memoList");
+
+  const search =
+    document.getElementById("searchInput")
+    .value
+    .toLowerCase();
+
+  memoList.innerHTML = "로딩중...";
+
+  const snap =
+    await getDocs(collection(db, "notes"));
+
+  const notes = [];
+
+  snap.forEach(docu => {
+    const data = docu.data();
+
+    if (data.deleted) return;
+
+    notes.push({
+      id: docu.id,
+      ...data
+    });
+  });
+
+  const filtered =
+    notes.filter(note =>
+      note.title.toLowerCase().includes(search)
+    );
+
+  memoList.innerHTML = "";
+
+  if (filtered.length === 0) {
+    memoList.innerHTML = `
+      <div class="card empty">
+        메모가 없습니다.
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(note => {
+
+    const div =
+      document.createElement("div");
+
+    div.className = "memo-item";
+
+    div.innerHTML = `
+      <div class="memo-title">
+        📄 ${note.title}
+      </div>
+
+      <div class="memo-info">
+        👤 ${note.author}
+        ·
+        🕒 ${note.createdAt}
+      </div>
+    `;
+
+    div.onclick = () => {
+      location.href =
+        "view.html?id=" + note.id;
+    };
+
+    memoList.appendChild(div);
+
+  });
+
 }
 
 // =====================
