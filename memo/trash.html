@@ -15,8 +15,6 @@
     }
 
     .top {
-      display: flex;
-      justify-content: space-between;
       margin-bottom: 15px;
     }
 
@@ -84,10 +82,6 @@
 <body>
 
 <div class="top">
-
-  <button onclick="goHome()">
-    홈
-  </button>
 
   <button onclick="goList()">
     ← 목록
@@ -216,12 +210,6 @@ async function deleteForever(id) {
 
 }
 
-function goHome() {
-
-  location.href = "/";
-
-}
-
 function goList() {
 
   location.href = "index.html";
@@ -230,7 +218,6 @@ function goList() {
 
 window.restoreMemo = restoreMemo;
 window.deleteForever = deleteForever;
-window.goHome = goHome;
 window.goList = goList;
 
 loadTrash();
