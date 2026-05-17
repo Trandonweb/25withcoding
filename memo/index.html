@@ -14,6 +14,8 @@
       display: flex;
       justify-content: space-between;
       margin-bottom: 10px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     button {
@@ -22,6 +24,10 @@
       border-radius: 12px;
       background: white;
       cursor: pointer;
+    }
+
+    button:hover {
+      background: #e8e8e8;
     }
 
     .memo {
@@ -34,11 +40,31 @@
 
     .title {
       font-weight: bold;
+      font-size: 17px;
     }
 
     .info {
       font-size: 12px;
       color: gray;
+      margin-top: 5px;
+    }
+
+    #search {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 12px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+
+    .empty {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      color: gray;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -46,23 +72,39 @@
 <body>
 
 <div class="top-bar">
-  <button onclick="goTrash()">휴지통</button>
+
+  <div>
+    <button onclick="goTrash()">휴지통</button>
+    <button onclick="resetAll()">초기화</button>
+  </div>
+
   <button onclick="goCreate()">+ 새 메모</button>
+
 </div>
 
-<input id="search" placeholder="검색..." oninput="render()" style="width:100%; padding:10px;">
+<input
+  id="search"
+  placeholder="검색..."
+  oninput="render()"
+/>
 
 <div id="list"></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
 import {
   getFirestore,
   collection,
   getDocs,
   query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  orderBy,
+  deleteDoc,
+  doc
+}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
@@ -75,8 +117,15 @@ const db = getFirestore(app);
 let notes = [];
 
 async function load() {
-  const q = query(collection(db, "notes"), orderBy("createdAt", "desc"));
-  const snap = await getDocs(q);
+
+  const q =
+    query(
+      collection(db, "notes"),
+      orderBy("createdAt", "desc")
+    );
+
+  const snap =
+    await getDocs(q);
 
   notes = snap.docs.map(d => ({
     id: d.id,
@@ -84,54 +133,116 @@ async function load() {
   }));
 
   render();
+
 }
 
 function render() {
-  const search = document.getElementById("search").value.toLowerCase();
-  const list = document.getElementById("list");
+
+  const search =
+    document.getElementById("search")
+    .value
+    .toLowerCase();
+
+  const list =
+    document.getElementById("list");
 
   list.innerHTML = "";
 
   const filtered = notes
     .filter(n => !n.deleted)
-    .filter(n => n.title.toLowerCase().includes(search));
+    .filter(n =>
+      (n.title || "")
+      .toLowerCase()
+      .includes(search)
+    );
 
   if (filtered.length === 0) {
-    list.innerHTML = "<div>메모 없음</div>";
+
+    list.innerHTML = `
+      <div class="empty">
+        메모 없음
+      </div>
+    `;
+
     return;
   }
 
   filtered.forEach(n => {
-    const div = document.createElement("div");
+
+    const div =
+      document.createElement("div");
+
     div.className = "memo";
 
     div.innerHTML = `
-      <div class="title">📄 ${n.title}</div>
+      <div class="title">
+        📄 ${n.title}
+      </div>
+
       <div class="info">
-        👤 ${n.authorName || "unknown"} · 🕒 ${new Date(n.createdAt).toLocaleString()}
+        👤 ${n.authorName || "guest"}
+        ·
+        🕒 ${
+          n.createdAt
+          ? new Date(n.createdAt).toLocaleString()
+          : "알 수 없음"
+        }
       </div>
     `;
 
     div.onclick = () => {
-      location.href = "view.html?id=" + n.id;
+      location.href =
+        "view.html?id=" + n.id;
     };
 
     list.appendChild(div);
+
   });
+
 }
 
 function goCreate() {
+
   location.href = "create.html";
+
 }
 
 function goTrash() {
+
   location.href = "trash.html";
+
+}
+
+async function resetAll() {
+
+  const ok =
+    confirm("모든 메모를 삭제할까요?");
+
+  if (!ok) return;
+
+  const snap =
+    await getDocs(collection(db, "notes"));
+
+  for (const d of snap.docs) {
+
+    await deleteDoc(
+      doc(db, "notes", d.id)
+    );
+
+  }
+
+  alert("초기화 완료!");
+
+  location.reload();
+
 }
 
 window.goCreate = goCreate;
 window.goTrash = goTrash;
+window.resetAll = resetAll;
 
 load();
+
 </script>
 
 </body>
