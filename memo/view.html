@@ -5,37 +5,59 @@
   <title>메모 보기</title>
 
   <style>
+
     body {
       font-family: sans-serif;
       background: #f0f0f0;
-      margin: 0;
       padding: 20px;
     }
 
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 14px;
+      background: white;
+      cursor: pointer;
+      margin: 3px;
+    }
+
+    button:hover {
+      background: #e6e6e6;
+    }
+
     .card {
-      max-width: 700px;
-      margin: auto;
       background: white;
       padding: 20px;
-      border-radius: 16px;
+      border-radius: 20px;
       position: relative;
       min-height: 400px;
     }
 
     h2 {
       margin-top: 0;
+      margin-bottom: 5px;
     }
 
     .meta {
       font-size: 13px;
       color: gray;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
 
     .content {
       white-space: pre-wrap;
-      line-height: 1.6;
+      line-height: 1.7;
       display: none;
+      background: #f5f5f5;
+      padding: 16px;
+      border-radius: 14px;
     }
 
     .pin-box {
@@ -44,26 +66,21 @@
     }
 
     input {
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      width: 150px;
-    }
-
-    button {
-      padding: 10px 12px;
+      width: 200px;
+      box-sizing: border-box;
       border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin-left: 5px;
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+      background: #f5f5f5;
+      font-family: sans-serif;
     }
 
     .actions {
-      position: absolute;
-      bottom: 15px;
-      right: 15px;
+      margin-top: 20px;
       display: none;
-      gap: 8px;
+      justify-content: flex-end;
+      gap: 10px;
     }
 
     .edit {
@@ -76,54 +93,99 @@
       color: white;
     }
 
-        #version {
-  position: fixed;
-  right: 15px;
-  bottom: 15px;
-  background: rgba(0,0,0,0.7);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  z-index: 9999;
-}
-    
+    #version {
+      position: fixed;
+      right: 15px;
+      bottom: 15px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      z-index: 9999;
+    }
+
   </style>
 </head>
 
 <body>
 
+<div class="top-bar">
+
+  <button onclick="goBack()">
+    뒤로가기
+  </button>
+
+</div>
+
 <div class="card">
 
-  <h2 id="title">로딩중...</h2>
+  <h2 id="title">
+    로딩중...
+  </h2>
+
   <div class="meta" id="meta"></div>
 
   <!-- PIN 입력 -->
   <div class="pin-box" id="pinBox">
+
     <p>PIN 입력</p>
-    <input id="pinInput" type="password" maxlength="4">
-    <button onclick="checkPin()">확인</button>
+
+    <input
+      id="pinInput"
+      type="password"
+      maxlength="4"
+      placeholder="4자리 PIN"
+    >
+
+    <button onclick="checkPin()">
+      확인
+    </button>
+
   </div>
 
   <!-- 내용 -->
-  <div class="content" id="content"></div>
+  <div
+    class="content"
+    id="content"
+  ></div>
 
   <!-- 버튼 -->
-  <div class="actions" id="actions">
-    <button class="edit" onclick="goEdit()">수정</button>
-    <button class="delete" onclick="deleteMemo()">삭제</button>
+  <div
+    class="actions"
+    id="actions"
+  >
+
+    <button
+      class="edit"
+      onclick="goEdit()"
+    >
+      수정
+    </button>
+
+    <button
+      class="delete"
+      onclick="deleteMemo()"
+    >
+      삭제
+    </button>
+
   </div>
 
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
 import {
   getFirestore,
   doc,
   getDoc,
   updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
@@ -131,69 +193,121 @@ const firebaseConfig = {
   projectId: "memo-5123c"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app =
+  initializeApp(firebaseConfig);
 
-const id = new URLSearchParams(location.search).get("id");
+const db =
+  getFirestore(app);
+
+const id =
+  new URLSearchParams(location.search)
+  .get("id");
 
 let memoRef;
 let memoData;
 
 async function load() {
-  memoRef = doc(db, "notes", id);
-  const snap = await getDoc(memoRef);
+
+  memoRef =
+    doc(db, "notes", id);
+
+  const snap =
+    await getDoc(memoRef);
 
   if (!snap.exists()) {
+
     alert("메모 없음");
-    location.href = "index.html";
+
+    location.href =
+      "index.html";
+
     return;
+
   }
 
-memoData = snap.data();
+  memoData =
+    snap.data();
 
-document.getElementById("title").innerText =
-  memoData.title;
+  document.getElementById("title").innerText =
+    memoData.title || "제목 없음";
 
-document.getElementById("meta").innerText =
-  `작성자: ${memoData.authorName || "unknown"}`;
+  document.getElementById("meta").innerText =
+    `작성자: ${memoData.authorName || "unknown"}`;
+
 }
+
 function checkPin() {
-  const pin = document.getElementById("pinInput").value;
+
+  const pin =
+    document.getElementById("pinInput")
+    .value;
 
   if (pin !== memoData.pin) {
+
     alert("PIN 틀림");
     return;
+
   }
 
-  document.getElementById("pinBox").style.display = "none";
-  document.getElementById("content").style.display = "block";
-  document.getElementById("actions").style.display = "flex";
+  document.getElementById("pinBox").style.display =
+    "none";
 
-  document.getElementById("content").innerText = memoData.content;
+  document.getElementById("content").style.display =
+    "block";
+
+  document.getElementById("actions").style.display =
+    "flex";
+
+  document.getElementById("content").innerText =
+    memoData.content || "";
+
 }
 
 async function deleteMemo() {
-  if (!confirm("삭제할까?")) return;
 
-  await updateDoc(memoRef, {
-    deleted: true
-  });
+  const ok =
+    confirm("삭제할까?");
 
-  location.href = "index.html";
+  if (!ok) return;
+
+  await updateDoc(
+    memoRef,
+    {
+      deleted: true
+    }
+  );
+
+  location.href =
+    "index.html";
+
 }
 
 function goEdit() {
-  location.href = "edit.html?id=" + id;
+
+  location.href =
+    "edit.html?id=" + id;
+
+}
+
+function goBack() {
+
+  location.href =
+    "index.html";
+
 }
 
 window.checkPin = checkPin;
 window.deleteMemo = deleteMemo;
 window.goEdit = goEdit;
+window.goBack = goBack;
 
 load();
+
 </script>
+
 <div id="version">
   v26.5.18.8
 </div>
+
 </body>
 </html>
