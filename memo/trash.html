@@ -44,12 +44,6 @@
       padding: 12px;
       border-radius: 12px;
       margin: 8px 0;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .memo:hover {
-      background: #eee;
     }
 
     .empty {
@@ -58,10 +52,18 @@
       margin-top: 30px;
     }
 
-    .info {
-      color: gray;
-      font-size: 12px;
-      margin-top: 5px;
+    .buttons {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .restore {
+      background: #dfffe0;
+    }
+
+    .delete {
+      background: #ffdede;
     }
 
     #version {
@@ -83,9 +85,13 @@
 
 <div class="top">
 
-  <button onclick="goHome()">홈</button>
+  <button onclick="goHome()">
+    홈
+  </button>
 
-  <button onclick="goList()">← 목록</button>
+  <button onclick="goList()">
+    ← 목록
+  </button>
 
 </div>
 
@@ -93,10 +99,6 @@
 
 <div class="card" id="list">
   로딩중...
-</div>
-
-<div id="version">
-  v26.5.18.8
 </div>
 
 <script type="module">
@@ -107,7 +109,10 @@ from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
   collection,
-  getDocs
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -124,70 +129,90 @@ const listDiv =
 
 async function loadTrash() {
 
-  try {
+  const snap =
+    await getDocs(collection(db, "notes"));
 
-    const snap =
-      await getDocs(collection(db, "notes"));
+  listDiv.innerHTML = "";
 
-    listDiv.innerHTML = "";
+  let hasData = false;
 
-    let hasData = false;
+  snap.forEach(docu => {
 
-    snap.forEach(docu => {
+    const data = docu.data();
 
-      const data = docu.data();
+    if (!data.deleted) return;
 
-      if (!data.deleted) return;
+    hasData = true;
 
-      hasData = true;
+    const div =
+      document.createElement("div");
 
-      const div =
-        document.createElement("div");
+    div.className = "memo";
 
-      div.className = "memo";
+    div.innerHTML = `
+      <b>${data.title}</b><br>
 
-      div.innerHTML = `
-        <b>📄 ${data.title || "제목 없음"}</b>
+      <small>
+        👤 ${data.authorName || "unknown"}
+      </small>
 
-        <div class="info">
-          👤 ${data.authorName || "unknown"}
-        </div>
-      `;
+      <div class="buttons">
 
-      div.onclick = () => {
+        <button
+          class="restore"
+          onclick="restoreMemo('${docu.id}')"
+        >
+          복구
+        </button>
 
-        location.href =
-          "view.html?id=" +
-          docu.id +
-          "&trash=1";
+        <button
+          class="delete"
+          onclick="deleteForever('${docu.id}')"
+        >
+          영구삭제
+        </button>
 
-      };
-
-      listDiv.appendChild(div);
-
-    });
-
-    if (!hasData) {
-
-      listDiv.innerHTML = `
-        <div class="empty">
-          휴지통이 비어있음
-        </div>
-      `;
-
-    }
-
-  } catch (e) {
-
-    console.error(e);
-
-    listDiv.innerHTML = `
-      <div class="empty">
-        불러오기 실패
       </div>
     `;
 
+    listDiv.appendChild(div);
+
+  });
+
+  if (!hasData) {
+
+    listDiv.innerHTML =
+      "<div class='empty'>휴지통이 비어있음</div>";
+
   }
+
+}
+
+async function restoreMemo(id) {
+
+  await updateDoc(
+    doc(db, "notes", id),
+    {
+      deleted: false
+    }
+  );
+
+  loadTrash();
+
+}
+
+async function deleteForever(id) {
+
+  const ok =
+    confirm("영구삭제할까요?");
+
+  if (!ok) return;
+
+  await deleteDoc(
+    doc(db, "notes", id)
+  );
+
+  loadTrash();
 
 }
 
@@ -203,12 +228,18 @@ function goList() {
 
 }
 
+window.restoreMemo = restoreMemo;
+window.deleteForever = deleteForever;
 window.goHome = goHome;
 window.goList = goList;
 
 loadTrash();
 
 </script>
+
+<div id="version">
+  v26.5.18.8
+</div>
 
 </body>
 </html>
