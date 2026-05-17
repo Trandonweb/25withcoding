@@ -140,7 +140,7 @@ let memoRef;
 let memoData;
 
 async function load() {
-  memoRef = doc(db, "memo", id);
+  memoRef = doc(db, "notes", id);
   const snap = await getDoc(memoRef);
 
   if (!snap.exists()) {
@@ -193,6 +193,6 @@ window.goEdit = goEdit;
 load();
 </script>
 <div id="version">
-  v26.5.18.5
+  v26.5.18.6
 </body>
 </html>
