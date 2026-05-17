@@ -18,6 +18,12 @@
       flex-wrap: wrap;
     }
 
+    .left-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     button {
       padding: 10px 14px;
       border: none;
@@ -36,6 +42,13 @@
       margin-top: 10px;
       border-radius: 12px;
       cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .memo-content {
+      flex: 1;
     }
 
     .title {
@@ -67,6 +80,13 @@
       margin-top: 10px;
     }
 
+    .select-bar {
+      margin-bottom: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     #version {
       position: fixed;
       right: 15px;
@@ -86,7 +106,7 @@
 
 <div class="top-bar">
 
-  <div>
+  <div class="left-buttons">
     <button onclick="goHome()">홈</button>
     <button onclick="goTrash()">휴지통</button>
     <button onclick="resetAll()">초기화</button>
@@ -94,6 +114,11 @@
 
   <button onclick="goCreate()">+ 새 메모</button>
 
+</div>
+
+<div class="select-bar">
+  <button onclick="selectAll()">전체 선택</button>
+  <button onclick="deleteSelected()">선택 삭제</button>
 </div>
 
 <input
@@ -116,7 +141,8 @@ import {
   query,
   orderBy,
   deleteDoc,
-  doc
+  doc,
+  updateDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -189,18 +215,30 @@ function render() {
     div.className = "memo";
 
     div.innerHTML = `
-      <div class="title">
-        📄 ${n.title}
-      </div>
 
-      <div class="info">
-        👤 ${n.authorName || "guest"}
-        ·
-        🕒 ${
-          n.createdAt
-          ? new Date(n.createdAt).toLocaleString()
-          : "알 수 없음"
-        }
+      <input
+        type="checkbox"
+        class="memo-check"
+        value="${n.id}"
+        onclick="event.stopPropagation()"
+      >
+
+      <div class="memo-content">
+
+        <div class="title">
+          📄 ${n.title}
+        </div>
+
+        <div class="info">
+          👤 ${n.authorName || "guest"}
+          ·
+          🕒 ${
+            n.createdAt
+            ? new Date(n.createdAt).toLocaleString()
+            : "알 수 없음"
+          }
+        </div>
+
       </div>
     `;
 
@@ -236,6 +274,16 @@ function goTrash() {
 
 async function resetAll() {
 
+  const password =
+    prompt("초기화 비밀번호 입력");
+
+  if (password !== "trandon@webt00n") {
+
+    alert("비밀번호 틀림");
+    return;
+
+  }
+
   const ok =
     confirm("모든 메모를 삭제할까요?");
 
@@ -258,10 +306,57 @@ async function resetAll() {
 
 }
 
+function selectAll() {
+
+  const checks =
+    document.querySelectorAll(".memo-check");
+
+  checks.forEach(c => {
+    c.checked = true;
+  });
+
+}
+
+async function deleteSelected() {
+
+  const checks =
+    document.querySelectorAll(".memo-check:checked");
+
+  if (checks.length === 0) {
+
+    alert("선택된 메모 없음");
+    return;
+
+  }
+
+  const ok =
+    confirm("선택한 메모를 삭제할까요?");
+
+  if (!ok) return;
+
+  for (const c of checks) {
+
+    await updateDoc(
+      doc(db, "notes", c.value),
+      {
+        deleted: true
+      }
+    );
+
+  }
+
+  alert("선택 삭제 완료!");
+
+  load();
+
+}
+
 window.goHome = goHome;
 window.goCreate = goCreate;
 window.goTrash = goTrash;
 window.resetAll = resetAll;
+window.selectAll = selectAll;
+window.deleteSelected = deleteSelected;
 
 load();
 
@@ -273,3 +368,4 @@ load();
 
 </body>
 </html>
+``
