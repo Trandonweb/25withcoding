@@ -140,7 +140,7 @@ let memoRef;
 let memoData;
 
 async function load() {
-  memoRef = doc(db, "notes", id);
+  memoRef = doc(db, "memo", id);
   const snap = await getDoc(memoRef);
 
   if (!snap.exists()) {
