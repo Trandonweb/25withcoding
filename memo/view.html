@@ -136,13 +136,14 @@ async function load() {
     return;
   }
 
-  memoData = snap.data();
+memoData = snap.data();
 
-  document.getElementById("title").innerText = memoData.title;
-  document.getElementById("meta").innerText =
-    `작성자: ${memoData.authorName || "unknown"} · ${new Date(memoData.createdAt).toLocaleString()}`;
-}
+document.getElementById("title").innerText =
+  memoData.title;
 
+document.getElementById("meta").innerText =
+  `작성자: ${memoData.authorName || "unknown"}`;
+  
 function checkPin() {
   const pin = document.getElementById("pinInput").value;
 
