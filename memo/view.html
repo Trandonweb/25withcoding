@@ -140,7 +140,8 @@ async function load() {
 
   document.getElementById("title").innerText = memoData.title;
   document.getElementById("meta").innerText =
-  `작성자: ${memoData.authorName || "unknown"} · ${memoData.createdAt.toDate().toLocaleString()}`;
+    `작성자: ${memoData.authorName || "unknown"} · ${new Date(memoData.createdAt).toLocaleString()}`;
+}
 
 function checkPin() {
   const pin = document.getElementById("pinInput").value;
@@ -158,7 +159,7 @@ function checkPin() {
 }
 
 async function deleteMemo() {
-  if (!confirm("삭제할까요?")) return;
+  if (!confirm("삭제할까?")) return;
 
   await updateDoc(memoRef, {
     deleted: true
