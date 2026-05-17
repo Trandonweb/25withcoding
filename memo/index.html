@@ -319,6 +319,16 @@ function selectAll() {
 
 async function deleteSelected() {
 
+  const password =
+    prompt("선택 삭제 비밀번호 입력");
+
+  if (password !== "trandon@webt00n") {
+
+    alert("비밀번호 틀림");
+    return;
+
+  }
+
   const checks =
     document.querySelectorAll(".memo-check:checked");
 
@@ -368,4 +378,3 @@ load();
 
 </body>
 </html>
-``
