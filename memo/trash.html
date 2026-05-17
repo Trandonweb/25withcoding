@@ -78,12 +78,23 @@
 
 <script type="module">
 
-import { db } from "/js/firebase.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
 import {
+  getFirestore,
   collection,
   getDocs
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+const app = initializeApp({
+  apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
+  authDomain: "memo-5123c.firebaseapp.com",
+  projectId: "memo-5123c"
+});
+
+const db = getFirestore(app);
 const listDiv =
   document.getElementById("list");
 
