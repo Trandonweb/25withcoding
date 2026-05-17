@@ -131,6 +131,12 @@ let notes = [];
 
 async function load() {
 
+  const q =
+    query(
+      collection(db, "notes"),
+      orderBy("createdAt", "desc")
+    );
+
   const snap =
     await getDocs(q);
 
@@ -252,7 +258,7 @@ load();
 
 </script>
 <div id="version">
-  v26.5.18.6
+  v26.5.18.7
 </div>
 </body>
 </html>
