@@ -173,7 +173,6 @@
     }
     try {
       await addDoc(collection(db, "notes"), {
-        id: generateId(),
         title: title,
         pin: pin,
         content: content,
