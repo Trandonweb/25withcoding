@@ -13,6 +13,7 @@
     .top-bar {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       margin-bottom: 15px;
     }
 
@@ -22,6 +23,11 @@
       border-radius: 14px;
       background: white;
       cursor: pointer;
+      margin: 3px;
+    }
+
+    button:hover {
+      background: #e6e6e6;
     }
 
     .card {
@@ -30,7 +36,8 @@
       border-radius: 20px;
     }
 
-    input, textarea {
+    input,
+    textarea {
       width: 100%;
       box-sizing: border-box;
       border: none;
@@ -38,9 +45,11 @@
       padding: 12px;
       margin-top: 10px;
       background: #f5f5f5;
+      font-family: sans-serif;
     }
 
     textarea {
+      resize: vertical;
       min-height: 300px;
       font-family: monospace;
     }
@@ -54,37 +63,70 @@
       margin-top: 20px;
       text-align: right;
     }
+
+    #version {
+      position: fixed;
+      right: 15px;
+      bottom: 15px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      z-index: 9999;
+    }
+
   </style>
 </head>
 
 <body>
 
 <div class="top-bar">
-  <button onclick="goBack()">뒤로가기</button>
+
+  <button onclick="goBack()">
+    뒤로가기
+  </button>
+
 </div>
 
 <div class="card">
+
   <h2>✏ 메모 수정</h2>
 
-  <div class="label">제목</div>
+  <div class="label">
+    제목
+  </div>
+
   <input id="titleInput">
 
-  <div class="label">내용</div>
+  <div class="label">
+    내용
+  </div>
+
   <textarea id="contentInput"></textarea>
 
   <div class="bottom">
-    <button onclick="saveEdit()">저장</button>
+
+    <button onclick="saveEdit()">
+      저장
+    </button>
+
   </div>
+
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
 import {
   getFirestore,
   doc,
   getDoc,
   updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
@@ -94,54 +136,90 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-const id = new URLSearchParams(location.search).get("id");
+const id =
+  new URLSearchParams(location.search)
+  .get("id");
 
 let noteData = null;
 
 /* 🔥 데이터 불러오기 */
 async function load() {
-  const snap = await getDoc(doc(db, "notes", id));
+
+  const snap =
+    await getDoc(doc(db, "notes", id));
 
   if (!snap.exists()) {
+
     alert("메모 없음");
-    location.href = "index.html";
+
+    location.href =
+      "index.html";
+
     return;
+
   }
 
   noteData = snap.data();
 
-  document.getElementById("titleInput").value = noteData.title;
-  document.getElementById("contentInput").value = noteData.content;
+  document.getElementById("titleInput").value =
+    noteData.title || "";
+
+  document.getElementById("contentInput").value =
+    noteData.content || "";
+
 }
 
 /* 🔥 저장 */
 async function saveEdit() {
-  const title = document.getElementById("titleInput").value.trim();
-  const content = document.getElementById("contentInput").value;
+
+  const title =
+    document.getElementById("titleInput")
+    .value
+    .trim();
+
+  const content =
+    document.getElementById("contentInput")
+    .value;
 
   if (!title) {
+
     alert("제목을 입력해주세요.");
     return;
+
   }
 
-  await updateDoc(doc(db, "notes", id), {
-    title: title,
-    content: content
-  });
+  await updateDoc(
+    doc(db, "notes", id),
+    {
+      title: title,
+      content: content
+    }
+  );
 
   alert("수정 완료!");
-  location.href = "view.html?id=" + id;
+
+  location.href =
+    "view.html?id=" + id;
+
 }
 
 function goBack() {
-  location.href = "view.html?id=" + id;
+
+  location.href =
+    "view.html?id=" + id;
+
 }
 
 window.saveEdit = saveEdit;
 window.goBack = goBack;
 
 load();
+
 </script>
+
+<div id="version">
+  v26.5.18.8
+</div>
 
 </body>
 </html>
