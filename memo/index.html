@@ -184,7 +184,7 @@ function render() {
         ·
         🕒 ${
           n.createdAt
-          ? new Date(n.createdAt).toLocaleString()
+          ? n.createdAt.toDate().toLocaleString()
           : "알 수 없음"
         }
       </div>
