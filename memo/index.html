@@ -131,12 +131,6 @@ let notes = [];
 
 async function load() {
 
-  const q =
-    query(
-      collection(db, "notes"),
-      orderBy("createdAt", "desc")
-    );
-
   const snap =
     await getDocs(q);
 
