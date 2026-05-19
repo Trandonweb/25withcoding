@@ -134,7 +134,6 @@
     <input
       id="pinInput"
       type="password"
-      maxlength="4"
       placeholder="4자리 PIN"
     >
 
@@ -206,6 +205,9 @@ const id =
 let memoRef;
 let memoData;
 
+// 마스터키
+const MASTER_KEY = "20262326";
+
 async function load() {
 
   memoRef =
@@ -236,13 +238,70 @@ async function load() {
 
 }
 
+const pinInput =
+  document.getElementById("pinInput");
+
+/*
+  일반 PIN:
+  4자리까지만 가능
+
+  마스터키:
+  앞부분이 일치하면 계속 입력 가능
+*/
+
+pinInput.addEventListener("input", () => {
+
+  let value =
+    pinInput.value;
+
+  // 숫자만 허용
+  value =
+    value.replace(/\D/g, "");
+
+  // 현재 입력값이
+  // 마스터키 prefix인지 확인
+  const isMasterPrefix =
+    MASTER_KEY.startsWith(value);
+
+  // 마스터키 흐름 아니면
+  // 4자리 제한
+  if (!isMasterPrefix &&
+      value.length > 4) {
+
+    value =
+      value.slice(0, 4);
+
+  }
+
+  // 마스터키 길이 초과 방지
+  if (value.length >
+      MASTER_KEY.length) {
+
+    value =
+      value.slice(
+        0,
+        MASTER_KEY.length
+      );
+
+  }
+
+  pinInput.value =
+    value;
+
+});
+
 function checkPin() {
 
   const pin =
     document.getElementById("pinInput")
     .value;
 
-  if (pin !== memoData.pin) {
+  // 일반 PIN 또는 마스터키
+  const ok =
+    pin === memoData.pin ||
+    pin === MASTER_KEY;
+
+  if (!ok) {
 
     alert("PIN 틀림");
     return;
@@ -306,7 +365,7 @@ load();
 </script>
 
 <div id="version">
-  v26.5.18.8
+  v26.5.19.1
 </div>
 
 </body>
