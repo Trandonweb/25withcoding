@@ -4,6 +4,7 @@
   <title>메모</title>
 
   <style>
+
     body {
       font-family: sans-serif;
       background: #f0f0f0;
@@ -68,7 +69,6 @@
       border: none;
       border-radius: 12px;
       box-sizing: border-box;
-      margin-bottom: 10px;
     }
 
     .empty {
@@ -107,25 +107,59 @@
 <div class="top-bar">
 
   <div class="left-buttons">
-    <button onclick="goHome()">홈</button>
-    <button onclick="goTrash()">휴지통</button>
-    <button onclick="resetAll()">초기화</button>
+
+    <button onclick="goHome()">
+      홈
+    </button>
+
+    <button onclick="goTrash()">
+      휴지통
+    </button>
+
+    <button onclick="resetAll()">
+      초기화
+    </button>
+
   </div>
 
-  <button onclick="goCreate()">+ 새 메모</button>
+  <button onclick="goCreate()">
+    + 새 메모
+  </button>
 
 </div>
 
 <div class="select-bar">
-  <button onclick="selectAll()">전체 선택</button>
-  <button onclick="deleteSelected()">선택 삭제</button>
+
+  <button onclick="selectAll()">
+    전체 선택
+  </button>
+
+  <button onclick="deleteSelected()">
+    선택 삭제
+  </button>
+
 </div>
 
-<input
-  id="search"
-  placeholder="검색..."
-  oninput="render()"
-/>
+<!-- 검색 -->
+
+<div style="
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+">
+
+  <input
+    id="search"
+    placeholder="검색..."
+    onkeydown="handleSearchKey(event)"
+    style="flex:1;"
+  >
+
+  <button onclick="render()">
+    검색
+  </button>
+
+</div>
 
 <div id="list"></div>
 
@@ -146,13 +180,22 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const app = initializeApp({
-  apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
-  authDomain: "memo-5123c.firebaseapp.com",
-  projectId: "memo-5123c"
-});
+const app =
+  initializeApp({
 
-const db = getFirestore(app);
+    apiKey:
+      "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
+
+    authDomain:
+      "memo-5123c.firebaseapp.com",
+
+    projectId:
+      "memo-5123c"
+
+  });
+
+const db =
+  getFirestore(app);
 
 let notes = [];
 
@@ -167,10 +210,13 @@ async function load() {
   const snap =
     await getDocs(q);
 
-  notes = snap.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
+  notes =
+    snap.docs.map(d => ({
+
+      id: d.id,
+      ...d.data()
+
+    }));
 
   render();
 
@@ -189,12 +235,32 @@ function render() {
   list.innerHTML = "";
 
   const filtered = notes
+
     .filter(n => !n.deleted)
-    .filter(n =>
-      (n.title || "")
-      .toLowerCase()
-      .includes(search)
-    );
+
+    .filter(n => {
+
+      const title =
+        (n.title || "")
+        .toLowerCase();
+
+      const content =
+        (n.content || "")
+        .toLowerCase();
+
+      const author =
+        (n.authorName || "")
+        .toLowerCase();
+
+      return (
+
+        title.includes(search) ||
+        content.includes(search) ||
+        author.includes(search)
+
+      );
+
+    });
 
   if (filtered.length === 0) {
 
@@ -205,6 +271,7 @@ function render() {
     `;
 
     return;
+
   }
 
   filtered.forEach(n => {
@@ -212,7 +279,8 @@ function render() {
     const div =
       document.createElement("div");
 
-    div.className = "memo";
+    div.className =
+      "memo";
 
     div.innerHTML = `
 
@@ -230,26 +298,43 @@ function render() {
         </div>
 
         <div class="info">
+
           👤 ${n.authorName || "guest"}
           ·
           🕒 ${
             n.createdAt
-            ? new Date(n.createdAt).toLocaleString()
+            ? new Date(
+                n.createdAt
+              ).toLocaleString()
             : "알 수 없음"
           }
+
         </div>
 
       </div>
+
     `;
 
     div.onclick = () => {
+
       location.href =
         "view.html?id=" + n.id;
+
     };
 
     list.appendChild(div);
 
   });
+
+}
+
+function handleSearchKey(event) {
+
+  if (event.key === "Enter") {
+
+    render();
+
+  }
 
 }
 
@@ -262,13 +347,15 @@ function goHome() {
 
 function goCreate() {
 
-  location.href = "create.html";
+  location.href =
+    "create.html";
 
 }
 
 function goTrash() {
 
-  location.href = "trash.html";
+  location.href =
+    "trash.html";
 
 }
 
@@ -285,12 +372,16 @@ async function resetAll() {
   }
 
   const ok =
-    confirm("모든 메모를 삭제할까요?");
+    confirm(
+      "모든 메모를 삭제할까요?"
+    );
 
   if (!ok) return;
 
   const snap =
-    await getDocs(collection(db, "notes"));
+    await getDocs(
+      collection(db, "notes")
+    );
 
   for (const d of snap.docs) {
 
@@ -309,10 +400,14 @@ async function resetAll() {
 function selectAll() {
 
   const checks =
-    document.querySelectorAll(".memo-check");
+    document.querySelectorAll(
+      ".memo-check"
+    );
 
   checks.forEach(c => {
+
     c.checked = true;
+
   });
 
 }
@@ -330,7 +425,9 @@ async function deleteSelected() {
   }
 
   const checks =
-    document.querySelectorAll(".memo-check:checked");
+    document.querySelectorAll(
+      ".memo-check:checked"
+    );
 
   if (checks.length === 0) {
 
@@ -340,17 +437,26 @@ async function deleteSelected() {
   }
 
   const ok =
-    confirm("선택한 메모를 삭제할까요?");
+    confirm(
+      "선택한 메모를 삭제할까요?"
+    );
 
   if (!ok) return;
 
   for (const c of checks) {
 
     await updateDoc(
-      doc(db, "notes", c.value),
+
+      doc(
+        db,
+        "notes",
+        c.value
+      ),
+
       {
         deleted: true
       }
+
     );
 
   }
@@ -361,19 +467,33 @@ async function deleteSelected() {
 
 }
 
-window.goHome = goHome;
-window.goCreate = goCreate;
-window.goTrash = goTrash;
-window.resetAll = resetAll;
-window.selectAll = selectAll;
-window.deleteSelected = deleteSelected;
+window.goHome =
+  goHome;
+
+window.goCreate =
+  goCreate;
+
+window.goTrash =
+  goTrash;
+
+window.resetAll =
+  resetAll;
+
+window.selectAll =
+  selectAll;
+
+window.deleteSelected =
+  deleteSelected;
+
+window.handleSearchKey =
+  handleSearchKey;
 
 load();
 
 </script>
 
 <div id="version">
-  v26.5.19.1
+  v26.5.19.2
 </div>
 
 </body>
