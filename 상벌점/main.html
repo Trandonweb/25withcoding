@@ -117,7 +117,17 @@
       color: black;
       font-weight: bold;
     }
-
+    #warning {
+      position: fixed;
+      left: 15px;
+      bottom: 15px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      z-index: 9999;
+    }
   </style>
 </head>
 
@@ -462,6 +472,14 @@ window.goAdmin = () => {
   location.href = "admin.html";
 };
 </script>
+  
+<!-- 좌측 하단 경고문 -->
 
+<div id="warning">
+  무단 결석시 -2점, 출석시 1점. 미리와서 컴퓨터(1~12번, 교사용 컴퓨터) 켜 두면 상점 1점. (단, 이 사항은 학생의 모범도에 따라 달라질 수 있다.)
+  | 벌점 10점 이상 : 축제 수익 -50% | 벌점 20점 이상 : 축제 수익 -75% | 벌점 30점 이상 : 축제 수익 없음 | 벌점 40점 이상 : 동아리 수료 불가 |
+  연 1회 이상 각 학년별 상점 우수자에게는 상품 부여. (단, 회장 제외)
+</div>
+  
 </body>
 </html>
