@@ -4,6 +4,7 @@
   <title>관리자 페이지</title>
 
   <style>
+
     body {
       font-family: sans-serif;
       padding: 20px;
@@ -83,16 +84,30 @@
 
   <h3>유저 추가</h3>
 
-  <input id="newId" placeholder="아이디">
+  <!-- 아이디 -> 학번 -->
+  <input id="newId" placeholder="학번">
+
   <input id="newName" placeholder="이름">
 
   <select id="newRole">
-    <option value="student">학생</option>
-    <option value="vice">부회장</option>
-    <option value="president">회장</option>
+
+    <option value="student">
+      학생
+    </option>
+
+    <option value="vice">
+      부회장
+    </option>
+
+    <option value="president">
+      회장
+    </option>
+
   </select>
 
-  <button onclick="createUser()">생성</button>
+  <button onclick="createUser()">
+    생성
+  </button>
 
 </div>
 
@@ -100,7 +115,9 @@
 
   <h3>전체 점수 초기화</h3>
 
-  <button onclick="resetAll()">전체 초기화</button>
+  <button onclick="resetAll()">
+    전체 초기화
+  </button>
 
 </div>
 
@@ -108,7 +125,9 @@
 
   <h3>유저 관리</h3>
 
-  <div id="userList">로딩중...</div>
+  <div id="userList">
+    로딩중...
+  </div>
 
 </div>
 
@@ -130,34 +149,53 @@ import {
 from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-  authDomain: "points2026-f5e50.firebaseapp.com",
-  projectId: "points2026-f5e50"
+
+  apiKey:
+    "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+
+  authDomain:
+    "points2026-f5e50.firebaseapp.com",
+
+  projectId:
+    "points2026-f5e50"
+
 };
 
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
 
-const myId = localStorage.getItem("userId");
+const myId =
+  localStorage.getItem("userId");
 
 if (!myId) {
+
   alert("로그인이 필요합니다.");
+
   location.href = "index.html";
+
 }
 
-const mySnap = await getDoc(doc(db, "users", myId));
+const mySnap =
+  await getDoc(doc(db, "users", myId));
 
 if (!mySnap.exists()) {
+
   alert("사용자 없음");
+
   location.href = "index.html";
+
 }
 
 const myData = mySnap.data();
 
 /* 회장만 접근 가능 */
 if (myData.role !== "president") {
+
   alert("접근 권한이 없습니다.");
+
   location.href = "main.html";
+
 }
 
 /* 점수 색상 */
@@ -172,15 +210,22 @@ function formatScore(score) {
   }
 
   return `<span class="zero">${score}</span>`;
+
 }
 
 /* 권한 한글화 */
 function roleToText(role) {
 
-  if (role === "president") return "회장";
-  if (role === "vice") return "부회장";
+  if (role === "president") {
+    return "회장";
+  }
+
+  if (role === "vice") {
+    return "부회장";
+  }
 
   return "학생";
+
 }
 
 /* 유저 생성 */
@@ -196,28 +241,46 @@ window.createUser = async () => {
     document.getElementById("newRole").value;
 
   if (!id || !name) {
+
     alert("입력해주세요.");
+
     return;
+
   }
 
-  const ref = doc(db, "users", id);
+  const ref =
+    doc(db, "users", id);
 
-  const snap = await getDoc(ref);
+  const snap =
+    await getDoc(ref);
 
   if (snap.exists()) {
-    alert("이미 존재하는 아이디");
+
+    alert("이미 존재하는 학번");
+
     return;
+
   }
 
+  /* 학년 = 학번 첫 글자 */
+  const grade =
+    id.charAt(0);
+
   await setDoc(ref, {
+
+    /* 순서 중요 */
+    grade: grade,
     name: name,
+    password: "qwer1234!",
     role: role,
     score: 0
+
   });
 
   alert("생성 완료");
 
   location.reload();
+
 };
 
 /* 전체 초기화 */
@@ -241,6 +304,7 @@ window.resetAll = async () => {
   alert("초기화 완료");
 
   location.reload();
+
 };
 
 /* 유저 목록 */
@@ -254,9 +318,11 @@ const querySnapshot =
 
 querySnapshot.forEach((docu) => {
 
-  const d = docu.data();
+  const d =
+    docu.data();
 
-  const div = document.createElement("div");
+  const div =
+    document.createElement("div");
 
   div.className = "user";
 
@@ -272,20 +338,28 @@ querySnapshot.forEach((docu) => {
     <br><br>
 
     <select id="role_${docu.id}">
+
       <option value="student"
         ${d.role === "student" ? "selected" : ""}>
+
         학생
+
       </option>
 
       <option value="vice"
         ${d.role === "vice" ? "selected" : ""}>
+
         부회장
+
       </option>
 
       <option value="president"
         ${d.role === "president" ? "selected" : ""}>
+
         회장
+
       </option>
+
     </select>
 
     <button onclick="changeRole('${docu.id}')">
@@ -315,14 +389,18 @@ window.changeRole = async (id) => {
   alert("권한 변경 완료");
 
   location.reload();
+
 };
 
 /* 유저 삭제 */
 window.deleteUser = async (id) => {
 
   if (id === myId) {
+
     alert("자기 자신은 삭제 불가");
+
     return;
+
   }
 
   if (!confirm(id + " 삭제할까요?")) {
@@ -334,13 +412,15 @@ window.deleteUser = async (id) => {
   alert("삭제 완료");
 
   location.reload();
+
 };
+
 window.goBack = () => {
 
   location.href = "main.html";
 
 };
-  
+
 </script>
 
 </body>
