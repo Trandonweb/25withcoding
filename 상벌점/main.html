@@ -120,18 +120,21 @@
 
     #warning {
       position: fixed;
-      top: 70px;
-      left: 50%;
-      transform: translateX(-50%);
+
       width: 420px;
-      max-width: 90%;
+      max-width: 70vw;
+
       background: white;
       color: black;
+
       padding: 14px;
       border-radius: 16px;
+
       box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+
       font-size: 13px;
       z-index: 9999;
+
       display: none;
       line-height: 1.5;
     }
@@ -278,23 +281,18 @@ querySnapshot.forEach((docu) => {
 
   const isMe = docu.id === myId;
 
-  /* 권한별 제한 */
   let disabled = false;
 
-  // 학생은 전부 막힘
   if (myData.role === "student") {
     disabled = true;
   }
 
-  // 부회장 제한
   if (myData.role === "vice") {
 
-    // 자기 자신 금지
     if (isMe) {
       disabled = true;
     }
 
-    // 회장 금지
     if (d.role === "president") {
       disabled = true;
     }
@@ -472,11 +470,21 @@ window.apply = async () => {
 window.toggleWarning = () => {
 
   const box = document.getElementById("warning");
+  const btn = document.getElementById("infoBtn");
 
   if (box.style.display === "block") {
+
     box.style.display = "none";
+
   } else {
+
+    const rect = btn.getBoundingClientRect();
+
+    box.style.left = (rect.right + 10) + "px";
+    box.style.top = rect.top + "px";
+
     box.style.display = "block";
+
   }
 
 };
