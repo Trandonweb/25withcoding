@@ -340,13 +340,18 @@ function checkPin() {
 
 async function deleteMemo() {
 
-  const password =
-    prompt("관리자 마스터키 입력");
+  // 공지사항만 관리자 비번 필요
+  if (isNotice(memoData.title)) {
 
-  if (password !== MASTER_KEY) {
+    const password =
+      prompt("관리자 마스터키 입력");
 
-    alert("마스터키 틀림");
-    return;
+    if (password !== MASTER_KEY) {
+
+      alert("마스터키 틀림");
+      return;
+
+    }
 
   }
 
@@ -369,13 +374,18 @@ async function deleteMemo() {
 
 function goEdit() {
 
-  const password =
-    prompt("관리자 마스터키 입력");
+  // 공지사항만 관리자 비번 필요
+  if (isNotice(memoData.title)) {
 
-  if (password !== MASTER_KEY) {
+    const password =
+      prompt("관리자 마스터키 입력");
 
-    alert("마스터키 틀림");
-    return;
+    if (password !== MASTER_KEY) {
+
+      alert("마스터키 틀림");
+      return;
+
+    }
 
   }
 
