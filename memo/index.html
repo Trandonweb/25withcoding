@@ -30,6 +30,11 @@
       border-radius: 10px;
       padding: 10px;
       margin-top: 8px;
+      transition: 0.2s;
+    }
+
+    .notice-item:hover {
+      background: #f3f3f3;
     }
 
     .top-bar {
@@ -138,6 +143,8 @@
 
 <body>
 
+<!-- 공지사항 -->
+
 <div class="notice-box">
 
   <div class="notice-title">
@@ -146,11 +153,7 @@
 
   <div id="notice-list">
 
-    <div
-  class="notice-item"
-  onclick="location.href='view.html?id=${n.id}'"
-  style="cursor:pointer;"
->
+    <div class="notice-item">
       현재 공지사항이 없습니다.
     </div>
 
@@ -193,6 +196,8 @@
   </button>
 
 </div>
+
+<!-- 검색 -->
 
 <div style="
   display:flex;
@@ -310,7 +315,11 @@ function renderNotice() {
   list.innerHTML =
     notices.map(n => `
 
-      <div class="notice-item">
+      <div
+        class="notice-item"
+        onclick="location.href='view.html?id=${n.id}'"
+        style="cursor:pointer;"
+      >
 
         📢 ${
           n.title
