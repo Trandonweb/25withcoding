@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>메모</title>
+
+  <title>코딩과 함께라면_메모장</title>
 
   <style>
 
@@ -9,6 +10,26 @@
       font-family: sans-serif;
       background: #f0f0f0;
       padding: 20px;
+    }
+
+    .notice-box {
+      background: #fff7d1;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .notice-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .notice-item {
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 8px;
     }
 
     .top-bar {
@@ -98,7 +119,7 @@
       font-size: 12px;
       z-index: 9999;
     }
-    
+
     #warning {
       position: fixed;
       left: 15px;
@@ -110,10 +131,30 @@
       font-size: 12px;
       z-index: 9999;
     }
+
   </style>
+
 </head>
 
 <body>
+
+<!-- 공지사항 -->
+
+<div class="notice-box">
+
+  <div class="notice-title">
+    📢 공지사항
+  </div>
+
+  <div id="notice-list">
+
+    <div class="notice-item">
+      현재 공지사항이 없습니다.
+    </div>
+
+  </div>
+
+</div>
 
 <div class="top-bar">
 
@@ -191,6 +232,9 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+const MASTER_KEY =
+  "20262326";
+
 const app =
   initializeApp({
 
@@ -209,6 +253,17 @@ const db =
   getFirestore(app);
 
 let notes = [];
+
+function isNotice(title) {
+
+  if (!title) return false;
+
+  return (
+    title.startsWith("!@#") &&
+    title.endsWith("#@!")
+  );
+
+}
 
 async function load() {
 
@@ -231,6 +286,71 @@ async function load() {
 
   render();
 
+  renderNotice();
+
+}
+
+function renderNotice() {
+
+  const list =
+    document.getElementById(
+      "notice-list"
+    );
+
+  if (!list) return;
+
+  const notices = notes.filter(n =>
+
+    !n.deleted &&
+    isNotice(n.title)
+
+  );
+
+  if (notices.length === 0) {
+
+    list.innerHTML = `
+      <div class="notice-item">
+        현재 공지사항이 없습니다.
+      </div>
+    `;
+
+    return;
+
+  }
+
+  list.innerHTML = notices.map(n => `
+
+    <div class="notice-item">
+
+      📢 ${
+        n.title
+          .replace("!@#", "")
+          .replace("#@!", "")
+          .trim()
+      }
+
+      <div style="
+        margin-top:6px;
+        font-size:12px;
+        color:gray;
+      ">
+
+        👤 ${n.authorName || "guest"}
+        ·
+        🕒 ${
+          n.createdAt
+          ? new Date(
+              n.createdAt
+            ).toLocaleString()
+          : "알 수 없음"
+        }
+
+      </div>
+
+    </div>
+
+  `).join("");
+
 }
 
 function render() {
@@ -248,6 +368,8 @@ function render() {
   const filtered = notes
 
     .filter(n => !n.deleted)
+
+    .filter(n => !isNotice(n.title))
 
     .filter(n => {
 
@@ -373,11 +495,11 @@ function goTrash() {
 async function resetAll() {
 
   const password =
-    prompt("초기화 비밀번호 입력");
+    prompt("초기화 마스터키 입력");
 
-  if (password !== "trandon@webt00n") {
+  if (password !== MASTER_KEY) {
 
-    alert("비밀번호 틀림");
+    alert("마스터키 틀림");
     return;
 
   }
@@ -426,11 +548,11 @@ function selectAll() {
 async function deleteSelected() {
 
   const password =
-    prompt("선택 삭제 비밀번호 입력");
+    prompt("선택 삭제 마스터키 입력");
 
-  if (password !== "trandon@webt00n") {
+  if (password !== MASTER_KEY) {
 
-    alert("비밀번호 틀림");
+    alert("마스터키 틀림");
     return;
 
   }
@@ -498,16 +620,16 @@ window.deleteSelected =
 
 window.handleSearchKey =
   handleSearchKey;
-  
+
 window.render =
   render;
-  
+
 load();
 
 </script>
 
 <div id="version">
-  v26.5.19.2
+  v26.5.24.1
 </div>
 
 <!-- 좌측 하단 경고문 -->
