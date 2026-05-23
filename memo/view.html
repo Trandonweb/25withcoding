@@ -208,6 +208,17 @@ let memoData;
 // 마스터키
 const MASTER_KEY = "20262326";
 
+function isNotice(title) {
+
+  if (!title) return false;
+
+  return (
+    title.startsWith("!@#") &&
+    title.endsWith("#@!")
+  );
+
+}
+
 async function load() {
 
   memoRef =
@@ -231,10 +242,30 @@ async function load() {
     snap.data();
 
   document.getElementById("title").innerText =
-    memoData.title || "제목 없음";
+    memoData.title
+      .replace("!@#", "")
+      .replace("#@!", "")
+      .trim() || "제목 없음";
 
   document.getElementById("meta").innerText =
     `작성자: ${memoData.authorName || "unknown"}`;
+
+  // 공지사항이면 바로 공개
+  if (isNotice(memoData.title)) {
+
+    document.getElementById("pinBox").style.display =
+      "none";
+
+    document.getElementById("content").style.display =
+      "block";
+
+    document.getElementById("actions").style.display =
+      "flex";
+
+    document.getElementById("content").innerText =
+      memoData.content || "";
+
+  }
 
 }
 
@@ -365,7 +396,7 @@ load();
 </script>
 
 <div id="version">
-  v26.5.19.2
+  v26.5.24.1
 </div>
 
 </body>
