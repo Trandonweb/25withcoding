@@ -242,7 +242,7 @@ async function load() {
     snap.data();
 
   document.getElementById("title").innerText =
-    memoData.title
+    (memoData.title || "")
       .replace("!@#", "")
       .replace("#@!", "")
       .trim() || "제목 없음";
@@ -250,7 +250,7 @@ async function load() {
   document.getElementById("meta").innerText =
     `작성자: ${memoData.authorName || "unknown"}`;
 
-  // 공지사항이면 바로 공개
+  // 공지사항이면 자동 공개
   if (isNotice(memoData.title)) {
 
     document.getElementById("pinBox").style.display =
@@ -272,30 +272,17 @@ async function load() {
 const pinInput =
   document.getElementById("pinInput");
 
-/*
-  일반 PIN:
-  4자리까지만 가능
-
-  마스터키:
-  앞부분이 일치하면 계속 입력 가능
-*/
-
 pinInput.addEventListener("input", () => {
 
   let value =
     pinInput.value;
 
-  // 숫자만 허용
   value =
     value.replace(/\D/g, "");
 
-  // 현재 입력값이
-  // 마스터키 prefix인지 확인
   const isMasterPrefix =
     MASTER_KEY.startsWith(value);
 
-  // 마스터키 흐름 아니면
-  // 4자리 제한
   if (!isMasterPrefix &&
       value.length > 4) {
 
@@ -304,7 +291,6 @@ pinInput.addEventListener("input", () => {
 
   }
 
-  // 마스터키 길이 초과 방지
   if (value.length >
       MASTER_KEY.length) {
 
@@ -327,7 +313,6 @@ function checkPin() {
     document.getElementById("pinInput")
     .value;
 
-  // 일반 PIN 또는 마스터키
   const ok =
     pin === memoData.pin ||
     pin === MASTER_KEY;
@@ -355,6 +340,16 @@ function checkPin() {
 
 async function deleteMemo() {
 
+  const password =
+    prompt("관리자 마스터키 입력");
+
+  if (password !== MASTER_KEY) {
+
+    alert("마스터키 틀림");
+    return;
+
+  }
+
   const ok =
     confirm("삭제할까?");
 
@@ -373,6 +368,16 @@ async function deleteMemo() {
 }
 
 function goEdit() {
+
+  const password =
+    prompt("관리자 마스터키 입력");
+
+  if (password !== MASTER_KEY) {
+
+    alert("마스터키 틀림");
+    return;
+
+  }
 
   location.href =
     "edit.html?id=" + id;
