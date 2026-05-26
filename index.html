@@ -1,161 +1,251 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
   <title>코딩과 함께라면</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+
+  <meta name="theme-color"
+        content="#ae33d6">
+
+  <link rel="apple-touch-icon"
+        href="/2025/logo.png">
+
+  <meta name="apple-mobile-web-app-capable"
+        content="yes">
+
+  <meta name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent">
 
   <style>
 
+    * {
+      box-sizing: border-box;
+    }
+
     body {
+
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
+
+      font-family:
+        Arial,
+        sans-serif;
+
+      background: #000;
+
+      color: white;
+
       display: flex;
+
       flex-direction: column;
+
       align-items: center;
+
       min-height: 100vh;
+
     }
 
     header {
+
       width: 100%;
-      padding: 20px;
-      background: #111;
-      color: white;
+
+      padding: 22px;
+
+      background: #000;
+
+      color: #ae33d6;
+
       text-align: center;
-      font-size: 22px;
+
+      font-size: 26px;
+
       font-weight: bold;
+
+      border-bottom:
+        2px solid #ae33d6;
+
+      box-shadow:
+        0 0 10px #630582,
+        0 0 20px #630582;
+
+      letter-spacing: 1px;
+
     }
 
     .container {
+
       margin-top: 40px;
+
       width: 90%;
+
       max-width: 600px;
+
     }
 
     .card {
-      background: white;
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 16px;
+
+      background: #111;
+
+      padding: 22px;
+
+      margin: 18px 0;
+
+      border-radius: 18px;
+
       cursor: pointer;
+
       transition: 0.2s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+      border:
+        2px solid #ae33d6;
+
+      box-shadow:
+        0 0 10px #630582,
+        0 0 20px #630582;
+
       text-align: center;
+
       font-size: 18px;
+
       font-weight: bold;
+
+      color: white;
+
     }
 
     .card:hover {
-      transform: scale(1.03);
-      background: #eee;
-    }
 
-    .login-box {
-      margin-top: 20px;
-      background: white;
-      padding: 15px;
-      border-radius: 16px;
-      text-align: center;
-    }
+      transform:
+        scale(1.03);
 
-    input {
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      width: 80%;
-      margin-top: 10px;
-    }
+      background:
+        #1a001f;
 
-    button {
-      padding: 10px 14px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background: #111;
-      color: white;
     }
 
     .user {
-      margin-top: 10px;
+
+      margin-bottom: 20px;
+
+      text-align: center;
+
+      color: #ccc;
+
       font-size: 14px;
-      color: #555;
+
+    }
+
+    .footer {
+
+      margin-top: auto;
+
+      padding: 20px;
+
+      color: #666;
+
+      font-size: 13px;
+
     }
 
   </style>
+
 </head>
 
 <body>
 
-<header>
-  코딩과 함께라면
-</header>
+  <header>
+    코딩과 함께라면
+  </header>
 
-<!-- 서비스 카드 -->
-<div class="container">
+  <div class="container">
 
-  <div class="card" onclick="go('/2025/')">
-    2025 기념관
+    <div class="user"
+         id="loginStatus">
+      로그인 안됨
+    </div>
+
+    <div class="card"
+         onclick="go('/2025/')">
+
+      2025 기념관
+
+    </div>
+
+    <div class="card"
+         onclick="go('/memo/')">
+
+      저장 공간
+
+    </div>
+
+    <div class="card"
+         onclick="go('/상벌점/')">
+
+      상벌점
+
+    </div>
+
+    <div class="card"
+         onclick="go('/NOTE/')">
+
+      설명용 노트
+
+    </div>
+
   </div>
 
-  <div class="card" onclick="go('/memo/')">
-    저장 공간
+  <div class="footer">
+    2026 Coding With Together
   </div>
 
-  <div class="card" onclick="go('/상벌점/')">
-    상벌점
-  </div>
+  <script>
 
-  <div class="card" onclick="go('/NOTE/')">
-    설명용 노트
-  </div>
+    function go(path) {
 
-</div>
+      location.href = path;
 
-<script>
-
-  function go(path) {
-    location.href = path;
-  }
-
-  function login() {
-
-    const id =
-      document.getElementById("userIdInput").value;
-
-    if (!id) {
-      alert("학번 입력하세요");
-      return;
     }
 
-    localStorage.setItem("userId", id);
+    function updateUI() {
+
+      const user =
+        localStorage.getItem("userId");
+
+      document
+        .getElementById("loginStatus")
+        .innerText =
+
+        user
+          ? "로그인됨 : " + user
+          : "로그인 안됨";
+
+    }
 
     updateUI();
 
-  }
+  </script>
 
-  function logout() {
+  <!-- PWA -->
+  <script>
 
-    localStorage.removeItem("userId");
+    if ("serviceWorker" in navigator) {
 
-    updateUI();
+      navigator
+        .serviceWorker
+        .register("/sw.js");
 
-  }
+    }
 
-  function updateUI() {
-
-    const user =
-      localStorage.getItem("userId");
-
-    document.getElementById("loginStatus").innerText =
-      user ? "로그인됨: " + user : "로그인 안됨";
-
-  }
-
-  updateUI();
-
-</script>
+  </script>
 
 </body>
+
 </html>
