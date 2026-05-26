@@ -1,0 +1,21 @@
+{
+  "name": "2026 코딩과 함께라면",
+  "short_name": "코딩과 함께라면",
+
+  "start_url": "/",
+
+  "display": "standalone",
+
+  "background_color": "#000000",
+  "theme_color": "#ae33d6",
+
+  "orientation": "portrait",
+
+  "icons": [
+    {
+      "src": "/2025/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
