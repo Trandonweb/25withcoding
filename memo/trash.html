@@ -54,6 +54,7 @@
       margin-top: 10px;
       display: flex;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .restore {
@@ -62,6 +63,12 @@
 
     .delete {
       background: #ffdede;
+    }
+
+    .admin-badge {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
     }
 
     #version {
@@ -105,7 +112,8 @@ import {
   collection,
   getDocs,
   updateDoc,
-  doc
+  doc,
+  deleteDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -120,6 +128,14 @@ const db = getFirestore(app);
 const listDiv =
   document.getElementById("list");
 
+// 관리자 여부
+
+const currentUser =
+  localStorage.getItem("authorName");
+
+const isAdmin =
+  currentUser === "20623";
+
 async function loadTrash() {
 
   const snap =
@@ -133,10 +149,13 @@ async function loadTrash() {
 
     const data = docu.data();
 
-    // 휴지통에 있는 것만 표시
-    // delete:true 는 숨김
+    // 휴지통 아니면 제외
 
-    if (!data.deleted || data.delete) return;
+    if (!data.deleted) return;
+
+    // 최종삭제는 관리자만 보임
+
+    if (data.delete && !isAdmin) return;
 
     hasData = true;
 
@@ -146,11 +165,20 @@ async function loadTrash() {
     div.className = "memo";
 
     div.innerHTML = `
+
       <b>${data.title}</b><br>
 
       <small>
         👤 ${data.authorName || "unknown"}
       </small>
+
+      ${
+        data.delete
+        ? `<div class="admin-badge">
+             ⛔ 최종삭제됨
+           </div>`
+        : ""
+      }
 
       <div class="buttons">
 
@@ -167,6 +195,19 @@ async function loadTrash() {
         >
           영구삭제
         </button>
+
+        ${
+          isAdmin && data.delete
+          ? `
+            <button
+              class="delete"
+              onclick="realDelete('${docu.id}')"
+            >
+              DB삭제
+            </button>
+          `
+          : ""
+        }
 
       </div>
     `;
@@ -205,14 +246,30 @@ async function deleteForever(id) {
 
   if (!ok) return;
 
-  // 진짜 삭제 X
-  // 관리자 숨김 처리만
-
   await updateDoc(
     doc(db, "notes", id),
     {
       delete: true
     }
+  );
+
+  loadTrash();
+
+}
+
+// 관리자만 가능
+
+async function realDelete(id) {
+
+  if (!isAdmin) return;
+
+  const ok =
+    confirm("진짜 DB에서 삭제할까요?");
+
+  if (!ok) return;
+
+  await deleteDoc(
+    doc(db, "notes", id)
   );
 
   loadTrash();
@@ -227,6 +284,7 @@ function goList() {
 
 window.restoreMemo = restoreMemo;
 window.deleteForever = deleteForever;
+window.realDelete = realDelete;
 window.goList = goList;
 
 loadTrash();
@@ -239,4 +297,3 @@ loadTrash();
 
 </body>
 </html>
-```
