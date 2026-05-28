@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -105,7 +106,6 @@ import {
   collection,
   getDocs,
   updateDoc,
-  deleteDoc,
   doc
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -134,7 +134,10 @@ async function loadTrash() {
 
     const data = docu.data();
 
-    if (!data.deleted) return;
+    // 휴지통에 있는 것만 표시
+    // delete:true 는 숨김
+
+    if (!data.deleted || data.delete) return;
 
     hasData = true;
 
@@ -187,7 +190,8 @@ async function restoreMemo(id) {
   await updateDoc(
     doc(db, "notes", id),
     {
-      deleted: false
+      deleted: false,
+      delete: false
     }
   );
 
@@ -202,8 +206,14 @@ async function deleteForever(id) {
 
   if (!ok) return;
 
-  await deleteDoc(
-    doc(db, "notes", id)
+  // 진짜 삭제 X
+  // 관리자 숨김 처리만
+
+  await updateDoc(
+    doc(db, "notes", id),
+    {
+      delete: true
+    }
   );
 
   loadTrash();
@@ -225,8 +235,9 @@ loadTrash();
 </script>
 
 <div id="version">
-  v26.5.24.1
+  v26.5.28.1
 </div>
 
 </body>
 </html>
+```
