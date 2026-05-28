@@ -69,6 +69,7 @@
       color: red;
       font-size: 12px;
       margin-top: 5px;
+      font-weight: bold;
     }
 
     #version {
@@ -128,13 +129,14 @@ const db = getFirestore(app);
 const listDiv =
   document.getElementById("list");
 
-// 관리자 여부
+// 관리자 판별
 
 const currentUser =
-  localStorage.getItem("authorName");
+  localStorage.getItem("AuthorName");
 
 const isAdmin =
-  currentUser === "20623";
+  String(currentUser).trim()
+  === "20623";
 
 async function loadTrash() {
 
@@ -153,7 +155,7 @@ async function loadTrash() {
 
     if (!data.deleted) return;
 
-    // 최종삭제는 관리자만 보임
+    // 최종삭제는 관리자만 보기 가능
 
     if (data.delete && !isAdmin) return;
 
@@ -174,9 +176,11 @@ async function loadTrash() {
 
       ${
         data.delete
-        ? `<div class="admin-badge">
-             ⛔ 최종삭제됨
-           </div>`
+        ? `
+          <div class="admin-badge">
+            ⛔ 최종삭제됨
+          </div>
+        `
         : ""
       }
 
@@ -189,12 +193,18 @@ async function loadTrash() {
           복구
         </button>
 
-        <button
-          class="delete"
-          onclick="deleteForever('${docu.id}')"
-        >
-          영구삭제
-        </button>
+        ${
+          !data.delete
+          ? `
+            <button
+              class="delete"
+              onclick="deleteForever('${docu.id}')"
+            >
+              영구삭제
+            </button>
+          `
+          : ""
+        }
 
         ${
           isAdmin && data.delete
@@ -256,8 +266,6 @@ async function deleteForever(id) {
   loadTrash();
 
 }
-
-// 관리자만 가능
 
 async function realDelete(id) {
 
