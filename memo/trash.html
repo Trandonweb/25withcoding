@@ -16,6 +16,8 @@
 
     .top {
       margin-bottom: 15px;
+      display: flex;
+      gap: 8px;
     }
 
     button {
@@ -28,6 +30,10 @@
 
     button:hover {
       background: #eee;
+    }
+
+    .admin-btn {
+      background: #ffe9b8;
     }
 
     .card {
@@ -95,6 +101,13 @@
     ← 목록
   </button>
 
+  <button
+    class="admin-btn"
+    onclick="adminLogin()"
+  >
+    관리자
+  </button>
+
 </div>
 
 <h2>🗑 휴지통</h2>
@@ -118,6 +131,8 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+const MASTER_KEY = "20262326";
+
 const app = initializeApp({
   apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
   authDomain: "memo-5123c.firebaseapp.com",
@@ -129,14 +144,9 @@ const db = getFirestore(app);
 const listDiv =
   document.getElementById("list");
 
-// 관리자 판별
+// 관리자 여부
 
-const currentUser =
-  localStorage.getItem("AuthorName");
-
-const isAdmin =
-  String(currentUser).trim()
-  === "20623";
+let isAdmin = false;
 
 async function loadTrash() {
 
@@ -151,11 +161,11 @@ async function loadTrash() {
 
     const data = docu.data();
 
-    // 휴지통 아니면 제외
+    // 휴지통만 표시
 
     if (!data.deleted) return;
 
-    // 최종삭제는 관리자만 보기 가능
+    // 최종삭제는 관리자만
 
     if (data.delete && !isAdmin) return;
 
@@ -235,6 +245,26 @@ async function loadTrash() {
 
 }
 
+function adminLogin() {
+
+  const pw =
+    prompt("마스터키 입력");
+
+  if (pw !== MASTER_KEY) {
+
+    alert("마스터키 틀림");
+    return;
+
+  }
+
+  isAdmin = true;
+
+  alert("관리자 모드 활성화");
+
+  loadTrash();
+
+}
+
 async function restoreMemo(id) {
 
   await updateDoc(
@@ -263,6 +293,8 @@ async function deleteForever(id) {
     }
   );
 
+  alert("영구삭제 완료");
+
   loadTrash();
 
 }
@@ -280,6 +312,8 @@ async function realDelete(id) {
     doc(db, "notes", id)
   );
 
+  alert("DB삭제 완료");
+
   loadTrash();
 
 }
@@ -294,6 +328,7 @@ window.restoreMemo = restoreMemo;
 window.deleteForever = deleteForever;
 window.realDelete = realDelete;
 window.goList = goList;
+window.adminLogin = adminLogin;
 
 loadTrash();
 
