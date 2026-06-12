@@ -2,28 +2,19 @@
 <html lang="ko">
 
 <head>
-
   <meta charset="UTF-8">
-
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>코딩과 함께라면</title>
 
-  <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
 
-  <meta name="theme-color"
-        content="#ae33d6">
+  <meta name="theme-color" content="#27ae60">
 
-  <link rel="apple-touch-icon"
-        href="/2025/logo.png">
+  <link rel="apple-touch-icon" href="/2025/logo.png">
 
-  <meta name="apple-mobile-web-app-capable"
-        content="yes">
-
-  <meta name="apple-mobile-web-app-status-bar-style"
-        content="black-translucent">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <style>
 
@@ -32,131 +23,70 @@
     }
 
     body {
-
       margin: 0;
-
-      font-family:
-        Arial,
-        sans-serif;
-
-      background: #000;
-
-      color: white;
-
+      font-family: Arial, sans-serif;
+      background: #F0F0F0;
+      color: #111;
       display: flex;
-
       flex-direction: column;
-
       align-items: center;
-
       min-height: 100vh;
-
     }
 
     header {
-
       width: 100%;
-
       padding: 22px;
-
-      background: #000;
-
-      color: #ae33d6;
-
+      background: #F0F0F0;
+      color: #1e7f4b;
       text-align: center;
-
       font-size: 26px;
-
       font-weight: bold;
-
-      border-bottom:
-        2px solid #ae33d6;
-
-      box-shadow:
-        0 0 10px #630582,
-        0 0 20px #630582;
-
+      border-bottom: 3px solid #27ae60;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
       letter-spacing: 1px;
-
     }
 
     .container {
-
       margin-top: 40px;
-
       width: 90%;
-
       max-width: 600px;
-
     }
 
     .card {
-
-      background: #111;
-
+      background: white;
       padding: 22px;
-
       margin: 18px 0;
-
       border-radius: 18px;
-
       cursor: pointer;
-
       transition: 0.2s;
-
-      border:
-        2px solid #ae33d6;
-
-      box-shadow:
-        0 0 10px #630582,
-        0 0 20px #630582;
-
+      border: 2px solid #27ae60;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       text-align: center;
-
       font-size: 18px;
-
       font-weight: bold;
-
-      color: white;
-
+      color: #111;
     }
 
     .card:hover {
-
-      transform:
-        scale(1.03);
-
-      background:
-        #1a001f;
-
+      transform: scale(1.03);
+      background: #eafff1;
     }
 
     .user {
-
       margin-bottom: 20px;
-
       text-align: center;
-
-      color: #ccc;
-
+      color: #555;
       font-size: 14px;
-
     }
 
     .footer {
-
       margin-top: auto;
-
       padding: 20px;
-
-      color: #666;
-
+      color: #777;
       font-size: 13px;
-
     }
 
   </style>
-
 </head>
 
 <body>
@@ -167,37 +97,29 @@
 
   <div class="container">
 
-    <div class="user"
-         id="loginStatus">
+    <div class="user" id="loginStatus">
       로그인 안됨
     </div>
 
-    <div class="card"
-         onclick="go('/2025/')">
+    <!-- 🔥 추가된 2026 Festival 버튼 -->
+    <div class="card" onclick="go('/2026festival/')">
+      🎉 2026 Festival
+    </div>
 
+    <div class="card" onclick="go('/2025/')">
       2025 기념관
-
     </div>
 
-    <div class="card"
-         onclick="go('/memo/')">
-
+    <div class="card" onclick="go('/memo/')">
       저장 공간
-
     </div>
 
-    <div class="card"
-         onclick="go('/상벌점/')">
-
+    <div class="card" onclick="go('/상벌점/')">
       상벌점
-
     </div>
 
-    <div class="card"
-         onclick="go('/NOTE/')">
-
+    <div class="card" onclick="go('/NOTE/')">
       설명용 노트
-
     </div>
 
   </div>
@@ -207,43 +129,24 @@
   </div>
 
   <script>
-
     function go(path) {
-
       location.href = path;
-
     }
 
     function updateUI() {
+      const user = localStorage.getItem("userId");
 
-      const user =
-        localStorage.getItem("userId");
-
-      document
-        .getElementById("loginStatus")
-        .innerText =
-
-        user
-          ? "로그인됨 : " + user
-          : "로그인 안됨";
-
+      document.getElementById("loginStatus").innerText =
+        user ? "로그인됨 : " + user : "로그인 안됨";
     }
 
     updateUI();
-
   </script>
 
-  <!-- PWA -->
   <script>
-
     if ("serviceWorker" in navigator) {
-
-      navigator
-        .serviceWorker
-        .register("/sw.js");
-
+      navigator.serviceWorker.register("/sw.js");
     }
-
   </script>
 
 </body>
