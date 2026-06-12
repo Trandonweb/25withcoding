@@ -14,6 +14,27 @@ body {
   color: white;
 }
 
+/* 🏠 홈 버튼 */
+.homeBtn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  padding: 10px 14px;
+  background: #4af;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  z-index: 1000;
+  transition: 0.2s;
+}
+
+.homeBtn:hover {
+  transform: scale(1.05);
+}
+
+/* 헤더 */
 header {
   text-align: center;
   padding: 20px;
@@ -100,13 +121,16 @@ button {
 
 <body>
 
+<!-- 🏠 홈 버튼 -->
+<button class="homeBtn" onclick="goHome()">🏠 Home</button>
+
 <header>🎉 2026 Coding Festival</header>
 
 <div class="grid" id="grid"></div>
 
 <script>
 
-// 🔥 임시 작품 데이터 (10개)
+// 🔥 임시 데이터
 const projects = [
   {id:1,title:"미니게임",desc:"간단한 점프 게임입니다.",img:"https://picsum.photos/400/300?1",url:"#",likes:12},
   {id:2,title:"웹 프로젝트",desc:"나만의 웹사이트 제작.",img:"https://picsum.photos/400/300?2",url:"#",likes:8},
@@ -161,6 +185,12 @@ function render(){
 }
 
 render();
+
+/* 🏠 홈 이동 */
+function goHome() {
+  location.href = "/2026festival/";
+}
+
 </script>
 
 </body>
