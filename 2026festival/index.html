@@ -2,71 +2,98 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>2026 Festival</title>
 
 <style>
 body {
-  margin:0;
-  font-family:sans-serif;
-  background:#0f0f14;
-  color:white;
+  margin: 0;
+  font-family: sans-serif;
+  background: #0f0f14;
+  color: white;
 }
 
 header {
-  text-align:center;
-  padding:20px;
-  font-size:24px;
-  font-weight:bold;
-  background:linear-gradient(90deg,#4af,#8f4);
+  text-align: center;
+  padding: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(90deg, #4af, #8f4);
 }
 
+/* 🔥 PC 3열 */
 .grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-  gap:15px;
-  padding:20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+/* 📱 모바일 1열 */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .card {
-  background:#1c1c25;
-  border-radius:12px;
-  overflow:hidden;
-  cursor:pointer;
-  transition:0.2s;
+  background: #1c1c25;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
 }
 
 .card:hover {
-  transform:scale(1.03);
+  transform: scale(1.03);
 }
 
 .card img {
-  width:100%;
-  height:120px;
-  object-fit:cover;
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
 }
 
 .info {
-  padding:10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
 }
 
 .title {
-  font-weight:bold;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.desc {
+  font-size: 13px;
+  color: #bbb;
+  line-height: 1.3em;
+  height: 2.6em;
+  overflow: hidden;
 }
 
 .likes {
-  color:#4af;
-  margin-top:5px;
+  color: #4af;
+  font-size: 14px;
+  margin-top: auto;
 }
 
 button {
-  margin-top:8px;
-  width:100%;
-  padding:6px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:#4af;
-  color:white;
+  margin-top: 8px;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #4af;
+  color: white;
+  font-weight: bold;
 }
 </style>
 </head>
@@ -78,47 +105,40 @@ button {
 <div class="grid" id="grid"></div>
 
 <script>
-// 🔥 임시 데이터 (나중에 Firebase로 교체)
+
+// 🔥 임시 작품 데이터 (10개)
 const projects = [
-  {
-    id:1,
-    title:"미니게임",
-    img:"https://picsum.photos/300/200?1",
-    url:"https://playentry.org/",
-    likes:12
-  },
-  {
-    id:2,
-    title:"웹 프로젝트",
-    img:"https://picsum.photos/300/200?2",
-    url:"https://github.com/",
-    likes:8
-  },
-  {
-    id:3,
-    title:"AI 작품",
-    img:"https://picsum.photos/300/200?3",
-    url:"https://example.com",
-    likes:20
-  }
+  {id:1,title:"미니게임",desc:"간단한 점프 게임입니다.",img:"https://picsum.photos/400/300?1",url:"#",likes:12},
+  {id:2,title:"웹 프로젝트",desc:"나만의 웹사이트 제작.",img:"https://picsum.photos/400/300?2",url:"#",likes:8},
+  {id:3,title:"AI 작품",desc:"AI 기반 창작 프로젝트.",img:"https://picsum.photos/400/300?3",url:"#",likes:20},
+  {id:4,title:"엔트리 게임",desc:"엔트리로 만든 게임.",img:"https://picsum.photos/400/300?4",url:"#",likes:5},
+  {id:5,title:"채팅 앱",desc:"간단한 실시간 채팅.",img:"https://picsum.photos/400/300?5",url:"#",likes:11},
+  {id:6,title:"퀴즈 게임",desc:"문제 맞추기 게임.",img:"https://picsum.photos/400/300?6",url:"#",likes:7},
+  {id:7,title:"타이머 앱",desc:"시간 관리 도구.",img:"https://picsum.photos/400/300?7",url:"#",likes:3},
+  {id:8,title:"메모장",desc:"간단한 메모 웹앱.",img:"https://picsum.photos/400/300?8",url:"#",likes:9},
+  {id:9,title:"미니 RPG",desc:"텍스트 RPG 게임.",img:"https://picsum.photos/400/300?9",url:"#",likes:15},
+  {id:10,title:"포트폴리오",desc:"나의 작품 모음.",img:"https://picsum.photos/400/300?10",url:"#",likes:18},
 ];
 
 const grid = document.getElementById("grid");
 
 function render(){
+
   grid.innerHTML = "";
 
   // 🔥 좋아요 순 정렬
   const sorted = [...projects].sort((a,b)=>b.likes-a.likes);
 
-  sorted.forEach(p=>{
+  sorted.forEach(p => {
+
     const card = document.createElement("div");
-    card.className="card";
+    card.className = "card";
 
     card.innerHTML = `
       <img src="${p.img}">
       <div class="info">
         <div class="title">${p.title}</div>
+        <div class="desc">${p.desc}</div>
         <div class="likes">❤️ ${p.likes}</div>
         <button>좋아요</button>
       </div>
@@ -129,7 +149,7 @@ function render(){
       window.open(p.url, "_blank");
     };
 
-    // ❤️ 좋아요 (로컬 테스트용)
+    // ❤️ 좋아요 (로컬 테스트)
     card.querySelector("button").onclick = (e) => {
       e.stopPropagation();
       p.likes++;
