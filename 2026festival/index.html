@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>2026 Festival</title>
+<title>코딩과 함께라면 2026 Festival</title>
 
 <style>
 body {
@@ -14,24 +14,21 @@ body {
   color: white;
 }
 
-/* 🏠 홈 버튼 */
-.homeBtn {
+/* Home 링크 */
+.home-link {
   position: fixed;
-  top: 15px;
-  left: 15px;
-  padding: 10px 14px;
-  background: #4af;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  z-index: 1000;
+  top: 18px;
+  left: 20px;
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 0.5px;
   transition: 0.2s;
+  z-index: 1000;
 }
 
-.homeBtn:hover {
-  transform: scale(1.05);
+.home-link:hover {
+  color: white;
 }
 
 /* 헤더 */
@@ -43,7 +40,7 @@ header {
   background: linear-gradient(90deg, #4af, #8f4);
 }
 
-/* 🔥 PC 3열 */
+/* PC 3열 */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -51,10 +48,14 @@ header {
   padding: 20px;
 }
 
-/* 📱 모바일 1열 */
+/* 모바일 1열 */
 @media (max-width: 768px) {
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .card img {
+    height: 220px;
   }
 }
 
@@ -106,7 +107,7 @@ header {
   margin-top: auto;
 }
 
-button {
+.like-btn {
   margin-top: 8px;
   padding: 8px;
   border: none;
@@ -115,14 +116,18 @@ button {
   background: #4af;
   color: white;
   font-weight: bold;
+  transition: 0.2s;
+}
+
+.like-btn:hover {
+  opacity: 0.9;
 }
 </style>
 </head>
 
 <body>
 
-<!-- 🏠 홈 버튼 -->
-<button class="homeBtn" onclick="goHome()">🏠 Home</button>
+<a href="/" class="home-link">Home</a>
 
 <header>🎉 2026 Coding Festival</header>
 
@@ -130,28 +135,98 @@ button {
 
 <script>
 
-// 🔥 임시 데이터
+// 임시 데이터
 const projects = [
-  {id:1,title:"미니게임",desc:"간단한 점프 게임입니다.",img:"https://picsum.photos/400/300?1",url:"#",likes:12},
-  {id:2,title:"웹 프로젝트",desc:"나만의 웹사이트 제작.",img:"https://picsum.photos/400/300?2",url:"#",likes:8},
-  {id:3,title:"AI 작품",desc:"AI 기반 창작 프로젝트.",img:"https://picsum.photos/400/300?3",url:"#",likes:20},
-  {id:4,title:"엔트리 게임",desc:"엔트리로 만든 게임.",img:"https://picsum.photos/400/300?4",url:"#",likes:5},
-  {id:5,title:"채팅 앱",desc:"간단한 실시간 채팅.",img:"https://picsum.photos/400/300?5",url:"#",likes:11},
-  {id:6,title:"퀴즈 게임",desc:"문제 맞추기 게임.",img:"https://picsum.photos/400/300?6",url:"#",likes:7},
-  {id:7,title:"타이머 앱",desc:"시간 관리 도구.",img:"https://picsum.photos/400/300?7",url:"#",likes:3},
-  {id:8,title:"메모장",desc:"간단한 메모 웹앱.",img:"https://picsum.photos/400/300?8",url:"#",likes:9},
-  {id:9,title:"미니 RPG",desc:"텍스트 RPG 게임.",img:"https://picsum.photos/400/300?9",url:"#",likes:15},
-  {id:10,title:"포트폴리오",desc:"나의 작품 모음.",img:"https://picsum.photos/400/300?10",url:"#",likes:18},
+  {
+    id: 1,
+    title: "미니게임",
+    desc: "간단한 점프 게임입니다.",
+    img: "https://picsum.photos/400/300?1",
+    url: "#",
+    likes: 12
+  },
+  {
+    id: 2,
+    title: "웹 프로젝트",
+    desc: "나만의 웹사이트 제작.",
+    img: "https://picsum.photos/400/300?2",
+    url: "#",
+    likes: 8
+  },
+  {
+    id: 3,
+    title: "AI 작품",
+    desc: "AI 기반 창작 프로젝트.",
+    img: "https://picsum.photos/400/300?3",
+    url: "#",
+    likes: 20
+  },
+  {
+    id: 4,
+    title: "엔트리 게임",
+    desc: "엔트리로 만든 게임.",
+    img: "https://picsum.photos/400/300?4",
+    url: "#",
+    likes: 5
+  },
+  {
+    id: 5,
+    title: "채팅 앱",
+    desc: "간단한 실시간 채팅.",
+    img: "https://picsum.photos/400/300?5",
+    url: "#",
+    likes: 11
+  },
+  {
+    id: 6,
+    title: "퀴즈 게임",
+    desc: "문제 맞추기 게임.",
+    img: "https://picsum.photos/400/300?6",
+    url: "#",
+    likes: 7
+  },
+  {
+    id: 7,
+    title: "타이머 앱",
+    desc: "시간 관리 도구.",
+    img: "https://picsum.photos/400/300?7",
+    url: "#",
+    likes: 3
+  },
+  {
+    id: 8,
+    title: "메모장",
+    desc: "간단한 메모 웹앱.",
+    img: "https://picsum.photos/400/300?8",
+    url: "#",
+    likes: 9
+  },
+  {
+    id: 9,
+    title: "미니 RPG",
+    desc: "텍스트 RPG 게임.",
+    img: "https://picsum.photos/400/300?9",
+    url: "#",
+    likes: 15
+  },
+  {
+    id: 10,
+    title: "포트폴리오",
+    desc: "나의 작품 모음.",
+    img: "https://picsum.photos/400/300?10",
+    url: "#",
+    likes: 18
+  }
 ];
 
 const grid = document.getElementById("grid");
 
-function render(){
+function render() {
 
   grid.innerHTML = "";
 
-  // 🔥 좋아요 순 정렬
-  const sorted = [...projects].sort((a,b)=>b.likes-a.likes);
+  // 좋아요 순 정렬
+  const sorted = [...projects].sort((a, b) => b.likes - a.likes);
 
   sorted.forEach(p => {
 
@@ -164,17 +239,17 @@ function render(){
         <div class="title">${p.title}</div>
         <div class="desc">${p.desc}</div>
         <div class="likes">❤️ ${p.likes}</div>
-        <button>좋아요</button>
+        <button class="like-btn">좋아요</button>
       </div>
     `;
 
-    // 🔗 클릭 → 작품 이동
+    // 작품 이동
     card.onclick = () => {
       window.open(p.url, "_blank");
     };
 
-    // ❤️ 좋아요 (로컬 테스트)
-    card.querySelector("button").onclick = (e) => {
+    // 좋아요
+    card.querySelector(".like-btn").onclick = (e) => {
       e.stopPropagation();
       p.likes++;
       render();
@@ -185,11 +260,6 @@ function render(){
 }
 
 render();
-
-/* 🏠 홈 이동 */
-function goHome() {
-  location.href = "/2026festival/";
-}
 
 </script>
 
