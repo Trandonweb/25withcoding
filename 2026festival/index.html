@@ -6,6 +6,11 @@
 
 <title>코딩과 함께라면 2026 Festival</title>
 
+<!-- 글꼴 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+
 <style>
 body {
   margin: 0;
@@ -34,10 +39,33 @@ body {
 /* 헤더 */
 header {
   text-align: center;
-  padding: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  background: linear-gradient(90deg, #4af, #8f4);
+  padding: 28px 20px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 42px;
+
+  background: linear-gradient(
+    90deg,
+    #00c853,
+    #64dd17
+  );
+
+  color: white;
+
+  letter-spacing: 1px;
+
+  text-shadow:
+    0 0 10px rgba(255,255,255,.4),
+    0 0 20px rgba(255,255,255,.2);
+
+  box-shadow:
+    0 4px 20px rgba(0,0,0,.3);
+}
+
+.subtitle {
+  text-align: center;
+  padding: 12px 20px;
+  color: #b8ffb8;
+  font-size: 15px;
 }
 
 /* PC 3열 */
@@ -57,6 +85,11 @@ header {
   .card img {
     height: 220px;
   }
+
+  header {
+    font-size: 28px;
+    padding: 24px 12px;
+  }
 }
 
 .card {
@@ -68,6 +101,7 @@ header {
   display: flex;
   flex-direction: column;
   min-height: 300px;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .card:hover {
@@ -90,7 +124,8 @@ header {
 
 .title {
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
+  color: white;
 }
 
 .desc {
@@ -102,7 +137,7 @@ header {
 }
 
 .likes {
-  color: #4af;
+  color: #64dd17;
   font-size: 14px;
   margin-top: auto;
 }
@@ -113,7 +148,7 @@ header {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  background: #4af;
+  background: #00c853;
   color: white;
   font-weight: bold;
   transition: 0.2s;
@@ -129,7 +164,11 @@ header {
 
 <a href="/" class="home-link">Home</a>
 
-<header>🎉 2026 Coding Festival</header>
+<header>코딩과 함께라면 2026 Festival</header>
+
+<div class="subtitle">
+  코딩과 함께 만드는 우리들의 축제
+</div>
 
 <div class="grid" id="grid"></div>
 
@@ -184,38 +223,6 @@ const projects = [
     img: "https://picsum.photos/400/300?6",
     url: "#",
     likes: 7
-  },
-  {
-    id: 7,
-    title: "타이머 앱",
-    desc: "시간 관리 도구.",
-    img: "https://picsum.photos/400/300?7",
-    url: "#",
-    likes: 3
-  },
-  {
-    id: 8,
-    title: "메모장",
-    desc: "간단한 메모 웹앱.",
-    img: "https://picsum.photos/400/300?8",
-    url: "#",
-    likes: 9
-  },
-  {
-    id: 9,
-    title: "미니 RPG",
-    desc: "텍스트 RPG 게임.",
-    img: "https://picsum.photos/400/300?9",
-    url: "#",
-    likes: 15
-  },
-  {
-    id: 10,
-    title: "포트폴리오",
-    desc: "나의 작품 모음.",
-    img: "https://picsum.photos/400/300?10",
-    url: "#",
-    likes: 18
   }
 ];
 
@@ -225,7 +232,6 @@ function render() {
 
   grid.innerHTML = "";
 
-  // 좋아요 순 정렬
   const sorted = [...projects].sort((a, b) => b.likes - a.likes);
 
   sorted.forEach(p => {
@@ -243,12 +249,10 @@ function render() {
       </div>
     `;
 
-    // 작품 이동
     card.onclick = () => {
       window.open(p.url, "_blank");
     };
 
-    // 좋아요
     card.querySelector(".like-btn").onclick = (e) => {
       e.stopPropagation();
       p.likes++;
