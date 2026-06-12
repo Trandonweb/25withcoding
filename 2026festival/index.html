@@ -1,98 +1,146 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>2026 Festival</title>
-  <style>
-    body { font-family: sans-serif; background:#111; color:white; }
-    h1 { text-align:center; }
+<meta charset="UTF-8">
+<title>2026 Festival</title>
 
-    .grid {
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
-      gap:15px;
-      padding:20px;
-    }
+<style>
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:#0f0f14;
+  color:white;
+}
 
-    .card {
-      background:#222;
-      border-radius:12px;
-      overflow:hidden;
-      cursor:pointer;
-      transition:0.2s;
-    }
+header {
+  text-align:center;
+  padding:20px;
+  font-size:24px;
+  font-weight:bold;
+  background:linear-gradient(90deg,#4af,#8f4);
+}
 
-    .card:hover { transform: scale(1.03); }
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:15px;
+  padding:20px;
+}
 
-    .card img {
-      width:100%;
-      height:120px;
-      object-fit:cover;
-    }
+.card {
+  background:#1c1c25;
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:0.2s;
+}
 
-    .info {
-      padding:10px;
-    }
+.card:hover {
+  transform:scale(1.03);
+}
 
-    .likes {
-      color:#4af;
-      font-size:14px;
-    }
-  </style>
+.card img {
+  width:100%;
+  height:120px;
+  object-fit:cover;
+}
+
+.info {
+  padding:10px;
+}
+
+.title {
+  font-weight:bold;
+}
+
+.likes {
+  color:#4af;
+  margin-top:5px;
+}
+
+button {
+  margin-top:8px;
+  width:100%;
+  padding:6px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:#4af;
+  color:white;
+}
+</style>
 </head>
+
 <body>
 
-<h1>🎉 2026 Festival 실시간 랭킹</h1>
+<header>🎉 2026 Coding Festival</header>
 
 <div class="grid" id="grid"></div>
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  databaseURL: "YOUR_DB_URL",
-  projectId: "YOUR_ID"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+<script>
+// 🔥 임시 데이터 (나중에 Firebase로 교체)
+const projects = [
+  {
+    id:1,
+    title:"미니게임",
+    img:"https://picsum.photos/300/200?1",
+    url:"https://playentry.org/",
+    likes:12
+  },
+  {
+    id:2,
+    title:"웹 프로젝트",
+    img:"https://picsum.photos/300/200?2",
+    url:"https://github.com/",
+    likes:8
+  },
+  {
+    id:3,
+    title:"AI 작품",
+    img:"https://picsum.photos/300/200?3",
+    url:"https://example.com",
+    likes:20
+  }
+];
 
 const grid = document.getElementById("grid");
 
-const projectsRef = ref(db, "projects");
-
-onValue(projectsRef, (snapshot) => {
-  const data = snapshot.val();
+function render(){
   grid.innerHTML = "";
 
-  if (!data) return;
+  // 🔥 좋아요 순 정렬
+  const sorted = [...projects].sort((a,b)=>b.likes-a.likes);
 
-  // likes 기준 정렬
-  const sorted = Object.entries(data).sort((a,b) => b[1].likes - a[1].likes);
-
-  sorted.forEach(([id, p]) => {
+  sorted.forEach(p=>{
     const card = document.createElement("div");
-    card.className = "card";
+    card.className="card";
 
     card.innerHTML = `
-      <img src="${p.thumbnail}">
+      <img src="${p.img}">
       <div class="info">
-        <div>${p.title}</div>
+        <div class="title">${p.title}</div>
         <div class="likes">❤️ ${p.likes}</div>
+        <button>좋아요</button>
       </div>
     `;
 
+    // 🔗 클릭 → 작품 이동
     card.onclick = () => {
-      location.href = `/2026festival/detail.html?id=${id}`;
+      window.open(p.url, "_blank");
+    };
+
+    // ❤️ 좋아요 (로컬 테스트용)
+    card.querySelector("button").onclick = (e) => {
+      e.stopPropagation();
+      p.likes++;
+      render();
     };
 
     grid.appendChild(card);
   });
-});
+}
+
+render();
 </script>
 
 </body>
