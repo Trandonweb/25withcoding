@@ -6,7 +6,6 @@
 
 <title>코딩과 함께라면 2026 Festival</title>
 
-<!-- 글꼴 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -19,7 +18,7 @@ body {
   color: white;
 }
 
-/* Home 링크 */
+/* Home */
 .home-link {
   position: fixed;
   top: 18px;
@@ -27,48 +26,29 @@ body {
   color: rgba(255,255,255,0.75);
   text-decoration: none;
   font-size: 13px;
-  letter-spacing: 0.5px;
-  transition: 0.2s;
   z-index: 1000;
 }
+.home-link:hover { color: white; }
 
-.home-link:hover {
-  color: white;
-}
-
-/* 헤더 */
+/* Header */
 header {
   text-align: center;
   padding: 12px 20px;
   font-family: 'Black Han Sans', sans-serif;
   font-size: 30px;
-
-  background: linear-gradient(
-    90deg,
-    #00c853,
-    #64dd17
-  );
-
+  background: linear-gradient(90deg, #00c853, #64dd17);
   color: white;
-
-  letter-spacing: 1px;
-
-  text-shadow:
-    0 0 10px rgba(255,255,255,.4),
-    0 0 20px rgba(255,255,255,.2);
-
-  box-shadow:
-    0 4px 20px rgba(0,0,0,.3);
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
 }
 
 .subtitle {
   text-align: center;
-  padding: 12px 20px;
+  padding: 10px;
   color: #b8ffb8;
-  font-size: 15px;
+  font-size: 14px;
 }
 
-/* PC 3열 */
+/* Grid */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -76,19 +56,9 @@ header {
   padding: 20px;
 }
 
-/* 모바일 1열 */
 @media (max-width: 768px) {
   .grid {
     grid-template-columns: 1fr;
-  }
-
-  .card img {
-    height: 220px;
-  }
-
-  header {
-    font-size: 28px;
-    padding: 24px 12px;
   }
 }
 
@@ -100,8 +70,6 @@ header {
   transition: 0.2s;
   display: flex;
   flex-direction: column;
-  min-height: 300px;
-  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .card:hover {
@@ -125,20 +93,17 @@ header {
 .title {
   font-weight: bold;
   font-size: 18px;
-  color: white;
 }
 
 .desc {
   font-size: 13px;
   color: #bbb;
-  line-height: 1.3em;
   height: 2.6em;
   overflow: hidden;
 }
 
 .likes {
   color: #64dd17;
-  font-size: 14px;
   margin-top: auto;
 }
 
@@ -151,99 +116,67 @@ header {
   background: #00c853;
   color: white;
   font-weight: bold;
-  transition: 0.2s;
-}
-
-.like-btn:hover {
-  opacity: 0.9;
 }
 </style>
 </head>
 
 <body>
 
-<a href="/" class="home-link">Home</a>
+<a class="home-link" href="/">Home</a>
 
 <header>코딩과 함께라면 2026 Festival</header>
 
-<div class="subtitle">
-  since 2025
-</div>
+<div class="subtitle">since 2025</div>
 
 <div class="grid" id="grid"></div>
 
-<script>
+<script type="module">
 
-// 임시 데이터
-const projects = [
-  {
-    id: 1,
-    title: "미니게임",
-    desc: "간단한 점프 게임입니다.",
-    img: "https://picsum.photos/400/300?1",
-    url: "#",
-    likes: 12
-  },
-  {
-    id: 2,
-    title: "웹 프로젝트",
-    desc: "나만의 웹사이트 제작.",
-    img: "https://picsum.photos/400/300?2",
-    url: "#",
-    likes: 8
-  },
-  {
-    id: 3,
-    title: "AI 작품",
-    desc: "AI 기반 창작 프로젝트.",
-    img: "https://picsum.photos/400/300?3",
-    url: "#",
-    likes: 20
-  },
-  {
-    id: 4,
-    title: "엔트리 게임",
-    desc: "엔트리로 만든 게임.",
-    img: "https://picsum.photos/400/300?4",
-    url: "#",
-    likes: 5
-  },
-  {
-    id: 5,
-    title: "채팅 앱",
-    desc: "간단한 실시간 채팅.",
-    img: "https://picsum.photos/400/300?5",
-    url: "#",
-    likes: 11
-  },
-  {
-    id: 6,
-    title: "퀴즈 게임",
-    desc: "문제 맞추기 게임.",
-    img: "https://picsum.photos/400/300?6",
-    url: "#",
-    likes: 7
-  }
-];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
+  authDomain: "festivallikes.firebaseapp.com",
+  projectId: "festivallikes",
+  storageBucket: "festivallikes.firebasestorage.app",
+  messagingSenderId: "782245120700",
+  appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const grid = document.getElementById("grid");
 
-function render() {
+async function loadProjects() {
 
   grid.innerHTML = "";
 
-  const sorted = [...projects].sort((a, b) => b.likes - a.likes);
+  const snap = await getDocs(collection(db, "projects"));
 
-  sorted.forEach(p => {
+  let projects = [];
+
+  snap.forEach(doc => {
+    projects.push({
+      id: doc.id,
+      ...doc.data()
+    });
+  });
+
+  // 좋아요 순 정렬
+  projects.sort((a, b) => b.likes - a.likes);
+
+  projects.forEach(p => {
 
     const card = document.createElement("div");
     card.className = "card";
 
     card.innerHTML = `
-      <img src="${p.img}">
+      <img src="${p.thum}">
       <div class="info">
-        <div class="title">${p.title}</div>
-        <div class="desc">${p.desc}</div>
+        <div class="title">${p.id}</div>
+        <div class="desc">${p.detail}</div>
         <div class="likes">❤️ ${p.likes}</div>
         <button class="like-btn">좋아요</button>
       </div>
@@ -255,15 +188,18 @@ function render() {
 
     card.querySelector(".like-btn").onclick = (e) => {
       e.stopPropagation();
+
+      // 임시 증가 (DB 저장은 다음 단계)
       p.likes++;
-      render();
+
+      card.querySelector(".likes").innerText = `❤️ ${p.likes}`;
     };
 
     grid.appendChild(card);
   });
 }
 
-render();
+loadProjects();
 
 </script>
 
