@@ -62,7 +62,6 @@ header {
   }
 }
 
-/* Card */
 .card {
   background: #1c1c25;
   border-radius: 14px;
@@ -81,6 +80,7 @@ header {
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
+  display: block;
 }
 
 .info {
@@ -171,7 +171,6 @@ async function loadProjects() {
     });
   });
 
-  // 좋아요 순 정렬
   projects.sort((a, b) => b.likes - a.likes);
 
   projects.forEach(p => {
@@ -189,12 +188,11 @@ async function loadProjects() {
       </div>
     `;
 
-    // 카드 클릭 → 작품 이동
+    // 🔥 여기 핵심 수정 (새 탭 제거)
     card.onclick = () => {
-      window.open(p.url, "_blank");
+      location.href = p.url;
     };
 
-    // 🔥 Firebase 좋아요 저장
     card.querySelector(".like-btn").onclick = async (e) => {
       e.stopPropagation();
 
