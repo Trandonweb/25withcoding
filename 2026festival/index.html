@@ -62,6 +62,7 @@ header {
   }
 }
 
+/* Card */
 .card {
   background: #1c1c25;
   border-radius: 14px;
@@ -80,7 +81,6 @@ header {
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  display: block;
 }
 
 .info {
@@ -126,7 +126,6 @@ header {
 <a class="home-link" href="/">Home</a>
 
 <header>코딩과 함께라면 2026 Festival</header>
-
 <div class="subtitle">since 2025</div>
 
 <div class="grid" id="grid"></div>
@@ -134,7 +133,14 @@ header {
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  increment
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
@@ -158,10 +164,10 @@ async function loadProjects() {
 
   let projects = [];
 
-  snap.forEach(doc => {
+  snap.forEach(docSnap => {
     projects.push({
-      id: doc.id,
-      ...doc.data()
+      id: docSnap.id,
+      ...docSnap.data()
     });
   });
 
@@ -183,16 +189,22 @@ async function loadProjects() {
       </div>
     `;
 
+    // 카드 클릭 → 작품 이동
     card.onclick = () => {
       window.open(p.url, "_blank");
     };
 
-    card.querySelector(".like-btn").onclick = (e) => {
+    // 🔥 Firebase 좋아요 저장
+    card.querySelector(".like-btn").onclick = async (e) => {
       e.stopPropagation();
 
-      // 임시 증가 (DB 저장은 다음 단계)
-      p.likes++;
+      const ref = doc(db, "projects", p.id);
 
+      await updateDoc(ref, {
+        likes: increment(1)
+      });
+
+      p.likes++;
       card.querySelector(".likes").innerText = `❤️ ${p.likes}`;
     };
 
