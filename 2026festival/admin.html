@@ -1,1 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Festival Admin</title>
 
+<style>
+body{
+  margin:0;
+  padding:20px;
+  background:#0f0f14;
+  color:white;
+  font-family:sans-serif;
+}
+
+input, textarea, select{
+  width:100%;
+  padding:10px;
+  margin:5px 0 15px;
+  box-sizing:border-box;
+}
+
+button{
+  padding:10px 15px;
+  cursor:pointer;
+}
+
+.card{
+  background:#1c1c25;
+  padding:15px;
+  margin-top:10px;
+  border-radius:10px;
+}
+
+.delete{
+  background:#d32f2f;
+  color:white;
+  border:none;
+}
+</style>
+</head>
+<body>
+
+<h1>관리자</h1>
+
+<div id="app" style="display:none">
+
+<h2>작품 추가</h2>
+
+<label>작품명</label>
+<input id="title">
+
+<label>개발자</label>
+<input id="by">
+
+<label>설명</label>
+<textarea id="detail"></textarea>
+
+<label>썸네일 URL</label>
+<input id="thum">
+
+<label>유형</label>
+<select id="type">
+  <option value="github">GitHub</option>
+  <option value="entry">Entry</option>
+</select>
+
+<label>URL</label>
+<input id="url">
+
+<label>엔트리 퍼가기 코드</label>
+<textarea id="embed"></textarea>
+
+<button onclick="addProject()">작품 추가</button>
+
+<hr>
+
+<h2>등록된 작품</h2>
+
+<div id="list"></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const pw = prompt("관리자 비밀번호");
+
+if(pw !== "20262326"){
+  document.body.innerHTML = "접근 거부";
+  throw new Error("Denied");
+}
+
+document.getElementById("app").style.display = "block";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
+  authDomain: "festivallikes.firebaseapp.com",
+  projectId: "festivallikes",
+  storageBucket: "festivallikes.firebasestorage.app",
+  messagingSenderId: "782245120700",
+  appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.addProject = async function(){
+
+  const title = document.getElementById("title").value.trim();
+
+  if(!title){
+    alert("작품명을 입력하세요");
+    return;
+  }
+
+  await setDoc(doc(db,"projects",title),{
+    by: document.getElementById("by").value,
+    detail: document.getElementById("detail").value,
+    likes: 0,
+    thum: document.getElementById("thum").value,
+    type: document.getElementById("type").value,
+    url: document.getElementById("url").value,
+    embed: document.getElementById("embed").value
+  });
+
+  alert("추가 완료");
+  loadProjects();
+};
+
+window.removeProject = async function(id){
+
+  if(!confirm(id + " 삭제?")) return;
+
+  await deleteDoc(doc(db,"projects",id));
+
+  loadProjects();
+};
+
+async function loadProjects(){
+
+  const list = document.getElementById("list");
+
+  list.innerHTML = "";
+
+  const snap = await getDocs(collection(db,"projects"));
+
+  snap.forEach(d=>{
+
+    const div = document.createElement("div");
+
+    div.className = "card";
+
+    div.innerHTML = `
+      <b>${d.id}</b><br>
+      ${d.data().by || ""}<br><br>
+
+      <button class="delete"
+        onclick="removeProject('${d.id}')">
+        삭제
+      </button>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+loadProjects();
+
+</script>
+
+</body>
+</html>
