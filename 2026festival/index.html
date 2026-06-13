@@ -214,25 +214,6 @@ loadProjects();
 
 const pressed = new Set();
 
-
-let buffer = "";
-
-window.addEventListener("keydown", (e) => {
-  const key = e.key.toLowerCase();
-
-  if (key.length !== 1) return;
-
-  buffer += key;
-
-  if (buffer.length > 20) {
-    buffer = buffer.slice(-20);
-  }
-
-  if (buffer.endsWith("with")) {
-    buffer = "";
-    location.href = "/2026festival/admin/";
-  }
-});
 </script>
 </body>
 </html>
