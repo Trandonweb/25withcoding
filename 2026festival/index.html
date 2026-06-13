@@ -138,7 +138,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/fireba
 import {
   getFirestore,
   collection,
-  getDocs,
+  onSnapshot,
   doc,
   updateDoc,
   increment
@@ -220,10 +220,79 @@ document.getElementById("subtitle").innerHTML = `
   });
 }
 
+function loadProjects() {
+
+  onSnapshot(collection(db, "projects"), (snap) => {
+
+    grid.innerHTML = "";
+
+    let projects = [];
+
+    snap.forEach(docSnap => {
+      projects.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
+    });
+
+    // 응원 순 정렬
+    projects.sort((a, b) => b.likes - a.likes);
+
+    // 총 응원 수 계산
+    const totalLikes = projects.reduce(
+      (sum, p) => sum + (p.likes || 0),
+      0
+    );
+
+    document.getElementById("subtitle").innerHTML = `
+      <div>since 2025</div>
+      <div>❤️ 지금까지 ${totalLikes.toLocaleString()}번의 응원이 도착했어요</div>
+    `;
+
+    projects.forEach((p, index) => {
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const medal =
+        index === 0 ? "🥇 " :
+        index === 1 ? "🥈 " :
+        index === 2 ? "🥉 " :
+        "";
+
+      card.innerHTML = `
+        <img src="${p.thum}">
+        <div class="info">
+          <div class="title">${medal}${p.id}</div>
+          <div class="desc">${p.detail}</div>
+          <div class="likes">❤️ ${p.likes}</div>
+          <button class="like-btn">응원하기</button>
+        </div>
+      `;
+
+      card.onclick = () => {
+        location.href = p.url;
+      };
+
+      card.querySelector(".like-btn").onclick = async (e) => {
+        e.stopPropagation();
+
+        await updateDoc(
+          doc(db, "projects", p.id),
+          {
+            likes: increment(1)
+          }
+        );
+      };
+
+      grid.appendChild(card);
+    });
+
+  });
+
+}
+
 loadProjects();
-
-const pressed = new Set();
-
 </script>
 </body>
 </html>
