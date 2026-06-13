@@ -183,8 +183,8 @@ async function loadProjects() {
       <div class="info">
         <div class="title">${p.id}</div>
         <div class="desc">${p.detail}</div>
-        <div class="likes">❤️ ${p.likes}</div>
-        <button class="like-btn">좋아요</button>
+        <div class="likes">💚 ${p.likes}</div>
+        <button class="like-btn">응원하기</button>
       </div>
     `;
 
@@ -203,7 +203,7 @@ async function loadProjects() {
       });
 
       p.likes++;
-      card.querySelector(".likes").innerText = `❤️ ${p.likes}`;
+      card.querySelector(".likes").innerText = `💚 ${p.likes}`;
     };
 
     grid.appendChild(card);
