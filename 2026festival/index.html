@@ -46,8 +46,8 @@ header {
   padding: 10px;
   color: #b8ffb8;
   font-size: 14px;
+  line-height: 1.8;
 }
-
 /* Grid */
 .grid {
   display: grid;
@@ -125,8 +125,10 @@ header {
 
 <a class="home-link" href="/">Home</a>
 
-<header>코딩과 함께라면 2026 Festival</header>
-<div class="subtitle">since 2025</div>
+<div class="subtitle" id="subtitle">
+  <div>since 2025</div>
+  <div>❤️ 지금까지 0번의 응원이 도착했어요</div>
+</div>
 
 <div class="grid" id="grid"></div>
 
@@ -172,7 +174,15 @@ async function loadProjects() {
   });
 
   projects.sort((a, b) => b.likes - a.likes);
+  const totalLikes = projects.reduce(
+  (sum, p) => sum + (p.likes || 0),
+  0
+);
 
+document.getElementById("subtitle").innerHTML = `
+  <div>since 2025</div>
+  <div>❤️ 지금까지 ${totalLikes.toLocaleString()}번의 응원이 도착했어요</div>
+`;
   projects.forEach(p => {
 
     const card = document.createElement("div");
