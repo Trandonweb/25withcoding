@@ -214,21 +214,24 @@ loadProjects();
 
 const pressed = new Set();
 
-window.addEventListener("keydown", (e) => {
-  pressed.add(e.key.toLowerCase());
 
-  if (
-    pressed.has("w") &&
-    pressed.has("i") &&
-    pressed.has("t") &&
-    pressed.has("h")
-  ) {
+let buffer = "";
+
+window.addEventListener("keydown", (e) => {
+  const key = e.key.toLowerCase();
+
+  if (key.length !== 1) return;
+
+  buffer += key;
+
+  if (buffer.length > 20) {
+    buffer = buffer.slice(-20);
+  }
+
+  if (buffer.endsWith("with")) {
+    buffer = "";
     location.href = "/2026festival/admin/";
   }
-});
-
-window.addEventListener("keyup", (e) => {
-  pressed.delete(e.key.toLowerCase());
 });
 </script>
 </body>
