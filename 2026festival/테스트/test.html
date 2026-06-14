@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Entry Test - 2026 Festival</title>
+
+<style>
+body {
+  margin: 0;
+  background: #0f0f14;
+  color: white;
+  font-family: sans-serif;
+}
+
+/* 상단바 */
+header {
+  padding: 14px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  background: linear-gradient(90deg, #00c853, #64dd17);
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+
+/* 컨테이너 */
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* iframe */
+.embed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* 정보 영역 */
+.info {
+  margin-top: 20px;
+  padding: 15px;
+  background: #1c1c25;
+  border-radius: 12px;
+}
+
+/* 버튼 */
+.btn {
+  margin-top: 15px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  background: #00c853;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* 뒤로가기 */
+.back {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+}
+.back:hover {
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<a class="back" href="/2026festival/">← 뒤로가기</a>
+
+<header>Entry 작품 테스트</header>
+
+<div class="container">
+
+  <!-- 엔트리 임베드 -->
+  <iframe
+    class="embed"
+    src="https://playentry.org/iframe/6880e551adcab9e6e87d4427"
+    allowfullscreen>
+  </iframe>
+
+  <!-- 정보 -->
+  <div class="info">
+    <h2>작품 이름: 테스트 게임</h2>
+    <p>제작자: 조예준</p>
+    <p>설명: 엔트리 임베드 테스트용 작품입니다.</p>
+
+    <hr>
+
+    <p><b>사용 방법</b></p>
+    <p>스페이스바로 점프 / 방향키로 이동</p>
+
+    <p><b>참고 사항</b></p>
+    <p>PC 환경에서 최적화됨</p>
+
+    <button class="btn">❤️ 응원하기</button>
+  </div>
+
+</div>
+
+</body>
+</html>
