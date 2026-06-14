@@ -13,7 +13,7 @@
 
   "icons": [
     {
-      "src": "/logoapp.png",
+      "src": "/logoapp.png.png",
       "sizes": "512x512",
       "type": "image/png"
     }
