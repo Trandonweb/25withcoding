@@ -125,6 +125,8 @@ header {
 
 <a class="home-link" href="/">Home</a>
 
+<header>코딩과 함께라면 2026 Festival</header>
+
 <div class="subtitle" id="subtitle">
   <div>since 2025</div>
   <div>❤️ 지금까지 0번의 응원이 도착했어요</div>
@@ -158,68 +160,6 @@ const db = getFirestore(app);
 
 const grid = document.getElementById("grid");
 
-async function loadProjects() {
-
-  grid.innerHTML = "";
-
-  const snap = await getDocs(collection(db, "projects"));
-
-  let projects = [];
-
-  snap.forEach(docSnap => {
-    projects.push({
-      id: docSnap.id,
-      ...docSnap.data()
-    });
-  });
-
-  projects.sort((a, b) => b.likes - a.likes);
-  const totalLikes = projects.reduce(
-  (sum, p) => sum + (p.likes || 0),
-  0
-);
-
-document.getElementById("subtitle").innerHTML = `
-  <div>since 2025</div>
-  <div>❤️ 지금까지 ${totalLikes.toLocaleString()}번의 응원이 도착했어요</div>
-`;
-  projects.forEach(p => {
-
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-      <img src="${p.thum}">
-      <div class="info">
-        <div class="title">${p.id}</div>
-        <div class="desc">${p.detail}</div>
-        <div class="likes">❤️ ${p.likes}</div>
-        <button class="like-btn">응원하기</button>
-      </div>
-    `;
-
-    // 🔥 여기 핵심 수정 (새 탭 제거)
-    card.onclick = () => {
-      location.href = p.url;
-    };
-
-    card.querySelector(".like-btn").onclick = async (e) => {
-      e.stopPropagation();
-
-      const ref = doc(db, "projects", p.id);
-
-      await updateDoc(ref, {
-        likes: increment(1)
-      });
-
-      p.likes++;
-      card.querySelector(".likes").innerText = `❤️ ${p.likes}`;
-    };
-
-    grid.appendChild(card);
-  });
-}
-
 function loadProjects() {
 
   onSnapshot(collection(db, "projects"), (snap) => {
@@ -238,7 +178,7 @@ function loadProjects() {
     // 응원 순 정렬
     projects.sort((a, b) => b.likes - a.likes);
 
-    // 총 응원 수 계산
+    // 총 응원 수
     const totalLikes = projects.reduce(
       (sum, p) => sum + (p.likes || 0),
       0
@@ -251,14 +191,14 @@ function loadProjects() {
 
     projects.forEach((p, index) => {
 
-      const card = document.createElement("div");
-      card.className = "card";
-
       const medal =
         index === 0 ? "🥇 " :
         index === 1 ? "🥈 " :
         index === 2 ? "🥉 " :
         "";
+
+      const card = document.createElement("div");
+      card.className = "card";
 
       card.innerHTML = `
         <img src="${p.thum}">
@@ -293,6 +233,8 @@ function loadProjects() {
 }
 
 loadProjects();
+
+
 </script>
 </body>
 </html>
