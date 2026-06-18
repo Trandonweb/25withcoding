@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>상벌점</title>
+</head>
+<body>
+
+<script>
+if(localStorage.getItem("userId")){
+    location.replace("/상벌점/main.html");
+}else{
+    location.replace("/signin?redirect=/상벌점/main.html");
+}
+</script>
+
+</body>
+</html>
