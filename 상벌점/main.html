@@ -492,9 +492,7 @@ window.toggleWarning = () => {
 /* 로그아웃 */
 window.logout = () => {
 
-  localStorage.removeItem("userId");
-
-  location.href = "index.html";
+  location.href = "/signout?redirect=/";
 
 };
 
