@@ -1,1 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>로그아웃</title>
+</head>
+<body>
 
+<script>
+  localStorage.removeItem("userId");
+
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get("redirect") || "/";
+
+  location.replace(redirect);
+</script>
+
+</body>
+</html>
