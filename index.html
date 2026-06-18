@@ -163,13 +163,12 @@
       const btn = document.getElementById("authBtn");
 
       if (user) {
-        btn.textContent = "로그아웃";
-
+        btn.textContent = `${user} 로그아웃`;
+      
         btn.onclick = () => {
-          localStorage.removeItem("userId");
-          location.reload();
+          location.href = "/signout?redirect=/";
         };
-
+      
       } else {
         btn.textContent = "로그인";
 
