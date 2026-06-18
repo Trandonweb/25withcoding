@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>코딩과 함께라면_상벌점_로그인</title>
+  <title>코딩과 함께라면_로그인</title>
   <style>
     body {
       margin: 0;
@@ -79,7 +79,7 @@
 
 <div class="card">
   <h1>2026 코딩과 함께라면</h1>
-  <h2>상벌점 시스템 로그인</h2>
+  <h2>로그인</h2>
 
   <input id="id" placeholder="학번을 입력하세요.">
 
@@ -104,36 +104,58 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// 로그인 후 돌아갈 주소
+const params = new URLSearchParams(window.location.search);
+const redirect = params.get("redirect") || "/";
+
+// 이미 로그인된 경우
+if (localStorage.getItem("userId")) {
+  location.href = redirect;
+}
+
 window.togglePw = () => {
   const pw = document.getElementById("pw");
   pw.type = pw.type === "password" ? "text" : "password";
 };
 
 window.login = async () => {
-  const id = document.getElementById("id").value;
+  const id = document.getElementById("id").value.trim();
   const pw = document.getElementById("pw").value;
 
-  const snap = await getDoc(doc(db, "users", id));
-
-  if(!snap.exists()){
-    alert("계정 없음");
+  if (!id || !pw) {
+    alert("학번과 비밀번호를 입력하세요.");
     return;
   }
 
-  const data = snap.data();
+  try {
+    const snap = await getDoc(doc(db, "users", id));
 
-  if(pw !== data.password){
-    alert("비밀번호 틀림");
-    return;
-  }
+    if (!snap.exists()) {
+      alert("계정 없음");
+      return;
+    }
 
-  localStorage.setItem("userId", id);
+    const data = snap.data();
 
-  // 🔥 기본 비번이면 강제 변경
-  if(data.password === "qwer1234!"){
-    location.href = "change.html";
-  } else {
-    location.href = "main.html";
+    if (pw !== data.password) {
+      alert("비밀번호 틀림");
+      return;
+    }
+
+    localStorage.setItem("userId", id);
+
+    // 기본 비밀번호면 변경 페이지
+    if (data.password === "qwer1234!") {
+      location.href = "/상벌점/change.html";
+      return;
+    }
+
+    // 원래 있던 페이지로 복귀
+    location.href = redirect;
+
+  } catch (e) {
+    console.error(e);
+    alert("로그인 중 오류 발생");
   }
 };
 </script>
