@@ -34,6 +34,7 @@
     }
 
     header {
+      position: relative;
       width: 100%;
       padding: 22px;
       background: #F0F0F0;
@@ -44,6 +45,28 @@
       border-bottom: 3px solid #27ae60;
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
       letter-spacing: 1px;
+    }
+
+    .auth-btn {
+      position: absolute;
+      right: 20px;
+      top: 16px;
+
+      border: none;
+      border-radius: 10px;
+
+      padding: 10px 15px;
+
+      background: #27ae60;
+      color: white;
+
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .auth-btn:hover {
+      opacity: 0.9;
     }
 
     .container {
@@ -72,13 +95,6 @@
       background: #eafff1;
     }
 
-    .user {
-      margin-bottom: 20px;
-      text-align: center;
-      color: #555;
-      font-size: 14px;
-    }
-
     .footer {
       margin-top: auto;
       padding: 20px;
@@ -93,15 +109,14 @@
 
   <header>
     코딩과 함께라면
+
+    <button id="authBtn" class="auth-btn">
+      로그인
+    </button>
   </header>
 
   <div class="container">
 
-    <div class="user" id="loginStatus">
-      로그인 안됨
-    </div>
-
-    <!-- 🔥 추가된 2026 Festival 버튼 -->
     <div class="card" onclick="go('/2026festival/')">
       🎉 2026 Festival
     </div>
@@ -114,7 +129,7 @@
       저장 공간
     </div>
 
-    <div class="card" onclick="go('/상벌점/')">
+    <div class="card" onclick="goPoint()">
       상벌점
     </div>
 
@@ -133,11 +148,35 @@
       location.href = path;
     }
 
-    function updateUI() {
+    function goPoint() {
       const user = localStorage.getItem("userId");
 
-      document.getElementById("loginStatus").innerText =
-        user ? "로그인됨 : " + user : "로그인 안됨";
+      if (user) {
+        location.href = "/상벌점/main.html";
+      } else {
+        location.href = "/signin?redirect=/상벌점/main.html";
+      }
+    }
+
+    function updateUI() {
+      const user = localStorage.getItem("userId");
+      const btn = document.getElementById("authBtn");
+
+      if (user) {
+        btn.textContent = "로그아웃";
+
+        btn.onclick = () => {
+          localStorage.removeItem("userId");
+          location.reload();
+        };
+
+      } else {
+        btn.textContent = "로그인";
+
+        btn.onclick = () => {
+          location.href = "/signin?redirect=/";
+        };
+      }
     }
 
     updateUI();
