@@ -8,24 +8,19 @@ let gameAreaRef = null;
 export function openTicTacToe(gameArea) {
 
     gameAreaRef = gameArea;
-
     resetGameState();
 
     gameArea.innerHTML = `
         <div class="ttt-container">
+            <h2>틱택토</h2>
 
-            <h2 class="ttt-title">틱택토</h2>
-
-            <p class="ttt-desc">AI 난이도를 선택하세요</p>
+            <p>AI 난이도를 선택하세요</p>
 
             <div class="ttt-difficulty-list">
-
                 <button class="ttt-difficulty-btn" data-difficulty="easy">쉬움</button>
                 <button class="ttt-difficulty-btn" data-difficulty="normal">보통</button>
                 <button class="ttt-difficulty-btn" data-difficulty="hard">어려움</button>
-
             </div>
-
         </div>
     `;
 
@@ -41,11 +36,11 @@ export function openTicTacToe(gameArea) {
 
 function resetGameState() {
     board = Array(9).fill("");
-    currentDifficulty = "";
     gameOver = false;
+    currentDifficulty = "";
 }
 
-// ---------------------- START GAME ----------------------
+// ---------------------- START ----------------------
 
 function startGame(difficulty) {
 
@@ -60,9 +55,9 @@ function startGame(difficulty) {
     gameAreaRef.innerHTML = `
         <div class="ttt-container">
 
-            <h2 class="ttt-title">틱택토</h2>
+            <h2>틱택토</h2>
 
-            <p style="text-align:center;margin-bottom:10px;">
+            <p style="text-align:center">
                 난이도: <b>${text}</b>
             </p>
 
@@ -75,6 +70,8 @@ function startGame(difficulty) {
                     margin:auto;
                 ">
             </div>
+
+            <div id="result"></div>
 
         </div>
     `;
@@ -117,16 +114,12 @@ function playerMove(index) {
     if (board[index] !== "") return;
 
     board[index] = "X";
+    renderBoard(); // ⭐ 즉시 반영
 
-    if (checkWinner("X")) {
-        return endGame("PLAYER WIN");
-    }
+    if (checkWinner("X")) return endGame("PLAYER WIN");
+    if (isDraw()) return endGame("DRAW");
 
-    if (isDraw()) {
-        return endGame("DRAW");
-    }
-
-    aiMove();
+    setTimeout(aiMove, 150); // ⭐ 렌더 후 AI
 }
 
 // ---------------------- AI ----------------------
@@ -153,15 +146,10 @@ function aiMove() {
 
     board[move] = "O";
 
-    if (checkWinner("O")) {
-        return endGame("AI WIN");
-    }
+    renderBoard(); // ⭐ AI 수 보이게 먼저 렌더
 
-    if (isDraw()) {
-        return endGame("DRAW");
-    }
-
-    renderBoard();
+    if (checkWinner("O")) return endGame("AI WIN");
+    if (isDraw()) return endGame("DRAW");
 }
 
 // ---------------------- EASY ----------------------
@@ -203,7 +191,7 @@ function smartMove() {
     return randomMove();
 }
 
-// ---------------------- HARD (MINIMAX FIXED) ----------------------
+// ---------------------- HARD ----------------------
 
 function minimaxBestMove() {
 
@@ -282,13 +270,15 @@ function isDraw() {
     return board.every(v => v !== "");
 }
 
-// ---------------------- END GAME (FIXED) ----------------------
+// ---------------------- END FIXED ----------------------
 
 function endGame(result) {
 
     gameOver = true;
 
-    gameAreaRef.innerHTML += `
+    const resultEl = document.getElementById("result");
+
+    resultEl.innerHTML = `
         <div style="
             text-align:center;
             margin-top:20px;
@@ -299,7 +289,6 @@ function endGame(result) {
         </div>
 
         <div style="text-align:center;margin-top:10px;">
-
             <button id="restartBtn"
                 style="
                     padding:10px 20px;
@@ -311,11 +300,10 @@ function endGame(result) {
                 ">
                 다시하기
             </button>
-
         </div>
     `;
 
     document.getElementById("restartBtn").onclick = () => {
-        startGame(currentDifficulty); // ← 핵심 (reload 제거)
+        startGame(currentDifficulty);
     };
 }
