@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>AI vs HUMAN</title>
 
 <style>
@@ -16,18 +15,19 @@
 }
 
 body{
-    background:#0f172a;
-    color:white;
+    background:#f0f0f0;
+    color:#222;
     width:100%;
     min-height:100vh;
-    overflow-x:hidden;
 }
 
 #screen{
     width:100%;
     min-height:100vh;
-    padding:20px;
+    padding:24px;
 }
+
+/* 홈 */
 
 #homeScreen{
     display:flex;
@@ -39,109 +39,174 @@ body{
 }
 
 .logo{
-    font-size:4rem;
+    font-size:2rem;
+    font-weight:700;
     margin-bottom:20px;
-}
-
-.subtitle{
-    color:#94a3b8;
-    margin-bottom:30px;
-    text-align:center;
-    font-size:1rem;
+    color:#222;
 }
 
 .main-btn{
-    width:min(600px,95%);
-    border:none;
-    border-radius:25px;
-    background:#22b45c;
-    color:white;
-    padding:28px;
-    font-size:1.4rem;
-    cursor:pointer;
-    transition:0.2s;
+    width:min(700px,95%);
+    min-height:110px;
+
+    border:2px solid transparent;
+    border-radius:24px;
+
+    background-image:
+        linear-gradient(#f0f0f0,#f0f0f0),
+        linear-gradient(
+            135deg,
+            #33cc77,
+            #1ea857
+        );
+
+    background-origin:border-box;
+    background-clip:padding-box,border-box;
+
+    color:#222;
+
+    font-size:1.3rem;
     font-weight:700;
+
+    cursor:pointer;
+
+    transition:.2s;
 }
 
 .main-btn:hover{
-    transform:translateY(-3px);
-    background:#1fa451;
+    transform:translateY(-2px);
 }
+
+/* 카테고리 / 게임 */
 
 #categoryScreen,
 #gameScreen{
     display:none;
-    width:100%;
     min-height:100vh;
-    padding:10px;
 }
 
 .top-bar{
     display:flex;
     align-items:center;
-    gap:10px;
-    margin-bottom:25px;
+    gap:12px;
+    margin-bottom:24px;
 }
 
 .back-btn{
-    border:none;
-    border-radius:12px;
-    background:#1e293b;
-    color:white;
-    padding:12px 18px;
-    cursor:pointer;
-    font-size:1rem;
-}
+    width:50px;
+    height:50px;
 
-.screen-title{
-    font-size:1.4rem;
+    border:2px solid transparent;
+    border-radius:14px;
+
+    background-image:
+        linear-gradient(#f0f0f0,#f0f0f0),
+        linear-gradient(
+            135deg,
+            #33cc77,
+            #1ea857
+        );
+
+    background-origin:border-box;
+    background-clip:padding-box,border-box;
+
+    background-color:#f0f0f0;
+
+    color:#222;
+
+    cursor:pointer;
+
+    font-size:1rem;
     font-weight:bold;
 }
 
+.screen-title{
+    font-size:1.5rem;
+    font-weight:700;
+}
+
+/* 게임 목록 */
+
 #gameList{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    grid-template-columns:
+        repeat(auto-fit,minmax(280px,1fr));
+
     gap:20px;
 }
 
 .game-select-btn{
-    background:#1e293b;
-    border:none;
-    color:white;
-    border-radius:20px;
-    padding:30px;
+
+    min-height:150px;
+
+    border:2px solid transparent;
+    border-radius:24px;
+
+    background-image:
+        linear-gradient(#f0f0f0,#f0f0f0),
+        linear-gradient(
+            135deg,
+            #33cc77,
+            #1ea857
+        );
+
+    background-origin:border-box;
+    background-clip:padding-box,border-box;
+
+    color:#222;
+
     font-size:1.2rem;
+    font-weight:700;
+
     cursor:pointer;
-    transition:0.2s;
-    min-height:140px;
+
+    transition:.2s;
 }
 
 .game-select-btn:hover{
-    transform:translateY(-3px);
-    background:#263548;
+    transform:translateY(-2px);
 }
 
+/* 게임 영역 */
+
 #gameArea{
-    width:100%;
-    min-height:calc(100vh - 80px);
-    background:#1e293b;
-    border-radius:20px;
-    padding:25px;
+
+    min-height:calc(100vh - 120px);
+
+    border:2px solid transparent;
+    border-radius:24px;
+
+    background-image:
+        linear-gradient(#f0f0f0,#f0f0f0),
+        linear-gradient(
+            135deg,
+            #33cc77,
+            #1ea857
+        );
+
+    background-origin:border-box;
+    background-clip:padding-box,border-box;
+
+    padding:24px;
 }
 
 .game-title{
-    font-size:2rem;
+    font-size:1.8rem;
+    font-weight:700;
     margin-bottom:20px;
 }
 
 .placeholder{
-    height:70vh;
+    min-height:60vh;
+
     display:flex;
     justify-content:center;
     align-items:center;
+
     text-align:center;
-    color:#94a3b8;
-    font-size:1.2rem;
+
+    color:#666;
+
     line-height:1.8;
 }
 
@@ -156,29 +221,25 @@ body{
     <div id="homeScreen">
 
         <div class="logo">
-            🤖 VS 🧑
-        </div>
-
-        <div class="subtitle">
-            인간은 AI를 이길 수 있을까?
+            AI vs HUMAN
         </div>
 
         <button
             class="main-btn"
             onclick="showCategory('intelligence')">
-            🧠 지능 대결
+            지능
         </button>
 
         <button
             class="main-btn"
             onclick="showCategory('physical')">
-            ⚽ 피지컬 대결
+            피지컬
         </button>
 
         <button
             class="main-btn"
             onclick="showRanking()">
-            🏆 랭킹
+            랭킹
         </button>
 
     </div>
@@ -234,14 +295,14 @@ body{
 <script>
 
 const intelligenceGames = [
-    "⭕ 틱택토",
-    "🧩 미로",
-    "🔢 숫자 맞추기"
+    "틱택토",
+    "미로",
+    "숫자 맞추기"
 ];
 
 const physicalGames = [
-    "⚽ 축구",
-    "⚾ 야구"
+    "축구",
+    "야구"
 ];
 
 let currentCategory = "";
@@ -257,35 +318,25 @@ const gameScreen =
 
 function showHome(){
 
-    homeScreen.style.display =
-        "flex";
-
-    categoryScreen.style.display =
-        "none";
-
-    gameScreen.style.display =
-        "none";
+    homeScreen.style.display = "flex";
+    categoryScreen.style.display = "none";
+    gameScreen.style.display = "none";
 }
 
 function showCategory(type){
 
     currentCategory = type;
 
-    homeScreen.style.display =
-        "none";
-
-    categoryScreen.style.display =
-        "block";
-
-    gameScreen.style.display =
-        "none";
+    homeScreen.style.display = "none";
+    categoryScreen.style.display = "block";
+    gameScreen.style.display = "none";
 
     document.getElementById(
         "categoryTitle"
     ).textContent =
         type === "intelligence"
-        ? "🧠 지능 대결"
-        : "⚽ 피지컬 대결";
+        ? "지능"
+        : "피지컬";
 
     const gameList =
         document.getElementById(
@@ -318,7 +369,6 @@ function showCategory(type){
         gameList.appendChild(btn);
 
     });
-
 }
 
 function openGame(game){
@@ -337,22 +387,13 @@ function openGame(game){
     document.getElementById(
         "gameArea"
     ).innerHTML = `
-
         <div class="game-title">
             ${game}
         </div>
 
         <div class="placeholder">
-
             아직 구현되지 않았습니다.
-
-            <br><br>
-
-            곧 AI와 인간의 대결이
-            시작됩니다.
-
         </div>
-
     `;
 }
 
