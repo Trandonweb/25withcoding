@@ -1,1 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI vs HUMAN</title>
 
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Pretendard",sans-serif;
+}
+
+body{
+    background:#111827;
+    color:white;
+    min-height:100vh;
+}
+
+header{
+    text-align:center;
+    padding:25px;
+    background:#1f2937;
+    border-bottom:2px solid #374151;
+}
+
+header h1{
+    font-size:2rem;
+}
+
+header p{
+    margin-top:8px;
+    color:#9ca3af;
+}
+
+.top-tabs{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:15px;
+}
+
+.top-tabs button{
+    padding:12px 20px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:#374151;
+    color:white;
+    font-size:1rem;
+}
+
+.top-tabs button.active{
+    background:#2563eb;
+}
+
+.sub-menu{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:10px;
+    padding:10px 20px;
+}
+
+.sub-menu button{
+    padding:10px 16px;
+    border:none;
+    border-radius:10px;
+    background:#1f2937;
+    color:white;
+    cursor:pointer;
+}
+
+.sub-menu button:hover{
+    background:#374151;
+}
+
+.game-container{
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+
+.game-box{
+    background:#1f2937;
+    border-radius:15px;
+    padding:30px;
+    min-height:500px;
+}
+
+.game-box h2{
+    margin-bottom:15px;
+}
+
+.placeholder{
+    text-align:center;
+    color:#9ca3af;
+    margin-top:100px;
+}
+
+footer{
+    margin-top:20px;
+    text-align:center;
+    color:#6b7280;
+    padding:15px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🤖 AI vs HUMAN</h1>
+    <p>인공지능을 이길 수 있을까?</p>
+</header>
+
+<div class="top-tabs">
+    <button id="intelligenceBtn" class="active">🧠 지능</button>
+    <button id="physicalBtn">⚽ 피지컬</button>
+</div>
+
+<div class="sub-menu" id="subMenu"></div>
+
+<div class="game-container">
+    <div class="game-box" id="gameArea">
+        <h2>환영합니다!</h2>
+        <div class="placeholder">
+            위에서 게임을 선택하세요.
+        </div>
+    </div>
+</div>
+
+<footer>
+    AI vs HUMAN · 2026 Festival
+</footer>
+
+<script>
+
+const intelligenceGames = [
+    "⭕ 틱택토",
+    "🧩 미로",
+    "🔢 숫자 맞추기"
+];
+
+const physicalGames = [
+    "⚽ 축구",
+    "⚾ 야구"
+];
+
+const subMenu = document.getElementById("subMenu");
+const gameArea = document.getElementById("gameArea");
+
+function renderMenu(list){
+
+    subMenu.innerHTML = "";
+
+    list.forEach(game=>{
+
+        const btn = document.createElement("button");
+
+        btn.textContent = game;
+
+        btn.onclick = () => {
+
+            gameArea.innerHTML = `
+                <h2>${game}</h2>
+
+                <div class="placeholder">
+                    아직 개발되지 않았습니다.<br><br>
+                    곧 AI와 대결이 시작됩니다.
+                </div>
+            `;
+        };
+
+        subMenu.appendChild(btn);
+    });
+}
+
+document.getElementById("intelligenceBtn").onclick = ()=>{
+
+    document.getElementById("intelligenceBtn").classList.add("active");
+    document.getElementById("physicalBtn").classList.remove("active");
+
+    renderMenu(intelligenceGames);
+};
+
+document.getElementById("physicalBtn").onclick = ()=>{
+
+    document.getElementById("physicalBtn").classList.add("active");
+    document.getElementById("intelligenceBtn").classList.remove("active");
+
+    renderMenu(physicalGames);
+};
+
+renderMenu(intelligenceGames);
+
+</script>
+
+</body>
+</html>
