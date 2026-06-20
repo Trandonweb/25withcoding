@@ -300,6 +300,8 @@ function showCategory(type){
     });
 }
 
+<script>
+
 function openGame(game){
 
     document.getElementById("categoryScreen").style.display = "none";
@@ -307,14 +309,18 @@ function openGame(game){
 
     document.getElementById("gameTitle").textContent = game;
 
+    const gameArea = document.getElementById("gameArea");
+
     if(game === "틱택토"){
+
         import("./js/games/tictactoe.js").then(m => {
-            m.openTicTacToe(document.getElementById("gameArea"));
+            m.openTicTacToe(gameArea);
         });
+
         return;
     }
 
-    document.getElementById("gameArea").innerHTML = `
+    gameArea.innerHTML = `
         <div class="game-title">${game}</div>
         <div class="placeholder">아직 구현되지 않았습니다.</div>
     `;
@@ -327,8 +333,6 @@ function backToCategory(){
 function showRanking(){
     alert("랭킹 시스템은 추후 구현됩니다.");
 }
-
-showHome();
 
 </script>
 
