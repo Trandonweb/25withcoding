@@ -41,44 +41,45 @@ function resetGameState() {
 }
 
 // ---------------------- START ----------------------
+let board = [];
+let currentDifficulty = "";
+let gameOver = false;
+let gameAreaRef = null;
+let isSelecting = false; // ⭐ 추가 (중복 방지)
 
-function startGame(difficulty) {
+// ---------------------- ENTRY ----------------------
+
+export function openTicTacToe(gameArea) {
+
+    gameAreaRef = gameArea;
 
     resetGameState();
-    currentDifficulty = difficulty;
 
-    const text =
-        difficulty === "easy" ? "쉬움"
-        : difficulty === "normal" ? "보통"
-        : "어려움";
-
-    gameAreaRef.innerHTML = `
+    gameArea.innerHTML = `
         <div class="ttt-container">
-
             <h2>틱택토</h2>
 
-            <p style="text-align:center">
-                난이도: <b>${text}</b>
-            </p>
+            <p>AI 난이도를 선택하세요</p>
 
-            <div id="board"
-                style="
-                    display:grid;
-                    grid-template-columns:repeat(3,1fr);
-                    gap:10px;
-                    max-width:320px;
-                    margin:auto;
-                ">
+            <div class="ttt-difficulty-list">
+                <button class="ttt-difficulty-btn" data-difficulty="easy">쉬움</button>
+                <button class="ttt-difficulty-btn" data-difficulty="normal">보통</button>
+                <button class="ttt-difficulty-btn" data-difficulty="hard">어려움</button>
             </div>
-
-            <div id="result"></div>
-
         </div>
     `;
 
-    renderBoard();
-}
+    // ⭐⭐⭐ 핵심: gameArea 기준 + 한 번만 이벤트 처리
+    if (isSelecting) return;
+    isSelecting = true;
 
+    gameArea.addEventListener("click", (e) => {
+        const btn = e.target.closest(".ttt-difficulty-btn");
+        if (!btn) return;
+
+        startGame(btn.dataset.difficulty);
+    }, { once: true }); // ⭐ 한 번만 실행
+}
 // ---------------------- BOARD ----------------------
 
 function renderBoard() {
