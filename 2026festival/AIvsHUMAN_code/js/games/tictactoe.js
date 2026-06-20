@@ -1,19 +1,22 @@
-// js/games/tictactoe.js
-
 let board = [];
 let currentDifficulty = "";
 let gameOver = false;
+let gameAreaRef = null;
+
+// ---------------------- ENTRY ----------------------
 
 export function openTicTacToe(gameArea) {
+
+    gameAreaRef = gameArea;
+
+    resetGameState();
 
     gameArea.innerHTML = `
         <div class="ttt-container">
 
             <h2 class="ttt-title">틱택토</h2>
 
-            <p class="ttt-desc">
-                AI 난이도를 선택하세요
-            </p>
+            <p class="ttt-desc">AI 난이도를 선택하세요</p>
 
             <div class="ttt-difficulty-list">
 
@@ -26,36 +29,42 @@ export function openTicTacToe(gameArea) {
         </div>
     `;
 
-    document.querySelectorAll(".ttt-difficulty-btn")
+    gameArea.querySelectorAll(".ttt-difficulty-btn")
         .forEach(btn => {
             btn.onclick = () => {
-                startGame(gameArea, btn.dataset.difficulty);
+                startGame(btn.dataset.difficulty);
             };
         });
 }
 
+// ---------------------- RESET ----------------------
 
-// ---------------------- GAME START ----------------------
-
-function startGame(gameArea, difficulty) {
-
-    currentDifficulty = difficulty;
+function resetGameState() {
     board = Array(9).fill("");
+    currentDifficulty = "";
     gameOver = false;
+}
+
+// ---------------------- START GAME ----------------------
+
+function startGame(difficulty) {
+
+    resetGameState();
+    currentDifficulty = difficulty;
 
     const text =
         difficulty === "easy" ? "쉬움"
         : difficulty === "normal" ? "보통"
         : "어려움";
 
-    gameArea.innerHTML = `
+    gameAreaRef.innerHTML = `
         <div class="ttt-container">
 
             <h2 class="ttt-title">틱택토</h2>
 
-            <p>난이도: <b>${text}</b></p>
-
-            <br>
+            <p style="text-align:center;margin-bottom:10px;">
+                난이도: <b>${text}</b>
+            </p>
 
             <div id="board"
                 style="
@@ -73,12 +82,13 @@ function startGame(gameArea, difficulty) {
     renderBoard();
 }
 
-
 // ---------------------- BOARD ----------------------
 
 function renderBoard() {
 
     const boardEl = document.getElementById("board");
+    if (!boardEl) return;
+
     boardEl.innerHTML = "";
 
     board.forEach((cell, i) => {
@@ -99,7 +109,6 @@ function renderBoard() {
     });
 }
 
-
 // ---------------------- PLAYER ----------------------
 
 function playerMove(index) {
@@ -110,18 +119,15 @@ function playerMove(index) {
     board[index] = "X";
 
     if (checkWinner("X")) {
-        endGame("PLAYER WIN");
-        return;
+        return endGame("PLAYER WIN");
     }
 
     if (isDraw()) {
-        endGame("DRAW");
-        return;
+        return endGame("DRAW");
     }
 
     aiMove();
 }
-
 
 // ---------------------- AI ----------------------
 
@@ -143,23 +149,23 @@ function aiMove() {
         move = minimaxBestMove();
     }
 
+    if (move === undefined) return;
+
     board[move] = "O";
 
     if (checkWinner("O")) {
-        endGame("AI WIN");
-        return;
+        return endGame("AI WIN");
     }
 
     if (isDraw()) {
-        endGame("DRAW");
-        return;
+        return endGame("DRAW");
     }
 
     renderBoard();
 }
 
+// ---------------------- EASY ----------------------
 
-// 쉬움
 function randomMove() {
     const empty = board
         .map((v, i) => v === "" ? i : null)
@@ -168,11 +174,10 @@ function randomMove() {
     return empty[Math.floor(Math.random() * empty.length)];
 }
 
+// ---------------------- NORMAL ----------------------
 
-// 보통 (막기 + 이기기)
 function smartMove() {
 
-    // 1. AI 이길 수 있으면 이김
     for (let i = 0; i < 9; i++) {
         if (board[i] === "") {
             board[i] = "O";
@@ -184,7 +189,6 @@ function smartMove() {
         }
     }
 
-    // 2. 플레이어 막기
     for (let i = 0; i < 9; i++) {
         if (board[i] === "") {
             board[i] = "X";
@@ -199,18 +203,18 @@ function smartMove() {
     return randomMove();
 }
 
+// ---------------------- HARD (MINIMAX FIXED) ----------------------
 
-// 어려움 (미니맥스)
 function minimaxBestMove() {
 
     let bestScore = -Infinity;
-    let move;
+    let move = -1;
 
     for (let i = 0; i < 9; i++) {
         if (board[i] === "") {
 
             board[i] = "O";
-            let score = minimax(board, false);
+            let score = minimax(false);
             board[i] = "";
 
             if (score > bestScore) {
@@ -223,9 +227,7 @@ function minimaxBestMove() {
     return move;
 }
 
-
-// minimax
-function minimax(newBoard, isMax) {
+function minimax(isMax) {
 
     if (checkWinner("O")) return 1;
     if (checkWinner("X")) return -1;
@@ -236,10 +238,10 @@ function minimax(newBoard, isMax) {
         let best = -Infinity;
 
         for (let i = 0; i < 9; i++) {
-            if (newBoard[i] === "") {
-                newBoard[i] = "O";
-                best = Math.max(best, minimax(newBoard, false));
-                newBoard[i] = "";
+            if (board[i] === "") {
+                board[i] = "O";
+                best = Math.max(best, minimax(false));
+                board[i] = "";
             }
         }
 
@@ -250,17 +252,16 @@ function minimax(newBoard, isMax) {
         let best = Infinity;
 
         for (let i = 0; i < 9; i++) {
-            if (newBoard[i] === "") {
-                newBoard[i] = "X";
-                best = Math.min(best, minimax(newBoard, true));
-                newBoard[i] = "";
+            if (board[i] === "") {
+                board[i] = "X";
+                best = Math.min(best, minimax(true));
+                board[i] = "";
             }
         }
 
         return best;
     }
 }
-
 
 // ---------------------- CHECK ----------------------
 
@@ -281,37 +282,40 @@ function isDraw() {
     return board.every(v => v !== "");
 }
 
-
-// ---------------------- END ----------------------
+// ---------------------- END GAME (FIXED) ----------------------
 
 function endGame(result) {
 
     gameOver = true;
 
-    gameArea.innerHTML += `
-
+    gameAreaRef.innerHTML += `
         <div style="
             text-align:center;
             margin-top:20px;
-            font-size:1.3rem;
+            font-size:1.4rem;
             font-weight:bold;
         ">
             ${result}
         </div>
 
-        <button
-            onclick="location.reload()"
-            style="
-                margin-top:15px;
-                padding:10px 20px;
-                border:none;
-                border-radius:10px;
-                background:#1ea857;
-                color:white;
-                cursor:pointer;
-            ">
-            다시하기
-        </button>
+        <div style="text-align:center;margin-top:10px;">
 
+            <button id="restartBtn"
+                style="
+                    padding:10px 20px;
+                    border:none;
+                    border-radius:10px;
+                    background:#1ea857;
+                    color:white;
+                    cursor:pointer;
+                ">
+                다시하기
+            </button>
+
+        </div>
     `;
+
+    document.getElementById("restartBtn").onclick = () => {
+        startGame(currentDifficulty); // ← 핵심 (reload 제거)
+    };
 }
