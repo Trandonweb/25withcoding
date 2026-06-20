@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>AI vs HUMAN</title>
 
 <style>
@@ -15,132 +16,163 @@
 }
 
 body{
-    background:#111827;
+    background:#0f172a;
     color:white;
+    width:100%;
     min-height:100vh;
-}
-
-header{
-    text-align:center;
-    padding:25px;
-    background:#1f2937;
-    border-bottom:2px solid #374151;
-}
-
-header h1{
-    font-size:2rem;
-}
-
-header p{
-    margin-top:8px;
-    color:#9ca3af;
+    overflow-x:hidden;
 }
 
 #screen{
+    width:100%;
+    min-height:100vh;
     padding:20px;
-    max-width:1200px;
-    margin:auto;
 }
 
 #homeScreen{
     display:flex;
     flex-direction:column;
-    gap:15px;
-    max-width:700px;
-    margin:auto;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    gap:20px;
+}
+
+.logo{
+    font-size:4rem;
+    margin-bottom:20px;
+}
+
+.subtitle{
+    color:#94a3b8;
+    margin-bottom:30px;
+    text-align:center;
+    font-size:1rem;
 }
 
 .main-btn{
-    width:100%;
-    padding:25px;
+    width:min(600px,95%);
     border:none;
-    border-radius:15px;
-    background:#2563eb;
+    border-radius:25px;
+    background:#22b45c;
     color:white;
-    font-size:1.3rem;
+    padding:28px;
+    font-size:1.4rem;
     cursor:pointer;
     transition:0.2s;
+    font-weight:700;
 }
 
 .main-btn:hover{
-    transform:translateY(-2px);
+    transform:translateY(-3px);
+    background:#1fa451;
+}
+
+#categoryScreen,
+#gameScreen{
+    display:none;
+    width:100%;
+    min-height:100vh;
+    padding:10px;
+}
+
+.top-bar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:25px;
 }
 
 .back-btn{
-    padding:12px 18px;
     border:none;
-    border-radius:10px;
-    background:#374151;
+    border-radius:12px;
+    background:#1e293b;
     color:white;
+    padding:12px 18px;
     cursor:pointer;
-    margin-bottom:20px;
+    font-size:1rem;
+}
+
+.screen-title{
+    font-size:1.4rem;
+    font-weight:bold;
 }
 
 #gameList{
     display:grid;
-    gap:15px;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
 }
 
 .game-select-btn{
-    width:100%;
-    padding:20px;
+    background:#1e293b;
     border:none;
-    border-radius:15px;
-    background:#1f2937;
     color:white;
-    font-size:1.1rem;
+    border-radius:20px;
+    padding:30px;
+    font-size:1.2rem;
     cursor:pointer;
     transition:0.2s;
+    min-height:140px;
 }
 
 .game-select-btn:hover{
-    background:#374151;
+    transform:translateY(-3px);
+    background:#263548;
 }
 
 #gameArea{
-    background:#1f2937;
-    border-radius:15px;
+    width:100%;
+    min-height:calc(100vh - 80px);
+    background:#1e293b;
+    border-radius:20px;
     padding:25px;
-    min-height:600px;
+}
+
+.game-title{
+    font-size:2rem;
+    margin-bottom:20px;
 }
 
 .placeholder{
+    height:70vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
     text-align:center;
-    color:#9ca3af;
-    margin-top:100px;
+    color:#94a3b8;
+    font-size:1.2rem;
     line-height:1.8;
-}
-
-footer{
-    text-align:center;
-    color:#6b7280;
-    padding:20px;
 }
 
 </style>
 </head>
 <body>
 
-<header>
-    <h1>🤖 AI vs HUMAN</h1>
-    <p>인공지능을 이길 수 있을까?</p>
-</header>
-
 <div id="screen">
 
-    <!-- 홈 화면 -->
+    <!-- 홈 -->
+
     <div id="homeScreen">
+
+        <div class="logo">
+            🤖 VS 🧑
+        </div>
+
+        <div class="subtitle">
+            인간은 AI를 이길 수 있을까?
+        </div>
 
         <button
             class="main-btn"
             onclick="showCategory('intelligence')">
-            🧠 지능
+            🧠 지능 대결
         </button>
 
         <button
             class="main-btn"
             onclick="showCategory('physical')">
-            ⚽ 피지컬
+            ⚽ 피지컬 대결
         </button>
 
         <button
@@ -151,41 +183,53 @@ footer{
 
     </div>
 
-    <!-- 카테고리 화면 -->
-    <div
-        id="categoryScreen"
-        style="display:none;">
+    <!-- 카테고리 -->
 
-        <button
-            class="back-btn"
-            onclick="showHome()">
-            ← 뒤로가기
-        </button>
+    <div id="categoryScreen">
+
+        <div class="top-bar">
+
+            <button
+                class="back-btn"
+                onclick="showHome()">
+                ←
+            </button>
+
+            <div
+                class="screen-title"
+                id="categoryTitle">
+            </div>
+
+        </div>
 
         <div id="gameList"></div>
 
     </div>
 
-    <!-- 게임 화면 -->
-    <div
-        id="gameScreen"
-        style="display:none;">
+    <!-- 게임 -->
 
-        <button
-            class="back-btn"
-            onclick="backToCategory()">
-            ← 뒤로가기
-        </button>
+    <div id="gameScreen">
+
+        <div class="top-bar">
+
+            <button
+                class="back-btn"
+                onclick="backToCategory()">
+                ←
+            </button>
+
+            <div
+                class="screen-title"
+                id="gameTitle">
+            </div>
+
+        </div>
 
         <div id="gameArea"></div>
 
     </div>
 
 </div>
-
-<footer>
-    AI vs HUMAN · 2026 Festival
-</footer>
 
 <script>
 
@@ -203,29 +247,13 @@ const physicalGames = [
 let currentCategory = "";
 
 const homeScreen =
-    document.getElementById(
-        "homeScreen"
-    );
+    document.getElementById("homeScreen");
 
 const categoryScreen =
-    document.getElementById(
-        "categoryScreen"
-    );
+    document.getElementById("categoryScreen");
 
 const gameScreen =
-    document.getElementById(
-        "gameScreen"
-    );
-
-const gameList =
-    document.getElementById(
-        "gameList"
-    );
-
-const gameArea =
-    document.getElementById(
-        "gameArea"
-    );
+    document.getElementById("gameScreen");
 
 function showHome(){
 
@@ -251,6 +279,18 @@ function showCategory(type){
 
     gameScreen.style.display =
         "none";
+
+    document.getElementById(
+        "categoryTitle"
+    ).textContent =
+        type === "intelligence"
+        ? "🧠 지능 대결"
+        : "⚽ 피지컬 대결";
+
+    const gameList =
+        document.getElementById(
+            "gameList"
+        );
 
     gameList.innerHTML = "";
 
@@ -289,13 +329,30 @@ function openGame(game){
     gameScreen.style.display =
         "block";
 
-    gameArea.innerHTML = `
-        <h2>${game}</h2>
+    document.getElementById(
+        "gameTitle"
+    ).textContent =
+        game;
+
+    document.getElementById(
+        "gameArea"
+    ).innerHTML = `
+
+        <div class="game-title">
+            ${game}
+        </div>
 
         <div class="placeholder">
-            아직 개발되지 않았습니다.<br><br>
-            곧 AI와 인간의 대결이 시작됩니다.
+
+            아직 구현되지 않았습니다.
+
+            <br><br>
+
+            곧 AI와 인간의 대결이
+            시작됩니다.
+
         </div>
+
     `;
 }
 
@@ -309,9 +366,11 @@ function backToCategory(){
 function showRanking(){
 
     alert(
-        "랭킹 시스템은 곧 구현됩니다."
+        "랭킹 시스템은 추후 구현됩니다."
     );
 }
+
+showHome();
 
 </script>
 
