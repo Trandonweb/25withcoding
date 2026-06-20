@@ -6,7 +6,6 @@
 <title>AI vs HUMAN</title>
 
 <style>
-
 *{
     margin:0;
     padding:0;
@@ -28,7 +27,6 @@ body{
 }
 
 /* 홈 */
-
 #homeScreen{
     display:flex;
     flex-direction:column;
@@ -42,52 +40,27 @@ body{
     font-size:2rem;
     font-weight:700;
     margin-bottom:20px;
-    color:#222;
 }
 
 .main-btn{
     width:min(700px,95%);
     min-height:110px;
-
-    border:2px solid transparent;
     border-radius:24px;
-
-    background-image:
-        linear-gradient(#f0f0f0,#f0f0f0),
-        linear-gradient(
-            135deg,
-            #33cc77,
-            #1ea857
-        );
-
-    background-origin:border-box;
-    background-clip:padding-box,border-box;
-
+    background:#33cc77;
     color:#222;
-
     font-size:1.3rem;
     font-weight:700;
-
     cursor:pointer;
-
-    transition:.2s;
 }
 
-.main-btn:hover{
-    transform:translateY(-2px);
-}
-
-/* 카테고리 / 게임 */
-
+/* 화면 */
 #categoryScreen,
 #gameScreen{
     display:none;
-    min-height:100vh;
 }
 
 .top-bar{
     display:flex;
-    align-items:center;
     gap:12px;
     margin-bottom:24px;
 }
@@ -95,169 +68,64 @@ body{
 .back-btn{
     width:50px;
     height:50px;
-
-    border:2px solid transparent;
-    border-radius:14px;
-
-    background-image:
-        linear-gradient(#f0f0f0,#f0f0f0),
-        linear-gradient(
-            135deg,
-            #33cc77,
-            #1ea857
-        );
-
-    background-origin:border-box;
-    background-clip:padding-box,border-box;
-
-    background-color:#f0f0f0;
-
-    color:#222;
-
-    cursor:pointer;
-
-    font-size:1rem;
-    font-weight:bold;
 }
-
-.screen-title{
-    font-size:1.5rem;
-    font-weight:700;
-}
-
-/* 게임 목록 */
 
 #gameList{
     display:grid;
-    grid-template-columns:
-        repeat(auto-fit,minmax(280px,1fr));
-
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
     gap:20px;
 }
 
 .game-select-btn{
-
     min-height:150px;
-
-    border:2px solid transparent;
     border-radius:24px;
-
-    background-image:
-        linear-gradient(#f0f0f0,#f0f0f0),
-        linear-gradient(
-            135deg,
-            #33cc77,
-            #1ea857
-        );
-
-    background-origin:border-box;
-    background-clip:padding-box,border-box;
-
-    color:#222;
-
+    background:#33cc77;
     font-size:1.2rem;
     font-weight:700;
-
     cursor:pointer;
-
-    transition:.2s;
 }
-
-.game-select-btn:hover{
-    transform:translateY(-2px);
-}
-
-/* 게임 영역 */
 
 #gameArea{
-
-    min-height:calc(100vh - 120px);
-
-    border:2px solid transparent;
+    min-height:70vh;
     border-radius:24px;
-
-    background-image:
-        linear-gradient(#f0f0f0,#f0f0f0),
-        linear-gradient(
-            135deg,
-            #33cc77,
-            #1ea857
-        );
-
-    background-origin:border-box;
-    background-clip:padding-box,border-box;
-
     padding:24px;
 }
-
-.game-title{
-    font-size:1.8rem;
-    font-weight:700;
-    margin-bottom:20px;
-}
-
-.placeholder{
-    min-height:60vh;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    text-align:center;
-
-    color:#666;
-
-    line-height:1.8;
-}
-
 </style>
 </head>
+
 <body>
 
 <div id="screen">
 
-    <!-- 홈 -->
-
+    <!-- HOME -->
     <div id="homeScreen">
-
         <div class="logo">AI vs HUMAN</div>
 
         <button class="main-btn" onclick="showCategory('intelligence')">지능</button>
         <button class="main-btn" onclick="showCategory('physical')">피지컬</button>
         <button class="main-btn" onclick="showRanking()">랭킹</button>
-
     </div>
 
-    <!-- 카테고리 -->
-
+    <!-- CATEGORY -->
     <div id="categoryScreen">
 
         <div class="top-bar">
-
             <button class="back-btn" onclick="showHome()">←</button>
-
-            <div class="screen-title" id="categoryTitle"></div>
-
+            <div id="categoryTitle"></div>
         </div>
 
         <div id="gameList"></div>
-
     </div>
 
-    <!-- 게임 -->
-
+    <!-- GAME -->
     <div id="gameScreen">
 
         <div class="top-bar">
-
             <button class="back-btn" onclick="backToCategory()">←</button>
-
-            <div class="screen-title" id="gameTitle"></div>
-
+            <div id="gameTitle"></div>
         </div>
 
         <div id="gameArea"></div>
-
     </div>
 
 </div>
@@ -300,8 +168,6 @@ function showCategory(type){
     });
 }
 
-<script>
-
 function openGame(game){
 
     document.getElementById("categoryScreen").style.display = "none";
@@ -322,7 +188,7 @@ function openGame(game){
 
     gameArea.innerHTML = `
         <div class="game-title">${game}</div>
-        <div class="placeholder">아직 구현되지 않았습니다.</div>
+        <div>아직 구현되지 않았습니다.</div>
     `;
 }
 
@@ -334,18 +200,8 @@ function showRanking(){
     alert("랭킹 시스템은 추후 구현됩니다.");
 }
 
-</script>
+showHome();
 
-<!-- ✅ 핵심: tictactoe.js 연결 (module bridge) -->
-<script type="module">
-import { openTicTacToe } from "./js/games/tictactoe.js";
-
-window.startTicTacToe = (level) => {
-    openTicTacToe(
-        document.getElementById("gameArea"),
-        level
-    );
-};
 </script>
 
 </body>
