@@ -384,6 +384,50 @@ function openGame(game){
     ).textContent =
         game;
 
+    if(game === "틱택토"){
+
+        document.getElementById(
+            "gameArea"
+        ).innerHTML = `
+
+            <div class="game-title">
+                틱택토
+            </div>
+
+            <div
+                style="
+                    max-width:600px;
+                    margin:auto;
+                    display:flex;
+                    flex-direction:column;
+                    gap:20px;
+                ">
+
+                <button
+                    class="game-select-btn"
+                    onclick="startTicTacToe('easy')">
+                    쉬움
+                </button>
+
+                <button
+                    class="game-select-btn"
+                    onclick="startTicTacToe('normal')">
+                    보통
+                </button>
+
+                <button
+                    class="game-select-btn"
+                    onclick="startTicTacToe('hard')">
+                    어려움
+                </button>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
     document.getElementById(
         "gameArea"
     ).innerHTML = `
@@ -396,7 +440,6 @@ function openGame(game){
         </div>
     `;
 }
-
 function backToCategory(){
 
     showCategory(
