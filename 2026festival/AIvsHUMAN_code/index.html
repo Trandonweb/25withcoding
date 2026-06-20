@@ -220,27 +220,11 @@ body{
 
     <div id="homeScreen">
 
-        <div class="logo">
-            AI vs HUMAN
-        </div>
+        <div class="logo">AI vs HUMAN</div>
 
-        <button
-            class="main-btn"
-            onclick="showCategory('intelligence')">
-            지능
-        </button>
-
-        <button
-            class="main-btn"
-            onclick="showCategory('physical')">
-            피지컬
-        </button>
-
-        <button
-            class="main-btn"
-            onclick="showRanking()">
-            랭킹
-        </button>
+        <button class="main-btn" onclick="showCategory('intelligence')">지능</button>
+        <button class="main-btn" onclick="showCategory('physical')">피지컬</button>
+        <button class="main-btn" onclick="showRanking()">랭킹</button>
 
     </div>
 
@@ -250,16 +234,9 @@ body{
 
         <div class="top-bar">
 
-            <button
-                class="back-btn"
-                onclick="showHome()">
-                ←
-            </button>
+            <button class="back-btn" onclick="showHome()">←</button>
 
-            <div
-                class="screen-title"
-                id="categoryTitle">
-            </div>
+            <div class="screen-title" id="categoryTitle"></div>
 
         </div>
 
@@ -273,16 +250,9 @@ body{
 
         <div class="top-bar">
 
-            <button
-                class="back-btn"
-                onclick="backToCategory()">
-                ←
-            </button>
+            <button class="back-btn" onclick="backToCategory()">←</button>
 
-            <div
-                class="screen-title"
-                id="gameTitle">
-            </div>
+            <div class="screen-title" id="gameTitle"></div>
 
         </div>
 
@@ -294,250 +264,92 @@ body{
 
 <script>
 
-const intelligenceGames = [
-    "틱택토",
-    "미로",
-    "숫자 맞추기"
-];
-
-const physicalGames = [
-    "축구",
-    "야구"
-];
+const intelligenceGames = ["틱택토","미로","숫자 맞추기"];
+const physicalGames = ["축구","야구"];
 
 let currentCategory = "";
 
-const homeScreen =
-    document.getElementById("homeScreen");
-
-const categoryScreen =
-    document.getElementById("categoryScreen");
-
-const gameScreen =
-    document.getElementById("gameScreen");
-
 function showHome(){
-
-    homeScreen.style.display = "flex";
-    categoryScreen.style.display = "none";
-    gameScreen.style.display = "none";
+    document.getElementById("homeScreen").style.display = "flex";
+    document.getElementById("categoryScreen").style.display = "none";
+    document.getElementById("gameScreen").style.display = "none";
 }
 
 function showCategory(type){
 
     currentCategory = type;
 
-    homeScreen.style.display = "none";
-    categoryScreen.style.display = "block";
-    gameScreen.style.display = "none";
+    document.getElementById("homeScreen").style.display = "none";
+    document.getElementById("categoryScreen").style.display = "block";
+    document.getElementById("gameScreen").style.display = "none";
 
-    document.getElementById(
-        "categoryTitle"
-    ).textContent =
-        type === "intelligence"
-        ? "지능"
-        : "피지컬";
+    document.getElementById("categoryTitle").textContent =
+        type === "intelligence" ? "지능" : "피지컬";
 
-    const gameList =
-        document.getElementById(
-            "gameList"
-        );
-
+    const gameList = document.getElementById("gameList");
     gameList.innerHTML = "";
 
-    const list =
-        type === "intelligence"
-        ? intelligenceGames
-        : physicalGames;
+    const list = type === "intelligence" ? intelligenceGames : physicalGames;
 
     list.forEach(game=>{
-
-        const btn =
-            document.createElement(
-                "button"
-            );
-
-        btn.className =
-            "game-select-btn";
-
-        btn.textContent =
-            game;
-
-        btn.onclick =
-            ()=>openGame(game);
-
+        const btn = document.createElement("button");
+        btn.className = "game-select-btn";
+        btn.textContent = game;
+        btn.onclick = ()=>openGame(game);
         gameList.appendChild(btn);
-
     });
 }
 
 function openGame(game){
 
-    categoryScreen.style.display =
-        "none";
+    document.getElementById("categoryScreen").style.display = "none";
+    document.getElementById("gameScreen").style.display = "block";
 
-    gameScreen.style.display =
-        "block";
-
-    document.getElementById(
-        "gameTitle"
-    ).textContent =
-        game;
+    document.getElementById("gameTitle").textContent = game;
 
     if(game === "틱택토"){
 
-        document.getElementById(
-            "gameArea"
-        ).innerHTML = `
+        document.getElementById("gameArea").innerHTML = `
+            <div class="game-title">틱택토</div>
 
-            <div class="game-title">
-                틱택토
+            <div style="max-width:600px;margin:auto;display:flex;flex-direction:column;gap:20px;">
+                <button class="game-select-btn" onclick="startTicTacToe('easy')">쉬움</button>
+                <button class="game-select-btn" onclick="startTicTacToe('normal')">보통</button>
+                <button class="game-select-btn" onclick="startTicTacToe('hard')">어려움</button>
             </div>
-
-            <div
-                style="
-                    max-width:600px;
-                    margin:auto;
-                    display:flex;
-                    flex-direction:column;
-                    gap:20px;
-                ">
-
-                <button
-                    class="game-select-btn"
-                    onclick="startTicTacToe('easy')">
-                    쉬움
-                </button>
-
-                <button
-                    class="game-select-btn"
-                    onclick="startTicTacToe('normal')">
-                    보통
-                </button>
-
-                <button
-                    class="game-select-btn"
-                    onclick="startTicTacToe('hard')">
-                    어려움
-                </button>
-
-            </div>
-
         `;
 
         return;
     }
 
-    document.getElementById(
-        "gameArea"
-    ).innerHTML = `
-        <div class="game-title">
-            ${game}
-        </div>
-
-        <div class="placeholder">
-            아직 구현되지 않았습니다.
-        </div>
+    document.getElementById("gameArea").innerHTML = `
+        <div class="game-title">${game}</div>
+        <div class="placeholder">아직 구현되지 않았습니다.</div>
     `;
 }
-function backToCategory(){
 
-    showCategory(
-        currentCategory
-    );
+function backToCategory(){
+    showCategory(currentCategory);
 }
 
 function showRanking(){
-
-    alert(
-        "랭킹 시스템은 추후 구현됩니다."
-    );
+    alert("랭킹 시스템은 추후 구현됩니다.");
 }
 
 showHome();
 
-function startTicTacToe(level){
+</script>
 
-    let levelText = "";
+<!-- ✅ 핵심: tictactoe.js 연결 (module bridge) -->
+<script type="module">
+import { openTicTacToe } from "./js/games/tictactoe.js";
 
-    if(level === "easy"){
-        levelText = "쉬움";
-    }
-
-    if(level === "normal"){
-        levelText = "보통";
-    }
-
-    if(level === "hard"){
-        levelText = "어려움";
-    }
-
-    document.getElementById(
-        "gameArea"
-    ).innerHTML = `
-
-        <div class="game-title">
-            틱택토
-        </div>
-
-        <p
-            style="
-                text-align:center;
-                margin-bottom:20px;
-                font-size:1.2rem;
-            ">
-            난이도 : <b>${levelText}</b>
-        </p>
-
-        <div
-            id="tttBoard"
-            style="
-                width:330px;
-                margin:auto;
-                display:grid;
-                grid-template-columns:
-                    repeat(3,1fr);
-                gap:8px;
-            ">
-        </div>
-
-    `;
-
-    const board =
-        document.getElementById(
-            "tttBoard"
-        );
-
-    for(let i=0;i<9;i++){
-
-        const cell =
-            document.createElement(
-                "button"
-            );
-
-        cell.style.height =
-            "100px";
-
-        cell.style.fontSize =
-            "2rem";
-
-        cell.style.border =
-            "2px solid #1ea857";
-
-        cell.style.borderRadius =
-            "12px";
-
-        cell.style.background =
-            "#f0f0f0";
-
-        cell.style.cursor =
-            "pointer";
-
-        board.appendChild(
-            cell
-        );
-    }
-}
+window.startTicTacToe = (level) => {
+    openTicTacToe(
+        document.getElementById("gameArea"),
+        level
+    );
+};
 </script>
 
 </body>
