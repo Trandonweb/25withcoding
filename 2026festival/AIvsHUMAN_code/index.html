@@ -307,7 +307,12 @@ function openGame(game){
 
     document.getElementById("gameTitle").textContent = game;
 
-
+    if(game === "틱택토"){
+        import("./js/games/tictactoe.js").then(m => {
+            m.openTicTacToe(document.getElementById("gameArea"));
+        });
+        return;
+    }
 
     document.getElementById("gameArea").innerHTML = `
         <div class="game-title">${game}</div>
