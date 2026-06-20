@@ -46,21 +46,20 @@ body{
     width:min(700px,95%);
     min-height:110px;
     border-radius:24px;
-    background:#33cc77;
-    color:#222;
+    border:2px solid #1ea857;
     font-size:1.3rem;
     font-weight:700;
     cursor:pointer;
 }
 
-/* 화면 */
-#categoryScreen,
-#gameScreen{
+/* 카테고리 */
+#categoryScreen,#gameScreen{
     display:none;
 }
 
 .top-bar{
     display:flex;
+    align-items:center;
     gap:12px;
     margin-bottom:24px;
 }
@@ -68,6 +67,9 @@ body{
 .back-btn{
     width:50px;
     height:50px;
+    border-radius:14px;
+    border:2px solid #1ea857;
+    cursor:pointer;
 }
 
 #gameList{
@@ -79,15 +81,15 @@ body{
 .game-select-btn{
     min-height:150px;
     border-radius:24px;
-    background:#33cc77;
+    border:2px solid #1ea857;
     font-size:1.2rem;
-    font-weight:700;
     cursor:pointer;
 }
 
 #gameArea{
-    min-height:70vh;
+    min-height:calc(100vh - 120px);
     border-radius:24px;
+    border:2px solid #1ea857;
     padding:24px;
 }
 </style>
@@ -97,7 +99,7 @@ body{
 
 <div id="screen">
 
-    <!-- HOME -->
+    <!-- 홈 -->
     <div id="homeScreen">
         <div class="logo">AI vs HUMAN</div>
 
@@ -106,9 +108,8 @@ body{
         <button class="main-btn" onclick="showRanking()">랭킹</button>
     </div>
 
-    <!-- CATEGORY -->
+    <!-- 카테고리 -->
     <div id="categoryScreen">
-
         <div class="top-bar">
             <button class="back-btn" onclick="showHome()">←</button>
             <div id="categoryTitle"></div>
@@ -117,9 +118,8 @@ body{
         <div id="gameList"></div>
     </div>
 
-    <!-- GAME -->
+    <!-- 게임 -->
     <div id="gameScreen">
-
         <div class="top-bar">
             <button class="back-btn" onclick="backToCategory()">←</button>
             <div id="gameTitle"></div>
@@ -131,63 +131,59 @@ body{
 </div>
 
 <script>
-
 const intelligenceGames = ["틱택토","미로","숫자 맞추기"];
 const physicalGames = ["축구","야구"];
 
 let currentCategory = "";
 
 function showHome(){
-    document.getElementById("homeScreen").style.display = "flex";
-    document.getElementById("categoryScreen").style.display = "none";
-    document.getElementById("gameScreen").style.display = "none";
+    document.getElementById("homeScreen").style.display="flex";
+    document.getElementById("categoryScreen").style.display="none";
+    document.getElementById("gameScreen").style.display="none";
 }
 
 function showCategory(type){
-
     currentCategory = type;
 
-    document.getElementById("homeScreen").style.display = "none";
-    document.getElementById("categoryScreen").style.display = "block";
-    document.getElementById("gameScreen").style.display = "none";
+    document.getElementById("homeScreen").style.display="none";
+    document.getElementById("categoryScreen").style.display="block";
+    document.getElementById("gameScreen").style.display="none";
 
     document.getElementById("categoryTitle").textContent =
-        type === "intelligence" ? "지능" : "피지컬";
+        type==="intelligence"?"지능":"피지컬";
+
+    const list = type==="intelligence"?intelligenceGames:physicalGames;
 
     const gameList = document.getElementById("gameList");
-    gameList.innerHTML = "";
-
-    const list = type === "intelligence" ? intelligenceGames : physicalGames;
+    gameList.innerHTML="";
 
     list.forEach(game=>{
-        const btn = document.createElement("button");
-        btn.className = "game-select-btn";
-        btn.textContent = game;
-        btn.onclick = ()=>openGame(game);
+        const btn=document.createElement("button");
+        btn.className="game-select-btn";
+        btn.textContent=game;
+        btn.onclick=()=>openGame(game);
         gameList.appendChild(btn);
     });
 }
 
 function openGame(game){
+    document.getElementById("categoryScreen").style.display="none";
+    document.getElementById("gameScreen").style.display="block";
 
-    document.getElementById("categoryScreen").style.display = "none";
-    document.getElementById("gameScreen").style.display = "block";
+    document.getElementById("gameTitle").textContent=game;
 
-    document.getElementById("gameTitle").textContent = game;
+    const gameArea=document.getElementById("gameArea");
 
-    const gameArea = document.getElementById("gameArea");
-
-    if(game === "틱택토"){
-
-        import("./js/games/tictactoe.js").then(m => {
-            m.openTicTacToe(gameArea);
-        });
-
+    if(game==="틱택토"){
+        import("./js/games/tictactoe.js")
+            .then(m=>{
+                m.openTicTacToe(gameArea);
+            });
         return;
     }
 
-    gameArea.innerHTML = `
-        <div class="game-title">${game}</div>
+    gameArea.innerHTML=`
+        <div>${game}</div>
         <div>아직 구현되지 않았습니다.</div>
     `;
 }
@@ -201,7 +197,6 @@ function showRanking(){
 }
 
 showHome();
-
 </script>
 
 </body>
