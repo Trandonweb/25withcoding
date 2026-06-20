@@ -456,6 +456,88 @@ function showRanking(){
 
 showHome();
 
+function startTicTacToe(level){
+
+    let levelText = "";
+
+    if(level === "easy"){
+        levelText = "쉬움";
+    }
+
+    if(level === "normal"){
+        levelText = "보통";
+    }
+
+    if(level === "hard"){
+        levelText = "어려움";
+    }
+
+    document.getElementById(
+        "gameArea"
+    ).innerHTML = `
+
+        <div class="game-title">
+            틱택토
+        </div>
+
+        <p
+            style="
+                text-align:center;
+                margin-bottom:20px;
+                font-size:1.2rem;
+            ">
+            난이도 : <b>${levelText}</b>
+        </p>
+
+        <div
+            id="tttBoard"
+            style="
+                width:330px;
+                margin:auto;
+                display:grid;
+                grid-template-columns:
+                    repeat(3,1fr);
+                gap:8px;
+            ">
+        </div>
+
+    `;
+
+    const board =
+        document.getElementById(
+            "tttBoard"
+        );
+
+    for(let i=0;i<9;i++){
+
+        const cell =
+            document.createElement(
+                "button"
+            );
+
+        cell.style.height =
+            "100px";
+
+        cell.style.fontSize =
+            "2rem";
+
+        cell.style.border =
+            "2px solid #1ea857";
+
+        cell.style.borderRadius =
+            "12px";
+
+        cell.style.background =
+            "#f0f0f0";
+
+        cell.style.cursor =
+            "pointer";
+
+        board.appendChild(
+            cell
+        );
+    }
+}
 </script>
 
 </body>
