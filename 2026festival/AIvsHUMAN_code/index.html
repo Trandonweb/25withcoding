@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI vs HUMAN</title>
 
-<link rel="stylesheet" href="css/style.css">
-
 <style>
+
 *{
     margin:0;
     padding:0;
@@ -37,80 +36,89 @@ header p{
     color:#9ca3af;
 }
 
-.top-tabs{
-    display:flex;
-    justify-content:center;
-    gap:10px;
-    padding:15px;
-}
-
-.top-tabs button{
-    padding:12px 20px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    background:#374151;
-    color:white;
-    font-size:1rem;
-}
-
-.top-tabs button.active{
-    background:#2563eb;
-}
-
-.sub-menu{
-    display:flex;
-    justify-content:center;
-    flex-wrap:wrap;
-    gap:10px;
-    padding:10px 20px;
-}
-
-.sub-menu button{
-    padding:10px 16px;
-    border:none;
-    border-radius:10px;
-    background:#1f2937;
-    color:white;
-    cursor:pointer;
-}
-
-.sub-menu button:hover{
-    background:#374151;
-}
-
-.game-container{
+#screen{
+    padding:20px;
     max-width:1200px;
     margin:auto;
-    padding:20px;
 }
 
-.game-box{
+#homeScreen{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    max-width:700px;
+    margin:auto;
+}
+
+.main-btn{
+    width:100%;
+    padding:25px;
+    border:none;
+    border-radius:15px;
+    background:#2563eb;
+    color:white;
+    font-size:1.3rem;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.main-btn:hover{
+    transform:translateY(-2px);
+}
+
+.back-btn{
+    padding:12px 18px;
+    border:none;
+    border-radius:10px;
+    background:#374151;
+    color:white;
+    cursor:pointer;
+    margin-bottom:20px;
+}
+
+#gameList{
+    display:grid;
+    gap:15px;
+}
+
+.game-select-btn{
+    width:100%;
+    padding:20px;
+    border:none;
+    border-radius:15px;
+    background:#1f2937;
+    color:white;
+    font-size:1.1rem;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.game-select-btn:hover{
+    background:#374151;
+}
+
+#gameArea{
     background:#1f2937;
     border-radius:15px;
-    padding:30px;
-    min-height:500px;
-}
-
-.game-box h2{
-    margin-bottom:15px;
+    padding:25px;
+    min-height:600px;
 }
 
 .placeholder{
     text-align:center;
     color:#9ca3af;
     margin-top:100px;
+    line-height:1.8;
 }
 
 footer{
-    margin-top:20px;
     text-align:center;
     color:#6b7280;
-    padding:15px;
+    padding:20px;
 }
+
 </style>
 </head>
-
 <body>
 
 <header>
@@ -118,20 +126,61 @@ footer{
     <p>인공지능을 이길 수 있을까?</p>
 </header>
 
-<div class="top-tabs">
-    <button id="intelligenceBtn" class="active">🧠 지능</button>
-    <button id="physicalBtn">⚽ 피지컬</button>
-</div>
+<div id="screen">
 
-<div class="sub-menu" id="subMenu"></div>
+    <!-- 홈 화면 -->
+    <div id="homeScreen">
 
-<div class="game-container">
-    <div class="game-box" id="gameArea">
-        <h2>환영합니다!</h2>
-        <div class="placeholder">
-            위에서 게임을 선택하세요.
-        </div>
+        <button
+            class="main-btn"
+            onclick="showCategory('intelligence')">
+            🧠 지능
+        </button>
+
+        <button
+            class="main-btn"
+            onclick="showCategory('physical')">
+            ⚽ 피지컬
+        </button>
+
+        <button
+            class="main-btn"
+            onclick="showRanking()">
+            🏆 랭킹
+        </button>
+
     </div>
+
+    <!-- 카테고리 화면 -->
+    <div
+        id="categoryScreen"
+        style="display:none;">
+
+        <button
+            class="back-btn"
+            onclick="showHome()">
+            ← 뒤로가기
+        </button>
+
+        <div id="gameList"></div>
+
+    </div>
+
+    <!-- 게임 화면 -->
+    <div
+        id="gameScreen"
+        style="display:none;">
+
+        <button
+            class="back-btn"
+            onclick="backToCategory()">
+            ← 뒤로가기
+        </button>
+
+        <div id="gameArea"></div>
+
+    </div>
+
 </div>
 
 <footer>
@@ -151,52 +200,118 @@ const physicalGames = [
     "⚾ 야구"
 ];
 
-const subMenu = document.getElementById("subMenu");
-const gameArea = document.getElementById("gameArea");
+let currentCategory = "";
 
-function renderMenu(list){
+const homeScreen =
+    document.getElementById(
+        "homeScreen"
+    );
 
-    subMenu.innerHTML = "";
+const categoryScreen =
+    document.getElementById(
+        "categoryScreen"
+    );
+
+const gameScreen =
+    document.getElementById(
+        "gameScreen"
+    );
+
+const gameList =
+    document.getElementById(
+        "gameList"
+    );
+
+const gameArea =
+    document.getElementById(
+        "gameArea"
+    );
+
+function showHome(){
+
+    homeScreen.style.display =
+        "flex";
+
+    categoryScreen.style.display =
+        "none";
+
+    gameScreen.style.display =
+        "none";
+}
+
+function showCategory(type){
+
+    currentCategory = type;
+
+    homeScreen.style.display =
+        "none";
+
+    categoryScreen.style.display =
+        "block";
+
+    gameScreen.style.display =
+        "none";
+
+    gameList.innerHTML = "";
+
+    const list =
+        type === "intelligence"
+        ? intelligenceGames
+        : physicalGames;
 
     list.forEach(game=>{
 
-        const btn = document.createElement("button");
+        const btn =
+            document.createElement(
+                "button"
+            );
 
-        btn.textContent = game;
+        btn.className =
+            "game-select-btn";
 
-        btn.onclick = () => {
+        btn.textContent =
+            game;
 
-            gameArea.innerHTML = `
-                <h2>${game}</h2>
+        btn.onclick =
+            ()=>openGame(game);
 
-                <div class="placeholder">
-                    아직 개발되지 않았습니다.<br><br>
-                    곧 AI와 대결이 시작됩니다.
-                </div>
-            `;
-        };
+        gameList.appendChild(btn);
 
-        subMenu.appendChild(btn);
     });
+
 }
 
-document.getElementById("intelligenceBtn").onclick = ()=>{
+function openGame(game){
 
-    document.getElementById("intelligenceBtn").classList.add("active");
-    document.getElementById("physicalBtn").classList.remove("active");
+    categoryScreen.style.display =
+        "none";
 
-    renderMenu(intelligenceGames);
-};
+    gameScreen.style.display =
+        "block";
 
-document.getElementById("physicalBtn").onclick = ()=>{
+    gameArea.innerHTML = `
+        <h2>${game}</h2>
 
-    document.getElementById("physicalBtn").classList.add("active");
-    document.getElementById("intelligenceBtn").classList.remove("active");
+        <div class="placeholder">
+            아직 개발되지 않았습니다.<br><br>
+            곧 AI와 인간의 대결이 시작됩니다.
+        </div>
+    `;
+}
 
-    renderMenu(physicalGames);
-};
+function backToCategory(){
 
-renderMenu(intelligenceGames);
+    showCategory(
+        currentCategory
+    );
+}
+
+function showRanking(){
+
+    alert(
+        "랭킹 시스템은 곧 구현됩니다."
+    );
+}
 
 </script>
 
