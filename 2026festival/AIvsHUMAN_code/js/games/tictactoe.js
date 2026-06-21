@@ -200,7 +200,62 @@ function minimaxBest(){
 
     return bestMove;
 }
+function minimax(boardState, isMaximizing){
 
+    if(checkMinimax(boardState, "O")) return 1;
+    if(checkMinimax(boardState, "X")) return -1;
+
+    if(boardState.every(v => v !== "")) return 0;
+
+    if(isMaximizing){
+
+        let bestScore = -Infinity;
+
+        for(let i=0; i<9; i++){
+
+            if(boardState[i] !== "") continue;
+
+            boardState[i] = "O";
+
+            const score = minimax(boardState, false);
+
+            boardState[i] = "";
+
+            bestScore = Math.max(bestScore, score);
+        }
+
+        return bestScore;
+    }
+
+    let bestScore = Infinity;
+
+    for(let i=0; i<9; i++){
+
+        if(boardState[i] !== "") continue;
+
+        boardState[i] = "X";
+
+        const score = minimax(boardState, true);
+
+        boardState[i] = "";
+
+        bestScore = Math.min(bestScore, score);
+    }
+
+    return bestScore;
+}
+function checkMinimax(boardState, player){
+
+    const w = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ];
+
+    return w.some(line =>
+        line.every(i => boardState[i] === player)
+    );
+}
 // ---------------- CHECK ----------------
 function check(p){
     const w=[
