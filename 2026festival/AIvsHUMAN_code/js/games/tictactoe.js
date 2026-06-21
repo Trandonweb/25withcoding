@@ -118,11 +118,15 @@ function player(i){
 // ---------------- AI ----------------
 function ai(){
 
+    console.log("difficulty =", currentDifficulty);
+
     let move;
 
     if(currentDifficulty==="easy") move = random();
     if(currentDifficulty==="normal") move = smart();
     if(currentDifficulty==="hard") move = minimaxBest();
+
+    console.log("move =", move);
 
     board[move]="O";
 
@@ -131,7 +135,6 @@ function ai(){
     if(check("O")) return end("AI WIN");
     if(draw()) return end("DRAW");
 }
-
 // ---------------- MOVES ----------------
 function random(){
     const empty = board.map((v,i)=>v===""?i:null).filter(v=>v!==null);
