@@ -2,6 +2,7 @@ let board = [];
 let currentDifficulty = "";
 let gameOver = false;
 let gameAreaRef = null;
+let aiTimer = null;
 
 // ---------------- ENTRY ----------------
 export function openTicTacToe(gameArea) {
@@ -14,9 +15,14 @@ export function openTicTacToe(gameArea) {
 
 // ---------------- RESET ----------------
 function reset(){
+
     board = Array(9).fill("");
-    currentDifficulty = "";
     gameOver = false;
+
+    if(aiTimer){
+        clearTimeout(aiTimer);
+        aiTimer = null;
+    }
 }
 
 // ---------------- DIFFICULTY SCREEN ----------------
@@ -76,6 +82,9 @@ function startGame(level){
 function render(){
 
     const el = document.getElementById("board");
+
+    if(!el) return;
+
     el.innerHTML = "";
 
     board.forEach((v,i)=>{
@@ -103,7 +112,7 @@ function player(i){
     if(check("X")) return end("PLAYER WIN");
     if(draw()) return end("DRAW");
 
-    setTimeout(ai,100);
+    aiTimer = setTimeout(ai,100);
 }
 
 // ---------------- AI ----------------
@@ -167,4 +176,15 @@ function end(msg){
     `;
 
     window.__tttRestart = ()=>showDifficultyScreen();
+}
+
+//--------------몰라 수정하래------------
+export function destroy(){
+
+    if(aiTimer){
+        clearTimeout(aiTimer);
+        aiTimer = null;
+    }
+
+    gameOver = true;
 }
