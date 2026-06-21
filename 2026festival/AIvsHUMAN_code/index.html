@@ -135,6 +135,7 @@ const intelligenceGames = ["틱택토","미로","숫자 맞추기"];
 const physicalGames = ["축구","야구"];
 
 let currentCategory = "";
+let currentGameModule = null;
 
 function showHome(){
     document.getElementById("homeScreen").style.display="flex";
@@ -176,9 +177,12 @@ function openGame(game){
 
     if(game==="틱택토"){
         import("./js/games/tictactoe.js")
-            .then(m=>{
-                m.openTicTacToe(gameArea);
-            });
+.then(m=>{
+
+    currentGameModule = m;
+
+    m.openTicTacToe(gameArea);
+});
         return;
     }
 
@@ -189,6 +193,11 @@ function openGame(game){
 }
 
 function backToCategory(){
+
+    if(currentGameModule?.destroy){
+        currentGameModule.destroy();
+    }
+
     showCategory(currentCategory);
 }
 
