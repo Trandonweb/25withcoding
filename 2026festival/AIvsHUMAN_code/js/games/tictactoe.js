@@ -177,22 +177,6 @@ function smart(){
     return random();
 }
 
-    // 플레이어가 이길 수 있으면 막음
-    for(const idx of empty){
-
-        board[idx] = "X";
-
-        if(check("X")){
-            board[idx] = "";
-            return idx;
-        }
-
-        board[idx] = "";
-    }
-
-    // 없으면 랜덤
-    return random();
-}
 function minimaxBest(){
     return random(); // 단순 유지 (원하면 고급버전 만들어줌)
 }
