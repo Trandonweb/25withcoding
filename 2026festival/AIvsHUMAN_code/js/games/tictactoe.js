@@ -178,7 +178,27 @@ function smart(){
 }
 
 function minimaxBest(){
-    return random(); // 단순 유지 (원하면 고급버전 만들어줌)
+
+    let bestScore = -Infinity;
+    let bestMove = null;
+
+    for(let i=0; i<9; i++){
+
+        if(board[i] !== "") continue;
+
+        board[i] = "O";
+
+        const score = minimax(board, false);
+
+        board[i] = "";
+
+        if(score > bestScore){
+            bestScore = score;
+            bestMove = i;
+        }
+    }
+
+    return bestMove;
 }
 
 // ---------------- CHECK ----------------
