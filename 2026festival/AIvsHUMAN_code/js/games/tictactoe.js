@@ -139,9 +139,40 @@ function random(){
 }
 
 function smart(){
-    return random(); // 간단 유지
-}
 
+    const empty = board
+        .map((v,i)=>v==="" ? i : null)
+        .filter(v=>v!==null);
+
+    // AI가 이길 수 있으면 이김
+    for(const idx of empty){
+
+        board[idx] = "O";
+
+        if(check("O")){
+            board[idx] = "";
+            return idx;
+        }
+
+        board[idx] = "";
+    }
+
+    // 플레이어가 이길 수 있으면 막음
+    for(const idx of empty){
+
+        board[idx] = "X";
+
+        if(check("X")){
+            board[idx] = "";
+            return idx;
+        }
+
+        board[idx] = "";
+    }
+
+    // 없으면 랜덤
+    return random();
+}
 function minimaxBest(){
     return random(); // 단순 유지 (원하면 고급버전 만들어줌)
 }
