@@ -15,6 +15,8 @@ let difficulty = "easy";
 
 let gameOver = false;
 
+let aiDir = 1;
+
 export function openMaze(gameArea){
 
     gameAreaRef = gameArea;
@@ -57,7 +59,9 @@ window.startMaze = function(level){
 
     player = { x:1, y:1 };
     ai = { x:1, y:1 };
-
+    
+    aiDir = 1;
+    
     gameOver = false;
 
     renderMaze();
@@ -274,13 +278,95 @@ function startAI(){
 
 function aiStep(){
 
-    const path =
+    if(difficulty === "easy"){
+        aiEasy();
+        return;
+    }
+
+    if(difficulty === "normal"){
+        aiNormal();
+        return;
+    }
+
+    if(difficulty === "hard"){
+        aiHard();
+        return;
+    }
+}
+
+function aiEasy(){
+
+    const dirs = [
+        [0,-1],
+        [1,0],
+        [0,1],
+        [-1,0]
+    ];
+
+    const leftDir =
+        (aiDir + 3) % 4;
+
+    const lx =
+        ai.x + dirs[leftDir][0];
+
+    const ly =
+        ai.y + dirs[leftDir][1];
+
+    if(canMove(lx,ly)){
+
+        aiDir = leftDir;
+
+        ai.x = lx;
+        ai.y = ly;
+
+        renderMaze();
+        checkFinish();
+        return;
+    }
+
+    const fx =
+        ai.x + dirs[aiDir][0];
+
+    const fy =
+        ai.y + dirs[aiDir][1];
+
+    if(canMove(fx,fy)){
+
+        ai.x = fx;
+        ai.y = fy;
+
+        renderMaze();
+        checkFinish();
+        return;
+    }
+
+    aiDir =
+        (aiDir + 1) % 4;
+}
+
+function aiNormal(){
+    moveAIByPath(
         bfs(
             ai.x,
             ai.y,
             finish.x,
             finish.y
-        );
+        )
+    );
+}
+
+function aiHard(){
+    moveAIByPath(
+        bfs(
+            ai.x,
+            ai.y,
+            finish.x,
+            finish.y
+        )
+    );
+}
+
+function moveAIByPath(path){
 
     if(path.length < 2){
         return;
@@ -402,4 +488,18 @@ function checkFinish(){
 
         alert("AI WIN");
     }
+}
+
+function canMove(x,y){
+
+    if(
+        x < 0 ||
+        y < 0 ||
+        x >= SIZE ||
+        y >= SIZE
+    ){
+        return false;
+    }
+
+    return maze[y][x] === 0;
 }
