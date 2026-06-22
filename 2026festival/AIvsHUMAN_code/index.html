@@ -185,7 +185,16 @@ function openGame(game){
 });
         return;
     }
+    if(game === "미로"){
 
+    import("./js/games/maze.js").then(m=>{
+        m.openMaze(
+            document.getElementById("gameArea")
+        );
+    });
+
+    return;
+}
     gameArea.innerHTML=`
         <div>${game}</div>
         <div>아직 구현되지 않았습니다.</div>
