@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -29,10 +28,9 @@
     .notice-item {
       background: white;
       border-radius: 10px;
-      padding: 12px;
+      padding: 10px;
       margin-top: 8px;
       transition: 0.2s;
-      font-weight: bold;
     }
 
     .notice-item:hover {
@@ -298,7 +296,6 @@ function renderNotice() {
   const notices = notes.filter(n =>
 
     !n.deleted &&
-    !n.delete &&
     isNotice(n.title)
 
   );
@@ -324,12 +321,30 @@ function renderNotice() {
         style="cursor:pointer;"
       >
 
-        ⭐️ ${
+        📢 ${
           n.title
             .replace("!@#", "")
             .replace("#@!", "")
             .trim()
         }
+
+        <div style="
+          margin-top:6px;
+          font-size:12px;
+          color:gray;
+        ">
+
+          👤 ${n.authorName || "guest"}
+          ·
+          🕒 ${
+            n.createdAt
+            ? new Date(
+                n.createdAt
+              ).toLocaleString()
+            : "알 수 없음"
+          }
+
+        </div>
 
       </div>
 
@@ -351,7 +366,7 @@ function render() {
 
   const filtered = notes
 
-    .filter(n => !n.deleted && !n.delete)
+    .filter(n => !n.deleted)
 
     .filter(n => !isNotice(n.title))
 
@@ -597,7 +612,7 @@ load();
 </script>
 
 <div id="version">
-  v26.5.28.1
+  v26.5.24.1
 </div>
 
 <div id="warning">
@@ -606,4 +621,3 @@ load();
 
 </body>
 </html>
-```
