@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -28,9 +29,10 @@
     .notice-item {
       background: white;
       border-radius: 10px;
-      padding: 10px;
+      padding: 12px;
       margin-top: 8px;
       transition: 0.2s;
+      font-weight: bold;
     }
 
     .notice-item:hover {
@@ -233,7 +235,9 @@ import {
   orderBy,
   deleteDoc,
   doc,
-  updateDoc
+  updateDoc,
+  getAuth,
+  signInAnonymously
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -253,7 +257,8 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
-
+const auth = get(Auth(app);
+await signInAnonymously(auth);
 let notes = [];
 
 function isNotice(title) {
@@ -296,6 +301,7 @@ function renderNotice() {
   const notices = notes.filter(n =>
 
     !n.deleted &&
+    !n.delete &&
     isNotice(n.title)
 
   );
@@ -321,30 +327,12 @@ function renderNotice() {
         style="cursor:pointer;"
       >
 
-        📢 ${
+        ⭐️ ${
           n.title
             .replace("!@#", "")
             .replace("#@!", "")
             .trim()
         }
-
-        <div style="
-          margin-top:6px;
-          font-size:12px;
-          color:gray;
-        ">
-
-          👤 ${n.authorName || "guest"}
-          ·
-          🕒 ${
-            n.createdAt
-            ? new Date(
-                n.createdAt
-              ).toLocaleString()
-            : "알 수 없음"
-          }
-
-        </div>
 
       </div>
 
@@ -366,7 +354,7 @@ function render() {
 
   const filtered = notes
 
-    .filter(n => !n.deleted)
+    .filter(n => !n.deleted && !n.delete)
 
     .filter(n => !isNotice(n.title))
 
@@ -612,7 +600,7 @@ load();
 </script>
 
 <div id="version">
-  v26.5.24.1
+  v26.6.27.1
 </div>
 
 <div id="warning">
