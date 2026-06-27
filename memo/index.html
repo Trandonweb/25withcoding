@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,7 +5,6 @@
   <title>코딩과 함께라면_메모장</title>
 
   <style>
-
     body {
       font-family: sans-serif;
       background: #f0f0f0;
@@ -33,6 +31,7 @@
       margin-top: 8px;
       transition: 0.2s;
       font-weight: bold;
+      cursor: pointer;
     }
 
     .notice-item:hover {
@@ -72,8 +71,8 @@
       border-radius: 12px;
       cursor: pointer;
       display: flex;
-      align-items: flex-start;
       gap: 10px;
+      align-items: flex-start;
     }
 
     .memo-content {
@@ -96,7 +95,6 @@
       padding: 10px;
       border: none;
       border-radius: 12px;
-      box-sizing: border-box;
     }
 
     .empty {
@@ -108,13 +106,6 @@
       margin-top: 10px;
     }
 
-    .select-bar {
-      margin-bottom: 10px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
     #version {
       position: fixed;
       right: 15px;
@@ -124,7 +115,6 @@
       padding: 6px 10px;
       border-radius: 10px;
       font-size: 12px;
-      z-index: 9999;
     }
 
     #warning {
@@ -136,100 +126,50 @@
       padding: 6px 10px;
       border-radius: 10px;
       font-size: 12px;
-      z-index: 9999;
     }
-
   </style>
 
 </head>
 
 <body>
 
-<!-- 공지사항 -->
-
 <div class="notice-box">
-
-  <div class="notice-title">
-    📢 공지사항
-  </div>
-
+  <div class="notice-title">📢 공지사항</div>
   <div id="notice-list">
-
-    <div class="notice-item">
-      현재 공지사항이 없습니다.
-    </div>
-
+    <div class="notice-item">현재 공지사항이 없습니다.</div>
   </div>
-
 </div>
 
 <div class="top-bar">
 
   <div class="left-buttons">
-
-    <button onclick="goHome()">
-      홈
-    </button>
-
-    <button onclick="goTrash()">
-      휴지통
-    </button>
-
-    <button onclick="resetAll()">
-      초기화
-    </button>
-
+    <button onclick="goHome()">홈</button>
+    <button onclick="goTrash()">휴지통</button>
+    <button onclick="resetAll()">초기화</button>
   </div>
 
-  <button onclick="goCreate()">
-    + 새 메모
-  </button>
+  <button onclick="goCreate()">+ 새 메모</button>
+</div>
 
+<div style="display:flex; gap:8px; margin-bottom:10px;">
+  <input id="search" placeholder="검색..." onkeydown="handleSearchKey(event)" style="flex:1;">
+  <button onclick="render()">검색</button>
 </div>
 
 <div class="select-bar">
-
-  <button onclick="selectAll()">
-    전체 선택
-  </button>
-
-  <button onclick="deleteSelected()">
-    선택 삭제
-  </button>
-
-</div>
-
-<!-- 검색 -->
-
-<div style="
-  display:flex;
-  gap:8px;
-  margin-bottom:10px;
-">
-
-  <input
-    id="search"
-    placeholder="검색..."
-    onkeydown="handleSearchKey(event)"
-    style="flex:1;"
-  >
-
-  <button onclick="render()">
-    검색
-  </button>
-
+  <button onclick="selectAll()">전체 선택</button>
+  <button onclick="deleteSelected()">선택 삭제</button>
 </div>
 
 <div id="list"></div>
 
+<div id="version">v26.6.27.1</div>
+<div id="warning">부적절한 어휘는 조치될 수 있습니다.</div>
+
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-
-import { getAuth, signInAnonymously } 
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -244,43 +184,28 @@ import {
 const MASTER_KEY = "20262326";
 
 const app = initializeApp({
-
-  apiKey:
-    "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
-
-  authDomain:
-    "memo-5123c.firebaseapp.com",
-
-  projectId:
-    "memo-5123c"
-
+  apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
+  authDomain: "memo-5123c.firebaseapp.com",
+  projectId: "memo-5123c"
 });
 
 const db = getFirestore(app);
 const auth = getAuth(app);
-await signInAnonymously(auth);
+
 let notes = [];
 
 function isNotice(title) {
+  return title && title.startsWith("!@#") && title.endsWith("#@!");
+}
 
-  if (!title) return false;
-
-  return (
-    title.startsWith("!@#") &&
-    title.endsWith("#@!")
-  );
-
+async function init() {
+  await signInAnonymously(auth);
+  await load();
 }
 
 async function load() {
-  console.log("snap size:", snap.size);
-  console.log(snap.docs.map(d => d.data()));
-  const q = query(
-    collection(db, "notes"),
-    orderBy("createdAt", "desc")
-  );
-
-  const snap = await getDocs(collection(db, "notes"));
+  const q = query(collection(db, "notes"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
 
   notes = snap.docs.map(d => ({
     id: d.id,
@@ -289,302 +214,129 @@ async function load() {
 
   render();
   renderNotice();
-
 }
 
 function renderNotice() {
-
-  const list =
-    document.getElementById(
-      "notice-list"
-    );
+  const list = document.getElementById("notice-list");
 
   const notices = notes.filter(n =>
-
-    !n.deleted &&
-    !n.delete &&
-    isNotice(n.title)
-
+    !n.deleted && !n.delete && isNotice(n.title)
   );
 
   if (notices.length === 0) {
-
-    list.innerHTML = `
-      <div class="notice-item">
-        현재 공지사항이 없습니다.
-      </div>
-    `;
-
+    list.innerHTML = `<div class="notice-item">현재 공지사항이 없습니다.</div>`;
     return;
-
   }
 
-  list.innerHTML =
-    notices.map(n => `
-
-      <div
-        class="notice-item"
-        onclick="location.href='view.html?id=${n.id}'"
-        style="cursor:pointer;"
-      >
-
-        ⭐️ ${
-          n.title
-            .replace("!@#", "")
-            .replace("#@!", "")
-            .trim()
-        }
-
-      </div>
-
-    `).join("");
-
+  list.innerHTML = notices.map(n => `
+    <div class="notice-item"
+      onclick="location.href='view.html?id=${n.id}'">
+      ⭐️ ${n.title.replace("!@#", "").replace("#@!", "").trim()}
+    </div>
+  `).join("");
 }
 
 function render() {
-  console.log(notes);
-  const search =
-    document.getElementById("search")
-    .value
-    .toLowerCase();
+  const search = document.getElementById("search").value.toLowerCase();
+  const list = document.getElementById("list");
 
-  const list =
-    document.getElementById("list");
+  const filtered = notes
+    .filter(n => !n.deleted && !n.delete)
+    .filter(n => !isNotice(n.title))
+    .filter(n => {
+      const t = (n.title || "").toLowerCase();
+      const c = (n.content || "").toLowerCase();
+      const a = (n.authorName || "").toLowerCase();
+      return t.includes(search) || c.includes(search) || a.includes(search);
+    });
 
   list.innerHTML = "";
 
-  const filtered = notes
-
-    .filter(n => !n.deleted && !n.delete)
-
-    .filter(n => !isNotice(n.title))
-
-    .filter(n => {
-
-      const title =
-        (n.title || "")
-        .toLowerCase();
-
-      const content =
-        (n.content || "")
-        .toLowerCase();
-
-      const author =
-        (n.authorName || "")
-        .toLowerCase();
-
-      return (
-
-        title.includes(search) ||
-        content.includes(search) ||
-        author.includes(search)
-
-      );
-
-    });
-
   if (filtered.length === 0) {
-
-    list.innerHTML = `
-      <div class="empty">
-        메모 없음
-      </div>
-    `;
-
+    list.innerHTML = `<div class="empty">메모 없음</div>`;
     return;
-
   }
 
   filtered.forEach(n => {
-
-    const div =
-      document.createElement("div");
-
+    const div = document.createElement("div");
     div.className = "memo";
 
     div.innerHTML = `
-
-      <input
-        type="checkbox"
+      <input type="checkbox"
         class="memo-check"
         value="${n.id}"
-        onclick="event.stopPropagation()"
-      >
+        onclick="event.stopPropagation()">
 
       <div class="memo-content">
-
-        <div class="title">
-          📄 ${n.title}
-        </div>
-
+        <div class="title">📄 ${n.title}</div>
         <div class="info">
-
           👤 ${n.authorName || "guest"}
-          ·
-          🕒 ${
-            n.createdAt
-            ? new Date(
-                n.createdAt
-              ).toLocaleString()
-            : "알 수 없음"
-          }
-
+          · 🕒 ${n.createdAt ? new Date(n.createdAt).toLocaleString() : "알 수 없음"}
         </div>
-
       </div>
-
     `;
 
     div.onclick = () => {
-
-      location.href =
-        "view.html?id=" + n.id;
-
+      location.href = "view.html?id=" + n.id;
     };
 
     list.appendChild(div);
-
   });
-
 }
 
-function handleSearchKey(event) {
-
-  if (event.key === "Enter") {
-
-    render();
-
-  }
-
+function handleSearchKey(e) {
+  if (e.key === "Enter") render();
 }
 
 function goHome() {
-
-  location.href =
-    "https://25withcoding.kr";
-
+  location.href = "https://25withcoding.kr";
 }
 
 function goCreate() {
-
-  location.href =
-    "create.html";
-
+  location.href = "create.html";
 }
 
 function goTrash() {
-
-  location.href =
-    "trash.html";
-
-}
-
-async function resetAll() {
-
-  const password =
-    prompt("초기화 마스터키 입력");
-
-  if (password !== MASTER_KEY) {
-
-    alert("마스터키 틀림");
-    return;
-
-  }
-
-  const ok =
-    confirm(
-      "모든 메모를 삭제할까요?"
-    );
-
-  if (!ok) return;
-
-  const snap =
-    await getDocs(
-      collection(db, "notes")
-    );
-
-  for (const d of snap.docs) {
-
-    await deleteDoc(
-      doc(db, "notes", d.id)
-    );
-
-  }
-
-  alert("초기화 완료!");
-
-  location.reload();
-
+  location.href = "trash.html";
 }
 
 function selectAll() {
-
-  const checks =
-    document.querySelectorAll(
-      ".memo-check"
-    );
-
-  checks.forEach(c => {
-
-    c.checked = true;
-
-  });
-
+  document.querySelectorAll(".memo-check").forEach(c => c.checked = true);
 }
 
 async function deleteSelected() {
+  const pw = prompt("마스터키 입력");
+  if (pw !== MASTER_KEY) return alert("마스터키 틀림");
 
-  const password =
-    prompt("선택 삭제 마스터키 입력");
+  const checks = document.querySelectorAll(".memo-check:checked");
+  if (!checks.length) return alert("선택된 메모 없음");
 
-  if (password !== MASTER_KEY) {
-
-    alert("마스터키 틀림");
-    return;
-
-  }
-
-  const checks =
-    document.querySelectorAll(
-      ".memo-check:checked"
-    );
-
-  if (checks.length === 0) {
-
-    alert("선택된 메모 없음");
-    return;
-
-  }
-
-  const ok =
-    confirm(
-      "선택한 메모를 삭제할까요?"
-    );
-
-  if (!ok) return;
+  if (!confirm("삭제할까요?")) return;
 
   for (const c of checks) {
-
-    await updateDoc(
-
-      doc(
-        db,
-        "notes",
-        c.value
-      ),
-
-      {
-        deleted: true
-      }
-
-    );
-
+    await updateDoc(doc(db, "notes", c.value), {
+      deleted: true
+    });
   }
 
-  alert("선택 삭제 완료!");
-
+  alert("삭제 완료");
   load();
+}
 
+async function resetAll() {
+  const pw = prompt("마스터키 입력");
+  if (pw !== MASTER_KEY) return alert("마스터키 틀림");
+
+  if (!confirm("전체 삭제할까요?")) return;
+
+  const snap = await getDocs(collection(db, "notes"));
+
+  for (const d of snap.docs) {
+    await deleteDoc(doc(db, "notes", d.id));
+  }
+
+  alert("초기화 완료");
+  location.reload();
 }
 
 window.goHome = goHome;
@@ -596,17 +348,9 @@ window.deleteSelected = deleteSelected;
 window.handleSearchKey = handleSearchKey;
 window.render = render;
 
-load();
+init();
 
 </script>
-
-<div id="version">
-  v26.6.27.1
-</div>
-
-<div id="warning">
-  부적절한 어휘는 조치될 수 있습니다.
-</div>
 
 </body>
 </html>
