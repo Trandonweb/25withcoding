@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-
+  <meta charset="UTF-8">
   <title>코딩과 함께라면_메모장</title>
 
   <style>
@@ -128,7 +128,6 @@
       font-size: 12px;
     }
   </style>
-
 </head>
 
 <body>
@@ -141,13 +140,11 @@
 </div>
 
 <div class="top-bar">
-
   <div class="left-buttons">
     <button onclick="goHome()">홈</button>
     <button onclick="goTrash()">휴지통</button>
     <button onclick="resetAll()">초기화</button>
   </div>
-
   <button onclick="goCreate()">+ 새 메모</button>
 </div>
 
@@ -167,7 +164,6 @@
 <div id="warning">부적절한 어휘는 조치될 수 있습니다.</div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
@@ -199,25 +195,35 @@ function isNotice(title) {
 }
 
 async function init() {
-  await signInAnonymously(auth);
-  await load();
+  try {
+    await signInAnonymously(auth);
+    await load();
+  } catch (error) {
+    console.error("초기화 중 오류 발생:", error);
+  }
 }
 
 async function load() {
-  const q = query(collection(db, "notes"), orderBy("createdAt", "desc"));
-  const snap = await getDocs(q);
+  try {
+    const q = query(collection(db, "notes"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
 
-  notes = snap.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
+    notes = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
 
-  render();
-  renderNotice();
+    render();
+    renderNotice();
+  } catch (error) {
+    console.error("데이터 로드 중 오류 발생:", error);
+    document.getElementById("list").innerHTML = `<div class="empty">데이터를 불러오지 못했습니다.</div>`;
+  }
 }
 
 function renderNotice() {
   const list = document.getElementById("notice-list");
+  if (!list) return;
 
   const notices = notes.filter(n =>
     !n.deleted && !n.delete && isNotice(n.title)
@@ -237,8 +243,10 @@ function renderNotice() {
 }
 
 function render() {
-  const search = document.getElementById("search").value.toLowerCase();
+  const searchInput = document.getElementById("search");
+  const search = searchInput ? searchInput.value.toLowerCase() : "";
   const list = document.getElementById("list");
+  if (!list) return;
 
   const filtered = notes
     .filter(n => !n.deleted && !n.delete)
@@ -339,6 +347,7 @@ async function resetAll() {
   location.reload();
 }
 
+// HTML 인라인 이벤트 바인딩을 위해 window 객체에 먼저 등록
 window.goHome = goHome;
 window.goCreate = goCreate;
 window.goTrash = goTrash;
@@ -348,8 +357,10 @@ window.deleteSelected = deleteSelected;
 window.handleSearchKey = handleSearchKey;
 window.render = render;
 
-init();
-
+// DOM이 완전히 로드된 후 안전하게 데이터 호출
+document.addEventListener("DOMContentLoaded", () => {
+  init();
+});
 </script>
 
 </body>
