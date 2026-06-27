@@ -279,7 +279,7 @@ async function load() {
     orderBy("createdAt", "desc")
   );
 
-  const snap = await getDocs(q);
+  const snap = await getDocs(collection(db, "notes"));
 
   notes = snap.docs.map(d => ({
     id: d.id,
