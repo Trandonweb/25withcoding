@@ -20,7 +20,7 @@ let aiDir = 1;
 
 let currentKey = null;
 let playerTimer = null;
-
+let aiTimer = null;
 export function openMaze(gameArea){
 
     gameAreaRef = gameArea;
@@ -259,8 +259,19 @@ function renderMaze(){
 function handleKey(e){
 
     currentKey = e.key;
-}
 
+    let dx = 0;
+    let dy = 0;
+
+    if(e.key==="ArrowUp") dy=-1;
+    if(e.key==="ArrowDown") dy=1;
+    if(e.key==="ArrowLeft") dx=-1;
+    if(e.key==="ArrowRight") dx=1;
+
+    if(dx || dy){
+        movePlayer(dx,dy);
+    }
+}
 function movePlayer(dx,dy){
 
     const nx = player.x + dx;
@@ -310,28 +321,30 @@ function startPlayer(){
             movePlayer(dx,dy);
         }
 
-    },300);
+    },100);
 }
 function startAI(){
 
+    if(aiTimer){
+        clearInterval(aiTimer);
+    }
+
     const speed = {
-        easy:300,
-        normal:300,
-        hard:300
+        easy:150,
+        normal:120,
+        hard:100
     };
 
-    const timer =
-        setInterval(()=>{
+    aiTimer = setInterval(()=>{
 
-            if(gameOver){
+        if(gameOver){
+            clearInterval(aiTimer);
+            return;
+        }
 
-                clearInterval(timer);
-                return;
-            }
+        aiStep();
 
-            aiStep();
-
-        },speed[difficulty]);
+    }, speed[difficulty]);
 }
 function aiStep(){
 
