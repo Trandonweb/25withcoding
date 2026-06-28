@@ -331,8 +331,8 @@ function startAI(){
 
     const speed = {
         easy:200,
-        normal:150,
-        hard:100
+        normal:190,
+        hard:180
     };
 
     aiTimer = setInterval(()=>{
