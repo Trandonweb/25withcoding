@@ -345,14 +345,69 @@ function aiEasy(){
 }
 
 function aiNormal(){
-    moveAIByPath(
+
+    const shortest =
         bfs(
             ai.x,
             ai.y,
             finish.x,
             finish.y
-        )
-    );
+        );
+
+    if(shortest.length < 2){
+        return;
+    }
+
+    // 10% 확률로 일부러 다른 길 탐색
+    if(Math.random() < 0.10){
+
+        const dirs = shuffleCopy([
+            [1,0],
+            [-1,0],
+            [0,1],
+            [0,-1]
+        ]);
+
+        for(const [dx,dy] of dirs){
+
+            const nx = ai.x + dx;
+            const ny = ai.y + dy;
+
+            if(!canMove(nx,ny)){
+                continue;
+            }
+
+            // 현재 최단경로의 다음 칸이면 의미 없음
+            if(
+                nx === shortest[1].x &&
+                ny === shortest[1].y
+            ){
+                continue;
+            }
+
+            // 여기서도 도착 가능한 길인지 확인
+            const test =
+                bfs(
+                    nx,
+                    ny,
+                    finish.x,
+                    finish.y
+                );
+
+            if(test.length){
+
+                ai.x = nx;
+                ai.y = ny;
+
+                renderMaze();
+                checkFinish();
+                return;
+            }
+        }
+    }
+
+    // 대부분은 최단경로 진행
+    moveAIByPath(shortest);
 }
 
 function aiHard(){
