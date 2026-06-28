@@ -330,35 +330,22 @@ function startAI(){
     }
 
     const speed = {
-        easy:200,
-        normal:190,
-        hard:180
+        easy:250,
+        normal:180,
+        hard:140
     };
 
     aiTimer = setInterval(()=>{
 
         if(gameOver){
             clearInterval(aiTimer);
+            aiTimer = null;
             return;
         }
 
         aiStep();
 
     }, speed[difficulty]);
-}
-function aiStep(){
-
-    if(difficulty === "easy"){
-        aiEasy();
-        return;
-    }
-
-    if(difficulty === "normal"){
-        aiNormal();
-        return;
-    }
-
-    aiHard();
 }
 
 function aiEasy(){
