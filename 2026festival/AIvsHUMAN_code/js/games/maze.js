@@ -25,37 +25,48 @@ export function openMaze(gameArea){
 
     gameAreaRef = gameArea;
 
-    gameArea.innerHTML = `
-        <div class="game-title">
-            미로
-        </div>
+    showDifficultyScreen();
+}
+function showDifficultyScreen(){
 
-        <div style="
-            max-width:600px;
-            margin:auto;
-            display:flex;
-            flex-direction:column;
-            gap:20px;
-        ">
-            <button class="game-select-btn"
-                onclick="window.startMaze('easy')">
-                쉬움
-            </button>
+    gameAreaRef.innerHTML = `
+        <div style="text-align:center">
+            <h2>미로</h2>
+            <p>난이도를 선택하세요</p>
 
-            <button class="game-select-btn"
-                onclick="window.startMaze('normal')">
-                보통
-            </button>
+            <div style="
+                display:flex;
+                flex-direction:column;
+                gap:15px;
+                max-width:300px;
+                margin:20px auto;
+            ">
 
-            <button class="game-select-btn"
-                onclick="window.startMaze('hard')">
-                어려움
-            </button>
+                <button
+                    onclick="window.__mazeStart('easy')"
+                    class="game-select-btn">
+                    쉬움
+                </button>
+
+                <button
+                    onclick="window.__mazeStart('normal')"
+                    class="game-select-btn">
+                    보통
+                </button>
+
+                <button
+                    onclick="window.__mazeStart('hard')"
+                    class="game-select-btn">
+                    어려움
+                </button>
+
+            </div>
         </div>
     `;
-}
 
-window.startMaze = function(level){
+    window.__mazeStart = startMaze;
+}
+function startMaze(level){
 
     difficulty = level;
 
@@ -627,3 +638,4 @@ function shuffleCopy(arr){
 
     return copy;
 }
+window.__mazeStart = startMaze;
