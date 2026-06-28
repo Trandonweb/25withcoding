@@ -321,7 +321,7 @@ function startPlayer(){
             movePlayer(dx,dy);
         }
 
-    },100);
+    },50);
 }
 function startAI(){
 
