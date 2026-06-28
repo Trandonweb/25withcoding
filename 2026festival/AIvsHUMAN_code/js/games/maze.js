@@ -1,8 +1,9 @@
 let gameAreaRef = null;
 
-const SIZE = 15;
+let SIZE = 15;
 
 let maze = [];
+
 let player = { x: 1, y: 1 };
 let ai = { x: 1, y: 1 };
 
@@ -55,13 +56,35 @@ window.startMaze = function(level){
 
     difficulty = level;
 
+    if(level === "easy"){
+        SIZE = 15;
+    }
+    else if(level === "normal"){
+        SIZE = 21;
+    }
+    else{
+        SIZE = 31;
+    }
+
+    finish = {
+        x: SIZE - 2,
+        y: SIZE - 2
+    };
+
     generateMaze();
 
-    player = { x:1, y:1 };
-    ai = { x:1, y:1 };
-    
+    player = {
+        x:1,
+        y:1
+    };
+
+    ai = {
+        x:1,
+        y:1
+    };
+
     aiDir = 1;
-    
+
     gameOver = false;
 
     renderMaze();
@@ -83,7 +106,6 @@ function generateMaze(){
     maze[1][1] = 0;
     maze[finish.y][finish.x] = 0;
 }
-
 function carve(x,y){
 
     maze[y][x] = 0;
@@ -105,15 +127,15 @@ function carve(x,y){
         if(
             nx > 0 &&
             ny > 0 &&
-            nx < SIZE-1 &&
-            ny < SIZE-1 &&
+            nx < SIZE - 1 &&
+            ny < SIZE - 1 &&
             maze[ny][nx] === 1
         ){
 
             maze[
-                y + dy/2
+                y + dy / 2
             ][
-                x + dx/2
+                x + dx / 2
             ] = 0;
 
             carve(nx,ny);
@@ -123,11 +145,11 @@ function carve(x,y){
 
 function shuffle(arr){
 
-    for(let i=arr.length-1;i>0;i--){
+    for(let i = arr.length - 1; i > 0; i--){
 
         const j =
             Math.floor(
-                Math.random()*(i+1)
+                Math.random() * (i + 1)
             );
 
         [arr[i],arr[j]]
@@ -138,13 +160,18 @@ function shuffle(arr){
 
 function renderMaze(){
 
+    const cellSize =
+        SIZE === 15 ? 24 :
+        SIZE === 21 ? 18 :
+        12;
+
     let html = `
         <div
             id="mazeBoard"
             style="
                 display:grid;
                 grid-template-columns:
-                    repeat(${SIZE},24px);
+                    repeat(${SIZE},${cellSize}px);
                 justify-content:center;
                 margin-top:20px;
             ">
@@ -184,8 +211,8 @@ function renderMaze(){
             html += `
                 <div
                     style="
-                        width:24px;
-                        height:24px;
+                        width:${cellSize}px;
+                        height:${cellSize}px;
                         background:${color};
                         border:1px solid #ddd;
                     ">
@@ -210,18 +237,30 @@ function renderMaze(){
 
     gameAreaRef.innerHTML = html;
 }
-
 function handleKey(e){
 
-    if(gameOver) return;
+    if(gameOver){
+        return;
+    }
 
     let dx = 0;
     let dy = 0;
 
-    if(e.key==="ArrowUp") dy=-1;
-    if(e.key==="ArrowDown") dy=1;
-    if(e.key==="ArrowLeft") dx=-1;
-    if(e.key==="ArrowRight") dx=1;
+    if(e.key === "ArrowUp"){
+        dy = -1;
+    }
+
+    if(e.key === "ArrowDown"){
+        dy = 1;
+    }
+
+    if(e.key === "ArrowLeft"){
+        dx = -1;
+    }
+
+    if(e.key === "ArrowRight"){
+        dx = 1;
+    }
 
     movePlayer(dx,dy);
 }
@@ -232,17 +271,15 @@ function movePlayer(dx,dy){
     const ny = player.y + dy;
 
     if(
-        nx<0 ||
-        ny<0 ||
-        nx>=SIZE ||
-        ny>=SIZE
+        nx < 0 ||
+        ny < 0 ||
+        nx >= SIZE ||
+        ny >= SIZE
     ){
         return;
     }
 
-    if(
-        maze[ny][nx]===1
-    ){
+    if(maze[ny][nx] === 1){
         return;
     }
 
@@ -275,7 +312,6 @@ function startAI(){
 
         },speed[difficulty]);
 }
-
 function aiStep(){
 
     if(difficulty === "easy"){
@@ -288,10 +324,7 @@ function aiStep(){
         return;
     }
 
-    if(difficulty === "hard"){
-        aiHard();
-        return;
-    }
+    aiHard();
 }
 
 function aiEasy(){
@@ -358,7 +391,7 @@ function aiNormal(){
         return;
     }
 
-    // 10% 확률로 일부러 다른 길 탐색
+    // 10% 확률로 다른 길 선택
     if(Math.random() < 0.10){
 
         const dirs = shuffleCopy([
@@ -377,7 +410,6 @@ function aiNormal(){
                 continue;
             }
 
-            // 현재 최단경로의 다음 칸이면 의미 없음
             if(
                 nx === shortest[1].x &&
                 ny === shortest[1].y
@@ -385,7 +417,6 @@ function aiNormal(){
                 continue;
             }
 
-            // 여기서도 도착 가능한 길인지 확인
             const test =
                 bfs(
                     nx,
@@ -406,11 +437,11 @@ function aiNormal(){
         }
     }
 
-    // 대부분은 최단경로 진행
     moveAIByPath(shortest);
 }
 
 function aiHard(){
+
     moveAIByPath(
         bfs(
             ai.x,
@@ -434,20 +465,24 @@ function moveAIByPath(path){
 
     checkFinish();
 }
-
 function bfs(sx,sy,tx,ty){
 
     const q = [
         {
             x:sx,
             y:sy,
-            path:[{x:sx,y:sy}]
+            path:[
+                {
+                    x:sx,
+                    y:sy
+                }
+            ]
         }
     ];
 
     const visited =
         new Set([
-            sx+","+sy
+            sx + "," + sy
         ]);
 
     while(q.length){
@@ -456,8 +491,8 @@ function bfs(sx,sy,tx,ty){
             q.shift();
 
         if(
-            cur.x===tx &&
-            cur.y===ty
+            cur.x === tx &&
+            cur.y === ty
         ){
             return cur.path;
         }
@@ -478,19 +513,19 @@ function bfs(sx,sy,tx,ty){
                 cur.y + dy;
 
             const key =
-                nx+","+ny;
+                nx + "," + ny;
 
             if(
-                nx<0 ||
-                ny<0 ||
-                nx>=SIZE ||
-                ny>=SIZE
+                nx < 0 ||
+                ny < 0 ||
+                nx >= SIZE ||
+                ny >= SIZE
             ){
                 continue;
             }
 
             if(
-                maze[ny][nx]===1
+                maze[ny][nx] === 1
             ){
                 continue;
             }
@@ -504,8 +539,10 @@ function bfs(sx,sy,tx,ty){
             visited.add(key);
 
             q.push({
+
                 x:nx,
                 y:ny,
+
                 path:[
                     ...cur.path,
                     {
@@ -519,12 +556,11 @@ function bfs(sx,sy,tx,ty){
 
     return [];
 }
-
 function checkFinish(){
 
     if(
-        player.x===finish.x &&
-        player.y===finish.y
+        player.x === finish.x &&
+        player.y === finish.y
     ){
 
         gameOver = true;
@@ -535,8 +571,8 @@ function checkFinish(){
     }
 
     if(
-        ai.x===finish.x &&
-        ai.y===finish.y
+        ai.x === finish.x &&
+        ai.y === finish.y
     ){
 
         gameOver = true;
@@ -557,4 +593,27 @@ function canMove(x,y){
     }
 
     return maze[y][x] === 0;
+}
+
+function shuffleCopy(arr){
+
+    const copy = [...arr];
+
+    for(
+        let i = copy.length - 1;
+        i > 0;
+        i--
+    ){
+
+        const j =
+            Math.floor(
+                Math.random() * (i + 1)
+            );
+
+        [copy[i],copy[j]]
+            =
+        [copy[j],copy[i]];
+    }
+
+    return copy;
 }
