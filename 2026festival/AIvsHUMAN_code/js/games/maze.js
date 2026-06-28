@@ -330,8 +330,8 @@ function startAI(){
     }
 
     const speed = {
-        easy:150,
-        normal:120,
+        easy:200,
+        normal:150,
         hard:100
     };
 
