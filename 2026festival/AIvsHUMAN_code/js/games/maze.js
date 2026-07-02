@@ -1,3 +1,4 @@
+console.log("★★★★★ NEW MAZE.JS LOADED ★★★★★");
 let gameAreaRef = null;
 
 let SIZE = 15;
