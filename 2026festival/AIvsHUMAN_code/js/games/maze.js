@@ -67,7 +67,7 @@ function showDifficultyScreen(){
     window.__mazeStart = startMaze;
 }
 function startMaze(level){
-
+    console.log("startMaze");
     difficulty = level;
 
     if(level === "easy"){
@@ -324,7 +324,7 @@ function startPlayer(){
     },50);
 }
 function startAI(){
-
+    console.log("startAI");
     if(aiTimer){
         clearInterval(aiTimer);
     }
@@ -348,7 +348,7 @@ function startAI(){
     }, speed[difficulty]);
 }
 function aiStep(){
-
+    console.log("aiStep");
     if(difficulty === "easy"){
         aiEasy();
         return;
