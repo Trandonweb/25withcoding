@@ -168,34 +168,57 @@ function showCategory(type){
 }
 
 function openGame(game){
+
     document.getElementById("categoryScreen").style.display="none";
     document.getElementById("gameScreen").style.display="block";
 
-    document.getElementById("gameTitle").textContent=game;
+    document.getElementById("gameTitle").textContent = game;
 
-    const gameArea=document.getElementById("gameArea");
+    const gameArea = document.getElementById("gameArea");
 
-    if(game==="틱택토"){
+    if(game === "틱택토"){
+
         import("./js/games/tictactoe.js")
-.then(m=>{
+        .then(m=>{
 
-    currentGameModule = m;
+            currentGameModule = m;
 
-    m.openTicTacToe(gameArea);
-});
+            m.openTicTacToe(gameArea);
+
+        });
+
         return;
     }
+
     if(game === "미로"){
 
-    import("./js/games/maze.js").then(m=>{
-        m.openMaze(
-            document.getElementById("gameArea")
-        );
-    });
+        import("./js/games/maze.js")
+        .then(m=>{
 
-    return;
-}
-    gameArea.innerHTML=`
+            currentGameModule = m;
+
+            m.openMaze(gameArea);
+
+        });
+
+        return;
+    }
+
+    if(game === "숫자 맞추기"){
+
+        import("./js/games/number.js")
+        .then(m=>{
+
+            currentGameModule = m;
+
+            m.openNumber(gameArea);
+
+        });
+
+        return;
+    }
+
+    gameArea.innerHTML = `
         <div>${game}</div>
         <div>아직 구현되지 않았습니다.</div>
     `;
