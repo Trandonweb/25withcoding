@@ -1,22 +1,23 @@
 let gameAreaRef = null;
 
-let difficulty = "easy";
-
 let target = 0;
-
-let playerMin = 1;
-let playerMax = 100;
-
-let aiMin = 1;
-let aiMax = 100;
 
 let playerCount = 0;
 let aiCount = 0;
 
 let gameOver = false;
 
+let difficulty = "easy";
+
+let aiMin = 1;
+let aiMax = 100;
+
+let aiHistory = [];
+let playerHistory = [];
+
 let aiTimer = null;
 
+// ---------------- ENTRY ----------------
 export function openNumber(gameArea){
 
     gameAreaRef = gameArea;
@@ -24,296 +25,231 @@ export function openNumber(gameArea){
     showDifficulty();
 }
 
+// ---------------- DIFFICULTY ----------------
 function showDifficulty(){
 
     gameAreaRef.innerHTML = `
         <div style="text-align:center">
             <h2>숫자 맞히기</h2>
-            <p>AI 난이도를 선택하세요.</p>
 
-            <div style="
-                display:flex;
-                flex-direction:column;
-                gap:15px;
-                max-width:300px;
-                margin:auto;
-            ">
-
-                <button class="game-select-btn"
-                    onclick="window.__numStart('easy')">
-                    쉬움
-                </button>
-
-                <button class="game-select-btn"
-                    onclick="window.__numStart('normal')">
-                    보통
-                </button>
-
-                <button class="game-select-btn"
-                    onclick="window.__numStart('hard')">
-                    어려움
-                </button>
-
-            </div>
+            <button onclick="window.__numStart('easy')" class="game-select-btn">쉬움</button>
+            <button onclick="window.__numStart('normal')" class="game-select-btn">보통</button>
+            <button onclick="window.__numStart('hard')" class="game-select-btn">어려움</button>
         </div>
     `;
 
     window.__numStart = startGame;
 }
 
+// ---------------- START ----------------
 function startGame(level){
 
     difficulty = level;
 
     target = Math.floor(Math.random()*100)+1;
 
-    playerMin = 1;
-    playerMax = 100;
-
-    aiMin = 1;
-    aiMax = 100;
-
     playerCount = 0;
     aiCount = 0;
 
     gameOver = false;
+
+    aiMin = 1;
+    aiMax = 100;
+
+    aiHistory = [];
+    playerHistory = [];
 
     render();
 
     startAI();
 }
 
+// ---------------- RENDER UI ----------------
 function render(){
 
+    let aiChat = aiHistory.map(v=>`<div class="bubble ai">??</div>`).join("");
+
+    let playerChat = playerHistory.map(v=>`<div class="bubble me">${v}</div>`).join("");
+
     gameAreaRef.innerHTML = `
-        <div style="text-align:center">
+        <div style="height:100%;display:flex;flex-direction:column;">
 
-            <h2>숫자 맞히기</h2>
+            <div style="text-align:center;margin-bottom:10px;">
+                <h3>숫자 맞히기</h3>
+                <p>횟수로 경쟁</p>
+            </div>
 
-            <p>
-                범위 :
-                <b>${playerMin}</b>
-                ~
-                <b>${playerMax}</b>
-            </p>
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                height:300px;
+                position:relative;
+            ">
 
-            <input
-                id="playerInput"
-                type="number"
-                min="${playerMin}"
-                max="${playerMax}"
-                style="
-                    padding:10px;
-                    font-size:18px;
-                    width:120px;
-                ">
+                <!-- AI -->
+                <div style="width:45%;">
+                    ${aiChat}
+                </div>
 
-            <br><br>
+                <!-- CENTER LINE -->
+                <div style="
+                    width:2px;
+                    background:#ddd;
+                    position:absolute;
+                    left:50%;
+                    top:0;
+                    bottom:0;
+                "></div>
 
-            <button
-                class="game-select-btn"
-                onclick="window.__playerGuess()">
-                확인
-            </button>
+                <!-- PLAYER -->
+                <div style="width:45%;text-align:right;">
+                    ${playerChat}
+                </div>
 
-            <hr>
+            </div>
 
-            <p>
-                플레이어 :
-                <span id="playerInfo">
-                    ${playerCount}회
-                </span>
-            </p>
+            <div style="text-align:center;margin-top:20px;">
+                <button onclick="window.__guess(1)">1</button>
+                <button onclick="window.__guess(50)">50</button>
+                <button onclick="window.__guess(100)">100</button>
+            </div>
 
-            <p>
-                AI :
-                <span id="aiInfo">
-                    ${aiCount}회
-                </span>
-            </p>
+            <div id="card" style="text-align:center;margin-top:20px;font-size:2rem;">
+                🂠
+            </div>
 
-            <p id="msg"></p>
+            <div id="status" style="text-align:center;margin-top:10px;"></div>
 
         </div>
     `;
 
-    window.__playerGuess = playerGuess;
+    window.__guess = playerGuess;
 }
 
-function playerGuess(){
+// ---------------- PLAYER GUESS ----------------
+function playerGuess(n){
 
     if(gameOver) return;
 
-    const input =
-        document.getElementById("playerInput");
-
-    const guess =
-        Number(input.value);
-
-    if(
-        isNaN(guess) ||
-        guess<playerMin ||
-        guess>playerMax
-    ){
-        return;
-    }
-
     playerCount++;
 
-    if(guess===target){
+    playerHistory.push(n);
 
-        finish("PLAYER WIN");
-
-        return;
+    if(n === target){
+        revealCard();
+        return finish("PLAYER WIN");
     }
 
-    if(guess<target){
-
-        playerMin=guess+1;
-
-        document.getElementById("msg").innerHTML=
-            "UP";
-    }
-    else{
-
-        playerMax=guess-1;
-
-        document.getElementById("msg").innerHTML=
-            "DOWN";
+    if(n < target){
+        pushStatus("UP");
+    }else{
+        pushStatus("DOWN");
     }
 
     render();
 }
+
+// ---------------- AI ----------------
 function startAI(){
 
-    if(aiTimer){
-        clearInterval(aiTimer);
-    }
+    if(aiTimer) clearInterval(aiTimer);
 
     aiTimer = setInterval(()=>{
 
         if(gameOver){
-
             clearInterval(aiTimer);
-            aiTimer = null;
             return;
         }
 
-        aiTurn();
+        aiGuess();
 
-    },700);
+    }, 900);
 }
 
-function aiTurn(){
+function aiGuess(){
 
     let guess;
 
-    if(difficulty==="easy"){
+    if(difficulty === "easy"){
 
-        guess =
-            Math.floor(
-                Math.random()*
-                (aiMax-aiMin+1)
-            ) + aiMin;
+        guess = Math.floor(Math.random()*(aiMax-aiMin+1))+aiMin;
     }
 
-    else if(difficulty==="normal"){
+    else if(difficulty === "normal"){
 
-        const center =
-            Math.floor(
-                (aiMin+aiMax)/2
-            );
+        let mid = Math.floor((aiMin+aiMax)/2);
 
-        const range =
-            Math.max(
-                1,
-                Math.floor(
-                    (aiMax-aiMin)/4
-                )
-            );
+        let spread = Math.floor((aiMax-aiMin)/4);
 
-        const min =
-            Math.max(
-                aiMin,
-                center-range
-            );
+        let min = Math.max(aiMin, mid-spread);
+        let max = Math.min(aiMax, mid+spread);
 
-        const max =
-            Math.min(
-                aiMax,
-                center+range
-            );
-
-        guess =
-            Math.floor(
-                Math.random()*
-                (max-min+1)
-            ) + min;
+        guess = Math.floor(Math.random()*(max-min+1))+min;
     }
 
     else{
 
-        guess =
-            Math.floor(
-                (aiMin+aiMax)/2
-            );
+        guess = Math.floor((aiMin+aiMax)/2);
     }
 
     aiCount++;
+    aiHistory.push(guess);
 
-    document.getElementById("aiInfo").innerHTML =
-        aiCount+"회";
-
-    if(guess===target){
-
-        finish("AI WIN");
-
-        return;
+    if(guess === target){
+        revealCard();
+        return finish("AI WIN");
     }
 
-    if(guess<target){
-
+    if(guess < target){
         aiMin = guess+1;
-    }
-    else{
-
+        pushStatusAI("UP");
+    }else{
         aiMax = guess-1;
+        pushStatusAI("DOWN");
+    }
+
+    render();
+}
+
+// ---------------- STATUS ----------------
+function pushStatus(text){
+    let el = document.getElementById("status");
+    if(el) el.innerHTML = `<div>${text}</div>`;
+}
+
+function pushStatusAI(text){
+    let el = document.getElementById("status");
+    if(el) el.innerHTML = `<div>AI: ${text}</div>`;
+}
+
+// ---------------- CARD REVEAL ----------------
+function revealCard(){
+
+    let el = document.getElementById("card");
+
+    if(el){
+        el.innerHTML = `🃏<br><b>${target}</b>`;
     }
 }
+
+// ---------------- FINISH ----------------
 function finish(msg){
 
     gameOver = true;
 
-    if(aiTimer){
-        clearInterval(aiTimer);
-        aiTimer = null;
-    }
+    if(aiTimer) clearInterval(aiTimer);
 
     gameAreaRef.innerHTML = `
         <div style="text-align:center">
 
             <h2>${msg}</h2>
 
-            <p>
-                정답 :
-                <b>${target}</b>
-            </p>
+            <p>정답: ${target}</p>
 
-            <p>
-                플레이어 :
-                ${playerCount}회
-            </p>
+            <p>PLAYER: ${playerCount}회</p>
+            <p>AI: ${aiCount}회</p>
 
-            <p>
-                AI :
-                ${aiCount}회
-            </p>
-
-            <br>
-
-            <button
-                class="game-select-btn"
-                onclick="window.__numRestart()">
+            <button onclick="window.__numRestart()" class="game-select-btn">
                 다시하기
             </button>
 
@@ -323,6 +259,7 @@ function finish(msg){
     window.__numRestart = showDifficulty;
 }
 
+// ---------------- DESTROY ----------------
 export function destroy(){
 
     gameOver = true;
@@ -332,5 +269,3 @@ export function destroy(){
         aiTimer = null;
     }
 }
-
-window.__numStart = startGame;
