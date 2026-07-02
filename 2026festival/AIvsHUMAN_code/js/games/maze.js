@@ -600,7 +600,7 @@ function checkFinish(){
 
         gameOver = true;
 
-        alert("PLAYER WIN");
+        endGame("PLAYER WIN");
 
         return;
     }
@@ -612,7 +612,7 @@ function checkFinish(){
 
         gameOver = true;
 
-        alert("AI WIN");
+        endGame("AI WIN");
     }
 }
 
@@ -653,3 +653,36 @@ function shuffleCopy(arr){
     return copy;
 }
 window.__mazeStart = startMaze;
+function endGame(msg){
+
+    gameOver = true;
+
+    if(playerTimer){
+        clearInterval(playerTimer);
+        playerTimer = null;
+    }
+
+    if(aiTimer){
+        clearInterval(aiTimer);
+        aiTimer = null;
+    }
+
+    const p = document.createElement("div");
+
+    p.style.textAlign = "center";
+    p.style.marginTop = "20px";
+
+    p.innerHTML = `
+        <h3>${msg}</h3>
+
+        <button
+            class="game-select-btn"
+            onclick="window.__mazeRestart()">
+            다시하기
+        </button>
+    `;
+
+    gameAreaRef.appendChild(p);
+
+    window.__mazeRestart = () => showDifficultyScreen();
+}
