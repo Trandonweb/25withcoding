@@ -347,7 +347,20 @@ function startAI(){
 
     }, speed[difficulty]);
 }
+function aiStep(){
 
+    if(difficulty === "easy"){
+        aiEasy();
+        return;
+    }
+
+    if(difficulty === "normal"){
+        aiNormal();
+        return;
+    }
+
+    aiHard();
+}
 function aiEasy(){
 
     const dirs = [
