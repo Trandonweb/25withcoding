@@ -3,7 +3,6 @@ let gameAreaRef = null;
 let target = 0;
 
 let gameOver = false;
-
 let difficulty = "easy";
 
 let playerHistory = [];
@@ -14,11 +13,12 @@ let aiMax = 100;
 
 let aiThinking = false;
 
+let playerDone = false;
+let aiDone = false;
+
 // ---------------- ENTRY ----------------
 export function openNumber(gameArea){
-
     gameAreaRef = gameArea;
-
     showDifficulty();
 }
 
@@ -57,29 +57,47 @@ function startGame(level){
     aiMin = 1;
     aiMax = 100;
 
-    renderChatUI();
+    playerDone = false;
+    aiDone = false;
+
+    renderUI();
+
+    addSystem("게임 시작!");
+    addAIMessage("??");
 }
 
 // ---------------- UI ----------------
-function renderChatUI(){
+function renderUI(){
 
     gameAreaRef.innerHTML = `
-        <div style="height:100%;display:flex;flex-direction:column;">
+        <div style="display:flex;flex-direction:column;height:100%">
 
-            <!-- CHAT AREA -->
-            <div id="chat"
-                style="flex:1;overflow:auto;padding:10px;background:#f5f5f5;border-radius:12px">
+            <!-- CHAT WRAPPER -->
+            <div style="display:flex;flex:1;gap:10px;">
+
+                <!-- AI SIDE -->
+                <div style="flex:1;display:flex;flex-direction:column;background:#f6f6f6;border-radius:12px;padding:10px;overflow:auto" id="aiChat">
+                    <b style="text-align:center">AI</b>
+                </div>
+
+                <!-- CENTER LINE -->
+                <div style="width:2px;background:#ddd"></div>
+
+                <!-- PLAYER SIDE -->
+                <div style="flex:1;display:flex;flex-direction:column;background:#f9f9f9;border-radius:12px;padding:10px;overflow:auto" id="playerChat">
+                    <b style="text-align:center">YOU</b>
+                </div>
 
             </div>
 
             <!-- INPUT -->
-            <div style="display:flex;margin-top:10px;gap:10px">
+            <div style="display:flex;gap:10px;margin-top:10px">
 
                 <input id="inputBox"
                     style="flex:1;padding:10px;border-radius:10px;border:1px solid #ccc"
-                    placeholder="숫자 입력 (1~100)">
+                    placeholder="1~100 숫자 입력">
 
-                <button onclick="window.__send()" class="game-select-btn">➤</button>
+                <button class="game-select-btn" onclick="window.__send()">➤</button>
 
             </div>
 
@@ -92,17 +110,14 @@ function renderChatUI(){
         .addEventListener("keydown", e=>{
             if(e.key==="Enter") playerSend();
         });
-
-    addAIMessage("??");
 }
 
 // ---------------- PLAYER ----------------
 function playerSend(){
 
-    if(gameOver) return;
+    if(gameOver || playerDone) return;
 
     const input = document.getElementById("inputBox");
-
     let value = Number(input.value);
 
     if(!value || value < 1 || value > 100) return;
@@ -114,23 +129,25 @@ function playerSend(){
     addPlayerMessage(value);
 
     if(value === target){
+        playerDone = true;
         revealCard();
-        return finish("PLAYER WIN");
+        checkFinish();
+        return;
     }
 
     if(value < target){
-        addSystem("UP");
+        addPlayerMessage("UP");
     } else {
-        addSystem("DOWN");
+        addPlayerMessage("DOWN");
     }
 
-    setTimeout(aiTurn, 500);
+    setTimeout(aiTurn, 400);
 }
 
 // ---------------- AI ----------------
 function aiTurn(){
 
-    if(gameOver || aiThinking) return;
+    if(gameOver || aiThinking || aiDone) return;
 
     aiThinking = true;
 
@@ -141,7 +158,6 @@ function aiTurn(){
     }
 
     else if(difficulty === "normal"){
-
         let mid = Math.floor((aiMin+aiMax)/2);
         let spread = Math.floor((aiMax-aiMin)/4);
 
@@ -157,77 +173,85 @@ function aiTurn(){
 
     aiHistory.push(guess);
 
-    addAIMessage(guess);
+    addAIMessage("??"); // 비밀 유지
 
     setTimeout(()=>{
 
         if(guess === target){
+            aiDone = true;
             revealCard();
-            return finish("AI WIN");
+            checkFinish();
+            return;
         }
 
         if(guess < target){
             aiMin = guess+1;
-            addSystem("AI UP");
+            addAIMessage("UP");
         } else {
             aiMax = guess-1;
-            addSystem("AI DOWN");
+            addAIMessage("DOWN");
         }
 
         aiThinking = false;
 
-    }, 400);
+    }, 300);
 }
 
-// ---------------- CHAT UI ----------------
+// ---------------- UI MESSAGES ----------------
 function addPlayerMessage(text){
-    addMessage("right", text, "you");
+    const el = document.getElementById("playerChat");
+    pushMsg(el, text);
 }
 
 function addAIMessage(text){
-    addMessage("left", text, "ai");
+    const el = document.getElementById("aiChat");
+    pushMsg(el, text);
 }
 
 function addSystem(text){
-    addMessage("center", text, "sys");
+    const el = document.getElementById("playerChat");
+    pushMsg(el, text, true);
 }
 
-function addMessage(side, text, type){
-
-    const chat = document.getElementById("chat");
+function pushMsg(container, text, sys=false){
 
     const div = document.createElement("div");
-
     div.style.margin = "6px 0";
 
-    if(type === "sys"){
-        div.style.textAlign = "center";
-        div.innerHTML = `<span style="background:#ddd;padding:4px 10px;border-radius:8px">${text}</span>`;
+    if(sys){
+        div.innerHTML = `<div style="text-align:center;color:#666">${text}</div>`;
+    } else {
+        div.innerHTML = `<div style="padding:6px 10px;background:#ddd;border-radius:10px;display:inline-block">${text}</div>`;
     }
 
-    else if(side === "right"){
-        div.style.textAlign = "right";
-        div.innerHTML = `<span style="background:#4cafef;color:white;padding:6px 10px;border-radius:12px">${text}</span>`;
-    }
-
-    else{
-        div.style.textAlign = "left";
-        div.innerHTML = `<span style="background:#eee;padding:6px 10px;border-radius:12px">${text}</span>`;
-    }
-
-    chat.appendChild(div);
-
-    chat.scrollTop = chat.scrollHeight;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
 }
 
 // ---------------- CARD ----------------
 function revealCard(){
-
-    addSystem(`🃏 정답: ${target}`);
+    addSystem(`🃏 정답 공개: ${target}`);
 }
 
-// ---------------- FINISH ----------------
-function finish(msg){
+// ---------------- FINISH CONTROL ----------------
+function checkFinish(){
+
+    if(playerDone && aiDone){
+        finish();
+    }
+
+    // 한쪽만 끝나도 기다림
+    if(playerDone && !aiDone){
+        addSystem("⏳ AI 계산 중...");
+    }
+
+    if(aiDone && !playerDone){
+        addSystem("⏳ 플레이어 입력 대기...");
+    }
+}
+
+// ---------------- END ----------------
+function finish(){
 
     gameOver = true;
 
@@ -239,6 +263,9 @@ function finish(msg){
     if(playerScore < aiScore) result = "PLAYER WIN";
     if(playerScore > aiScore) result = "AI WIN";
 
+    // AI 로그 공개
+    const aiLog = aiHistory.join(", ");
+
     gameAreaRef.innerHTML = `
         <div style="text-align:center">
 
@@ -246,6 +273,11 @@ function finish(msg){
 
             <p>PLAYER: ${playerScore}회</p>
             <p>AI: ${aiScore}회</p>
+
+            <details style="margin-top:15px">
+                <summary>AI 기록 보기</summary>
+                <p>${aiLog}</p>
+            </details>
 
             <button class="game-select-btn" onclick="location.reload()">
                 다시하기
