@@ -2,20 +2,17 @@ let gameAreaRef = null;
 
 let target = 0;
 
-let playerCount = 0;
-let aiCount = 0;
-
 let gameOver = false;
 
 let difficulty = "easy";
 
+let playerHistory = [];
+let aiHistory = [];
+
 let aiMin = 1;
 let aiMax = 100;
 
-let aiHistory = [];
-let playerHistory = [];
-
-let aiTimer = null;
+let aiThinking = false;
 
 // ---------------- ENTRY ----------------
 export function openNumber(gameArea){
@@ -32,13 +29,17 @@ function showDifficulty(){
         <div style="text-align:center">
             <h2>숫자 맞히기</h2>
 
-            <button onclick="window.__numStart('easy')" class="game-select-btn">쉬움</button>
-            <button onclick="window.__numStart('normal')" class="game-select-btn">보통</button>
-            <button onclick="window.__numStart('hard')" class="game-select-btn">어려움</button>
+            <div style="display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto">
+
+                <button class="game-select-btn" onclick="window.__start('easy')">쉬움</button>
+                <button class="game-select-btn" onclick="window.__start('normal')">보통</button>
+                <button class="game-select-btn" onclick="window.__start('hard')">어려움</button>
+
+            </div>
         </div>
     `;
 
-    window.__numStart = startGame;
+    window.__start = startGame;
 }
 
 // ---------------- START ----------------
@@ -48,137 +49,100 @@ function startGame(level){
 
     target = Math.floor(Math.random()*100)+1;
 
-    playerCount = 0;
-    aiCount = 0;
-
     gameOver = false;
+
+    playerHistory = [];
+    aiHistory = [];
 
     aiMin = 1;
     aiMax = 100;
 
-    aiHistory = [];
-    playerHistory = [];
-
-    render();
-
-    startAI();
+    renderChatUI();
 }
 
-// ---------------- RENDER UI ----------------
-function render(){
-
-    let aiChat = aiHistory.map(v=>`<div class="bubble ai">??</div>`).join("");
-
-    let playerChat = playerHistory.map(v=>`<div class="bubble me">${v}</div>`).join("");
+// ---------------- UI ----------------
+function renderChatUI(){
 
     gameAreaRef.innerHTML = `
         <div style="height:100%;display:flex;flex-direction:column;">
 
-            <div style="text-align:center;margin-bottom:10px;">
-                <h3>숫자 맞히기</h3>
-                <p>횟수로 경쟁</p>
-            </div>
-
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                height:300px;
-                position:relative;
-            ">
-
-                <!-- AI -->
-                <div style="width:45%;">
-                    ${aiChat}
-                </div>
-
-                <!-- CENTER LINE -->
-                <div style="
-                    width:2px;
-                    background:#ddd;
-                    position:absolute;
-                    left:50%;
-                    top:0;
-                    bottom:0;
-                "></div>
-
-                <!-- PLAYER -->
-                <div style="width:45%;text-align:right;">
-                    ${playerChat}
-                </div>
+            <!-- CHAT AREA -->
+            <div id="chat"
+                style="flex:1;overflow:auto;padding:10px;background:#f5f5f5;border-radius:12px">
 
             </div>
 
-            <div style="text-align:center;margin-top:20px;">
-                <button onclick="window.__guess(1)">1</button>
-                <button onclick="window.__guess(50)">50</button>
-                <button onclick="window.__guess(100)">100</button>
-            </div>
+            <!-- INPUT -->
+            <div style="display:flex;margin-top:10px;gap:10px">
 
-            <div id="card" style="text-align:center;margin-top:20px;font-size:2rem;">
-                🂠
-            </div>
+                <input id="inputBox"
+                    style="flex:1;padding:10px;border-radius:10px;border:1px solid #ccc"
+                    placeholder="숫자 입력 (1~100)">
 
-            <div id="status" style="text-align:center;margin-top:10px;"></div>
+                <button onclick="window.__send()" class="game-select-btn">➤</button>
+
+            </div>
 
         </div>
     `;
 
-    window.__guess = playerGuess;
+    window.__send = playerSend;
+
+    document.getElementById("inputBox")
+        .addEventListener("keydown", e=>{
+            if(e.key==="Enter") playerSend();
+        });
+
+    addAIMessage("??");
 }
 
-// ---------------- PLAYER GUESS ----------------
-function playerGuess(n){
+// ---------------- PLAYER ----------------
+function playerSend(){
 
     if(gameOver) return;
 
-    playerCount++;
+    const input = document.getElementById("inputBox");
 
-    playerHistory.push(n);
+    let value = Number(input.value);
 
-    if(n === target){
+    if(!value || value < 1 || value > 100) return;
+
+    input.value = "";
+
+    playerHistory.push(value);
+
+    addPlayerMessage(value);
+
+    if(value === target){
         revealCard();
         return finish("PLAYER WIN");
     }
 
-    if(n < target){
-        pushStatus("UP");
-    }else{
-        pushStatus("DOWN");
+    if(value < target){
+        addSystem("UP");
+    } else {
+        addSystem("DOWN");
     }
 
-    render();
+    setTimeout(aiTurn, 500);
 }
 
 // ---------------- AI ----------------
-function startAI(){
+function aiTurn(){
 
-    if(aiTimer) clearInterval(aiTimer);
+    if(gameOver || aiThinking) return;
 
-    aiTimer = setInterval(()=>{
-
-        if(gameOver){
-            clearInterval(aiTimer);
-            return;
-        }
-
-        aiGuess();
-
-    }, 900);
-}
-
-function aiGuess(){
+    aiThinking = true;
 
     let guess;
 
     if(difficulty === "easy"){
-
         guess = Math.floor(Math.random()*(aiMax-aiMin+1))+aiMin;
     }
 
     else if(difficulty === "normal"){
 
         let mid = Math.floor((aiMin+aiMax)/2);
-
         let spread = Math.floor((aiMax-aiMin)/4);
 
         let min = Math.max(aiMin, mid-spread);
@@ -188,48 +152,78 @@ function aiGuess(){
     }
 
     else{
-
         guess = Math.floor((aiMin+aiMax)/2);
     }
 
-    aiCount++;
     aiHistory.push(guess);
 
-    if(guess === target){
-        revealCard();
-        return finish("AI WIN");
+    addAIMessage(guess);
+
+    setTimeout(()=>{
+
+        if(guess === target){
+            revealCard();
+            return finish("AI WIN");
+        }
+
+        if(guess < target){
+            aiMin = guess+1;
+            addSystem("AI UP");
+        } else {
+            aiMax = guess-1;
+            addSystem("AI DOWN");
+        }
+
+        aiThinking = false;
+
+    }, 400);
+}
+
+// ---------------- CHAT UI ----------------
+function addPlayerMessage(text){
+    addMessage("right", text, "you");
+}
+
+function addAIMessage(text){
+    addMessage("left", text, "ai");
+}
+
+function addSystem(text){
+    addMessage("center", text, "sys");
+}
+
+function addMessage(side, text, type){
+
+    const chat = document.getElementById("chat");
+
+    const div = document.createElement("div");
+
+    div.style.margin = "6px 0";
+
+    if(type === "sys"){
+        div.style.textAlign = "center";
+        div.innerHTML = `<span style="background:#ddd;padding:4px 10px;border-radius:8px">${text}</span>`;
     }
 
-    if(guess < target){
-        aiMin = guess+1;
-        pushStatusAI("UP");
-    }else{
-        aiMax = guess-1;
-        pushStatusAI("DOWN");
+    else if(side === "right"){
+        div.style.textAlign = "right";
+        div.innerHTML = `<span style="background:#4cafef;color:white;padding:6px 10px;border-radius:12px">${text}</span>`;
     }
 
-    render();
+    else{
+        div.style.textAlign = "left";
+        div.innerHTML = `<span style="background:#eee;padding:6px 10px;border-radius:12px">${text}</span>`;
+    }
+
+    chat.appendChild(div);
+
+    chat.scrollTop = chat.scrollHeight;
 }
 
-// ---------------- STATUS ----------------
-function pushStatus(text){
-    let el = document.getElementById("status");
-    if(el) el.innerHTML = `<div>${text}</div>`;
-}
-
-function pushStatusAI(text){
-    let el = document.getElementById("status");
-    if(el) el.innerHTML = `<div>AI: ${text}</div>`;
-}
-
-// ---------------- CARD REVEAL ----------------
+// ---------------- CARD ----------------
 function revealCard(){
 
-    let el = document.getElementById("card");
-
-    if(el){
-        el.innerHTML = `🃏<br><b>${target}</b>`;
-    }
+    addSystem(`🃏 정답: ${target}`);
 }
 
 // ---------------- FINISH ----------------
@@ -237,35 +231,26 @@ function finish(msg){
 
     gameOver = true;
 
-    if(aiTimer) clearInterval(aiTimer);
+    const playerScore = playerHistory.length;
+    const aiScore = aiHistory.length;
+
+    let result = "DRAW";
+
+    if(playerScore < aiScore) result = "PLAYER WIN";
+    if(playerScore > aiScore) result = "AI WIN";
 
     gameAreaRef.innerHTML = `
         <div style="text-align:center">
 
-            <h2>${msg}</h2>
+            <h2>${result}</h2>
 
-            <p>정답: ${target}</p>
+            <p>PLAYER: ${playerScore}회</p>
+            <p>AI: ${aiScore}회</p>
 
-            <p>PLAYER: ${playerCount}회</p>
-            <p>AI: ${aiCount}회</p>
-
-            <button onclick="window.__numRestart()" class="game-select-btn">
+            <button class="game-select-btn" onclick="location.reload()">
                 다시하기
             </button>
 
         </div>
     `;
-
-    window.__numRestart = showDifficulty;
-}
-
-// ---------------- DESTROY ----------------
-export function destroy(){
-
-    gameOver = true;
-
-    if(aiTimer){
-        clearInterval(aiTimer);
-        aiTimer = null;
-    }
 }
