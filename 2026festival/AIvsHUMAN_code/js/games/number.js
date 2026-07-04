@@ -93,7 +93,7 @@ function precomputeAIGame() {
 // ---------------- UI ----------------
 function renderUI(){
     gameAreaRef.innerHTML = `
-        <div style="display:flex;flex-direction:column;height:100%;position:relative;">
+        <div style="display:flex;flex-direction:column;height:100%;">
             <div style="display:flex;flex:1;gap:10px;margin-bottom:10px;overflow:hidden;">
                 <div style="flex:1;display:flex;flex-direction:column;background:#f6f6f6;border-radius:12px;padding:10px;overflow:auto" id="aiChat">
                     <b style="text-align:center">AI</b>
@@ -103,17 +103,21 @@ function renderUI(){
                     <b style="text-align:center">YOU</b>
                 </div>
             </div>
-            <div style="display:flex;gap:10px;align-items:center" id="inputArea">
+            
+            <div style="display:flex;gap:10px;align-items:stretch;" id="inputArea">
                 <input id="inputBox"
-                    style="flex:1;padding:3px 10px;border-radius:10px;border:1px solid #ccc"
+                    style="flex:1;padding:8px 12px;border-radius:10px;border:1px solid #ccc;font-size:1em;"
                     placeholder="1~100 숫자 입력">
-                <button class="game-select-btn" style="padding:3px 12px" onclick="window.__send()">➤</button>
+                <button class="game-select-btn" style="padding:0 15px; display:flex; align-items:center; justify-content:center;" onclick="window.__send()">➤</button>
             </div>
-            <button id="nextBtn" class="game-select-btn" 
-                style="display:none; position:absolute; bottom:0; right:0; padding:5px 15px; z-index:10;"
-                onclick="window.__finishGame()">
-                다음
-            </button>
+            
+            <div id="nextBtnArea" style="display:none; text-align:right;">
+                <button id="nextBtn" class="game-select-btn" 
+                    style="padding:2px 12px; font-size:0.9em;"
+                    onclick="window.__finishGame()">
+                    다음
+                </button>
+            </div>
         </div>
     `;
 
@@ -166,7 +170,6 @@ function aiTurn(){
     aiHistory.push(guess);
     aiCurrentIndex++;
 
-    // 진행 중에는 숫자를 '??'로 숨겨서 출력 (id 속성을 부여하여 나중에 변경할 수 있도록 함)
     addAIMessage("??", `ai-guess-${aiCurrentIndex-1}`);
 
     if(guess === target){
@@ -187,6 +190,7 @@ function aiTurn(){
 }
 
 // ---------------- AI RAPID REVEAL ----------------
+// 플레이어가 정답을 맞췄을 때만 로그 안내 멘트 후 빠르게 출력
 function revealAILogRapidly() {
     addSystem("🏁 플레이어 정답! AI의 남은 계산 로그를 출력합니다.");
     
@@ -202,7 +206,6 @@ function revealAILogRapidly() {
         aiHistory.push(guess);
         aiCurrentIndex++;
 
-        // 진행 중에는 숫자를 '??'로 출력
         addAIMessage("??", `ai-guess-${aiCurrentIndex-1}`);
 
         if(guess === target) {
@@ -245,7 +248,6 @@ function pushMsg(container, text, sys=false, id=""){
     if(sys){
         div.innerHTML = `<div style="text-align:center;color:#666;font-size:0.9em;">${text}</div>`;
     } else {
-        // AI 메시지 구분을 위해 id 추가가 가능하도록 수정
         const idAttr = id ? `id="${id}"` : "";
         div.innerHTML = `<div ${idAttr} style="padding:6px 10px;background:#ddd;border-radius:10px;display:inline-block">${text}</div>`;
     }
@@ -255,7 +257,6 @@ function pushMsg(container, text, sys=false, id=""){
 }
 
 // ---------------- SHOW NEXT BUTTON & REVEAL AI GUESSES ----------------
-// 조건이 충족되면 AI 내역을 전부 공개하고 입력창을 숨긴 뒤 우측 하단에 '다음' 버튼을 띄웁니다.
 function showNextButton(){
     // 1. AI가 냈던 실제 숫자들을 '??'에서 복원
     aiHistory.forEach((actualGuess, index) => {
@@ -268,12 +269,12 @@ function showNextButton(){
     // 2. 정답 카드 공개
     revealCard();
 
-    // 3. 하단 입력창을 숨기고 '다음' 버튼 활성화
+    // 3. 하단 입력창 공간 전체를 숨기고 '다음' 버튼 영역을 가리지 않게 노출
     const inputArea = document.getElementById("inputArea");
     if(inputArea) inputArea.style.display = "none";
 
-    const nextBtn = document.getElementById("nextBtn");
-    if(nextBtn) nextBtn.style.display = "block";
+    const nextBtnArea = document.getElementById("nextBtnArea");
+    if(nextBtnArea) nextBtnArea.style.display = "block";
 }
 
 // ---------------- CARD ----------------
@@ -299,8 +300,6 @@ function finish(){
     if(playerScore < aiScore) result = "PLAYER WIN";
     if(playerScore > aiScore) result = "AI WIN";
 
-    // 부모 컨테이너 내부 요소 전체 중앙 정렬 구성 및 AI 로그 세션 제거
-    // 다시하기 버튼 높이 축소 (padding: 4px 16px 수준으로 조절)
     gameAreaRef.innerHTML = `
         <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; text-align:center;">
             <h2>${result}</h2>
