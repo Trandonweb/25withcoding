@@ -656,6 +656,73 @@ function shuffleCopy(arr){
 
     return copy;
 }
+function findFarthestCell(){
+
+    const q = [{
+        x:1,
+        y:1,
+        d:0
+    }];
+
+    const visited = Array.from(
+        {length:SIZE},
+        ()=>Array(SIZE).fill(false)
+    );
+
+    visited[1][1] = true;
+
+    let farthest = {
+        x:1,
+        y:1,
+        d:0
+    };
+
+    while(q.length){
+
+        const cur = q.shift();
+
+        if(cur.d > farthest.d){
+            farthest = cur;
+        }
+
+        const dirs = [
+            [1,0],
+            [-1,0],
+            [0,1],
+            [0,-1]
+        ];
+
+        for(const [dx,dy] of dirs){
+
+            const nx = cur.x + dx;
+            const ny = cur.y + dy;
+
+            if(
+                nx<0||
+                ny<0||
+                nx>=SIZE||
+                ny>=SIZE
+            ) continue;
+
+            if(visited[ny][nx]) continue;
+
+            if(maze[ny][nx]===1) continue;
+
+            visited[ny][nx]=true;
+
+            q.push({
+                x:nx,
+                y:ny,
+                d:cur.d+1
+            });
+        }
+    }
+
+    return {
+        x:farthest.x,
+        y:farthest.y
+    };
+}
 window.__mazeStart = startMaze;
 function endGame(msg){
 
