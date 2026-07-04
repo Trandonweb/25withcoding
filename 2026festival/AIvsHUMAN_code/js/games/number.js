@@ -388,25 +388,60 @@ function checkFinish(){
 
 // ---------------- END ----------------
 function finish(){
+
     gameOver = true;
 
     const playerScore = playerHistory.length;
     const aiScore = aiHistory.length;
 
     let result = "DRAW";
+
     if(playerScore < aiScore) result = "PLAYER WIN";
     if(playerScore > aiScore) result = "AI WIN";
 
-    // 결과 화면의 다시하기 버튼 세로 padding을 기존 4px에서 1/3 수준인 1.5px로 축소
     gameAreaRef.innerHTML = `
-        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; text-align:center;">
-            <h2 style="margin-bottom: 10px;">${result}</h2>
-            <p style="margin: 4px 0;">PLAYER: ${playerScore}회</p>
-            <p style="margin: 4px 0; margin-bottom: 15px;">AI: ${aiScore}회</p>
-            
-            <button class="game-select-btn" style="padding:1.5px 12px; font-size:0.9em; height:22px; box-sizing:border-box;" onclick="location.reload()">
+        <div
+            style="
+                display:flex;
+                flex-direction:column;
+                justify-content:center;
+                align-items:center;
+                width:100%;
+                height:100%;
+                text-align:center;
+            ">
+
+            <h2 style="margin-bottom:18px;">
+                ${result}
+            </h2>
+
+            <p style="margin:4px 0;">
+                PLAYER : <b>${playerScore}</b>회
+            </p>
+
+            <p style="margin:4px 0 24px 0;">
+                AI : <b>${aiScore}</b>회
+            </p>
+
+            <button
+                onclick="location.reload()"
+                style="
+                    width:110px;
+                    height:36px;
+                    border:none;
+                    border-radius:8px;
+                    background:#1ea857;
+                    color:white;
+                    font-size:0.95rem;
+                    cursor:pointer;
+                    transition:.15s;
+                "
+                onmouseover="this.style.opacity='0.9'"
+                onmouseout="this.style.opacity='1'"
+            >
                 다시하기
             </button>
+
         </div>
     `;
 }
