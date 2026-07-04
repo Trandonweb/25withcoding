@@ -27,11 +27,35 @@ function showDifficulty(){
     gameAreaRef.innerHTML = `
         <div style="text-align:center">
             <h2 style="margin-bottom: 10px;">숫자 맞히기</h2>
-            <div style="display:flex;flex-direction:column;gap:4px;max-width:300px;margin:0 auto">
-                <button class="game-select-btn" style="padding:3px 10px; font-size:0.9em;" onclick="window.__start('easy')">쉬움</button>
-                <button class="game-select-btn" style="padding:3px 10px; font-size:0.9em;" onclick="window.__start('normal')">보통</button>
-                <button class="game-select-btn" style="padding:3px 10px; font-size:0.9em;" onclick="window.__start('hard')">어려움</button>
-            </div>
+            <div style="display:flex;gap:8px;align-items:center;" id="inputArea">
+
+    <input id="inputBox"
+        style="
+            flex:1;
+            height:36px;
+            padding:0 10px;
+            border-radius:8px;
+            border:1px solid #ccc;
+            font-size:0.95rem;
+        "
+        placeholder="1~100 숫자 입력">
+
+    <button
+        onclick="window.__send()"
+        style="
+            width:42px;
+            height:36px;
+            border:none;
+            border-radius:8px;
+            background:#1ea857;
+            color:white;
+            font-size:18px;
+            cursor:pointer;
+        ">
+        ➤
+    </button>
+
+</div>
         </div>
     `;
     window.__start = startGame;
