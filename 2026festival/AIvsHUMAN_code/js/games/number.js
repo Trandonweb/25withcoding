@@ -76,7 +76,7 @@ function startGame(level){
     precomputeAIGame();
 
     renderUI();
-    addSystem("게임 시작!");
+    addSystem("Game Start!");
 }
 
 // ---------------- AI PRECOMPUTATION ----------------
