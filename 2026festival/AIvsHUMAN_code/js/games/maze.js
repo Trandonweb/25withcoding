@@ -123,8 +123,12 @@ function generateMaze(){
 
     carve(1,1);
 
-    maze[1][1] = 0;
-    maze[finish.y][finish.x] = 0;
+maze[1][1]=0;
+
+// 제일 먼 칸 찾기
+finish = findFarthestCell();
+
+maze[finish.y][finish.x]=0;
 }
 function carve(x,y){
 
@@ -667,22 +671,46 @@ function endGame(msg){
         aiTimer = null;
     }
 
-    const p = document.createElement("div");
+    gameAreaRef.innerHTML = `
+        <div style="
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            height:100%;
+            text-align:center;
+        ">
 
-    p.style.textAlign = "center";
-    p.style.marginTop = "20px";
+            <div style="
+                background:#ffffff;
+                border-radius:14px;
+                padding:22px 30px;
+                box-shadow:0 4px 12px rgba(0,0,0,.12);
+                min-width:220px;
+            ">
 
-    p.innerHTML = `
-        <h3>${msg}</h3>
+                <h2 style="
+                    margin:0 0 18px 0;
+                    color:${msg==="PLAYER WIN" ? "#2d8cff" : "#ff5555"};
+                ">
+                    ${msg}
+                </h2>
 
-        <button
-            class="game-select-btn"
-            onclick="window.__mazeRestart()">
-            다시하기
-        </button>
+                <button
+                    class="game-select-btn"
+                    style="
+                        height:28px;
+                        padding:0 14px;
+                        font-size:13px;
+                    "
+                    onclick="window.__mazeRestart()">
+                    다시하기
+                </button>
+
+            </div>
+
+        </div>
     `;
-
-    gameAreaRef.appendChild(p);
 
     window.__mazeRestart = () => showDifficultyScreen();
 }
