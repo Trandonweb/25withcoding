@@ -23,41 +23,38 @@ export function openNumber(gameArea){
 
 // ---------------- DIFFICULTY ----------------
 function showDifficulty(){
-    // 난이도 선택 버튼의 세로 여백(gap)과 패딩을 1/3 수준으로 축소
+
     gameAreaRef.innerHTML = `
         <div style="text-align:center">
-            <h2 style="margin-bottom: 10px;">숫자 맞히기</h2>
-            <div style="display:flex;gap:8px;align-items:center;" id="inputArea">
+            <h2>숫자 맞히기</h2>
 
-    <input id="inputBox"
-        style="
-            flex:1;
-            height:36px;
-            padding:0 10px;
-            border-radius:8px;
-            border:1px solid #ccc;
-            font-size:0.95rem;
-        "
-        placeholder="1~100 숫자 입력">
+            <div style="
+                display:flex;
+                flex-direction:column;
+                gap:10px;
+                max-width:300px;
+                margin:0 auto;
+            ">
 
-    <button
-        onclick="window.__send()"
-        style="
-            width:42px;
-            height:36px;
-            border:none;
-            border-radius:8px;
-            background:#1ea857;
-            color:white;
-            font-size:18px;
-            cursor:pointer;
-        ">
-        ➤
-    </button>
+                <button class="game-select-btn"
+                    onclick="window.__start('easy')">
+                    쉬움
+                </button>
 
-</div>
+                <button class="game-select-btn"
+                    onclick="window.__start('normal')">
+                    보통
+                </button>
+
+                <button class="game-select-btn"
+                    onclick="window.__start('hard')">
+                    어려움
+                </button>
+
+            </div>
         </div>
     `;
+
     window.__start = startGame;
 }
 
@@ -117,32 +114,109 @@ function precomputeAIGame() {
 
 // ---------------- UI ----------------
 function renderUI(){
+
     gameAreaRef.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;">
+
+            <!-- 채팅 -->
             <div style="display:flex;flex:1;gap:10px;margin-bottom:10px;overflow:hidden;">
-                <div style="flex:1;display:flex;flex-direction:column;background:#f6f6f6;border-radius:12px;padding:10px;overflow:auto" id="aiChat">
-                    <b style="text-align:center">AI</b>
+
+                <div id="aiChat"
+                    style="
+                        flex:1;
+                        display:flex;
+                        flex-direction:column;
+                        background:#f6f6f6;
+                        border-radius:12px;
+                        padding:10px;
+                        overflow:auto;
+                    ">
+                    <b style="text-align:center;margin-bottom:8px;">AI</b>
                 </div>
-                <div style="width:2px;background:#ddd"></div>
-                <div style="flex:1;display:flex;flex-direction:column;background:#f9f9f9;border-radius:12px;padding:10px;overflow:auto" id="playerChat">
-                    <b style="text-align:center">YOU</b>
+
+                <div style="width:2px;background:#ddd;"></div>
+
+                <div id="playerChat"
+                    style="
+                        flex:1;
+                        display:flex;
+                        flex-direction:column;
+                        background:#f9f9f9;
+                        border-radius:12px;
+                        padding:10px;
+                        overflow:auto;
+                    ">
+                    <b style="text-align:center;margin-bottom:8px;">YOU</b>
                 </div>
+
             </div>
-            
-            <div style="display:flex;gap:10px;align-items:stretch;" id="inputArea">
-                <input id="inputBox"
-                    style="flex:1;padding:3px 10px;border-radius:6px;border:1px solid #ccc;font-size:0.9em;height:24px;box-sizing:border-box;"
-                    placeholder="1~100 숫자 입력">
-                <button class="game-select-btn" style="padding:0 10px; display:flex; align-items:center; justify-content:center; height:24px; box-sizing:border-box;" onclick="window.__send()">➤</button>
+
+            <!-- 입력 -->
+            <div
+                id="inputArea"
+                style="
+                    display:flex;
+                    gap:8px;
+                    align-items:center;
+                ">
+
+                <input
+                    id="inputBox"
+                    placeholder="1~100 숫자 입력"
+                    style="
+                        flex:1;
+                        height:36px;
+                        padding:0 10px;
+                        border:1px solid #ccc;
+                        border-radius:8px;
+                        font-size:0.95rem;
+                        outline:none;
+                    ">
+
+                <button
+                    onclick="window.__send()"
+                    style="
+                        width:42px;
+                        height:36px;
+                        border:none;
+                        border-radius:8px;
+                        background:#1ea857;
+                        color:white;
+                        font-size:18px;
+                        cursor:pointer;
+                    ">
+                    ➤
+                </button>
+
             </div>
-            
-            <div id="nextBtnArea" style="display:none; text-align:right;">
-                <button id="nextBtn" class="game-select-btn" 
-                    style="padding:1px 10px; font-size:0.85em; height:22px; box-sizing:border-box;"
-                    onclick="window.__finishGame()">
+
+            <!-- 다음 -->
+            <div
+                id="nextBtnArea"
+                style="
+                    display:none;
+                    text-align:right;
+                    margin-top:8px;
+                ">
+
+                <button
+                    id="nextBtn"
+                    onclick="window.__finishGame()"
+                    style="
+                        height:34px;
+                        padding:0 16px;
+                        border:none;
+                        border-radius:8px;
+                        background:#1ea857;
+                        color:white;
+                        font-size:0.9rem;
+                        cursor:pointer;
+                    ">
                     다음
                 </button>
+
             </div>
+
         </div>
     `;
 
@@ -151,10 +225,11 @@ function renderUI(){
 
     document.getElementById("inputBox")
         .addEventListener("keydown", e=>{
-            if(e.key==="Enter") playerSend();
+            if(e.key === "Enter"){
+                playerSend();
+            }
         });
 }
-
 // ---------------- PLAYER ----------------
 function playerSend(){
     if(gameOver || playerDone) return;
