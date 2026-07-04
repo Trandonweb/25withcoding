@@ -23,13 +23,14 @@ export function openNumber(gameArea){
 
 // ---------------- DIFFICULTY ----------------
 function showDifficulty(){
+    // 난이도 선택 버튼의 세로 여백(gap)과 패딩을 1/3 수준으로 축소
     gameAreaRef.innerHTML = `
         <div style="text-align:center">
-            <h2>숫자 맞히기</h2>
-            <div style="display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto">
-                <button class="game-select-btn" onclick="window.__start('easy')">쉬움</button>
-                <button class="game-select-btn" onclick="window.__start('normal')">보통</button>
-                <button class="game-select-btn" onclick="window.__start('hard')">어려움</button>
+            <h2 style="margin-bottom: 10px;">숫자 맞히기</h2>
+            <div style="display:flex;flex-direction:column;gap:4px;max-width:300px;margin:0 auto">
+                <button class="game-select-btn" style="padding:3px 10px; font-size:0.9em;" onclick="window.__start('easy')">쉬움</button>
+                <button class="game-select-btn" style="padding:3px 10px; font-size:0.9em;" onclick="window.__start('normal')">보통</button>
+                <button class="game-select-btn" style="padding:3px 10px; font-size:0.9em;" onclick="window.__start('hard')">어려움</button>
             </div>
         </div>
     `;
@@ -106,14 +107,14 @@ function renderUI(){
             
             <div style="display:flex;gap:10px;align-items:stretch;" id="inputArea">
                 <input id="inputBox"
-                    style="flex:1;padding:8px 12px;border-radius:10px;border:1px solid #ccc;font-size:1em;"
+                    style="flex:1;padding:3px 10px;border-radius:6px;border:1px solid #ccc;font-size:0.9em;height:24px;box-sizing:border-box;"
                     placeholder="1~100 숫자 입력">
-                <button class="game-select-btn" style="padding:0 15px; display:flex; align-items:center; justify-content:center;" onclick="window.__send()">➤</button>
+                <button class="game-select-btn" style="padding:0 10px; display:flex; align-items:center; justify-content:center; height:24px; box-sizing:border-box;" onclick="window.__send()">➤</button>
             </div>
             
             <div id="nextBtnArea" style="display:none; text-align:right;">
                 <button id="nextBtn" class="game-select-btn" 
-                    style="padding:2px 12px; font-size:0.9em;"
+                    style="padding:1px 10px; font-size:0.85em; height:22px; box-sizing:border-box;"
                     onclick="window.__finishGame()">
                     다음
                 </button>
@@ -190,7 +191,6 @@ function aiTurn(){
 }
 
 // ---------------- AI RAPID REVEAL ----------------
-// 플레이어가 정답을 맞췄을 때만 로그 안내 멘트 후 빠르게 출력
 function revealAILogRapidly() {
     addSystem("🏁 플레이어 정답! AI의 남은 계산 로그를 출력합니다.");
     
@@ -230,6 +230,7 @@ function addPlayerMessage(text){
     pushMsg(el, text);
 }
 
+// 말풍선 내부 여백도 컴팩트하게 어울리도록 살짝 조정 가능합니다 (필요시 padding 수정)
 function addAIMessage(text, id = ""){
     const el = document.getElementById("aiChat");
     pushMsg(el, text, false, id);
@@ -243,13 +244,13 @@ function addSystem(text){
 function pushMsg(container, text, sys=false, id=""){
     if(!container) return;
     const div = document.createElement("div");
-    div.style.margin = "6px 0";
+    div.style.margin = "4px 0";
 
     if(sys){
-        div.innerHTML = `<div style="text-align:center;color:#666;font-size:0.9em;">${text}</div>`;
+        div.innerHTML = `<div style="text-align:center;color:#666;font-size:0.85em;">${text}</div>`;
     } else {
         const idAttr = id ? `id="${id}"` : "";
-        div.innerHTML = `<div ${idAttr} style="padding:6px 10px;background:#ddd;border-radius:10px;display:inline-block">${text}</div>`;
+        div.innerHTML = `<div ${idAttr} style="padding:4px 8px;background:#ddd;border-radius:8px;display:inline-block;font-size:0.95em;">${text}</div>`;
     }
 
     container.appendChild(div);
@@ -258,7 +259,6 @@ function pushMsg(container, text, sys=false, id=""){
 
 // ---------------- SHOW NEXT BUTTON & REVEAL AI GUESSES ----------------
 function showNextButton(){
-    // 1. AI가 냈던 실제 숫자들을 '??'에서 복원
     aiHistory.forEach((actualGuess, index) => {
         const guessEl = document.getElementById(`ai-guess-${index}`);
         if(guessEl) {
@@ -266,10 +266,8 @@ function showNextButton(){
         }
     });
 
-    // 2. 정답 카드 공개
     revealCard();
 
-    // 3. 하단 입력창 공간 전체를 숨기고 '다음' 버튼 영역을 가리지 않게 노출
     const inputArea = document.getElementById("inputArea");
     if(inputArea) inputArea.style.display = "none";
 
@@ -300,13 +298,14 @@ function finish(){
     if(playerScore < aiScore) result = "PLAYER WIN";
     if(playerScore > aiScore) result = "AI WIN";
 
+    // 결과 화면의 다시하기 버튼 세로 padding을 기존 4px에서 1/3 수준인 1.5px로 축소
     gameAreaRef.innerHTML = `
         <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; text-align:center;">
-            <h2>${result}</h2>
-            <p>PLAYER: ${playerScore}회</p>
-            <p style="margin-bottom: 25px;">AI: ${aiScore}회</p>
+            <h2 style="margin-bottom: 10px;">${result}</h2>
+            <p style="margin: 4px 0;">PLAYER: ${playerScore}회</p>
+            <p style="margin: 4px 0; margin-bottom: 15px;">AI: ${aiScore}회</p>
             
-            <button class="game-select-btn" style="padding:4px 16px;" onclick="location.reload()">
+            <button class="game-select-btn" style="padding:1.5px 12px; font-size:0.9em; height:22px; box-sizing:border-box;" onclick="location.reload()">
                 다시하기
             </button>
         </div>
