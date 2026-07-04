@@ -1,4 +1,3 @@
-적용이 안되노
 let gameAreaRef = null;
 
 let target = 0;
