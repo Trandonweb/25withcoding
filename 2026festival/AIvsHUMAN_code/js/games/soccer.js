@@ -17,7 +17,10 @@ let end = null;
 // canvas
 let canvas, ctx;
 
-// objects
+// =========================
+// OBJECTS (3D 느낌 핵심)
+// =========================
+
 const goal = {
     x: 780,
     y: 170,
@@ -26,10 +29,12 @@ const goal = {
 };
 
 const ball = {
-    x: 0,
-    y: 0,
+    x: 120,
+    y: 350,
+    z: 0,       // 👈 깊이
     vx: 0,
     vy: 0,
+    vz: 0,      // 👈 전진 힘
     r: 6,
     moving: false
 };
@@ -55,7 +60,7 @@ export function openSoccer(gameArea){
 function showDifficulty(){
     gameAreaRef.innerHTML = `
         <div style="text-align:center">
-            <h2>⚽ 프리킥 축구</h2>
+            <h2>⚽ 프리킥 축구 (3D MODE)</h2>
 
             <button onclick="window.__soccerStart('easy')">쉬움</button>
             <button onclick="window.__soccerStart('normal')">보통</button>
@@ -85,7 +90,7 @@ function startGame(level){
 }
 
 // =========================
-// UI (canvas container)
+// UI
 // =========================
 function renderUI(){
     gameAreaRef.innerHTML = `
@@ -140,17 +145,20 @@ function onUp(){
 }
 
 // =========================
-// SHOOT
+// SHOOT (3D 핵심)
 // =========================
 function shootHuman(){
+
     const dx = end.x - start.x;
     const dy = end.y - start.y;
 
-    const power = Math.min(18, Math.hypot(dx, dy) / 10);
+    const power = Math.min(22, Math.hypot(dx, dy) / 8);
     const angle = Math.atan2(dy, dx);
 
     ball.vx = Math.cos(angle) * power;
     ball.vy = Math.sin(angle) * power;
+
+    ball.vz = power * 1.4; // 👈 핵심 (거리감)
 
     ball.moving = true;
 }
@@ -166,15 +174,17 @@ function aiShoot(){
 
     ball.vx = dx * 0.02;
     ball.vy = dy * 0.02;
+    ball.vz = 18 + Math.random() * 5;
 
     ball.moving = true;
 }
 
 // =========================
-// KEEP
+// KEEP (AI GK)
 // =========================
 function updateKeeper(){
-    let speed = 0.08;
+
+    let speed = 0.06;
 
     if(difficulty === "easy") speed = 0.04;
     if(difficulty === "hard") speed = 0.12;
@@ -183,38 +193,56 @@ function updateKeeper(){
 }
 
 // =========================
-// BALL SPAWN
+// SPAWN BALL
 // =========================
 function spawnBall(){
     ball.x = 120 + Math.random() * 250;
-    ball.y = 200 + Math.random() * 150;
+    ball.y = 300;
+    ball.z = 0;
 
     ball.vx = 0;
     ball.vy = 0;
+    ball.vz = 0;
+
     ball.moving = false;
 }
 
 // =========================
-// GAME LOGIC
+// BALL UPDATE (3D 물리)
+// =========================
+function updateBall(){
+
+    if(!ball.moving) return;
+
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+    ball.z += ball.vz;
+
+    ball.vy += 0.35; // 중력
+
+    ball.vx *= 0.98;
+    ball.vy *= 0.98;
+    ball.vz *= 0.97;
+
+    if(ball.y > 360){
+        ball.y = 360;
+        ball.vy *= -0.4;
+    }
+}
+
+// =========================
+// GOAL CHECK (3D 반영)
 // =========================
 function checkGoal(){
 
     if(
-        ball.x > goal.x &&
+        ball.z > 240 &&
         ball.y > goal.y &&
         ball.y < goal.y + goal.h
     ){
         if(mode === "HUMAN_ATTACK") scoreHuman++;
         else scoreAI++;
 
-        nextRound();
-    }
-
-    if(
-        ball.x > keeper.x &&
-        ball.y > keeper.y &&
-        ball.y < keeper.y + keeper.h
-    ){
         nextRound();
     }
 
@@ -263,26 +291,10 @@ function finish(){
 }
 
 // =========================
-// UPDATE LOOP
-// =========================
-function update(){
-
-    if(ball.moving){
-        ball.x += ball.vx;
-        ball.y += ball.vy;
-
-        ball.vx *= 0.98;
-        ball.vy *= 0.98;
-    }
-
-    updateKeeper();
-    checkGoal();
-}
-
-// =========================
-// DRAW
+// DRAW (3D 느낌 핵심)
 // =========================
 function draw(){
+
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     // field
@@ -297,22 +309,39 @@ function draw(){
     ctx.fillStyle = "#3498db";
     ctx.fillRect(keeper.x,keeper.y,keeper.w,keeper.h);
 
-    // ball
+    // ball (3D scale)
+    const scale = 1 / (1 + ball.z * 0.01);
+    const size = ball.r * scale;
+
     ctx.fillStyle = "#f1c40f";
-    ctx.fillRect(ball.x,ball.y,ball.r,ball.r);
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // drag line
+    if(dragging && start && end){
+        ctx.strokeStyle = "red";
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+    }
 
     // UI
     ctx.fillStyle = "#000";
-    ctx.fillText(`ROUND ${round}/${maxRound}`, 20,20);
-    ctx.fillText(`H:${scoreHuman} A:${scoreAI}`, 20,40);
-    ctx.fillText(mode, 20,60);
+    ctx.fillText(`ROUND ${round}/${maxRound}`, 20, 20);
+    ctx.fillText(`H:${scoreHuman} A:${scoreAI}`, 20, 40);
+    ctx.fillText(mode, 20, 60);
 }
 
 // =========================
 // LOOP
 // =========================
 function loop(){
-    update();
+    updateBall();
+    updateKeeper();
+    checkGoal();
     draw();
+
     requestAnimationFrame(loop);
 }
