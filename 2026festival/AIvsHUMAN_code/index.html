@@ -217,6 +217,34 @@ function openGame(game){
 
         return;
     }
+    
+    if(game === "축구"){
+
+        import("./js/games/soccer.js")
+        .then(m=>{
+
+            currentGameModule = m;
+
+            m.openMaze(gameArea);
+
+        });
+
+        return;
+    }
+
+    if(game === "야구"){
+
+        import("./js/games/baseball.js")
+        .then(m=>{
+
+            currentGameModule = m;
+
+            m.openMaze(gameArea);
+
+        });
+
+        return;
+    }
 
     gameArea.innerHTML = `
         <div>${game}</div>
