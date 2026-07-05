@@ -1,19 +1,23 @@
-console.log("⚽ FREEKICK SOCCER LOADED");
+let gameAreaRef = null;
 
-// =========================
-// CANVAS SETUP
-// =========================
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+let difficulty = "easy";
 
-canvas.width = 900;
-canvas.height = 500;
+let round = 0;
+let maxRound = 5;
 
-// =========================
-// PIXEL OBJECTS (직접 생성)
-// =========================
+let scoreHuman = 0;
+let scoreAI = 0;
 
-// 골대 (픽셀)
+let mode = "HUMAN_ATTACK";
+
+let dragging = false;
+let start = null;
+let end = null;
+
+// canvas
+let canvas, ctx;
+
+// objects
 const goal = {
     x: 780,
     y: 170,
@@ -21,7 +25,6 @@ const goal = {
     h: 160
 };
 
-// 공 (pixel ball)
 const ball = {
     x: 0,
     y: 0,
@@ -31,87 +34,121 @@ const ball = {
     moving: false
 };
 
-// 골키퍼 (AI)
 const keeper = {
     x: 760,
     y: 250,
     w: 10,
-    h: 60,
-    targetY: 250
+    h: 60
 };
 
 // =========================
-// GAME STATE
+// ENTRY (number.js style)
 // =========================
-let round = 0;
-let maxRound = 5;
-
-let scoreHuman = 0;
-let scoreAI = 0;
-
-let mode = "HUMAN_ATTACK"; 
-// HUMAN_ATTACK / HUMAN_DEFENSE
-
-let dragging = false;
-let start = null;
-let end = null;
-
-// 프리킥 위치 (박스 밖 랜덤)
-function spawnBall() {
-    ball.x = 100 + Math.random() * 250;
-    ball.y = 150 + Math.random() * 200;
-    ball.vx = 0;
-    ball.vy = 0;
-    ball.moving = false;
-
-    start = null;
-    end = null;
+export function openSoccer(gameArea){
+    gameAreaRef = gameArea;
+    showDifficulty();
 }
 
 // =========================
-// INPUT (DRAG SHOT)
+// DIFFICULTY UI
 // =========================
-canvas.addEventListener("mousedown", (e) => {
-    if (ball.moving) return;
+function showDifficulty(){
+    gameAreaRef.innerHTML = `
+        <div style="text-align:center">
+            <h2>⚽ 프리킥 축구</h2>
 
-    dragging = true;
-    start = getPos(e);
-});
+            <button onclick="window.__soccerStart('easy')">쉬움</button>
+            <button onclick="window.__soccerStart('normal')">보통</button>
+            <button onclick="window.__soccerStart('hard')">어려움</button>
+        </div>
+    `;
 
-canvas.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
-    end = getPos(e);
-});
-
-canvas.addEventListener("mouseup", () => {
-    if (!dragging) return;
-    dragging = false;
-
-    if (mode === "HUMAN_ATTACK") shootHuman();
-});
+    window.__soccerStart = startGame;
+}
 
 // =========================
-// MOUSE POS
+// START
 // =========================
-function getPos(e) {
-    const rect = canvas.getBoundingClientRect();
+function startGame(level){
+    difficulty = level;
+
+    round = 0;
+    scoreHuman = 0;
+    scoreAI = 0;
+    mode = "HUMAN_ATTACK";
+
+    renderUI();
+    initCanvas();
+    spawnBall();
+
+    loop();
+}
+
+// =========================
+// UI (canvas container)
+// =========================
+function renderUI(){
+    gameAreaRef.innerHTML = `
+        <canvas id="gameCanvas"></canvas>
+    `;
+}
+
+// =========================
+// CANVAS INIT
+// =========================
+function initCanvas(){
+    canvas = document.getElementById("gameCanvas");
+    ctx = canvas.getContext("2d");
+
+    canvas.width = 900;
+    canvas.height = 500;
+
+    canvas.addEventListener("mousedown", onDown);
+    canvas.addEventListener("mousemove", onMove);
+    canvas.addEventListener("mouseup", onUp);
+}
+
+// =========================
+// INPUT
+// =========================
+function getPos(e){
+    const r = canvas.getBoundingClientRect();
     return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: e.clientX - r.left,
+        y: e.clientY - r.top
     };
 }
 
+function onDown(e){
+    if(ball.moving) return;
+    dragging = true;
+    start = getPos(e);
+}
+
+function onMove(e){
+    if(!dragging) return;
+    end = getPos(e);
+}
+
+function onUp(){
+    if(!dragging) return;
+    dragging = false;
+
+    if(mode === "HUMAN_ATTACK"){
+        shootHuman();
+    }
+}
+
 // =========================
-// HUMAN SHOOT
+// SHOOT
 // =========================
-function shootHuman() {
+function shootHuman(){
     const dx = end.x - start.x;
     const dy = end.y - start.y;
 
     const power = Math.min(18, Math.hypot(dx, dy) / 10);
     const angle = Math.atan2(dy, dx);
 
-    // 커브 추가 (살짝)
     ball.vx = Math.cos(angle) * power;
     ball.vy = Math.sin(angle) * power;
 
@@ -119,64 +156,69 @@ function shootHuman() {
 }
 
 // =========================
-// AI SHOOT (수비 턴)
+// AI SHOOT
 // =========================
-function aiShoot() {
+function aiShoot(){
     const targetY = 150 + Math.random() * 200;
 
     const dx = goal.x - ball.x;
     const dy = targetY - ball.y;
 
-    const power = 12 + Math.random() * 6;
-
-    ball.vx = dx * 0.02 + (Math.random() - 0.5);
+    ball.vx = dx * 0.02;
     ball.vy = dy * 0.02;
 
     ball.moving = true;
 }
 
 // =========================
-// AI KEEPER
+// KEEP
 // =========================
-function updateKeeper() {
-    let reaction = 0.08;
+function updateKeeper(){
+    let speed = 0.08;
 
-    if (window.difficulty === "easy") reaction = 0.04;
-    if (window.difficulty === "hard") reaction = 0.12;
+    if(difficulty === "easy") speed = 0.04;
+    if(difficulty === "hard") speed = 0.12;
 
-    keeper.targetY = ball.y;
-
-    keeper.y += (keeper.targetY - keeper.y) * reaction;
+    keeper.y += (ball.y - keeper.y) * speed;
 }
 
 // =========================
-// COLLISION
+// BALL SPAWN
 // =========================
-function checkGoal() {
+function spawnBall(){
+    ball.x = 120 + Math.random() * 250;
+    ball.y = 200 + Math.random() * 150;
 
-    // 골 판정
-    if (
+    ball.vx = 0;
+    ball.vy = 0;
+    ball.moving = false;
+}
+
+// =========================
+// GAME LOGIC
+// =========================
+function checkGoal(){
+
+    if(
         ball.x > goal.x &&
         ball.y > goal.y &&
         ball.y < goal.y + goal.h
-    ) {
-        if (mode === "HUMAN_ATTACK") scoreHuman++;
+    ){
+        if(mode === "HUMAN_ATTACK") scoreHuman++;
         else scoreAI++;
 
         nextRound();
     }
 
-    // 골키퍼 막기
-    if (
+    if(
         ball.x > keeper.x &&
         ball.y > keeper.y &&
         ball.y < keeper.y + keeper.h
-    ) {
+    ){
         nextRound();
     }
 
-    // 아웃
-    if (ball.x > canvas.width) {
+    if(ball.x > canvas.width){
         nextRound();
     }
 }
@@ -184,55 +226,51 @@ function checkGoal() {
 // =========================
 // NEXT ROUND
 // =========================
-function nextRound() {
+function nextRound(){
     round++;
 
-    if (round >= maxRound) {
-        endGame();
+    if(round >= maxRound){
+        finish();
         return;
     }
 
-    // 공격/수비 전환
     mode = (mode === "HUMAN_ATTACK")
         ? "HUMAN_DEFENSE"
         : "HUMAN_ATTACK";
 
     spawnBall();
 
-    if (mode === "HUMAN_DEFENSE") {
+    if(mode === "HUMAN_DEFENSE"){
         setTimeout(aiShoot, 500);
     }
 }
 
 // =========================
-// END GAME
+// FINISH (number.js style)
 // =========================
-function endGame() {
-    console.log("GAME END");
-    console.log("HUMAN:", scoreHuman, "AI:", scoreAI);
+function finish(){
 
-    localStorage.setItem("soccer_result", JSON.stringify({
-        human: scoreHuman,
-        ai: scoreAI
-    }));
+    gameAreaRef.innerHTML = `
+        <div style="text-align:center">
+            <h2>GAME END</h2>
 
-    window.parent.postMessage({
-        type: "SOCCER_END",
-        human: scoreHuman,
-        ai: scoreAI
-    }, "*");
+            <p>HUMAN : ${scoreHuman}</p>
+            <p>AI : ${scoreAI}</p>
+
+            <button onclick="location.reload()">다시하기</button>
+        </div>
+    `;
 }
 
 // =========================
-// UPDATE
+// UPDATE LOOP
 // =========================
-function update() {
+function update(){
 
-    if (ball.moving) {
+    if(ball.moving){
         ball.x += ball.vx;
         ball.y += ball.vy;
 
-        // 감속
         ball.vx *= 0.98;
         ball.vy *= 0.98;
     }
@@ -242,54 +280,39 @@ function update() {
 }
 
 // =========================
-// DRAW (PIXEL STYLE)
+// DRAW
 // =========================
-function drawPixel(x, y, w, h, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
-}
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // field
+    ctx.fillStyle = "#2ecc71";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    // 필드
-    drawPixel(0, 0, canvas.width, canvas.height, "#2ecc71");
+    // goal
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(goal.x,goal.y,goal.w,goal.h);
 
-    // 골대
-    drawPixel(goal.x, goal.y, goal.w, goal.h, "#ffffff");
+    // keeper
+    ctx.fillStyle = "#3498db";
+    ctx.fillRect(keeper.x,keeper.y,keeper.w,keeper.h);
 
-    // 골키퍼
-    drawPixel(keeper.x, keeper.y, keeper.w, keeper.h, "#3498db");
-
-    // 공
-    drawPixel(ball.x, ball.y, ball.r, ball.r, "#f1c40f");
-
-    // 드래그 라인
-    if (dragging && start && end) {
-        ctx.strokeStyle = "red";
-        ctx.beginPath();
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(end.x, end.y);
-        ctx.stroke();
-    }
+    // ball
+    ctx.fillStyle = "#f1c40f";
+    ctx.fillRect(ball.x,ball.y,ball.r,ball.r);
 
     // UI
-    ctx.fillStyle = "black";
-    ctx.fillText(`ROUND: ${round}/${maxRound}`, 20, 20);
-    ctx.fillText(`HUMAN: ${scoreHuman}`, 20, 40);
-    ctx.fillText(`AI: ${scoreAI}`, 20, 60);
-    ctx.fillText(`MODE: ${mode}`, 20, 80);
+    ctx.fillStyle = "#000";
+    ctx.fillText(`ROUND ${round}/${maxRound}`, 20,20);
+    ctx.fillText(`H:${scoreHuman} A:${scoreAI}`, 20,40);
+    ctx.fillText(mode, 20,60);
 }
 
 // =========================
 // LOOP
 // =========================
-function loop() {
+function loop(){
     update();
     draw();
     requestAnimationFrame(loop);
 }
-
-// start
-spawnBall();
-loop();
