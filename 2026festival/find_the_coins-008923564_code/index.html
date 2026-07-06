@@ -1,1 +1,276 @@
+<!doctype html>
+<html lang="ko"><head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260706-03-fe1d6e3"}');</script><script src="/_sdk/f432b76fb310b513.telemetry_sdk.js" integrity="sha512-9FJQ55EKmmqhyyik8BhrMVfm0+iYYfb8uOlRsjtkxJMEI97qOVEI4PnHohDjQAtvAep0IOEpdQ64eki0sz62ug=="></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find The Coins</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+  <script src="/_sdk/0179d719c431a79e.data_sdk.js" type="text/javascript" integrity="sha512-OsRvJkI5GkC3MJQcgotQYotpzrMSX415GiKKgvYdxQEEkzD/fdchShO2FMSy0PJr/tiINMXOk5Vl2zAgg6bUiA=="></script>
+  <script src="/_sdk/0b3af1c300e720aa.resizing_sdk.js" type="text/javascript" integrity="sha512-nX1P6oXZmEY5wCI2lUVg3BwKu1cr0yi+ZpXgZ0Yn90vkSwvpmyzBMvOyD6VLJUtBwFI2dSrw1b6OvORxSggw3w=="></script>
+ </head>
+ <body data-template-id="__page-root" style="background: rgb(42, 42, 42);">
+  <div id="start-screen" style="position:fixed;inset:0;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);display:flex;align-items:center;justify-content:center;z-index:20;">
+   <div style="text-align:center;">
+    <h1 data-template-id="start-title" class="canva-text" style="font-size: 48px; font-weight: 700; margin-bottom: 16px; color: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.3) 2px 2px 4px; font-style: normal;">Find The Coins</h1>
+    <p data-template-id="start-description" class="canva-text" style="font-size: 18px; margin-bottom: 32px; color: rgb(240, 240, 240); font-weight: 400; font-style: normal;">큰 맵을 탐험하며 모든 동전을 찾아보세요!</p><button id="play-btn" data-template-id="start-button" class="canva-button" style="background: rgb(255, 220, 0); color: rgb(51, 51, 51); border: 3px solid rgb(51, 51, 51); padding: 16px 48px; font-size: 20px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.2s; font-style: normal;">게임 시작</button>
+   </div>
+  </div>
+  <canvas id="game" style="display:none;"></canvas><button id="col-btn" aria-label="Open collection" style="position:fixed;top:20px;left:20px;width:50px;height:50px;border-radius:50%;background:#ffdc00;border:3px solid #333;cursor:pointer;font-size:20px;z-index:15;display:none;">🪙</button><button id="spawn-btn" aria-label="Return to spawn point" style="position:fixed;top:80px;left:20px;width:50px;height:50px;border-radius:50%;background:#fff;border:3px solid #333;cursor:pointer;font-size:20px;z-index:15;display:none;">📍</button>
+  <div id="collection-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:10;display:none;align-items:center;justify-content:center;">
+   <div style="background:#f5f5f5;border-radius:12px;padding:32px;width:90%;max-width:700px;border:3px solid #222;">
+    <h2 data-template-id="collection-title" class="canva-text" style="text-align: center; font-size: 24px; font-weight: 700; margin-bottom: 20px; color: rgb(17, 17, 17); font-style: normal;">Coin Collection</h2>
+    <div id="slots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;"></div>
+    <p data-template-id="collection-hint" class="canva-text" style="text-align: center; margin-top: 16px; color: rgb(102, 102, 102); font-size: 16px; font-weight: 400; font-style: normal;">Explore the map with WASD or Arrow keys to find all coins!</p>
+   </div>
+  </div>
+  <div id="popup-container" style="position:fixed;inset:0;pointer-events:none;z-index:25;display:flex;align-items:center;justify-content:center;"></div>
+  <style>
+    @keyframes popupBounce {
+      0% { transform: scale(0.3) translateY(-20px); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes popupFade {
+      0% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-30px); }
+    }
+    .coin-popup {
+      animation: popupBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, popupFade 0.5s ease-out 1.5s forwards;
+      background: white;
+      border: 3px solid #333;
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .coin-popup-text {
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 16px;
+    }
+    .coin-popup-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin: 0 auto;
+      border: 3px solid #333;
+    }
+  </style>
+  <script src="/_sdk/e063511df281944a.editing_sdk.js" integrity="sha512-Xa8p4aPfoMxVnzxQE2WAG0FfoaPLxdjOJMfUZGm1yZosJTYmnNDvgLkJ2EoN0i3zxjeQVAzUMSXNvTKQVqbXyQ=="></script>
+  <script>
+    const startScreen = document.getElementById('start-screen');
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const playBtn = document.getElementById('play-btn');
+    const colBtn = document.getElementById('col-btn');
+    const spawnBtn = document.getElementById('spawn-btn');
 
+    let gameStarted = false;
+
+    playBtn.addEventListener('click', () => {
+        startScreen.style.display = 'none';
+        canvas.style.display = 'block';
+        colBtn.style.display = 'block';
+        spawnBtn.style.display = 'block';
+        gameStarted = true;
+    });
+
+    spawnBtn.addEventListener('click', () => {
+        px = MAP_W / 2;
+        py = MAP_H / 2;
+    });
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const MAP_W = 3000, MAP_H = 3000;
+    const PLAYER_SIZE = 40, SPEED = 7;
+    let px = MAP_W / 2, py = MAP_H / 2;
+    const keys = {};
+
+    // [변경점 1] 데이터 구조에 난이도(difficulty) 속성 추가
+    const coins = [
+        {name:"Yellow Coin", color:"#ffdc00", x:1500, y:1350, found:false, difficulty:"Easy"}
+    ];
+
+    // 캐릭터의 생김새를 Canvas 코드로 그리는 헬퍼 함수 (크기 비율 조절용 scale 인자 추가)
+    function drawYellowCoinCharacter(ctx, x, y, scale = 1, isFound = true) {
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        // 아직 획득하지 못한 도감 상태라면 회색조 처리
+        const bodyColor = isFound ? "#ffdc00" : "#777777";
+        const strokeColor = isFound ? "#000000" : "#333333";
+        const borderColor = isFound ? "#ffa500" : "#555555";
+
+        // 1. 다리 그리기
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 4 * scale;
+        
+        ctx.beginPath();
+        ctx.moveTo(x - 8 * scale, y + 15 * scale);
+        ctx.lineTo(x - 8 * scale, y + 33 * scale);
+        ctx.lineTo(x - 18 * scale, y + 33 * scale);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x + 10 * scale, y + 15 * scale);
+        ctx.lineTo(x + 10 * scale, y + 31 * scale);
+        ctx.lineTo(x + 23 * scale, y + 31 * scale);
+        ctx.stroke();
+
+        // 2. 동전 몸통 외곽 테두리
+        ctx.beginPath();
+        ctx.arc(x, y, 25 * scale, 0, Math.PI * 2);
+        ctx.fillStyle = borderColor;
+        ctx.fill();
+
+        // 3. 동전 몸통 내부
+        ctx.beginPath();
+        ctx.arc(x, y, 23 * scale, 0, Math.PI * 2);
+        ctx.fillStyle = bodyColor;
+        ctx.fill();
+
+        // 4. 얼굴 그리기
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 3 * scale;
+
+        // 왼쪽 눈
+        ctx.beginPath();
+        ctx.moveTo(x - 5 * scale, y - 10 * scale);
+        ctx.lineTo(x - 5 * scale, y + 1 * scale);
+        ctx.stroke();
+
+        // 미소 입
+        ctx.beginPath();
+        ctx.moveTo(x - 13 * scale, y + 9 * scale);
+        ctx.lineTo(x - 4 * scale, y + 9 * scale);
+        ctx.lineTo(x + 1 * scale, y + 3 * scale);
+        ctx.lineTo(x + 8 * scale, y + 3 * scale);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    window.addEventListener('keydown', e => keys[e.key] = true);
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    let showCollection = false;
+    const modal = document.getElementById('collection-modal');
+    document.getElementById('col-btn').onclick = () => {
+        showCollection = !showCollection;
+        modal.style.display = showCollection ? 'flex' : 'none';
+        if (showCollection) renderSlots();
+    };
+    modal.addEventListener('click', e => { if (e.target === modal) { showCollection = false; modal.style.display = 'none'; }});
+
+    // [변경점 2] 도감(Slots) 렌더링 시 원형 그래픽 대신 캔버스를 생성해 Yellow Coin 캐릭터를 똑같이 드로잉
+    function renderSlots() {
+        const el = document.getElementById('slots');
+        el.innerHTML = '';
+        coins.forEach(c => {
+            const d = document.createElement('div');
+            d.style.cssText = 'background:'+(c.found?'#64dc64':'#b4b4b4')+';border-radius:8px;padding:16px;text-align:center;border:2px solid #333;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+            
+            // 미니 캐릭터를 그릴 작은 독립형 캔버스 생성
+            const slotCanvas = document.createElement('canvas');
+            slotCanvas.width = 70;
+            slotCanvas.height = 75;
+            const sCtx = slotCanvas.getContext('2d');
+            
+            // 도감용 크기(scale = 0.8)에 맞게 캐릭터 그리기 (미발견 시 회색)
+            drawYellowCoinCharacter(sCtx, 35, 30, 0.8, c.found);
+
+            const name = document.createElement('span');
+            name.textContent = c.name;
+            name.style.cssText = 'font-size:14px;font-weight:700;margin-top:4px;color:#222;';
+
+            // [변경점 3] Easy 난이도 텍스트 태그 생성 및 스타일링
+            const diffTag = document.createElement('span');
+            diffTag.textContent = `[${c.difficulty}]`;
+            diffTag.style.cssText = 'font-size:12px;font-weight:600;color:#007aff;margin-top:2px;';
+            
+            d.appendChild(slotCanvas);
+            d.appendChild(name);
+            d.appendChild(diffTag); // 난이도 표시 추가
+            el.appendChild(d);
+        });
+    }
+
+    function showCoinPopup(coin) {
+        const popup = document.createElement('div');
+        popup.className = 'coin-popup';
+        
+        const text = document.createElement('div');
+        text.className = 'coin-popup-text';
+        text.textContent = 'YOU FOUND';
+        
+        const circle = document.createElement('div');
+        circle.className = 'coin-popup-circle';
+        circle.style.backgroundColor = coin.color;
+        
+        popup.appendChild(text);
+        popup.appendChild(circle);
+        
+        document.getElementById('popup-container').appendChild(popup);
+        
+        setTimeout(() => popup.remove(), 2000);
+    }
+
+    function loop() {
+        if (keys['w']||keys['W']||keys['ArrowUp']) py -= SPEED;
+        if (keys['s']||keys['S']||keys['ArrowDown']) py += SPEED;
+        if (keys['a']||keys['A']||keys['ArrowLeft']) px -= SPEED;
+        if (keys['d']||keys['D']||keys['ArrowRight']) px += SPEED;
+        px = Math.max(0, Math.min(px, MAP_W));
+        py = Math.max(0, Math.min(py, MAP_H));
+
+        // collect
+        coins.forEach(c => {
+            if (!c.found && Math.abs(px - c.x) < 35 && Math.abs(py - c.y) < 35) {
+                c.found = true;
+                showCoinPopup(c);
+            }
+        });
+
+        const W = canvas.width, H = canvas.height;
+        let cx = px - W/2, cy = py - H/2;
+        cx = Math.max(0, Math.min(cx, MAP_W - W));
+        cy = Math.max(0, Math.min(cy, MAP_H - H));
+
+        ctx.fillStyle = '#50b450';
+        ctx.fillRect(0, 0, W, H);
+
+        // spawn
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(MAP_W/2-50-cx, MAP_H/2-50-cy, 100, 100);
+
+        // coins
+        coins.forEach(c => {
+            if (!c.found) {
+                drawYellowCoinCharacter(ctx, c.x - cx, c.y - cy, 1, true);
+            }
+        });
+
+        // player
+        ctx.fillStyle = '#3264ff';
+        ctx.fillRect(px-cx-PLAYER_SIZE/2, py-cy-PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE);
+
+        requestAnimationFrame(loop);
+    }
+    loop();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a16bbae532ecaa38',t:'MTc4MzMxMDcxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body></html>
