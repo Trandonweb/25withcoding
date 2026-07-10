@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>관리자 | 코딩과 함께라면</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:sans-serif;
+}
+
+body{
+    background:#f0f0f0;
+}
+
+header{
+    background:white;
+    padding:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+header h1{
+    font-size:26px;
+}
+
+header p{
+    color:#666;
+    margin-top:4px;
+}
+
+#logout{
+    border:none;
+    background:#ff5b5b;
+    color:white;
+    padding:10px 18px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:15px;
+}
+
+#logout:hover{
+    background:#e54d4d;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:30px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:white;
+    border-radius:18px;
+    padding:25px;
+    cursor:pointer;
+    transition:.25s;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 8px 25px rgba(0,0,0,.15);
+}
+
+.card h2{
+    font-size:22px;
+    margin-bottom:12px;
+}
+
+.card p{
+    color:#666;
+    line-height:1.5;
+}
+
+.main{
+    border-left:6px solid #33cc77;
+}
+
+.disabled{
+    opacity:.45;
+    cursor:default;
+}
+
+.disabled:hover{
+    transform:none;
+}
+
+footer{
+    text-align:center;
+    color:#888;
+    padding:35px;
+}
+
+#loading{
+    position:fixed;
+    inset:0;
+    background:#f0f0f0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:25px;
+    z-index:999;
+}
+
+.spinner{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    border:7px solid #ddd;
+    border-top:7px solid #33cc77;
+    animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">
+    <div class="spinner"></div>
+</div>
+
+<header>
+
+<div>
+    <h1>관리자 페이지</h1>
+    <p id="welcome">불러오는 중...</p>
+</div>
+
+<button id="logout">로그아웃</button>
+
+</header>
+
+<div class="container">
+
+<div class="grid">
+
+<div class="card main" id="mirroring">
+    <h2>🖥 화면 모니터링</h2>
+    <p>
+        현재 로그인한 학생들의 화면을 확인합니다.
+        클릭하면 실시간 모니터링 페이지로 이동합니다.
+    </p>
+</div>
+
+<div class="card disabled">
+    <h2>👥 사용자 관리</h2>
+    <p>준비 중...</p>
+</div>
+
+<div class="card disabled">
+    <h2>🏅 상벌점 관리</h2>
+    <p>준비 중...</p>
+</div>
+
+<div class="card disabled">
+    <h2>📊 통계</h2>
+    <p>준비 중...</p>
+</div>
+
+<div class="card disabled">
+    <h2>📜 로그</h2>
+    <p>준비 중...</p>
+</div>
+
+<div class="card disabled">
+    <h2>⚙ 관리자 설정</h2>
+    <p>준비 중...</p>
+</div>
+
+</div>
+
+</div>
+
+<footer>
+2026 Coding Together Administrator
+</footer>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+    authDomain: "points2026-f5e50.firebaseapp.com",
+    projectId: "points2026-f5e50",
+    storageBucket: "points2026-f5e50.firebasestorage.app",
+    messagingSenderId: "248724251417",
+    appId: "1:248724251417:web:02d85cdc4addac98069b88"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const id = localStorage.getItem("userId");
+  // 로그인 확인
+if (!id) {
+    location.href = "/login?redirect=/admin/";
+    throw new Error("Not logged in");
+}
+
+try{
+
+    const snap = await getDoc(doc(db,"users",id));
+
+    if(!snap.exists()){
+        localStorage.removeItem("userId");
+        location.href="/login?redirect=/admin/";
+        throw new Error("User not found");
+    }
+
+    const user = snap.data();
+
+    // 권한 확인
+    if(user.role !== "president" && user.role !== "vice"){
+        alert("관리자만 접근할 수 있습니다.");
+        location.href="/";
+        throw new Error("No Permission");
+    }
+
+    // 환영 문구
+    document.getElementById("welcome").innerHTML =
+        `안녕하세요, <b>${user.name}</b>님 (${user.role})`;
+
+    // 로딩 종료
+    document.getElementById("loading").style.display="none";
+
+}catch(e){
+
+    console.error(e);
+
+    localStorage.removeItem("userId");
+    location.href="/login?redirect=/admin/";
+
+}
+
+// 로그아웃
+document.getElementById("logout").onclick=()=>{
+
+    if(confirm("로그아웃하시겠습니까?")){
+
+        localStorage.removeItem("userId");
+        location.href="/login";
+
+    }
+
+};
+
+// 화면 모니터링
+document.getElementById("mirroring").onclick=()=>{
+
+    location.href="/admin/mirroring.html";
+
+};
+
+</script>
+
+</body>
+</html>
+  
