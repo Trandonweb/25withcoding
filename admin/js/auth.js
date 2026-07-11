@@ -20,7 +20,7 @@ export async function getCurrentUser() {
     const userId = localStorage.getItem("userId");
 
     if (!userId) {
-        location.href = "/login?redirect=" + encodeURIComponent(location.pathname);
+        location.href="/signin/?redirect=/admin/mirroring.html" + encodeURIComponent(location.pathname);
         throw new Error("로그인 필요");
     }
 
