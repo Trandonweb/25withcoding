@@ -20,8 +20,7 @@ import {
 
 import {
     startAdminSignaling,
-    stopAdminSignaling,
-    getConnectionState
+    stopAdminSignaling
 } from "./webrtc.js";
 
 
@@ -47,27 +46,27 @@ let viewerTitle = null;
 
 export function initViewer(){
 
-    grid=document.getElementById("grid");
+    grid = document.getElementById("grid");
 
-    viewer=document.getElementById("viewer");
+    viewer = document.getElementById("viewer");
 
-    viewerImage=document.getElementById("bigImage");
+    viewerImage = document.getElementById("bigImage");
 
-    viewerVideo=document.getElementById("bigVideo");
+    viewerVideo = document.getElementById("bigVideo");
 
-    viewerTitle=document.getElementById("viewerTitle");
+    viewerTitle = document.getElementById("viewerTitle");
 
 
     loadUsers();
 
 
-    const close=
+    const close =
         document.getElementById("closeViewer");
 
 
     if(close){
 
-        close.onclick=()=>{
+        close.onclick = () => {
 
             closeViewer();
 
@@ -85,34 +84,28 @@ export function initViewer(){
 
 function loadUsers(){
 
-
     onSnapshot(
         collection(db,"users"),
         snap=>{
-
 
             users.clear();
 
 
             snap.forEach(doc=>{
 
-
                 users.set(
                     doc.id,
                     doc.data()
                 );
-
 
             });
 
 
             render();
 
-
         }
 
     );
-
 
 }
 
@@ -124,7 +117,6 @@ function loadUsers(){
 
 function render(){
 
-
     if(!grid) return;
 
 
@@ -134,7 +126,7 @@ function render(){
     users.forEach((data,id)=>{
 
 
-        const card=
+        const card =
             createCard(
                 id,
                 data
@@ -149,7 +141,6 @@ function render(){
 
     autoGrid();
 
-
 }
 
 
@@ -161,7 +152,7 @@ function render(){
 function createCard(id,data){
 
 
-    const card=
+    const card =
         document.createElement("div");
 
 
@@ -175,9 +166,7 @@ function createCard(id,data){
         <b>${id}</b>
 
         <span class="mode">
-
-            FIREBASE
-
+            ${data.mode || "FIREBASE"}
         </span>
 
     </div>
@@ -186,9 +175,7 @@ function createCard(id,data){
     <div class="preview">
 
         <div class="black">
-
             화면 준비중...
-
         </div>
 
     </div>
@@ -203,36 +190,31 @@ function createCard(id,data){
     );
 
 
-
     card.onclick=()=>{
 
-
         openViewer(id);
-
 
     };
 
 
-
     return card;
-
 
 }
 
 
 
 // ============================================
-// 이미지 업데이트
+// 미리보기 이미지 업데이트
 // ============================================
 
 async function updatePreview(card,id){
 
 
-    const box=
+    const box =
         card.querySelector(".preview");
 
 
-    const url=
+    const url =
         await getLatestFrame(id);
 
 
@@ -243,6 +225,20 @@ async function updatePreview(card,id){
         box.innerHTML=`
 
         <img src="${url}">
+
+        `;
+
+
+    }else{
+
+
+        box.innerHTML=`
+
+        <div class="black">
+
+            화면 준비중...
+
+        </div>
 
         `;
 
@@ -267,12 +263,11 @@ async function openViewer(id){
     viewer.style.display="flex";
 
 
-    viewerTitle.innerText=
-        id;
+    viewerTitle.innerText=id;
 
 
 
-    const snap=
+    const snap =
         await getDoc(
             doc(db,"users",id)
         );
@@ -310,11 +305,20 @@ async function openViewer(id){
         viewerImage.style.display="flex";
 
 
-        const url=
+        const url =
             await getLatestFrame(id);
 
 
-        viewerImage.src=url;
+
+        if(url){
+
+            viewerImage.src=url;
+
+        }else{
+
+            viewerImage.removeAttribute("src");
+
+        }
 
 
     }
@@ -340,9 +344,8 @@ function updateRTCState(id,state){
     if(state==="connected"){
 
 
-        viewerTitle.innerText=
+        viewerTitle.innerText =
             `${id} - WEBRTC`;
-
 
     }
 
@@ -374,6 +377,7 @@ async function fallbackFirebase(){
         return;
 
 
+
     stopAdminSignaling(
         selectedId
     );
@@ -384,18 +388,27 @@ async function fallbackFirebase(){
     viewerImage.style.display="flex";
 
 
-    const url=
+
+    const url =
         await getLatestFrame(
             selectedId
         );
 
 
-    viewerImage.src=url;
+    if(url){
+
+        viewerImage.src=url;
+
+    }else{
+
+        viewerImage.removeAttribute("src");
+
+    }
 
 
-    viewerTitle.innerText=
+
+    viewerTitle.innerText =
         `${selectedId} - FIREBASE`;
-
 
 }
 
@@ -415,7 +428,6 @@ function closeViewer(){
             selectedId
         );
 
-
     }
 
 
@@ -424,6 +436,20 @@ function closeViewer(){
 
 
     viewer.style.display="none";
+
+
+    if(viewerVideo){
+
+        viewerVideo.srcObject=null;
+
+    }
+
+
+    if(viewerImage){
+
+        viewerImage.removeAttribute("src");
+
+    }
 
 
 }
@@ -437,7 +463,7 @@ function closeViewer(){
 function autoGrid(){
 
 
-    const count=
+    const count =
         grid.children.length;
 
 
@@ -461,8 +487,7 @@ function autoGrid(){
 
 
 
-    grid.style.gridTemplateColumns=
+    grid.style.gridTemplateColumns =
         `repeat(${col},1fr)`;
-
 
 }
