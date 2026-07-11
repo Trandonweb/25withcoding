@@ -10,20 +10,20 @@ let animationFrameId = null;
 // --- 게임 규칙 및 스코어 보드 ---
 let difficulty = "easy";
 let gameOver = false;
-let currentRound = 1; // 1~5 라운드
-let currentTurn = "HUMAN_ATTACK"; // HUMAN_ATTACK -> AI_ATTACK -> 라운드 증가
+let currentRound = 1; 
+let currentTurn = "HUMAN_ATTACK"; 
 let humanScore = 0;
 let aiScore = 0;
-let turnResultText = ""; // "GOAL!" 또는 "MISS"
+let turnResultText = ""; 
 let turnResultTimer = 0;
 
 // --- ✍️ 마우스 궤적 드로잉 및 카메라 변수 ---
 let isDrawingPath = false;
-let drawnMousePoints = []; // 유저가 마우스로 그린 화면 픽셀 좌표 목록
-let ballPath3D = [];       // 실질적으로 공이 순차 비행할 3D 물리 공간 좌표 배열
-let pathIndex = 0;         // 현재 공이 가고 있는 궤적 위치 인덱스
+let drawnMousePoints = []; 
+let ballPath3D = [];       
+let pathIndex = 0;         
 
-let camY = 0; // 카메라 종축 트래킹 변수
+let camY = 0; 
 const HORIZON_DEFAULT = 180;
 let horizon = HORIZON_DEFAULT;
 
@@ -33,7 +33,12 @@ let keeperObj = {};
 let ballObj = {};
 const goalObj = { x: 0, z: 460, width: 220, height: 100 };
 
-// --- 4개 팀 유니폼 픽셀 데이터 매핑 ---
+// --- 키퍼 다이빙 메커니즘 변수 ---
+let isDiving = false;
+let diveTargetX = 0;
+let diveProgress = 0;
+
+// --- 픽셀 데이터 매핑 ---
 const PIXELS_STRIKER = [
     [0,0,4,4,4,0,0], [0,0,4,1,4,0,0], [0,2,2,2,2,2,0],
     [2,2,5,2,5,2,2], [2,2,2,2,2,2,2], [0,6,6,0,6,6,0],
@@ -58,12 +63,12 @@ function drawPixelArt(art, sx, sy, pixelSize, teamColor, gloveColor = '#ffffff')
         for (let c = 0; c < art[r].length; c++) {
             let color = null;
             switch(art[r][c]) {
-                case 1: color = '#ffdbac'; break; // 피부
-                case 2: color = teamColor; break; // 동적 치환 유니폼 상의
+                case 1: color = '#ffdbac'; break; 
+                case 2: color = teamColor; break; 
                 case 3: color = '#000000'; break;
-                case 4: color = '#3a2718'; break; // 머리카락
+                case 4: color = '#3a2718'; break; 
                 case 5: color = gloveColor; break; 
-                case 6: color = '#ffffff'; break; // 바지
+                case 6: color = '#ffffff'; break; 
             }
             if (color) {
                 ctx.fillStyle = color;
@@ -83,7 +88,8 @@ function showDifficulty() {
     gameAreaRef.innerHTML = `
         <div style="text-align:center; padding-top: 50px;">
             <h2 style="margin-bottom: 20px;">⚽ AI vs HUMAN : 프리킥 대항전</h2>
-            <p style="color: #666; margin-bottom: 30px;">공에서부터 골대 안으로 원하는 <span style="color:#1ea857; font-weight:bold;">슈팅 곡선을 마우스로 직접 그리세요!</span></p>
+            <p style="color: #666; margin-bottom: 15px;">공에서 골대 안으로 원하는 <span style="color:#1ea857; font-weight:bold;">슈팅 곡선을 그립시다!</span></p>
+            <p style="color: #888; font-size: 14px; margin-bottom: 30px;">🛡️ <b>수비 턴 변경:</b> AI가 찰 때, 골대의 원하는 곳을 <b>마우스로 클릭</b>하면 키퍼가 날아갑니다!</p>
             <div style="display:flex; flex-direction:column; gap:12px; max-width:320px; margin:0 auto;">
                 <button class="game-select-btn" onclick="window.__startSoccer('easy')">쉬움 (AI의 방어율 저하)</button>
                 <button class="game-select-btn" onclick="window.__startSoccer('normal')">보통 (치열한 공방전)</button>
@@ -108,7 +114,7 @@ function startGame(level) {
 
     gameAreaRef.innerHTML = `
         <div style="display:flex; flex-direction:column; align-items:center; width:100%; position:relative;">
-            <canvas id="soccerCanvas" width="900" height="550" style="background:#1e5e2f; border-radius:12px; cursor:crosshair; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"></canvas>
+            <canvas id="soccerCanvas" width="900" height="550" style="background:#1e5e2f; border-radius:12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"></canvas>
         </div>
     `;
 
@@ -121,19 +127,22 @@ function startGame(level) {
     loop();
 }
 
-// --- 턴 교대 시 위치 및 물리 초기화 ---
 function initTurn() {
     isDrawingPath = false;
     drawnMousePoints = [];
     ballPath3D = [];
     pathIndex = 0;
     
+    isDiving = false;
+    diveTargetX = 0;
+    diveProgress = 0;
+
     camY = 0;
     horizon = HORIZON_DEFAULT;
     turnResultText = "";
     turnResultTimer = 0;
 
-    let keeperSpeed = difficulty === "easy" ? 2.5 : difficulty === "normal" ? 4.5 : 6.5;
+    let keeperSpeed = difficulty === "easy" ? 2.0 : difficulty === "normal" ? 3.5 : 5.0;
 
     ballObj = { x: 0, y: 0, z: 40, radius: 13, isShot: false };
     kickerObj = { x: -25, y: 0, z: 20 }; 
@@ -141,17 +150,43 @@ function initTurn() {
     if (currentTurn === "HUMAN_ATTACK") {
         keeperObj = { x: 0, y: 0, z: 450, speed: keeperSpeed, dir: 1, width: 50, height: 65 };
     } else {
-        keeperObj = { x: 0, y: 0, z: 450, speed: keeperSpeed * 0.7, dir: 1, width: 50, height: 65 };
-        setTimeout(executeAIShot, 1200);
+        keeperObj = { x: 0, y: 0, z: 450, speed: 0, dir: 1, width: 50, height: 65 };
+        setTimeout(executeAIShot, 1500); // 유저가 수비 준비할 시간 확보
     }
 }
 
-// ---------------- ✍️ MOUSE PATH DRAWING SYSTEM ----------------
+// ---------------- ✍️ MOUSE SYSTEM (드로잉 & 골대 다이빙 클릭) ----------------
 function setupMouseEvents() {
     canvas.onmousedown = (e) => {
-        if (currentTurn !== "HUMAN_ATTACK" || ballObj.isShot || gameOver || turnResultText) return;
-        isDrawingPath = true;
-        drawnMousePoints = [{ x: e.offsetX, y: e.offsetY }];
+        if (gameOver || turnResultText) return;
+
+        // 1. 공격 유저일 때 -> 드로잉 시작
+        if (currentTurn === "HUMAN_ATTACK" && !ballObj.isShot) {
+            isDrawingPath = true;
+            drawnMousePoints = [{ x: e.offsetX, y: e.offsetY }];
+        }
+        
+        // 2. 수비 유저일 때 -> 골대 부분 클릭 시 다이빙 발동
+        if (currentTurn === "AI_ATTACK" && !isDiving) {
+            let mx = e.offsetX;
+            let my = e.offsetY;
+
+            // 골대의 현재 원근감 화면 투영 위치 구하기
+            const gBL = project(-goalObj.width/2, 0, goalObj.z);
+            const gTR = project(goalObj.width/2, goalObj.height, goalObj.z);
+
+            // 골대 박스 근처를 클릭했는지 검사
+            if (mx >= gBL.x - 30 && mx <= gTR.x + 30 && my >= gTR.y - 30 && my <= gBL.y + 20) {
+                // 화면의 마우스 클릭 X좌표를 3D 공간의 X축으로 밸런싱 역산
+                const scale = 350 / (350 + goalObj.z);
+                let targetX3D = (mx - canvas.width / 2) / scale;
+                
+                // 골대 한계범위 제한 제한
+                diveTargetX = Math.max(-goalObj.width/2 - 10, Math.min(goalObj.width/2 + 10, targetX3D));
+                isDiving = true;
+                diveProgress = 0;
+            }
+        }
     };
 
     canvas.onmousemove = (e) => {
@@ -174,11 +209,13 @@ function setupMouseEvents() {
             let sampleIdx = Math.min(drawnMousePoints.length - 1, Math.floor(t * (drawnMousePoints.length - 1)));
             let pt = drawnMousePoints[sampleIdx];
 
-            // 변수명에서 앞에 숫자를 제거하여 문법 에러 원천 차단 (posZ, posX, posY)
             let posZ = 40 + (goalObj.z - 40) * t;
             let scale = 350 / (350 + posZ);
             let posX = (pt.x - canvas.width / 2) / scale;
-            let posY = ((canvas.height - pt.y) - (horizon * (1 - scale))) / scale;
+            
+            // 🚀 [초반 뜨는 현상 튜닝] t(진행도) 가중치를 주어 출발지 원근 궤적 변환 보정
+            let targetY = ((canvas.height - pt.y) - (horizon * (1 - scale))) / scale;
+            let posY = targetY * Math.pow(t, 0.5); // 급격하게 위로 솟구치지 않고 부드러운 포물선 유도
             if (posY < 0) posY = 0; 
 
             ballPath3D.push({ x: posX, y: posY, z: posZ });
@@ -194,16 +231,16 @@ function executeAIShot() {
     ballPath3D = [];
     pathIndex = 0;
 
-    let targetX = (Math.random() - 0.5) * (goalObj.width - 40);
-    let targetY = 20 + Math.random() * (goalObj.height - 35);
-    let curveX = (Math.random() - 0.5) * 160; 
+    let targetX = (Math.random() - 0.5) * (goalObj.width - 30);
+    let targetY = 15 + Math.random() * (goalObj.height - 40);
+    let curveX = (Math.random() - 0.5) * 150; 
 
-    const totalFrames = 60;
+    const totalFrames = 65; // 유저가 보고 대처하게 살짝 느리게 유도
     for (let i = 0; i <= totalFrames; i++) {
         let t = i / totalFrames;
         let posZ = 40 + (goalObj.z - 40) * t;
         let posX = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * curveX + t * t * targetX;
-        let posY = Math.sin(t * Math.PI) * (targetY + 30) + (targetY * t);
+        let posY = Math.sin(t * Math.PI) * (targetY + 25) + (targetY * t);
 
         ballPath3D.push({ x: posX, y: posY, z: posZ });
     }
@@ -213,14 +250,22 @@ function executeAIShot() {
 function update() {
     if (gameOver) return;
 
+    // 골키퍼 제어 알고리즘
     if (currentTurn === "AI_ATTACK") {
-        if (window.keys && window.keys['ArrowLeft']) keeperObj.x -= 4.5;
-        if (window.keys && window.keys['ArrowRight']) keeperObj.x += 4.5;
+        // [유저가 골키퍼 제어] 클릭 다이빙 상태 연산
+        if (isDiving && diveProgress < 1) {
+            diveProgress += 0.08; // 다이빙 속도
+            keeperObj.x = keeperObj.x * (1 - diveProgress) + diveTargetX * diveProgress;
+            // 다이빙 도중 살짝 띄워주는 연산
+            keeperObj.y = Math.sin(diveProgress * Math.PI) * 20;
+        }
     } else {
+        // [AI가 골키퍼 제어] 좌우 무빙 자동 수비
         keeperObj.x += keeperObj.speed * keeperObj.dir;
-        if (keeperObj.x > goalObj.width/2 - 10 || keeperObj.x < -goalObj.width/2 + 10) keeperObj.dir *= -1;
+        if (keeperObj.x > goalObj.width/2 - 15 || keeperObj.x < -goalObj.width/2 + 15) keeperObj.dir *= -1;
     }
 
+    // 공 비행 및 판정
     if (ballObj.isShot && ballPath3D.length > 0 && !turnResultText) {
         if (pathIndex < ballPath3D.length) {
             let nextPos = ballPath3D[pathIndex];
@@ -228,17 +273,17 @@ function update() {
             ballObj.y = nextPos.y;
             ballObj.z = nextPos.z;
 
-            // 시야 처박힘 해결용 카메라 고정 로직
             if (ballObj.z > 80) {
-                camY = camY * 0.9 + Math.max(0, ballObj.y * 0.35) * 0.1; 
+                camY = camY * 0.9 + Math.max(0, ballObj.y * 0.3) * 0.1; 
                 horizon = horizon * 0.95 + HORIZON_DEFAULT * 0.05;      
             }
-
             pathIndex++;
         }
 
         if (ballObj.z >= goalObj.z || pathIndex >= ballPath3D.length) {
-            if (Math.abs(ballObj.x - keeperObj.x) < 45 && ballObj.y < keeperObj.height) {
+            // 수비 범위 보정 (다이빙 가중치 추가)
+            let defenseRange = isDiving ? 55 : 40; 
+            if (Math.abs(ballObj.x - keeperObj.x) < defenseRange && ballObj.y < (keeperObj.height + 20)) {
                 turnResultText = "MISS";
             } 
             else if (ballObj.x >= -goalObj.width/2 && ballObj.x <= goalObj.width/2 && ballObj.y <= goalObj.height && ballObj.y >= 0) {
@@ -269,7 +314,6 @@ function nextTurnEvent() {
         } else {
             let remHumanAtt = 5 - currentRound;
             let remAiAtt = 5 - currentRound;
-
             if (humanScore + remHumanAtt < aiScore || aiScore + remAiAtt < humanScore) {
                 gameOver = true;
             } else {
@@ -285,7 +329,7 @@ function nextTurnEvent() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. 관중석 및 하늘 배경
+    // 1. 관중석 및 배경
     ctx.fillStyle = '#1e3c72'; ctx.fillRect(0, 0, canvas.width, horizon - 40); 
     ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, horizon - 40, canvas.width, 40); 
 
@@ -296,7 +340,7 @@ function draw() {
         }
     }
 
-    // 경기장 필드 잔디
+    // 경기장 잔디 그라데이션
     ctx.fillStyle = '#1b5228'; ctx.fillRect(0, horizon, canvas.width, canvas.height - horizon);
     ctx.fillStyle = '#226632';
     for (let i = 0; i < 10; i++) {
@@ -307,7 +351,7 @@ function draw() {
         }
     }
 
-    // 경기장 라인 마킹
+    // 가이드라인 라인 마킹
     ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2;
     ctx.beginPath();
     let lineFar = project(-250, 0, 460), lineNear = project(-400, 0, 0);
@@ -355,7 +399,7 @@ function draw() {
     ctx.arc(bp.x, bp.y, ballObj.radius * bp.scale, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.stroke();
 
-    // ✍️ 실시간 유저 드로잉 라인 렌더링
+    // ✍️ 실시간 유저 드로잉 라인 노출
     if (isDrawingPath && drawnMousePoints.length > 1) {
         ctx.strokeStyle = '#00ffaa'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.beginPath();
@@ -364,12 +408,14 @@ function draw() {
         ctx.stroke();
     }
 
-    // 6. 스코어보드 HUD
-    ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; ctx.fillRect(20, 20, 320, 65);
-    ctx.fillStyle = "#ffffff"; ctx.font = "bold 15px Pretendard"; ctx.textAlign = "left";
-    ctx.fillText(`ROUND: ${currentRound} / 5 | ${currentTurn === "HUMAN_ATTACK" ? "인간 공격" : "수비 (방향키 제어)"}`, 35, 42);
-    ctx.font = "bold 18px Pretendard";
-    ctx.fillText(`HUMAN  ${humanScore} : ${aiScore}  AI`, 35, 72);
+    // 6. 스코어보드 HUD 및 가이드 텍스트
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)"; ctx.fillRect(20, 20, 360, 80);
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 14px Pretendard"; ctx.textAlign = "left";
+    let guideStr = currentTurn === "HUMAN_ATTACK" ? "공에서 골대 방향으로 슈팅선을 그리세요!" : "골대 안의 빈공간을 클릭해 다이빙 수비!";
+    ctx.fillText(`ROUND: ${currentRound} / 5 | ${currentTurn === "HUMAN_ATTACK" ? "인간 공격" : "인간 수비"}`, 35, 42);
+    ctx.fillText(guideStr, 35, 62);
+    ctx.font = "bold 18px Pretendard"; ctx.fillStyle = "#ffcc00";
+    ctx.fillText(`HUMAN  ${humanScore} : ${aiScore}  AI`, 35, 87);
 
     if (turnResultText) {
         ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -426,10 +472,4 @@ export function destroy() {
         canvas.onclick = null;
     }
     window.__startSoccer = null;
-}
-
-if (!window.keys) {
-    window.keys = {};
-    window.addEventListener('keydown', e => window.keys[e.code] = true);
-    window.addEventListener('keyup', e => window.keys[e.code] = false);
 }
