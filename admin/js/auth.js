@@ -61,6 +61,16 @@ export async function requireAdmin() {
     }
 
     return user;
+}
+
+
+/**
+ * 페이지 접근 권한 확인용
+ * 관리자 페이지 공통 사용
+ */
+export async function checkAuth() {
+
+    return await requireAdmin();
 
 }
 
