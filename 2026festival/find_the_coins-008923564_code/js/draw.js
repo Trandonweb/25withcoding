@@ -1,24 +1,29 @@
 /**
  * draw.js
- * 게임의 모든 렌더링 로직을 담당합니다.
+ * 게임의 모든 렌더링 루프 및 그리기 함수를 담당합니다.
  */
 
+// 캔버스 컨텍스트 가져오기
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+/**
+ * 게임의 메인 렌더링 루프
+ */
 function drawGame() {
     // 1. 화면 초기화
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 카메라 위치 보정 (플레이어가 화면 중앙에 오도록)
+    // 카메라 위치 계산 (플레이어가 화면 중앙에 오도록)
     const offsetX = canvas.width / 2 - px;
     const offsetY = canvas.height / 2 - py;
 
     ctx.save();
     ctx.translate(offsetX, offsetY);
 
-    // 2. 맵 그리기 (현재 맵에 따라 분기)
+    // 2. 맵 그리기
     if (currentMap === "main") {
         drawMainMap();
-        // 메인 맵의 코인 및 오브젝트 그리기
-        drawHouse();
     } else if (currentMap === "house") {
         drawHouseMap();
     }
@@ -28,44 +33,41 @@ function drawGame() {
 
     ctx.restore();
 
-    // 4. UI 및 대화 메시지 출력
-    drawUI();
-
-    requestAnimationFrame(drawGame);
+    // 4. UI 렌더링 (카메라 고정)
+    drawUIOverlay();
 }
 
+/**
+ * 맵 및 배경 그리기
+ */
 function drawMainMap() {
-    ctx.fillStyle = "#2d3436"; // 맵 배경색
-    ctx.fillRect(0, 0, MAP_W, MAP_H);
+    ctx.fillStyle = "#2d3436";
+    ctx.fillRect(0, 0, GAME_CONFIG.MAP_MAIN_SIZE, GAME_CONFIG.MAP_MAIN_SIZE);
     
-    // 격자선이나 장식 요소들
+    // 장식용 그리드
     ctx.strokeStyle = "#444";
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= MAP_W; i += 100) {
-        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, MAP_H); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(MAP_W, i); ctx.stroke();
+    ctx.lineWidth = 2;
+    for (let i = 0; i <= GAME_CONFIG.MAP_MAIN_SIZE; i += 200) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, GAME_CONFIG.MAP_MAIN_SIZE); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(GAME_CONFIG.MAP_MAIN_SIZE, i); ctx.stroke();
     }
 }
 
-function drawHouse() {
-    // 집 오브젝트
-    ctx.fillStyle = "#8b4513";
-    ctx.fillRect(houseObj.x, houseObj.y, houseObj.w, houseObj.h);
-    // 문
-    ctx.fillStyle = "#5d2906";
-    ctx.fillRect(houseObj.doorX, houseObj.doorY, 30, 50);
+function drawHouseMap() {
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(0, 0, GAME_CONFIG.MAP_HOUSE_SIZE, GAME_CONFIG.MAP_HOUSE_SIZE);
 }
 
-function drawUI() {
-    // 플레이어 채팅 말풍선
+/**
+ * UI 레이어 그리기
+ */
+function drawUIOverlay() {
+    // 채팅 메시지 표시
     if (messageTimer > 0) {
         ctx.fillStyle = "rgba(255,255,255,0.9)";
-        ctx.padding = 10;
-        ctx.font = "16px Arial";
-        ctx.fillText(playerMessage, canvas.width / 2 - 50, canvas.height / 2 - 60);
+        ctx.font = "20px DM Sans";
+        ctx.textAlign = "center";
+        ctx.fillText(playerMessage, canvas.width / 2, canvas.height / 2 - 80);
         messageTimer--;
     }
 }
-
-// 렌더링 시작
-drawGame();
