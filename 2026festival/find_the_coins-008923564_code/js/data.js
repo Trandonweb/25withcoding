@@ -1,74 +1,46 @@
-// =====================================
-// data.js
-// Find the Coins
-// 게임 데이터 및 설정
-// =====================================
+/**
+ * data.js
+ * 게임의 설정값, 상수, 글로벌 상태 관리
+ */
 
-// Canvas
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-// 게임 설정
-const GAME = {
-    width: 1280,
-    height: 720,
-    fps: 60,
-    version: "1.0.0"
+// 1. 게임 환경 설정
+const GAME_CONFIG = {
+    FPS: 60,
+    DEFAULT_SPEED: 7,
+    PLAYER_SIZE: 40,
+    MAP_MAIN_SIZE: 3000,
+    MAP_HOUSE_SIZE: 600
 };
 
-// 플레이어
-const PLAYER = {
-    width: 48,
-    height: 48,
-    speed: 4,
-    startX: 640,
-    startY: 360
-};
+// 2. 게임 상태 변수
+let gameStarted = false;
+let currentMap = "main"; // "main" 또는 "house"
+let px = 1500; // 초기 플레이어 X
+let py = 1500; // 초기 플레이어 Y
 
-// 플레이어 상태
-let player = {
-    x: PLAYER.startX,
-    y: PLAYER.startY,
-    width: PLAYER.width,
-    height: PLAYER.height,
-    direction: "down",
-    moving: false
-};
+// 3. UI 및 기타 상태
+let showCollection = false;
+let playerMessage = "";
+let messageTimer = 0;
 
-// 키 입력
+// 4. 이벤트 및 키 상태 관리용
 const keys = {};
 
-// 게임 상태
-let gameState = {
-    paused: false,
-    inventoryOpen: false,
-    dialogOpen: false,
-    currentMap: "main"
+/**
+ * 전역 설정 및 데이터 초기화
+ */
+const DATA = {
+    // 맵 이동 시 플레이어 위치 정보
+    spawnPoints: {
+        main: { x: 1500, y: 1500 },
+        house: { x: 300, y: 300 }
+    },
+    
+    // 게임 시스템 메시지 스타일 등
+    uiSettings: {
+        popupDuration: 2000,
+        chatTimeout: 180
+    }
 };
 
-// 코인 데이터
-let coins = [];
-
-// 획득한 코인
-let collectedCoins = [];
-
-// 집 데이터
-let houses = [];
-
-// NPC
-let npcs = [];
-
-// 이미지
-const images = {};
-
-// 효과음
-const sounds = {};
-
-// 폰트
-const fonts = {};
-
-// 애니메이션
-let animationFrameId = null;
-
-// 디버그 모드
-const DEBUG = false;
+console.log("Data initialized: System Ready.");
