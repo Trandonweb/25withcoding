@@ -1,15 +1,17 @@
 /**
  * main.js
- * 게임 루프 관리 및 모듈 통합
+ * 게임 루프 관리 및 전체 시스템 통합 실행
  */
 
-// 1. 게임 루프 설정
+/**
+ * 게임 메인 루프: 매 프레임마다 호출됨
+ */
 function gameLoop() {
     if (gameStarted) {
-        // 입력 처리 (events.js의 함수 호출)
+        // 1. 플레이어 이동 및 상호작용 업데이트
         handlePlayerMovement();
         
-        // 렌더링 처리 (draw.js의 함수 호출)
+        // 2. 화면 렌더링
         drawGame();
     }
     
@@ -17,9 +19,11 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// 2. 초기화 함수
+/**
+ * 게임 초기화 함수
+ */
 function init() {
-    console.log("Find The Coins 게임을 시작합니다.");
+    console.log("Find The Coins 게임 엔진 시작...");
     
     // 윈도우 리사이즈 대응
     window.addEventListener('resize', () => {
@@ -27,20 +31,30 @@ function init() {
         canvas.height = window.innerHeight;
     });
 
+    // 캔버스 사이즈 초기화
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
     // 게임 루프 시작
     gameLoop();
 }
 
-// 3. 페이지 로드 완료 시 초기화 실행
+// 윈도우 로드 완료 시 게임 시작
 window.onload = () => {
     init();
 };
 
 /**
- * 전역 상태 관리
- * (다른 파일과 공유되는 데이터)
+ * 전역 유틸리티: 게임 시작 버튼 이벤트 연결
+ * (index.html에서 호출 가능하도록 설정)
  */
-const gameState = {
-    isPaused: false,
-    score: 0
-};
+document.getElementById('play-btn').addEventListener('click', () => {
+    gameStarted = true;
+    document.getElementById('start-screen').style.display = 'none';
+    canvas.style.display = 'block';
+    
+    // UI 버튼들 활성화
+    document.getElementById('col-btn').style.display = 'block';
+    document.getElementById('spawn-btn').style.display = 'block';
+    document.getElementById('chat-btn').style.display = 'block';
+});
