@@ -1,102 +1,31 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coin Adventure</title>
+    <meta charset="UTF-8">
+    <title>Coin Adventure</title>
 
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-body{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    background:#222;
-    overflow:hidden;
-}
-
-#game{
-    position:relative;
-    width:1000px;
-    height:700px;
-    background:#3dbb4a;
-    border:5px solid #111;
-    overflow:hidden;
-}
-
-#player{
-    position:absolute;
-    width:40px;
-    height:40px;
-    background:#1e90ff;
-    left:50px;
-    top:50px;
-}
-</style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
 <div id="game">
-    <div id="player"></div>
+
+    <div id="map">
+
+        <div id="spawn"></div>
+
+        <div id="player"></div>
+
+    </div>
+
 </div>
 
-<script>
-
-const player = document.getElementById("player");
-
-let x = 50;
-let y = 50;
-
-const speed = 5;
-
-const keys = {};
-
-document.addEventListener("keydown",(e)=>{
-    keys[e.key]=true;
-});
-
-document.addEventListener("keyup",(e)=>{
-    keys[e.key]=false;
-});
-
-function update(){
-
-    if(keys["ArrowUp"] || keys["w"] || keys["W"]){
-        y -= speed;
-    }
-
-    if(keys["ArrowDown"] || keys["s"] || keys["S"]){
-        y += speed;
-    }
-
-    if(keys["ArrowLeft"] || keys["a"] || keys["A"]){
-        x -= speed;
-    }
-
-    if(keys["ArrowRight"] || keys["d"] || keys["D"]){
-        x += speed;
-    }
-
-    // 맵 밖으로 못 나감
-    x = Math.max(0,Math.min(960,x));
-    y = Math.max(0,Math.min(660,y));
-
-    player.style.left = x + "px";
-    player.style.top = y + "px";
-
-    requestAnimationFrame(update);
-}
-
-update();
-
-</script>
+<script src="js/input.js"></script>
+<script src="js/player.js"></script>
+<script src="js/game.js"></script>
 
 </body>
+
 </html>
