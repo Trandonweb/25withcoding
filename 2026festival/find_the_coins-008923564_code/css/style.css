@@ -1,0 +1,67 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#222;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    overflow:hidden;
+}
+
+#game{
+
+    width:1200px;
+    height:700px;
+
+    border:5px solid black;
+
+    overflow:hidden;
+
+    position:relative;
+}
+
+/* 맵 */
+
+#map{
+
+    width:2500px;
+    height:2500px;
+
+    background:#3fb54b;
+
+    position:relative;
+}
+
+/* 플레이어 */
+
+#player{
+
+    width:40px;
+    height:40px;
+
+    background:dodgerblue;
+
+    position:absolute;
+}
+
+/* 스폰 지점 */
+
+#spawn{
+
+    width:80px;
+    height:80px;
+
+    border:4px solid yellow;
+
+    background:rgba(255,255,0,0.25);
+
+    position:absolute;
+
+    left:1210px;
+    top:1210px;
+}
