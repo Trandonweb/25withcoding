@@ -88,8 +88,8 @@ function showDifficulty() {
     gameAreaRef.innerHTML = `
         <div style="text-align:center; padding-top: 50px;">
             <h2 style="margin-bottom: 20px;">⚽ AI vs HUMAN : 프리킥 대항전</h2>
-            <p style="color: #666; margin-bottom: 15px;">공에서 골대 안으로 원하는 <span style="color:#1ea857; font-weight:bold;">슈팅 곡선을 그립시다!</span></p>
-            <p style="color: #888; font-size: 14px; margin-bottom: 30px;">🛡️ <b>수비 턴 변경:</b> AI가 찰 때, 골대의 원하는 곳을 <b>마우스로 클릭</b>하면 키퍼가 날아갑니다!</p>
+            <p style="color: #666; margin-bottom: 15px;">공에서 골대 안으로 원하는 <span style="color:#1ea857; font-weight:bold;">슈팅 곡선을 시원하게 그립시다!</span></p>
+            <p style="color: #888; font-size: 14px; margin-bottom: 30px;">🛡️ <b>수비 턴 가이드:</b> AI 공격 시 화면 요동 없이 키퍼 정면 시점으로 철저히 고정됩니다.</p>
             <div style="display:flex; flex-direction:column; gap:12px; max-width:320px; margin:0 auto;">
                 <button class="game-select-btn" onclick="window.__startSoccer('easy')">쉬움 (AI의 방어율 저하)</button>
                 <button class="game-select-btn" onclick="window.__startSoccer('normal')">보통 (치열한 공방전)</button>
@@ -137,6 +137,7 @@ function initTurn() {
     diveTargetX = 0;
     diveProgress = 0;
 
+    // 수비 시점일 땐 고정 카메라, 공격 시점일 땐 유연한 추적 카메라용 초기화
     camY = 0;
     horizon = HORIZON_DEFAULT;
     turnResultText = "";
@@ -151,38 +152,32 @@ function initTurn() {
         keeperObj = { x: 0, y: 0, z: 450, speed: keeperSpeed, dir: 1, width: 50, height: 65 };
     } else {
         keeperObj = { x: 0, y: 0, z: 450, speed: 0, dir: 1, width: 50, height: 65 };
-        setTimeout(executeAIShot, 1500); // 유저가 수비 준비할 시간 확보
+        setTimeout(executeAIShot, 1500); 
     }
 }
 
-// ---------------- ✍️ MOUSE SYSTEM (드로잉 & 골대 다이빙 클릭) ----------------
+// ---------------- ✍️ MOUSE SYSTEM ----------------
 function setupMouseEvents() {
     canvas.onmousedown = (e) => {
         if (gameOver || turnResultText) return;
 
-        // 1. 공격 유저일 때 -> 드로잉 시작
         if (currentTurn === "HUMAN_ATTACK" && !ballObj.isShot) {
             isDrawingPath = true;
             drawnMousePoints = [{ x: e.offsetX, y: e.offsetY }];
         }
         
-        // 2. 수비 유저일 때 -> 골대 부분 클릭 시 다이빙 발동
         if (currentTurn === "AI_ATTACK" && !isDiving) {
             let mx = e.offsetX;
             let my = e.offsetY;
 
-            // 골대의 현재 원근감 화면 투영 위치 구하기
             const gBL = project(-goalObj.width/2, 0, goalObj.z);
             const gTR = project(goalObj.width/2, goalObj.height, goalObj.z);
 
-            // 골대 박스 근처를 클릭했는지 검사
-            if (mx >= gBL.x - 30 && mx <= gTR.x + 30 && my >= gTR.y - 30 && my <= gBL.y + 20) {
-                // 화면의 마우스 클릭 X좌표를 3D 공간의 X축으로 밸런싱 역산
+            if (mx >= gBL.x - 40 && mx <= gTR.x + 40 && my >= gTR.y - 40 && my <= gBL.y + 30) {
                 const scale = 350 / (350 + goalObj.z);
                 let targetX3D = (mx - canvas.width / 2) / scale;
                 
-                // 골대 한계범위 제한 제한
-                diveTargetX = Math.max(-goalObj.width/2 - 10, Math.min(goalObj.width/2 + 10, targetX3D));
+                diveTargetX = Math.max(-goalObj.width/2 - 15, Math.min(goalObj.width/2 + 15, targetX3D));
                 isDiving = true;
                 diveProgress = 0;
             }
@@ -197,26 +192,40 @@ function setupMouseEvents() {
     canvas.onmouseup = (e) => {
         if (!isDrawingPath) return;
         isDrawingPath = false;
-        if (drawnMousePoints.length < 5) return; 
+
+        // 🛑 [1cm 미세클릭 슛 차단 안전장치]
+        if (drawnMousePoints.length < 5) return;
+        let startPt = drawnMousePoints[0];
+        let endPt = drawnMousePoints[drawnMousePoints.length - 1];
+        let dragDistance = Math.hypot(endPt.x - startPt.x, endPt.y - startPt.y);
+        if (dragDistance < 60) return; // 드래그 길이가 60픽셀 이하면 무시
 
         ballObj.isShot = true;
         ballPath3D = [];
         pathIndex = 0;
 
+        // 드로잉 데이터로부터 슈팅 끝점 및 휘어짐(바나나킥) 특성 추출
+        const scaleGoal = 350 / (350 + goalObj.z);
+        let targetX = (endPt.x - canvas.width / 2) / scaleGoal;
+        
+        // 🚀 [하늘 솟구침 완벽 제어] 마우스 Y값 한계 비율 고정
+        let rawTargetY = ((canvas.height - endPt.y) - (horizon * (1 - scaleGoal))) / scaleGoal;
+        let targetY = Math.min(goalObj.height + 40, Math.max(5, rawTargetY * 0.45)); 
+
+        // 중간 경로 최댓값을 기준으로 바나나킥 곡선용 측면 휨 계산
+        let midPt = drawnMousePoints[Math.floor(drawnMousePoints.length / 2)];
+        let midX = (midPt.x - canvas.width / 2) / scaleGoal;
+        let curveX = (midX - targetX * 0.5) * 1.8;
+
         const totalFrames = 60; 
         for (let i = 0; i <= totalFrames; i++) {
             let t = i / totalFrames;
-            let sampleIdx = Math.min(drawnMousePoints.length - 1, Math.floor(t * (drawnMousePoints.length - 1)));
-            let pt = drawnMousePoints[sampleIdx];
-
             let posZ = 40 + (goalObj.z - 40) * t;
-            let scale = 350 / (350 + posZ);
-            let posX = (pt.x - canvas.width / 2) / scale;
-            
-            // 🚀 [초반 뜨는 현상 튜닝] t(진행도) 가중치를 주어 출발지 원근 궤적 변환 보정
-            let targetY = ((canvas.height - pt.y) - (horizon * (1 - scale))) / scale;
-            let posY = targetY * Math.pow(t, 0.5); // 급격하게 위로 솟구치지 않고 부드러운 포물선 유도
-            if (posY < 0) posY = 0; 
+
+            // 🎯 이상적인 역학 포물선 공식으로 재조합 적용
+            let posX = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * curveX + t * t * targetX;
+            // 초기 도약 고도를 보정하여 공이 중간에 너무 높게 뜨지 않게 제어
+            let posY = Math.sin(t * Math.PI) * (targetY * 0.4) + (targetY * t);
 
             ballPath3D.push({ x: posX, y: posY, z: posZ });
         }
@@ -231,16 +240,16 @@ function executeAIShot() {
     ballPath3D = [];
     pathIndex = 0;
 
-    let targetX = (Math.random() - 0.5) * (goalObj.width - 30);
-    let targetY = 15 + Math.random() * (goalObj.height - 40);
-    let curveX = (Math.random() - 0.5) * 150; 
+    let targetX = (Math.random() - 0.5) * (goalObj.width - 25);
+    let targetY = 15 + Math.random() * (goalObj.height - 35);
+    let curveX = (Math.random() - 0.5) * 130; 
 
-    const totalFrames = 65; // 유저가 보고 대처하게 살짝 느리게 유도
+    const totalFrames = 65; 
     for (let i = 0; i <= totalFrames; i++) {
         let t = i / totalFrames;
         let posZ = 40 + (goalObj.z - 40) * t;
         let posX = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * curveX + t * t * targetX;
-        let posY = Math.sin(t * Math.PI) * (targetY + 25) + (targetY * t);
+        let posY = Math.sin(t * Math.PI) * (targetY * 0.5) + (targetY * t);
 
         ballPath3D.push({ x: posX, y: posY, z: posZ });
     }
@@ -250,22 +259,17 @@ function executeAIShot() {
 function update() {
     if (gameOver) return;
 
-    // 골키퍼 제어 알고리즘
     if (currentTurn === "AI_ATTACK") {
-        // [유저가 골키퍼 제어] 클릭 다이빙 상태 연산
         if (isDiving && diveProgress < 1) {
-            diveProgress += 0.08; // 다이빙 속도
+            diveProgress += 0.08; 
             keeperObj.x = keeperObj.x * (1 - diveProgress) + diveTargetX * diveProgress;
-            // 다이빙 도중 살짝 띄워주는 연산
-            keeperObj.y = Math.sin(diveProgress * Math.PI) * 20;
+            keeperObj.y = Math.sin(diveProgress * Math.PI) * 25; 
         }
     } else {
-        // [AI가 골키퍼 제어] 좌우 무빙 자동 수비
         keeperObj.x += keeperObj.speed * keeperObj.dir;
         if (keeperObj.x > goalObj.width/2 - 15 || keeperObj.x < -goalObj.width/2 + 15) keeperObj.dir *= -1;
     }
 
-    // 공 비행 및 판정
     if (ballObj.isShot && ballPath3D.length > 0 && !turnResultText) {
         if (pathIndex < ballPath3D.length) {
             let nextPos = ballPath3D[pathIndex];
@@ -273,17 +277,24 @@ function update() {
             ballObj.y = nextPos.y;
             ballObj.z = nextPos.z;
 
-            if (ballObj.z > 80) {
-                camY = camY * 0.9 + Math.max(0, ballObj.y * 0.3) * 0.1; 
-                horizon = horizon * 0.95 + HORIZON_DEFAULT * 0.05;      
+            // 🎥 [시점 전면 분리 개편]
+            if (currentTurn === "HUMAN_ATTACK") {
+                // 공격 시에는 부드러운 전진 추적
+                if (ballObj.z > 80) {
+                    camY = camY * 0.9 + Math.max(0, ballObj.y * 0.25) * 0.1; 
+                    horizon = horizon * 0.95 + HORIZON_DEFAULT * 0.05;      
+                }
+            } else {
+                // 🛡️ [수비 시점 완벽 고정] 시야가 한 치의 흔들림도 없이 정면 유지
+                camY = 0;
+                horizon = HORIZON_DEFAULT;
             }
             pathIndex++;
         }
 
         if (ballObj.z >= goalObj.z || pathIndex >= ballPath3D.length) {
-            // 수비 범위 보정 (다이빙 가중치 추가)
-            let defenseRange = isDiving ? 55 : 40; 
-            if (Math.abs(ballObj.x - keeperObj.x) < defenseRange && ballObj.y < (keeperObj.height + 20)) {
+            let defenseRange = isDiving ? 55 : 38; 
+            if (Math.abs(ballObj.x - keeperObj.x) < defenseRange && ballObj.y < (keeperObj.height + 25)) {
                 turnResultText = "MISS";
             } 
             else if (ballObj.x >= -goalObj.width/2 && ballObj.x <= goalObj.width/2 && ballObj.y <= goalObj.height && ballObj.y >= 0) {
@@ -351,7 +362,7 @@ function draw() {
         }
     }
 
-    // 가이드라인 라인 마킹
+    // 라인 마킹
     ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2;
     ctx.beginPath();
     let lineFar = project(-250, 0, 460), lineNear = project(-400, 0, 0);
@@ -411,7 +422,7 @@ function draw() {
     // 6. 스코어보드 HUD 및 가이드 텍스트
     ctx.fillStyle = "rgba(0, 0, 0, 0.7)"; ctx.fillRect(20, 20, 360, 80);
     ctx.fillStyle = "#ffffff"; ctx.font = "bold 14px Pretendard"; ctx.textAlign = "left";
-    let guideStr = currentTurn === "HUMAN_ATTACK" ? "공에서 골대 방향으로 슈팅선을 그리세요!" : "골대 안의 빈공간을 클릭해 다이빙 수비!";
+    let guideStr = currentTurn === "HUMAN_ATTACK" ? "공에서 골대 방향으로 슈팅 곡선을 길게 그리세요!" : "🛡️ 키퍼 시점 고정! 골대 빈 곳을 클릭해 다이빙!";
     ctx.fillText(`ROUND: ${currentRound} / 5 | ${currentTurn === "HUMAN_ATTACK" ? "인간 공격" : "인간 수비"}`, 35, 42);
     ctx.fillText(guideStr, 35, 62);
     ctx.font = "bold 18px Pretendard"; ctx.fillStyle = "#ffcc00";
