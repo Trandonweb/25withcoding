@@ -7,7 +7,8 @@ import {
     collection,
     onSnapshot,
     doc,
-    getDoc
+    getDoc,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 import {
@@ -258,10 +259,15 @@ function createCard(id,data){
     );
 
 
-    card.onclick=()=>{
-
+    card.onclick=async()=>{
+    
+    
+        await requestWebRTC(id);
+    
+    
         openViewer(id);
-
+    
+    
     };
 
 
@@ -557,5 +563,23 @@ function autoGrid(){
 
     grid.style.gridTemplateColumns =
         `repeat(${col},1fr)`;
+
+}
+
+
+async function requestWebRTC(id){
+
+    const col =
+        id.startsWith("guest-")
+        ? "guests"
+        : "users";
+
+
+    await updateDoc(
+        doc(db,col,id),
+        {
+            mode:"webrtc"
+        }
+    );
 
 }
