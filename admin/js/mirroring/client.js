@@ -12,7 +12,6 @@ import {
 } from "./upload.js";
 
 import {
-    startStatus,
     setMode,
     setOnline,
     setOffline,
