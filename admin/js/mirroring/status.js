@@ -19,22 +19,19 @@ let heartbeatTimer = null;
 // 내부 업데이트
 // ------------------------------------
 
-async function update(data) {
+async function update(data){
 
-    if (!userId) return;
+    if(!userId)return;
 
-    try {
 
-        await updateDoc(
-            doc(db, "users", userId),
-            data
-        );
+    const col =
+        getCollectionName(userId);
 
-    } catch (e) {
 
-        console.warn("Status Update Error", e);
-
-    }
+    await updateDoc(
+        doc(db,col,userId),
+        data
+    );
 
 }
 
@@ -253,5 +250,16 @@ export async function ensureStatusFields(){
     };
 
     await update(defaults);
+
+}
+
+//-------------------------------------
+//몰라 수정하란다(나중에 내가 너보고 전체 코드를 달라고 하면 바꿔)
+//-------------------------------------
+function getCollectionName(id){
+
+    return id.startsWith("guest-")
+    ? "guests"
+    : "users";
 
 }
