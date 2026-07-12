@@ -58,30 +58,40 @@ let running = false;
 async function start(){
 
     if(running) return;
+
     running=true;
 
-    // 로그인 확인
-    const loginUser=await authCheck();
+
+    // 1. 로그인 확인
+    const loginUser = await authCheck();
+
 
     if(loginUser){
-        userId=loginUser;
+        userId = loginUser;
     }
 
-    userId=await initializeUserOrGuest(userId);
 
-    // 온라인
+    // 2. ID 확정
+    userId = await initializeUserOrGuest(userId);
+
+
+
+    // 3. 온라인 등록
     await setOnline(userId);
 
-    // heartbeat
+
+
+    // 4. 하트비트 시작
     heartbeatTimer=setInterval(()=>{
 
         heartbeat(userId);
 
     },30000);
 
-    // 화면 공유
 
-    stream=await navigator.mediaDevices.getDisplayMedia({
+
+    // 5. 화면 공유 권한 요청
+    stream = await navigator.mediaDevices.getDisplayMedia({
 
         video:{
             frameRate:5
@@ -91,14 +101,27 @@ async function start(){
 
     });
 
+
+
+    // 6. 캡처 준비
     await startCapture(stream);
 
-    // firebase 기본
 
-    await setMode(userId,"firebase");
 
+    // 7. 최초 상태
+    await setMode(
+        userId,
+        "firebase"
+    );
+
+
+
+    // 8. Firebase 업로드 시작
     startUploadLoop();
 
+
+
+    // 9. 관리자 명령 감시
     listenMode();
 
 }
