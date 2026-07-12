@@ -251,3 +251,23 @@ export function isConnected(targetId) {
     const connectionData = peerConnections.get(targetId);
     return connectionData ? connectionData.state === "connected" : false;
 }
+
+//--전환 명령 추가...?--
+async function requestWebRTC(id){
+
+
+const col =
+id.startsWith("guest-")
+?"guests"
+:"users";
+
+
+await updateDoc(
+doc(db,col,id),
+{
+mode:"webrtc"
+}
+);
+
+
+}
