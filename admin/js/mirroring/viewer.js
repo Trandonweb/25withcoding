@@ -31,6 +31,43 @@ import {
 const users = new Map();
 const guests = new Map();
 
+
+function updateOnlineCount(){
+
+
+    let count=0;
+
+
+    users.forEach(u=>{
+
+        if(u.online===true){
+            count++;
+        }
+
+    });
+
+
+    guests.forEach(u=>{
+
+        if(u.online===true){
+            count++;
+        }
+
+    });
+
+
+    const el=document.getElementById("online");
+
+
+    if(el){
+
+        el.innerText=
+        `🟢 접속 ${count}명`;
+
+    }
+
+}
+
 let selectedId = null;
 
 let grid = null;
@@ -85,6 +122,8 @@ export function initViewer(){
 
 function loadUsers(){
 
+
+    // 회원 감시
     onSnapshot(
         collection(db,"users"),
         snap=>{
@@ -103,13 +142,39 @@ function loadUsers(){
 
 
             render();
+            updateOnlineCount();
 
         }
-
     );
 
-}
 
+
+    // 게스트 감시
+    onSnapshot(
+        collection(db,"guests"),
+        snap=>{
+
+            guests.clear();
+
+
+            snap.forEach(doc=>{
+
+                guests.set(
+                    doc.id,
+                    doc.data()
+                );
+
+            });
+
+
+            render();
+            updateOnlineCount();
+
+        }
+    );
+
+
+}
 
 
 // ============================================
@@ -125,18 +190,20 @@ function render(){
 
 
     users.forEach((data,id)=>{
-
-
-        const card =
-            createCard(
-                id,
-                data
-            );
-
-
+    
+        const card=createCard(id,data);
+    
         grid.appendChild(card);
-
-
+    
+    });
+    
+    
+    guests.forEach((data,id)=>{
+    
+        const card=createCard(id,data);
+    
+        grid.appendChild(card);
+    
     });
 
 
