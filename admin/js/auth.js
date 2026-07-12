@@ -116,15 +116,49 @@ export async function ensureMirrorFields(userId) {
 /**
  * 학생 접속
  */
-export async function setOnline(userId) {
+function getCollectionName(id){
 
-    await updateDoc(doc(db, "users", userId), {
+    return id.startsWith("guest-")
+    ?"guests"
+    :"users";
 
-        online: true,
-        state: "live",
-        updatedAt: serverTimestamp()
+}
 
-    });
+
+
+export async function setOnline(id){
+
+    await updateDoc(
+        doc(
+            db,
+            getCollectionName(id),
+            id
+        ),
+        {
+            online:true,
+            state:"live",
+            updatedAt:serverTimestamp()
+        }
+    );
+
+}
+
+
+
+export async function setOffline(id){
+
+    await updateDoc(
+        doc(
+            db,
+            getCollectionName(id),
+            id
+        ),
+        {
+            online:false,
+            state:"offline",
+            updatedAt:serverTimestamp()
+        }
+    );
 
 }
 
