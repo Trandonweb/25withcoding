@@ -263,9 +263,13 @@ function createCard(id,data){
     
     
         await requestWebRTC(id);
-    
-    
-        openViewer(id);
+
+
+        setTimeout(()=>{
+        
+            openViewer(id);
+        
+        },500);
     
     
     };
@@ -330,26 +334,28 @@ async function updatePreview(card,id){
 
 async function openViewer(id){
 
-
     selectedId=id;
 
 
     viewer.style.display="flex";
 
-
     viewerTitle.innerText=id;
 
+
+    const col =
+        id.startsWith("guest-")
+        ?"guests"
+        :"users";
 
 
     const snap =
         await getDoc(
-            doc(db,"users",id)
+            doc(db,col,id)
         );
 
 
     if(!snap.exists())
         return;
-
 
 
     const data=snap.data();
@@ -379,20 +385,13 @@ async function openViewer(id){
         viewerImage.style.display="flex";
 
 
-        const url =
+        const url=
             await getLatestFrame(id);
 
 
 
-        if(url){
-
+        if(url)
             viewerImage.src=url;
-
-        }else{
-
-            viewerImage.removeAttribute("src");
-
-        }
 
 
     }
