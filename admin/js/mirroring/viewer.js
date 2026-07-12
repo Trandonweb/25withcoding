@@ -29,6 +29,7 @@ import {
 // ============================================
 
 const users = new Map();
+const guests = new Map();
 
 let selectedId = null;
 
