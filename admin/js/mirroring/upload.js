@@ -1,6 +1,6 @@
 // ============================================
 // upload.js
-// Firebase Storage 업로드 (회원/비회원 경로 분리 버전)
+// Firebase Storage 업로드 (디버그 버전)
 // ============================================
 
 import {
@@ -23,143 +23,249 @@ import { storage, db } from "../firebase.js";
 let currentIndex = -1;
 const MAX_FRAMES = 5;
 
-/**
- * ID 문자열을 분석하여 users 인지 guests 인지 컬렉션 이름을 반환하는 헬퍼 함수
- */
-function getCollectionName(userId) {
-    return userId.startsWith("guest-") ? "guests" : "users";
+function getCollectionName(userId){
+    return userId.startsWith("guest-")
+        ? "guests"
+        : "users";
 }
 
-/**
- * 로그인하지 않은 사용자를 위한 게스트 ID 발급 및 초기화
- * 비회원은 guests 컬렉션에 따로 저장되며 번호는 댕겨지지 않고 누적됩니다.
- */
-export async function initializeUserOrGuest(userId) {
-    // 1. 로그인한 회원 ID(학번 등)가 있으면 그대로 사용
-    if (userId) return userId;
+export async function initializeUserOrGuest(userId){
 
-    // 2. 비회원이면 접속순으로 guest-1, guest-2... 고유 식별자 발급
-    try {
-        const counterRef = doc(db, "system", "guestCounter");
-        
-        const guestId = await runTransaction(db, async (transaction) => {
-            const counterSnap = await transaction.get(counterRef);
-            let nextNumber = 1;
+    if(userId) return userId;
 
-            if (counterSnap.exists()) {
-                nextNumber = (counterSnap.data().count || 0) + 1;
+    try{
+
+        const counterRef=doc(db,"system","guestCounter");
+
+        const guestId=await runTransaction(db,async(transaction)=>{
+
+            const snap=await transaction.get(counterRef);
+
+            let next=1;
+
+            if(snap.exists()){
+                next=(snap.data().count||0)+1;
             }
 
-            transaction.set(counterRef, { count: nextNumber }, { merge: true });
-            return `guest-${nextNumber}`;
+            transaction.set(counterRef,{
+                count:next
+            },{merge:true});
+
+            return `guest-${next}`;
+
         });
 
-        // 3. updateDoc 실패 방지를 위해 guests 컬렉션에 문서 미리 생성
-        await setDoc(doc(db, "guests", guestId), {
-            current: 0,
-            mode: "firebase",
-            updatedAt: serverTimestamp()
-        }, { merge: true });
+        await setDoc(
+            doc(db,"guests",guestId),
+            {
+                current:0,
+                mode:"firebase",
+                updatedAt:serverTimestamp()
+            },
+            {merge:true}
+        );
 
         return guestId;
 
-    } catch (error) {
-        console.error("게스트 식별자 발급 실패:", error);
+    }catch(e){
+
+        console.error("게스트 생성 실패",e);
+
         return `guest-${Date.now()}`;
+
     }
+
 }
 
-/**
- * 현재 번호 반환
- */
-export function getCurrentIndex() {
-    return currentIndex < 0 ? 0 : currentIndex;
+export function getCurrentIndex(){
+
+    return currentIndex<0
+        ?0
+        :currentIndex;
+
 }
 
-/**
- * 업로드 번호 초기화
- */
-export function resetUploadIndex() {
-    currentIndex = -1;
+export function resetUploadIndex(){
+
+    currentIndex=-1;
+
 }
 
-/**
- * Firestore(users 또는 guests)에서 현재 저장된 current 값을 가져와 인덱스 순서를 맞춤
- */
-async function syncIndex(userId) {
-    if (currentIndex !== -1) return;
-    
-    try {
-        const colName = getCollectionName(userId);
-        const snap = await getDoc(doc(db, colName, userId));
-        if (snap.exists() && snap.data().current !== undefined) {
-            currentIndex = (snap.data().current + 1) % MAX_FRAMES;
-        } else {
-            currentIndex = 0;
+async function syncIndex(userId){
+
+    if(currentIndex!=-1) return;
+
+    try{
+
+        const col=getCollectionName(userId);
+
+        const snap=await getDoc(
+            doc(db,col,userId)
+        );
+
+        if(
+            snap.exists() &&
+            snap.data().current!=undefined
+        ){
+
+            currentIndex=
+            (snap.data().current+1)%MAX_FRAMES;
+
+        }else{
+
+            currentIndex=0;
+
         }
-    } catch (e) {
-        currentIndex = 0;
+
+    }catch(e){
+
+        console.warn("syncIndex 실패",e);
+
+        currentIndex=0;
+
     }
+
 }
 
-/**
- * Blob 업로드 (타겟 ID에 따라 users 또는 guests 컬렉션에 분기 저장)
- */
-export async function uploadFrame(userId, blob) {
-    if (!userId) throw new Error("userId(또는 guestId)가 없습니다.");
+export async function uploadFrame(userId,blob){
+
+    if(!userId){
+
+        throw new Error("userId 없음");
+
+    }
+
+    console.log("========== uploadFrame ==========");
+    console.log("user :",userId);
+    console.log("blob :",blob);
 
     await syncIndex(userId);
 
-    const targetIndex = currentIndex;
-    const path = `mirroring/${userId}/${targetIndex}.jpg`;
-    const storageRef = ref(storage, path);
+    const targetIndex=currentIndex;
 
-    // 1. Storage 업로드
-    await uploadBytes(storageRef, blob, {
-        contentType: "image/jpeg"
-    });
+    const path=`mirroring/${userId}/${targetIndex}.jpg`;
 
-    // 2. 해당 컬렉션(users 또는 guests) 분기 처리 후 업데이트
-    const colName = getCollectionName(userId);
-    await updateDoc(doc(db, colName, userId), {
-        current: targetIndex,
-        mode: "firebase",
-        updatedAt: serverTimestamp()
-    });
+    console.log("path :",path);
 
-    // 3. 정합성 완료 시 인덱스 전환
-    currentIndex = (targetIndex + 1) % MAX_FRAMES;
+    const storageRef=ref(storage,path);
+
+    try{
+
+        console.log("Storage 업로드 시작");
+
+        await uploadBytes(
+            storageRef,
+            blob,
+            {
+                contentType:"image/jpeg"
+            }
+        );
+
+        console.log("Storage 업로드 성공");
+
+    }catch(e){
+
+        console.error("Storage 업로드 실패",e);
+
+        throw e;
+
+    }
+
+    try{
+
+        const col=getCollectionName(userId);
+
+        await updateDoc(
+            doc(db,col,userId),
+            {
+                current:targetIndex,
+                mode:"firebase",
+                updatedAt:serverTimestamp()
+            }
+        );
+
+        console.log("Firestore current 갱신 성공");
+
+    }catch(e){
+
+        console.error("Firestore current 갱신 실패",e);
+
+        throw e;
+
+    }
+
+    currentIndex=(targetIndex+1)%MAX_FRAMES;
+
+    console.log("다음 index =",currentIndex);
+
 }
 
-/**
- * URL 반환 (캐시 무효화 포함)
- */
-export async function getFrameURL(userId, index) {
-    try {
-        const storageRef = ref(storage, `mirroring/${userId}/${index}.jpg`);
-        const url = await getDownloadURL(storageRef);
+export async function getFrameURL(userId,index){
+
+    try{
+
+        const storageRef=ref(
+            storage,
+            `mirroring/${userId}/${index}.jpg`
+        );
+
+        const url=await getDownloadURL(storageRef);
+
         return `${url}?t=${Date.now()}`;
-    } catch (error) {
-        console.error("URL 조회 실패:", error);
+
+    }catch(e){
+
+        console.warn(
+            `이미지 없음 : mirroring/${userId}/${index}.jpg`
+        );
+
         return null;
+
     }
+
 }
 
-/**
- * 현재 최신 이미지 URL 조회 (users/guests 컬렉션 자동 분기)
- */
-export async function getLatestFrame(userId) {
-    try {
-        const colName = getCollectionName(userId);
-        const snap = await getDoc(doc(db, colName, userId));
-        if (!snap.exists()) return null;
+export async function getLatestFrame(userId){
 
-        const data = snap.data();
-        if (data.current === undefined) return null;
+    try{
 
-        return await getFrameURL(userId, data.current);
-    } catch (error) {
-        console.error("최신 프레임 조회 실패:", error);
+        const col=getCollectionName(userId);
+
+        const snap=await getDoc(
+            doc(db,col,userId)
+        );
+
+        if(!snap.exists()){
+
+            console.warn("사용자 문서 없음",userId);
+
+            return null;
+
+        }
+
+        const data=snap.data();
+
+        console.log("Firestore 데이터",data);
+
+        if(data.current==undefined){
+
+            console.warn("current 없음");
+
+            return null;
+
+        }
+
+        return await getFrameURL(
+            userId,
+            data.current
+        );
+
+    }catch(e){
+
+        console.error("최신 프레임 조회 실패",e);
+
         return null;
+
     }
+
 }
