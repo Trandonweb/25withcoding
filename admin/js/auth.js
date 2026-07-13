@@ -12,173 +12,223 @@ import {
 
 import { db } from "./firebase.js";
 
-/**
- * 현재 로그인한 사용자 반환
- */
-export async function getCurrentUser() {
+
+// =====================================
+// 컬렉션 결정
+// =====================================
+
+function getCollectionName(id){
+
+    return id.startsWith("guest-")
+        ? "guests"
+        : "users";
+
+}
+
+
+// =====================================
+// 현재 로그인 사용자
+// =====================================
+
+export async function getCurrentUser(){
 
     const userId = localStorage.getItem("userId");
 
-    if (!userId) {
-        location.href="/signin/?redirect=/admin/mirroring.html" + encodeURIComponent(location.pathname);
+    if(!userId){
+
+        location.href="/signin/?redirect=/admin/mirroring.html"+encodeURIComponent(location.pathname);
+
         throw new Error("로그인 필요");
+
     }
 
-    const ref = doc(db, "users", userId);
+    const ref = doc(db,"users",userId);
+
     const snap = await getDoc(ref);
 
-    if (!snap.exists()) {
+    if(!snap.exists()){
+
         localStorage.removeItem("userId");
-        location.href = "/login";
+
+        location.href="/login";
+
         throw new Error("계정 없음");
+
     }
 
-    const data = snap.data();
+    return{
 
-    return {
-        id: userId,
-        ...data
+        id:userId,
+
+        ...snap.data()
+
     };
 
 }
 
-/**
- * 관리자 권한 확인
- */
-export async function requireAdmin() {
+
+// =====================================
+// 관리자 권한
+// =====================================
+
+export async function requireAdmin(){
 
     const user = await getCurrentUser();
 
-    if (
-        user.role !== "president" &&
-        user.role !== "vice"
-    ) {
+    if(
+
+        user.role!=="president" &&
+
+        user.role!=="vice"
+
+    ){
 
         alert("관리자만 접근 가능합니다.");
-        location.href = "/";
+
+        location.href="/";
+
         throw new Error("권한 없음");
 
     }
 
     return user;
+
 }
 
 
-/**
- * 페이지 접근 권한 확인용
- * 관리자 페이지 공통 사용
- */
-export async function checkAuth() {
+// =====================================
+// 페이지 인증
+// =====================================
+
+export async function checkAuth(){
 
     return await requireAdmin();
 
 }
 
-/**
- * 미러링용 필드 생성
- * (없을 때만 추가)
- */
-export async function ensureMirrorFields(userId) {
 
-    const ref = doc(db, "users", userId);
+// =====================================
+// 미러링 기본 필드 생성
+// =====================================
+
+export async function ensureMirrorFields(userId){
+
+    const ref = doc(
+
+        db,
+
+        getCollectionName(userId),
+
+        userId
+
+    );
 
     const snap = await getDoc(ref);
 
-    if (!snap.exists()) return;
+    if(!snap.exists()) return;
 
     const data = snap.data();
 
-    const update = {};
+    const update={};
 
-    if (data.online === undefined)
-        update.online = false;
+    if(data.online===undefined)
 
-    if (data.state === undefined)
-        update.state = "offline";
+        update.online=false;
 
-    if (data.mode === undefined)
-        update.mode = "firebase";
+    if(data.state===undefined)
 
-    if (data.current === undefined)
-        update.current = 0;
+        update.state="offline";
 
-    if (data.updatedAt === undefined)
-        update.updatedAt = serverTimestamp();
+    if(data.mode===undefined)
 
-    if (Object.keys(update).length > 0) {
+        update.mode="firebase";
 
-        await updateDoc(ref, update);
+    if(data.current===undefined)
+
+        update.current=0;
+
+    if(data.updatedAt===undefined)
+
+        update.updatedAt=serverTimestamp();
+
+    if(Object.keys(update).length){
+
+        await updateDoc(ref,update);
 
     }
 
 }
 
-/**
- * 학생 접속
- */
-function getCollectionName(id){
 
-    return id.startsWith("guest-")
-    ?"guests"
-    :"users";
+// =====================================
+// 학생 접속
+// =====================================
 
-}
-
-
-
-export async function setOnline(id){
+export async function setOnline(userId){
 
     await updateDoc(
+
         doc(
+
             db,
-            getCollectionName(id),
-            id
+
+            getCollectionName(userId),
+
+            userId
+
         ),
+
         {
+
             online:true,
+
             state:"live",
+
             updatedAt:serverTimestamp()
+
         }
+
     );
 
 }
 
 
+// =====================================
+// 학생 종료
+// =====================================
 
-export async function setOffline(id){
+export async function setOffline(userId){
 
-    await updateDoc(
-        doc(
-            db,
-            getCollectionName(id),
-            id
-        ),
-        {
-            online:false,
-            state:"offline",
-            updatedAt:serverTimestamp()
-        }
-    );
+    try{
 
-}
+        await updateDoc(
 
-/**
- * 학생 종료
- */
-export async function setOffline(userId) {
+            doc(
 
-    try {
+                db,
 
-        await updateDoc(doc(db, "users", userId), {
+                getCollectionName(userId),
 
-            online: false,
-            state: "offline",
-            updatedAt: serverTimestamp()
+                userId
 
-        });
+            ),
 
-    } catch (e) {
+            {
+
+                online:false,
+
+                state:"offline",
+
+                updatedAt:serverTimestamp()
+
+            }
+
+        );
+
+    }catch(e){
+
         console.warn(e);
+
     }
 
 }
