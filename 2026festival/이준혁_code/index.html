@@ -1,1 +1,438 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>학교 축제: 무한의 계단 (우주 정복)</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #0b0e14;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #ui {
+            text-align: center;
+            margin-bottom: 10px;
+            z-index: 5;
+        }
+        #score-board {
+            font-size: 26px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        #timer-bar-container {
+            width: 360px;
+            height: 16px;
+            background-color: #222;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 10px;
+            border: 2px solid #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #00d2ff, #0066ff);
+        }
+        #canvas-container {
+            position: relative;
+            width: 360px;
+            height: 540px;
+        }
+        canvas {
+            background-color: #0f172a;
+            border: 4px solid #fff;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        }
+        .overlay {
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            background-color: rgba(0, 0, 0, 0.75);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .overlay h1 {
+            color: #ffd32a;
+            font-size: 34px;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 0px #000;
+            text-align: center;
+        }
+        .overlay p {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 25px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        .start-btn {
+            padding: 12px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #00ea90;
+            color: #111;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 5px 0px #00a868;
+            transition: 0.1s;
+        }
+        .start-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0px #00a868;
+        }
+        #controls {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #bbb;
+            text-align: center;
+            line-height: 1.6;
+            z-index: 5;
+        }
+        .btn-hint {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #333;
+            color: #fff;
+            border-radius: 5px;
+            font-weight: bold;
+            border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
 
+    <div id="ui">
+        <div id="score-board">SCORE: <span id="current-score">0</span> | BEST: <span id="best-score">0</span></div>
+        <div id="timer-bar-container">
+            <div id="timer-bar"></div>
+        </div>
+    </div>
+
+    <div id="canvas-container">
+        <!-- 시작 화면 -->
+        <div id="startScreen" class="overlay">
+            <h1>무한의 계단<br><span style="font-size: 20px; color:#00ea90;">- 우주를 향해서 -</span></h1>
+            <p>점수가 올라갈수록 배경이 우주로 바뀝니다!<br>목표는 1000점 돌파!</p>
+            <button class="start-btn" onclick="startGame()">게임 시작</button>
+        </div>
+
+        <!-- 게임오버 화면 -->
+        <div id="gameOverScreen" class="overlay" style="display: none;">
+            <h1 style="color: #ff4757;">MISSION FAILED</h1>
+            <p style="font-size: 18px; margin-bottom: 20px; color: #fff;">최종 도달 높이: <span id="final-score" style="color:#ffd32a; font-weight:bold;">0</span>m</p>
+            <button class="start-btn" style="background-color:#3498db; box-shadow:0 5px 0px #2980b9; color: white;" onclick="startGame()">다시 도전</button>
+        </div>
+
+        <canvas id="gameCanvas" width="360" height="540"></canvas>
+    </div>
+
+    <div id="controls">
+        [방향 전환] : <span class="btn-hint">A</span> 또는 <span class="btn-hint">←</span> (왼쪽)<br>
+        [그대로 오르기] : <span class="btn-hint">D</span> 또는 <span class="btn-hint">→</span> (오른쪽)
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('current-score');
+        const bestEl = document.getElementById('best-score');
+        const finalScoreEl = document.getElementById('final-score');
+        const timerBar = document.getElementById('timer-bar');
+        
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+
+        // [최적의 규격] 자연스럽고 촘촘하게 맞물리는 큼직한 계단 간격
+        const STEP_X = 32;       
+        const STEP_Y = 22;       
+        const STAIR_WIDTH = 66;  
+        const STAIR_HEIGHT = 14;
+
+        let score = 0;
+        let bestScore = localStorage.getItem('infinite_space_best') || 0;
+        bestEl.textContent = bestScore;
+
+        let isPlaying = false;
+        let timeLimit = 100;
+        let timeDecreaseRate = 0.12; 
+
+        // [위치 조정] 플레이어와 시작 계단의 고정 Y 위치를 화면 위(뒤)쪽으로 올려 시야 공간 확보
+        const PLAYER_FIXED_X = canvas.width / 2;
+        const PLAYER_FIXED_Y = canvas.height - 180; 
+        
+        let player = {
+            direction: 1, // 1: 우측, -1: 좌측
+            walkFrame: 0,
+            bounceY: 0
+        };
+
+        let stairs = [];
+        let scrollY = 0; 
+
+        function startGame() {
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            
+            score = 0;
+            scoreEl.textContent = score;
+            timeLimit = 100;
+            timeDecreaseRate = 0.12;
+            player.direction = 1;
+            player.walkFrame = 0;
+            player.bounceY = 0;
+            scrollY = 0;
+
+            // 플레이어 발밑에 맞춘 깔끔한 위치 정렬
+            stairs = [{ x: PLAYER_FIXED_X, y: PLAYER_FIXED_Y + 12 }];
+            
+            // 촘촘한 배치에 맞춰 화면 전체를 덮을 만큼 생성
+            for (let i = 0; i < 30; i++) {
+                generateNextStair(i);
+            }
+
+            if (!isPlaying) {
+                isPlaying = true;
+                update();
+            }
+        }
+
+        // 초반 5개는 무조건 오른쪽으로 직진
+        function generateNextStair(index) {
+            const lastStair = stairs[stairs.length - 1];
+            let rand;
+            
+            if (index !== undefined && index < 5) {
+                rand = 1;
+            } else {
+                rand = Math.random() > 0.5 ? 1 : -1;
+            }
+            
+            stairs.push({
+                x: lastStair.x + (rand * STEP_X),
+                y: lastStair.y - STEP_Y
+            });
+        }
+
+        // 키 입력 처리
+        window.addEventListener('keydown', (e) => {
+            if (!isPlaying) return;
+
+            if(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                e.preventDefault();
+            }
+
+            let inputType = ""; 
+            
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+                inputType = "turn";
+            } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+                inputType = "straight";
+            }
+
+            if (inputType === "") return; 
+
+            const currentStair = stairs[0];
+            const nextStair = stairs[1];
+            const targetDirection = nextStair.x > currentStair.x ? 1 : -1;
+
+            if (inputType === "turn") {
+                player.direction *= -1;
+            }
+
+            if (player.direction === targetDirection) {
+                score++;
+                scoreEl.textContent = score;
+                
+                // 자연스러운 걷기 프레임 연출
+                player.walkFrame = player.walkFrame === 0 ? 1 : 0;
+                player.bounceY = -8; 
+
+                timeLimit = Math.min(100, timeLimit + 6);
+                timeDecreaseRate = 0.12 + (score * 0.0035); 
+
+                const offsetX = targetDirection * STEP_X;
+                const offsetY = STEP_Y;
+
+                stairs.forEach(stair => {
+                    stair.x -= offsetX;
+                    stair.y += offsetY;
+                });
+
+                scrollY += offsetY;
+
+                stairs.shift(); 
+                generateNextStair(); 
+            } else {
+                endGame();
+            }
+        });
+
+        function endGame() {
+            isPlaying = false;
+            finalScoreEl.textContent = score;
+            gameOverScreen.style.display = 'flex';
+
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('infinite_space_best', bestScore);
+                bestEl.textContent = bestScore;
+            }
+        }
+
+        function update() {
+            if (!isPlaying) return;
+
+            player.bounceY += 1.0;
+            if (player.bounceY > 0) player.bounceY = 0;
+
+            timeLimit -= timeDecreaseRate;
+            if (timeLimit <= 0) {
+                timeLimit = 0;
+                endGame();
+                return;
+            }
+            timerBar.style.width = timeLimit + '%';
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        // 고도별 배경 생성
+        function getBackgroundGradient() {
+            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            if (score < 300) {
+                grad.addColorStop(0, '#1a82e2');
+                grad.addColorStop(1, '#a1dbff');
+            } else if (score < 600) {
+                grad.addColorStop(0, '#2c1654');
+                grad.addColorStop(1, '#ff7e5f');
+            } else if (score < 900) {
+                grad.addColorStop(0, '#0b091a');
+                grad.addColorStop(1, '#3b2d54');
+            } else {
+                grad.addColorStop(0, '#020208');
+                grad.addColorStop(1, '#0c102b');
+            }
+            return grad;
+        }
+
+        function draw() {
+            // 1. 테마 배경 그리기
+            ctx.fillStyle = getBackgroundGradient();
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // [패럴랙스 오브젝트]
+            if (score < 300) {
+                ctx.fillStyle = 'rgba(25, 42, 86, 0.25)';
+                const cityY = (scrollY * 0.15) % 150;
+                for(let i = -1; i < 3; i++) {
+                    ctx.fillRect(i * 120 + 10, canvas.height - 180 + cityY, 80, 200);
+                    ctx.fillRect(i * 120 + 60, canvas.height - 130 + cityY, 50, 150);
+                }
+            } else if (score < 600) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                const cloudY = (scrollY * 0.2) % 300;
+                ctx.beginPath();
+                ctx.arc(80, 100 + cloudY, 35, 0, Math.PI * 2);
+                ctx.arc(130, 90 + cloudY, 50, 0, Math.PI * 2);
+                ctx.arc(180, 100 + cloudY, 35, 0, Math.PI * 2);
+                ctx.arc(280, 240 + cloudY, 45, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                for (let i = 0; i < 25; i++) {
+                    let starX = (Math.sin(i * 452) * 0.5 + 0.5) * canvas.width;
+                    let starY = ((Math.cos(i * 854) * 0.5 + 0.5) * canvas.height + (scrollY * 0.3)) % canvas.height;
+                    let size = (i % 3 === 0) ? 3 : 1.5;
+                    ctx.fillRect(starX, starY, size, size);
+                }
+                if (score >= 950) {
+                    const saturnY = Math.max(80, 400 - (score - 950) * 1.5);
+                    ctx.fillStyle = '#ebd59b';
+                    ctx.beginPath();
+                    ctx.arc(270, saturnY, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(214, 187, 137, 0.5)';
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.ellipse(270, saturnY, 42, 9, Math.PI / 6, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+
+            // 2. 단정하고 통일감 있게 연속적으로 맞물린 계단 그리기 (개별 색상 표시 제거)
+            stairs.forEach((stair, index) => {
+                if (stair.y > canvas.height + 80 || stair.y < -80) return;
+
+                // 다음 계단 표시 없이 전체적으로 매끄럽고 정돈된 블록 테마 적용
+                ctx.fillStyle = score >= 600 ? '#20324a' : '#4b6584'; 
+                
+                // 계단 상단 플레이트
+                ctx.fillRect(stair.x - STAIR_WIDTH/2, stair.y - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
+                
+                // 계단 밑면 입체 섀도우
+                ctx.fillStyle = score >= 600 ? '#131e2e' : '#2f3640';
+                ctx.fillRect(stair.x - STAIR_WIDTH/2, stair.y, STAIR_WIDTH, 5);
+
+                // 계단 테두리 선
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(stair.x - STAIR_WIDTH/2, stair.y - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT + 5);
+            });
+
+            // 3. 자이언트 플레이어 렌더링 (동일 크기 유지)
+            ctx.save();
+            ctx.translate(PLAYER_FIXED_X, PLAYER_FIXED_Y + player.bounceY);
+            ctx.scale(player.direction, 1);
+
+            ctx.rotate(0.06); 
+
+            // [몸통]
+            ctx.fillStyle = '#9b59b6';
+            ctx.fillRect(-11, -30, 22, 23);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(-11, -30, 22, 23);
+
+            // [얼굴]
+            ctx.fillStyle = '#fdb45c';
+            ctx.fillRect(-9, -48, 18, 18);
+            ctx.strokeRect(-9, -48, 18, 18);
+            // 눈
+            ctx.fillStyle = '#000';
+            ctx.fillRect(3, -42, 3.5, 4.5);
+
+            // [걷기 애니메이션 다리]
+            ctx.fillStyle = '#2c3e50';
+            if (player.walkFrame === 0) {
+                ctx.fillRect(-9, -7, 7, 9);
+                ctx.strokeRect(-9, -7, 7, 9);
+                
+                ctx.fillRect(2, -7, 7, 5);
+                ctx.strokeRect(2, -7, 7, 5);
+            } else {
+                ctx.fillRect(-9, -7, 7, 5);
+                ctx.strokeRect(-9, -7, 7, 5);
+                
+                ctx.fillRect(2, -7, 7, 9);
+                ctx.strokeRect(2, -7, 7, 9);
+            }
+
+            ctx.restore();
+        }
+    </script>
+</body>
+</html>
