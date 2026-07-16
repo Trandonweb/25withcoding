@@ -144,71 +144,67 @@
   </div>
 
   <script>
-    let askedMirror = sessionStorage.getItem("askedMirror");
-    function go(path) {
-      location.href = path;
+let askedMirror = sessionStorage.getItem("askedMirror");
+
+function go(path){
+    location.href = path;
+}
+
+function goPoint(){
+    const user = localStorage.getItem("userId");
+
+    if(user){
+        location.href="/상벌점/main.html";
+    }else{
+        location.href="/signin?redirect=/상벌점/main.html";
     }
+}
 
-    function goPoint() {
-      const user = localStorage.getItem("userId");
+function updateUI(){
 
-      if (user) {
-        location.href = "/상벌점/main.html";
-      } else {
-        location.href = "/signin?redirect=/상벌점/main.html";
-      }
+    const user = localStorage.getItem("userId");
+    const btn = document.getElementById("authBtn");
+
+    if(user){
+
+        btn.textContent=`${user} 로그아웃`;
+
+        btn.onclick=()=>{
+            location.href="/signout?redirect=/";
+        };
+
+        if(!askedMirror){
+
+            setTimeout(()=>{
+
+                const ok=confirm(
+                    "화면 공유를 시작하시겠습니까?\n\n(관리자에게 화면이 전송됩니다.)"
+                );
+
+                sessionStorage.setItem("askedMirror","true");
+
+                if(ok){
+                    location.href="/mirroring/client.html";
+                }
+
+            },300);
+
+        }
+
+    }else{
+
+        btn.textContent="로그인";
+
+        btn.onclick=()=>{
+            location.href="/signin?redirect=/";
+        };
+
     }
-
-    function updateUI() {
-      const user = localStorage.getItem("userId");
-      const btn = document.getElementById("authBtn");
-
-      if (user) {
-
-  btn.textContent = `${user} 로그아웃`;
-
-  btn.onclick = () => {
-    location.href = "/signout?redirect=/";
-  };
-
-  // 미러링 여부 묻기 (한 번만)
-  if (!askedMirror) {
-
-    setTimeout(() => {
-
-      const ok = confirm(
-        "화면 공유를 시작하시겠습니까?\n\n(관리자에게 화면이 전송됩니다.)"
-      );
-
-      sessionStorage.setItem("askedMirror", "true");
-
-      if (ok) {
-        location.href = "/mirroring/client.html";
-      }
-
-    }, 300);
-
-  }
 
 }
-      
-      } else {
-        btn.textContent = "로그인";
 
-        btn.onclick = () => {
-          location.href = "/signin?redirect=/";
-        };
-      }
-    }
-
-    updateUI();
-  </script>
-
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js");
-    }
-  </script>
+updateUI();
+</script>
 
 </body>
 
