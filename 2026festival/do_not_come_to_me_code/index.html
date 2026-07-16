@@ -1,1 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>코딩과 함께라면 - 순발력 테스트 대작전!</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+        }
+        canvas {
+            border: 2px solid #fff;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            background-color: #000;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
 
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+// --- 색상 정의 ---
+const WHITE = "#FFFFFF";
+const BLACK = "#000000";
+const RED = "#FF3232";
+const GREEN = "#32FF32";
+const BLUE = "#3232FF";
+const YELLOW = "#FFFF00";
+const GRAY = "#323232";
+const DARK_GRAY = "#1E1E1E";
+const BOSS_COLOR = "#9632FA";
+
+// --- 게임 상태 및 변수 ---
+let gameState = "START_SCREEN";
+const playerPos = [400, 300];
+const playerRadius = 25;
+
+let obstacles = [];
+let spawnTimer = 0;
+let spawnRate = 60;
+
+let score = 0;
+let lives = 3;
+let scoreTimer = 0;
+let gameTime = 0;
+
+let boss = null;
+let buttonRect = { x: 290, y: 350, width: 220, height: 60 };
+let mouseX = 0, mouseY = 0;
+
+// 스토리 대사
+const story1Lines = [
+    "평화롭던 코딩 세상에 버그 바이러스가 침공했다...",
+    "바이러스들은 메인 서버(중앙 캐릭터)를 노리고 사방에서 몰려온다.",
+    "마우스 클릭으로 바이러스들을 소멸시키고 서버를 지켜라!",
+    "[스페이스바를 누르면 전투가 시작됩니다]"
+];
+
+const story2Lines = [
+    "치열한 전투 끝에, 바이러스의 신호가 한곳으로 뭉치기 시작한다...",
+    "마침내 버그 바이러스들의 거대한 우두머리, '디버그 불능 보스'가 출현했다!",
+    "보스는 엄청난 맷집을 자랑하며 부하들을 계속 소환한다.",
+    "서버의 운명이 당신의 손가락 끝에 달렸다. 준비하라!",
+    "[스페이스바를 누르면 보스전이 시작됩니다]"
+];
+
+// --- 몹 정보 매핑 ---
+const mobInfo = {
+    1: { color: BLUE, radius: 20 },
+    2: { color: YELLOW, radius: 27 },
+    3: { color: RED, radius: 35 }
+};
+
+// --- 함수 정의 ---
+function drawHeart(ctx, x, y, size) {
+    ctx.fillStyle = RED;
+    ctx.beginPath();
+    ctx.moveTo(x, y + size / 3);
+    ctx.lineTo(x - size / 2, y - size / 4);
+    ctx.lineTo(x - size / 4, y - size / 2);
+    ctx.lineTo(x, y - size / 6);
+    ctx.lineTo(x + size / 4, y - size / 2);
+    ctx.lineTo(x + size / 2, y - size / 4);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function spawnObstacle() {
+    const edges = ['top', 'bottom', 'left', 'right'];
+    const edge = edges[Math.floor(Math.random() * edges.length)];
+    const speed = Math.random() * (3.0 - 1.5) + 1.5;
+
+    let clicksRequired = 1;
+    const randVal = Math.random();
+
+    if (gameTime < 600) {
+        clicksRequired = 1;
+    } else if (gameTime < 1200) {
+        clicksRequired = randVal > 0.6 ? 2 : 1;
+    } else {
+        if (randVal > 0.7) clicksRequired = 3;
+        else if (randVal > 0.3) clicksRequired = 2;
+        else clicksRequired = 1;
+    }
+
+    const radius = mobInfo[clicksRequired].radius;
+    let x, y;
+
+    if (edge === 'top') {
+        x = Math.random() * canvas.width;
+        y = -radius;
+    } else if (edge === 'bottom') {
+        x = Math.random() * canvas.width;
+        y = canvas.height + radius;
+    } else if (edge === 'left') {
+        x = -radius;
+        y = Math.random() * canvas.height;
+    } else {
+        x = canvas.width + radius;
+        y = Math.random() * canvas.height;
+    }
+
+    return {
+        pos: [x, y],
+        radius: radius,
+        clicks: clicksRequired,
+        maxClicks: clicksRequired,
+        speed: speed
+    };
+}
+
+function spawnBoss() {
+    return {
+        pos: [canvas.width / 2, -100],
+        radius: 60,
+        clicks: 50,
+        maxClicks: 50,
+        speed: 1.0,
+        targetY: 120,
+        moveDir: 1
+    };
+}
+
+function resetGame() {
+    obstacles = [];
+    score = 0;
+    lives = 3;
+    scoreTimer = 0;
+    gameTime = 0;
+    spawnRate = 60;
+    boss = null;
+}
+
+// --- 이벤트 리스너 ---
+canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+});
+
+canvas.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return; // 좌클릭만 허용
+
+    if (gameState === "START_SCREEN") {
+        if (mouseX >= buttonRect.x && mouseX <= buttonRect.x + buttonRect.width &&
+            mouseY >= buttonRect.y && mouseY <= buttonRect.y + buttonRect.height) {
+            gameState = "STORY_1";
+        }
+    } 
+    else if (gameState === "PLAYING" || gameState === "BOSS_BATTLE") {
+        let clickedSomething = false;
+
+        // 보스 클릭 판정
+        if (gameState === "BOSS_BATTLE" && boss) {
+            const dist = Math.hypot(boss.pos[0] - mouseX, boss.pos[1] - mouseY);
+            if (dist < boss.radius) {
+                boss.clicks--;
+                score += 50;
+                clickedSomething = true;
+                if (boss.clicks <= 0) {
+                    gameState = "VICTORY";
+                }
+            }
+        }
+
+        // 일반 몹 클릭 판정 (Pygame 역순 탐색 반영)
+        if (!clickedSomething) {
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                const dist = Math.hypot(obs.pos[0] - mouseX, obs.pos[1] - mouseY);
+                if (dist < obs.radius) {
+                    obs.clicks--;
+                    if (obs.clicks <= 0) {
+                        obstacles.splice(i, 1);
+                        score += 100;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+});
+
+window.addEventListener('keydown', (e) => {
+    if (gameState === "STORY_1" && e.code === "Space") {
+        resetGame();
+        gameState = "PLAYING";
+    } else if (gameState === "STORY_2" && e.code === "Space") {
+        boss = spawnBoss();
+        gameState = "BOSS_BATTLE";
+    } else if (gameState === "GAME_OVER" || gameState === "VICTORY") {
+        if (e.key.toLowerCase() === 'r') {
+            resetGame();
+            gameState = "PLAYING";
+        } else if (e.key.toLowerCase() === 'm') {
+            gameState = "START_SCREEN";
+        }
+    }
+});
+
+// --- 메인 게임 루프 (60 FPS 기준) ---
+function gameLoop() {
+    // --- 1. 로직 업데이트 ---
+    if (gameState === "PLAYING") {
+        gameTime++;
+        scoreTimer++;
+        if (scoreTimer % 30 === 0) {
+            score += 10;
+        }
+
+        if (gameTime >= 1800) { // 30초 버티면 보스전으로
+            obstacles = [];
+            gameState = "STORY_2";
+        }
+
+        spawnTimer++;
+        if (spawnTimer >= spawnRate) {
+            obstacles.push(spawnObstacle());
+            spawnTimer = 0;
+            if (spawnRate > 25 && gameTime % 300 === 0) {
+                spawnRate -= 3;
+            }
+        }
+    } 
+    else if (gameState === "BOSS_BATTLE") {
+        if (boss) {
+            if (boss.pos[1] < boss.targetY) {
+                boss.pos[1] += boss.speed;
+            } else {
+                boss.pos[0] += boss.moveDir * 2;
+                if (boss.pos[0] <= 100 || boss.pos[0] >= canvas.width - 100) {
+                    boss.moveDir *= -1;
+                }
+            }
+
+            spawnTimer++;
+            if (spawnTimer >= 90) {
+                const obs = spawnObstacle();
+                obs.pos = [boss.pos[0], boss.pos[1]];
+                obstacles.push(obs);
+                spawnTimer = 0;
+            }
+        }
+    }
+
+    // 플레이어를 향해 이동 및 충돌 판정
+    if (gameState === "PLAYING" || gameState === "BOSS_BATTLE") {
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            const obs = obstacles[i];
+            const dx = playerPos[0] - obs.pos[0];
+            const dy = playerPos[1] - obs.pos[1];
+            const dist = Math.hypot(dx, dy);
+
+            if (dist !== 0) {
+                obs.pos[0] += (dx / dist) * obs.speed;
+                obs.pos[1] += (dy / dist) * obs.speed;
+            }
+
+            // 플레이어 충돌 검사
+            if (dist < (playerRadius + obs.radius)) {
+                lives--;
+                obstacles.splice(i, 1);
+                if (lives <= 0) {
+                    gameState = "GAME_OVER";
+                }
+            }
+        }
+    }
+
+    // --- 2. 화면 렌더링 ---
+    ctx.fillStyle = BLACK;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // [홈 화면]
+    if (gameState === "START_SCREEN") {
+        ctx.textAlign = "center";
+        ctx.fillStyle = GREEN;
+        ctx.font = "bold 50px 'Malgun Gothic'";
+        ctx.fillText("버그 소탕 순발력 테스트", canvas.width / 2, canvas.height / 2 - 100);
+
+        ctx.fillStyle = WHITE;
+        ctx.font = "25px 'Malgun Gothic'";
+        ctx.fillText("버그들을 클릭해 메인 서버를 지키세요!", canvas.width / 2, canvas.height / 2 - 30);
+
+        // 버튼 감지 및 그리기
+        if (mouseX >= buttonRect.x && mouseX <= buttonRect.x + buttonRect.width &&
+            mouseY >= buttonRect.y && mouseY <= buttonRect.y + buttonRect.height) {
+            ctx.fillStyle = GREEN;
+            ctx.beginPath();
+            ctx.roundRect(buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height, 10);
+            ctx.fill();
+            ctx.fillStyle = BLACK;
+        } else {
+            ctx.strokeStyle = WHITE;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height, 10);
+            ctx.stroke();
+            ctx.fillStyle = WHITE;
+        }
+        ctx.font = "bold 25px 'Malgun Gothic'";
+        ctx.fillText("GAME START", buttonRect.x + buttonRect.width / 2, buttonRect.y + buttonRect.height / 2 + 8);
+    } 
+    // [스토리 화면]
+    else if (gameState === "STORY_1" || gameState === "STORY_2") {
+        const lines = gameState === "STORY_1" ? story1Lines : story2Lines;
+        
+        ctx.fillStyle = DARK_GRAY;
+        ctx.beginPath();
+        ctx.roundRect(50, 100, canvas.width - 100, canvas.height - 200, 15);
+        ctx.fill();
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.textAlign = "left";
+        ctx.font = "22px 'Malgun Gothic'";
+        for (let i = 0; i < lines.length; i++) {
+            ctx.fillStyle = (i === lines.length - 1) ? YELLOW : WHITE;
+            ctx.fillText(lines[i], 80, 160 + i * 60);
+        }
+    } 
+    // [인게임 / 엔딩 레이아웃 전체]
+    else if (gameState === "PLAYING" || gameState === "BOSS_BATTLE" || gameState === "GAME_OVER" || gameState === "VICTORY") {
+        // 플레이어 (초록 원 대체)
+        ctx.fillStyle = GREEN;
+        ctx.beginPath();
+        ctx.arc(playerPos[0], playerPos[1], playerRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 보스 그리기
+        if (gameState === "BOSS_BATTLE" && boss) {
+            ctx.fillStyle = BOSS_COLOR;
+            ctx.beginPath();
+            ctx.roundRect(boss.pos[0] - 60, boss.pos[1] - 60, 120, 120, 15);
+            ctx.fill();
+            ctx.strokeStyle = WHITE;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(boss.pos[0], boss.pos[1], 40, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 보스 체력 바
+            const hbarWidth = 200;
+            const hbarHeight = 15;
+            const bx = boss.pos[0] - hbarWidth / 2;
+            const by = boss.pos[1] - 80;
+            ctx.fillStyle = GRAY;
+            ctx.fillRect(bx, by, hbarWidth, hbarHeight);
+            const currentBar = hbarWidth * (boss.clicks / boss.maxClicks);
+            ctx.fillStyle = RED;
+            ctx.fillRect(bx, by, currentBar, hbarHeight);
+            
+            ctx.fillStyle = WHITE;
+            ctx.font = "25px 'Malgun Gothic'";
+            ctx.textAlign = "center";
+            ctx.fillText(`BOSS HP: ${boss.clicks}`, boss.pos[0], by - 10);
+        }
+
+        // 일반 몹 그리기
+        obstacles.forEach(obs => {
+            ctx.fillStyle = mobInfo[obs.maxClicks].color;
+            ctx.beginPath();
+            ctx.arc(obs.pos[0], obs.pos[1], obs.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 남은 클릭 수 표시
+            ctx.fillStyle = (obs.maxClicks === 1) ? WHITE : BLACK;
+            ctx.font = "25px 'Malgun Gothic'";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(obs.clicks, obs.pos[0], obs.pos[1]);
+        });
+
+        // UI 표시 (스코어, 타이머, 라이프)
+        ctx.textBaseline = "alphabetic";
+        ctx.textAlign = "left";
+        ctx.fillStyle = WHITE;
+        ctx.font = "25px 'Malgun Gothic'";
+        ctx.fillText(`SCORE: ${score}`, 20, 45);
+
+        if (gameState === "PLAYING") {
+            ctx.fillStyle = YELLOW;
+            ctx.fillText(`BOSS WAVE: ${Math.max(0, Math.ceil(30 - gameTime / 60))}s`, 20, 85);
+        }
+
+        // 하트 그리기
+        for (let i = 0; i < lives; i++) {
+            drawHeart(ctx, canvas.width - 40 - (i * 35), 35, 25);
+        }
+    }
+
+    // [엔딩/게임오버 오버레이 오버랩]
+    if (gameState === "GAME_OVER" || gameState === "VICTORY") {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.78)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.textAlign = "center";
+        if (gameState === "GAME_OVER") {
+            ctx.fillStyle = RED;
+            ctx.font = "bold 50px 'Malgun Gothic'";
+            ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
+            ctx.fillStyle = WHITE;
+            ctx.font = "25px 'Malgun Gothic'";
+            ctx.fillText("서버가 파괴되었습니다... 다시 하려면 'R', 메인 메뉴는 'M'", canvas.width / 2, canvas.height / 2 + 50);
+        } else {
+            ctx.fillStyle = GREEN;
+            ctx.font = "bold 50px 'Malgun Gothic'";
+            ctx.fillText("VICTORY!", canvas.width / 2, canvas.height / 2 - 20);
+            ctx.fillStyle = WHITE;
+            ctx.font = "25px 'Malgun Gothic'";
+            ctx.fillText("버그 원흉을 처단했습니다! 다시 하려면 'R', 메인 메뉴는 'M'", canvas.width / 2, canvas.height / 2 + 50);
+        }
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+// 게임 루프 시작
+requestAnimationFrame(gameLoop);
+</script>
+
+</body>
+</html>
