@@ -4,18 +4,194 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <title>화면 모니터링</title>
 
 <style>
 
-/* 기존 mirroring.css 내용 여기로 이동 */
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#f0f0f0;
+    font-family:sans-serif;
+}
+
+
+/* 상단 바 */
+
+header{
+
+    width:100%;
+    height:70px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:0 20px;
+
+    background:white;
+
+    box-shadow:0 0 10px rgba(0,0,0,.1);
+
+}
+
+#back{
+
+    padding:10px 15px;
+
+    border:none;
+    border-radius:10px;
+
+    background:#27ae60;
+    color:white;
+
+    cursor:pointer;
+
+}
+
+#online{
+
+    font-weight:bold;
+    margin-left:20px;
+
+}
+
+.left{
+
+    display:flex;
+    align-items:center;
+
+}
+
+
+/* 학생 카드 */
+
+#grid{
+
+    padding:20px;
+
+    display:grid;
+    grid-template-columns:
+        repeat(auto-fill,minmax(220px,1fr));
+
+    gap:20px;
+
+}
+
+
+.card{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:20px;
+
+    cursor:pointer;
+
+    box-shadow:0 0 10px rgba(0,0,0,.1);
+
+    transition:.2s;
+
+}
+
+
+.card:hover{
+
+    transform:scale(1.03);
+
+}
+
+
+.card h3{
+
+    margin-top:0;
+
+}
+
+
+/* 확대 화면 */
+
+#viewer{
+
+    position:fixed;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    background:rgba(0,0,0,.7);
+
+    display:none;
+
+    justify-content:center;
+    align-items:center;
+
+}
+
+
+#viewerBox{
+
+    width:90%;
+    max-width:1100px;
+
+    background:white;
+
+    border-radius:20px;
+
+    padding:20px;
+
+}
+
+
+#viewerTop{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+}
+
+
+#closeViewer{
+
+    padding:10px 15px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:red;
+    color:white;
+
+    cursor:pointer;
+
+}
+
+
+#bigVideo{
+
+    width:100%;
+
+    margin-top:20px;
+
+    border-radius:15px;
+
+    background:black;
+
+}
+
 
 </style>
 
 </head>
-
 
 <body>
 
@@ -25,20 +201,25 @@
 <div class="left">
 
 <button id="back">
-← 관리자
+
+← 홈
+
 </button>
 
-
 <div id="online">
+
 🟢 접속 0명
-</div>
 
 </div>
 
+</div>
 
-<div>
+
+<h2>
+
 화면 모니터링
-</div>
+
+</h2>
 
 
 </header>
@@ -53,72 +234,588 @@
 
 <div id="viewer">
 
+<div id="viewerBox">
 
 <div id="viewerTop">
 
+<h2 id="viewerTitle">
 
-<div id="viewerTitle">
-학생
-</div>
+학생 화면
 
+</h2>
 
 <button id="closeViewer">
-닫기
-</button>
 
+닫기
+
+</button>
 
 </div>
 
 
-
-<div id="viewerImage">
-
-
-<img id="bigImage">
-
-
-<video id="bigVideo"
+<video
+id="bigVideo"
 autoplay
 playsinline>
+
 </video>
 
 
 </div>
 
-
 </div>
-
 
 
 
 <script type="module">
 
+// ===================================
+// Firebase 불러오기
+// ===================================
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+
 import {
-    checkAuth
-} from "./js/auth.js";
 
+getFirestore,
+collection,
+onSnapshot,
+doc,
+getDoc,
+updateDoc,
+arrayUnion
 
-import {
-    initViewer
-} from "./js/mirroring/viewer.js";
+}
 
-
-
-// 로그인 및 권한 검사
-
-await checkAuth();
-
-
-
-// 화면 모니터링 시작
-
-initViewer();
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 
 
-</script>
+// ===================================
+// Firebase 설정
+// ===================================
+
+const firebaseConfig={
+
+apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+authDomain:"points2026-f5e50.firebaseapp.com",
+projectId:"points2026-f5e50",
+storageBucket:"points2026-f5e50.firebasestorage.app",
+messagingSenderId:"248724251417",
+appId:"1:248724251417:web:02d85cdc4addac98069b88"
+
+};
 
 
-</body>
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-</html>
+
+// ===================================
+// 사용할 변수들
+// ===================================
+
+let selectedId=null;
+
+let peerConnection=null;
+
+const rtcConfig={
+
+    iceServers:[
+        {
+            urls:"stun:stun.l.google.com:19302"
+        }
+    ]
+
+};
+// ===================================
+// 관리자 권한 확인
+// ===================================
+
+const adminId = localStorage.getItem("userId");
+
+if (!adminId) {
+
+    alert("로그인이 필요합니다.");
+    location.href = "/signin?redirect=/admin/mirroring.html";
+
+    throw new Error("로그인 필요");
+
+}
+
+
+const adminSnap = await getDoc(
+    doc(db, "users", adminId)
+);
+
+if (!adminSnap.exists()) {
+
+    alert("계정을 찾을 수 없습니다.");
+    location.href = "/";
+
+    throw new Error("계정 없음");
+
+}
+
+
+const adminData = adminSnap.data();
+
+
+// 회장 또는 부회장만 허용
+if (
+    adminData.role !== "president" &&
+    adminData.role !== "vice"
+) {
+
+    alert("관리자만 접근 가능합니다.");
+    location.href = "/";
+
+    throw new Error("권한 없음");
+
+}
+
+
+// ===================================
+// 홈 버튼
+// ===================================
+
+document.getElementById("back").onclick = () => {
+
+    location.href = "/";
+
+};
+
+
+// ===================================
+// 접속 인원 표시
+// ===================================
+
+function updateOnlineCount(count) {
+
+    document.getElementById("online").innerText =
+        `🟢 접속 ${count}명`;
+
+}
+
+
+// ===================================
+// 카드 생성
+// ===================================
+
+function createCard(id, data) {
+
+    const card = document.createElement("div");
+
+    card.className = "card";
+
+    card.innerHTML = `
+
+        <h3>${data.name ?? id}</h3>
+
+        <p>ID : ${id}</p>
+
+        <p>
+            상태 :
+            ${
+                data.online
+                ? "온라인"
+                : "오프라인"
+            }
+        </p>
+
+        <p>
+            모드 :
+            ${data.mode ?? "unknown"}
+        </p>
+
+    `;
+
+
+    // 온라인 상태만 클릭 가능
+    if (data.online === true) {
+
+        card.onclick = () => {
+
+            connectStudent(id);
+
+        };
+
+    }
+
+    return card;
+
+}
+
+
+// ===================================
+// 접속자 목록 불러오기
+// ===================================
+
+function loadUsers() {
+
+    onSnapshot(
+        collection(db, "users"),
+
+        (snapshot) => {
+
+            const grid =
+                document.getElementById("grid");
+
+            grid.innerHTML = "";
+
+            let onlineCount = 0;
+
+
+            snapshot.forEach((userDoc) => {
+
+                const data =
+                    userDoc.data();
+
+                const id =
+                    userDoc.id;
+
+
+                // 자기 자신은 표시 X
+                if (id === adminId) {
+                    return;
+                }
+
+
+                // 온라인 인원 카운트
+                if (data.online === true) {
+                    onlineCount++;
+                }
+
+
+                const card =
+                    createCard(id, data);
+
+                grid.appendChild(card);
+
+            });
+
+
+            updateOnlineCount(
+                onlineCount
+            );
+
+        }
+
+    );
+
+}
+
+
+// ===================================
+// 최초 실행
+// ===================================
+
+loadUsers();
+// ===================================
+// 학생 연결 시작
+// ===================================
+
+async function connectStudent(userId){
+
+    // 이미 연결되어 있다면 끊기
+    if(peerConnection){
+
+        try{
+            peerConnection.close();
+        }catch(e){
+            console.warn(e);
+        }
+
+        peerConnection=null;
+
+    }
+
+
+    selectedId=userId;
+
+
+    document.getElementById("viewer").style.display="flex";
+    document.getElementById("viewerTitle").innerText=
+        `${userId} 화면`;
+
+
+    const userRef=
+        doc(db,"users",userId);
+
+
+    const snap=
+        await getDoc(userRef);
+
+
+    if(!snap.exists()){
+
+        alert("사용자를 찾을 수 없습니다.");
+
+        return;
+
+    }
+
+
+    const data=snap.data();
+
+
+    // -----------------------------------
+    // 아직 OFFER가 없는 경우
+    // -----------------------------------
+
+    if(!data.clientOffer){
+
+        alert("학생이 아직 화면 공유를 시작하지 않았습니다.");
+
+        return;
+
+    }
+
+
+    // -----------------------------------
+    // PeerConnection 생성
+    // -----------------------------------
+
+    peerConnection=
+        new RTCPeerConnection(rtcConfig);
+
+
+
+    // -----------------------------------
+    // 영상 수신
+    // -----------------------------------
+
+    peerConnection.ontrack=(event)=>{
+
+        const video=
+            document.getElementById("bigVideo");
+
+
+        if(event.streams[0]){
+
+            video.srcObject=
+                event.streams[0];
+
+        }
+
+    };
+
+
+
+    // -----------------------------------
+    // 연결 상태 출력
+    // -----------------------------------
+
+    peerConnection.onconnectionstatechange=()=>{
+
+        console.log(
+            "[ADMIN]",
+            peerConnection.connectionState
+        );
+
+    };
+
+
+
+    // -----------------------------------
+    // ICE Candidate 생성
+    // -----------------------------------
+
+    peerConnection.onicecandidate=
+    async(event)=>{
+
+        if(!event.candidate)
+            return;
+
+
+        try{
+
+            await updateDoc(
+
+                userRef,
+
+                {
+
+                    adminCandidates:
+                    arrayUnion(
+                        event.candidate.toJSON()
+                    )
+
+                }
+
+            );
+
+        }catch(e){
+
+            console.error(e);
+
+        }
+
+    };
+
+
+
+    // -----------------------------------
+    // OFFER 적용
+    // -----------------------------------
+
+    const offer=
+        JSON.parse(
+            data.clientOffer
+        );
+
+
+    await peerConnection
+    .setRemoteDescription(
+
+        new RTCSessionDescription(
+            offer
+        )
+
+    );
+
+
+
+    // -----------------------------------
+    // ANSWER 생성
+    // -----------------------------------
+
+    const answer=
+        await peerConnection.createAnswer();
+
+
+    await peerConnection
+    .setLocalDescription(
+        answer
+    );
+
+
+
+    // -----------------------------------
+    // ANSWER 저장
+    // -----------------------------------
+
+    await updateDoc(
+
+        userRef,
+
+        {
+
+            adminAnswer:
+            answer.toJSON()
+
+        }
+
+    );
+
+
+
+    console.log(
+        "[ADMIN] Answer 전송 완료"
+    );
+
+}
+// ===================================
+// 학생 ICE Candidate 실시간 감시
+// ===================================
+
+let unsubscribeUser = null;
+
+
+async function watchClientCandidates(userId){
+
+    const userRef =
+        doc(db, "users", userId);
+
+
+    // 이전 리스너 제거
+    if(unsubscribeUser){
+
+        unsubscribeUser();
+
+        unsubscribeUser = null;
+
+    }
+
+
+    const addedCandidates =
+        new Set();
+
+
+    unsubscribeUser = onSnapshot(
+
+        userRef,
+
+        async (snapshot) => {
+
+            if(
+                !snapshot.exists() ||
+                !peerConnection
+            ){
+                return;
+            }
+
+
+            const data =
+                snapshot.data();
+
+
+            if(
+                !data.clientCandidates ||
+                !Array.isArray(
+                    data.clientCandidates
+                )
+            ){
+                return;
+            }
+
+
+            for(
+                const candidate of
+                data.clientCandidates
+            ){
+
+                const key =
+                    JSON.stringify(
+                        candidate
+                    );
+
+
+                // 이미 추가된 Candidate 무시
+                if(
+                    addedCandidates.has(key)
+                ){
+                    continue;
+                }
+
+
+                addedCandidates.add(
+                    key
+                );
+
+
+                try{
+
+                    await peerConnection
+                    .addIceCandidate(
+
+                        new RTCIceCandidate(
+                            candidate
+                        )
+
+                    );
+
+                }catch(e){
+
+                    console.warn(e);
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
