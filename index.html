@@ -143,8 +143,7 @@
     2026 Coding With Together
   </div>
 
-  <script>
-let askedMirror = sessionStorage.getItem("askedMirror");
+ <script>
 
 function go(path){
     location.href = path;
@@ -165,6 +164,10 @@ function updateUI(){
     const user = localStorage.getItem("userId");
     const btn = document.getElementById("authBtn");
 
+    // 이번 탭에서 이미 물어봤는가?
+    const askedMirror =
+        sessionStorage.getItem("askedMirror");
+
     if(user){
 
         btn.textContent=`${user} 로그아웃`;
@@ -173,18 +176,26 @@ function updateUI(){
             location.href="/signout?redirect=/";
         };
 
+        // 처음 로그인한 경우에만 물어보기
         if(!askedMirror){
 
             setTimeout(()=>{
 
-                const ok=confirm(
-                    "화면 공유를 시작하시겠습니까?\n\n(관리자에게 화면이 전송됩니다.)"
+                const ok = confirm(
+                    "화면 공유를 시작하시겠습니까?\n\n관리자가 화면을 실시간으로 확인할 수 있습니다."
                 );
 
-                sessionStorage.setItem("askedMirror","true");
+                // 이번 탭에서는 다시 안 물어봄
+                sessionStorage.setItem(
+                    "askedMirror",
+                    "true"
+                );
 
                 if(ok){
-                    location.href="admin/mirroring/client.html";
+
+                    location.href =
+                    "/admin/mirroring/client.html";
+
                 }
 
             },300);
@@ -196,7 +207,8 @@ function updateUI(){
         btn.textContent="로그인";
 
         btn.onclick=()=>{
-            location.href="/signin?redirect=/";
+            location.href=
+            "/signin?redirect=/";
         };
 
     }
@@ -204,8 +216,8 @@ function updateUI(){
 }
 
 updateUI();
-</script>
 
+</script>
 </body>
 
 </html>
