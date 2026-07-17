@@ -1,14 +1,204 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-    <meta charset="UTF-8">
-    <title>화면 공유</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>화면 공유</title>
+
+<style>
+
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:sans-serif;
+    background:#F0F0F0;
+}
+
+#message{
+    font-size:24px;
+    font-weight:bold;
+}
+
+</style>
+
 </head>
+
 <body>
 
-<h2>화면 공유를 준비하고 있습니다...</h2>
+<div id="message">
 
-<script type="module" src="./client.js"></script>
+화면 공유를 준비하고 있습니다...
+
+</div>
+
+
+<script type="module">
+
+// --------------------------------------------------
+// Firebase import
+// --------------------------------------------------
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+
+import {
+    getFirestore,
+    doc,
+    updateDoc,
+    serverTimestamp,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+
+// --------------------------------------------------
+// Firebase 설정
+// --------------------------------------------------
+
+// 네 firebaseConfig 넣기
+
+const firebaseConfig = {
+
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+// --------------------------------------------------
+// userId 가져오기
+// --------------------------------------------------
+
+const userId =
+    localStorage.getItem("userId");
+
+if(!userId){
+
+    alert("로그인이 필요합니다.");
+
+    location.replace("/");
+
+}
+
+
+// --------------------------------------------------
+// 화면 공유 요청
+// --------------------------------------------------
+
+const stream =
+await navigator.mediaDevices.getDisplayMedia({
+
+    video:true,
+    audio:false
+
+});
+
+
+// --------------------------------------------------
+// 온라인 표시
+// --------------------------------------------------
+
+await updateDoc(
+
+    doc(db,"users",userId),
+
+    {
+
+        online:true,
+        state:"live",
+        mode:"webrtc",
+        updatedAt:serverTimestamp()
+
+    }
+
+);
+
+
+// --------------------------------------------------
+// 관리자 연결 대기
+// --------------------------------------------------
+
+document.getElementById("message").textContent =
+"관리자의 연결을 기다리는 중...";
+
+
+// --------------------------------------------------
+// 연결 성공 감시
+// --------------------------------------------------
+
+// 여기서 adminAnswer를 감시하면 됨.
+
+onSnapshot(
+
+    doc(db,"users",userId),
+
+    async(snap)=>{
+
+        if(!snap.exists()) return;
+
+        const data = snap.data();
+
+
+        // 관리자가 연결을 시작함
+
+        if(data.adminAnswer){
+
+            document.getElementById("message").textContent =
+            "연결되었습니다.";
+
+
+            setTimeout(()=>{
+
+                location.replace("/");
+
+            },1000);
+
+        }
+
+    }
+
+);
+
+
+// --------------------------------------------------
+// 화면 공유 종료 시
+// --------------------------------------------------
+
+stream.getVideoTracks()[0]
+.addEventListener(
+
+    "ended",
+
+    async()=>{
+
+        await updateDoc(
+
+            doc(db,"users",userId),
+
+            {
+
+                online:false,
+                state:"offline"
+
+            }
+
+        );
+
+        location.replace("/");
+
+    }
+
+);
+
+
+</script>
 
 </body>
+
 </html>
