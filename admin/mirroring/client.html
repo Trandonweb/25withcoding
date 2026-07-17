@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <title>화면 공유</title>
 
@@ -12,17 +11,42 @@
 
 body{
     margin:0;
-    height:100vh;
+    font-family:sans-serif;
+    background:#f0f0f0;
     display:flex;
     justify-content:center;
     align-items:center;
-    font-family:sans-serif;
-    background:#F0F0F0;
+    height:100vh;
 }
 
-#message{
-    font-size:24px;
+.box{
+    width:90%;
+    max-width:600px;
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 0 20px rgba(0,0,0,.1);
+}
+
+h1{
+    margin-top:0;
+    color:#27ae60;
+}
+
+.status{
+
+    margin-top:20px;
+    font-size:18px;
     font-weight:bold;
+
+}
+
+.warn{
+
+    margin-top:25px;
+    color:red;
+    line-height:1.7;
+
 }
 
 </style>
@@ -31,174 +55,428 @@ body{
 
 <body>
 
-<div id="message">
+<div class="box">
 
-화면 공유를 준비하고 있습니다...
+<h1>화면 공유 중</h1>
+
+<p>
+
+관리자에게 화면을 공유하고 있습니다.<br>
+이 창을 닫지 마세요.
+
+</p>
+
+<div class="status" id="status">
+
+연결 준비중...
+
+</div>
+
+<div class="warn">
+
+- 창을 닫으면 화면 공유가 종료됩니다.<br>
+- 새로고침하지 마세요.<br>
+- 뒤로가기 하지 마세요.<br>
+- 공유가 종료되면 다시 로그인해야 합니다.
+
+</div>
 
 </div>
 
 
 <script type="module">
 
-// --------------------------------------------------
-// Firebase import
-// --------------------------------------------------
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 
 import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+getFirestore,
+doc,
+getDoc,
+updateDoc,
+onSnapshot,
+arrayUnion,
+serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-import {
-    getFirestore,
-    doc,
-    updateDoc,
-    serverTimestamp,
-    onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
+const firebaseConfig={
 
-// --------------------------------------------------
-// Firebase 설정
-// --------------------------------------------------
-
-// 네 firebaseConfig 넣기
-
-const firebaseConfig = {
+apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+authDomain:"points2026-f5e50.firebaseapp.com",
+projectId:"points2026-f5e50",
+storageBucket:"points2026-f5e50.firebasestorage.app",
+messagingSenderId:"248724251417",
+appId:"1:248724251417:web:02d85cdc4addac98069b88"
 
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
 
-// --------------------------------------------------
-// userId 가져오기
-// --------------------------------------------------
+const userId=localStorage.getItem("userId");
 
-const userId =
-    localStorage.getItem("userId");
 
 if(!userId){
 
     alert("로그인이 필요합니다.");
-
-    location.replace("/");
+    location.href="/";
 
 }
 
 
-// --------------------------------------------------
-// 화면 공유 요청
-// --------------------------------------------------
+const userRef=doc(db,"users",userId);
 
-const stream =
-await navigator.mediaDevices.getDisplayMedia({
 
-    video:true,
-    audio:false
+const statusEl=document.getElementById("status");
+
+
+function setStatus(text){
+
+    statusEl.innerText=text;
+
+}
+
+
+const rtcConfig={
+
+iceServers:[
+{
+urls:"stun:stun.l.google.com:19302"
+}
+]
+
+};
+
+
+let pc=null;
+let stream=null;
+let unsubscribe=null;
+// ==========================================
+// 창 닫기 방지
+// ==========================================
+
+window.addEventListener("beforeunload",(e)=>{
+
+    e.preventDefault();
+    e.returnValue="";
 
 });
 
 
-// --------------------------------------------------
-// 온라인 표시
-// --------------------------------------------------
+// ==========================================
+// 화면 공유 시작
+// ==========================================
 
-await updateDoc(
+async function startSharing(){
 
-    doc(db,"users",userId),
+    try{
 
-    {
-
-        online:true,
-        state:"live",
-        mode:"webrtc",
-        updatedAt:serverTimestamp()
-
-    }
-
-);
+        setStatus("화면 선택창을 열고 있습니다...");
 
 
-// --------------------------------------------------
-// 관리자 연결 대기
-// --------------------------------------------------
+        stream=await navigator.mediaDevices.getDisplayMedia({
 
-document.getElementById("message").textContent =
-"관리자의 연결을 기다리는 중...";
+            video:{
+                frameRate:10
+            },
 
+            audio:false
 
-// --------------------------------------------------
-// 연결 성공 감시
-// --------------------------------------------------
-
-// 여기서 adminAnswer를 감시하면 됨.
-
-onSnapshot(
-
-    doc(db,"users",userId),
-
-    async(snap)=>{
-
-        if(!snap.exists()) return;
-
-        const data = snap.data();
+        });
 
 
-        // 관리자가 연결을 시작함
+        // 사용자가 공유 종료 버튼 누른 경우
+        stream.getVideoTracks()[0].onended=()=>{
 
-        if(data.adminAnswer){
+            alert("화면 공유가 종료되었습니다.");
 
-            document.getElementById("message").textContent =
-            "연결되었습니다.";
+            location.href="/";
 
-
-            setTimeout(()=>{
-
-                location.replace("/");
-
-            },1000);
-
-        }
-
-    }
-
-);
+        };
 
 
-// --------------------------------------------------
-// 화면 공유 종료 시
-// --------------------------------------------------
+        setStatus("WEBRTC 연결 준비중...");
 
-stream.getVideoTracks()[0]
-.addEventListener(
 
-    "ended",
+        pc=new RTCPeerConnection(rtcConfig);
 
-    async()=>{
 
-        await updateDoc(
+        // 영상 트랙 추가
+        stream.getTracks().forEach(track=>{
 
-            doc(db,"users",userId),
+            pc.addTrack(track,stream);
 
-            {
+        });
 
-                online:false,
-                state:"offline"
+
+        // 상태 표시
+        pc.onconnectionstatechange=()=>{
+
+            console.log(pc.connectionState);
+
+            switch(pc.connectionState){
+
+                case "connected":
+
+                    setStatus("관리자와 연결되었습니다.");
+
+                    break;
+
+                case "connecting":
+
+                    setStatus("연결 중...");
+
+                    break;
+
+                case "failed":
+
+                    setStatus("연결 실패");
+
+                    break;
+
+                case "disconnected":
+
+                    setStatus("연결이 끊겼습니다.");
+
+                    break;
 
             }
 
+        };
+
+
+        // ICE Candidate 발생
+        pc.onicecandidate=async(event)=>{
+
+            if(!event.candidate) return;
+
+            try{
+
+                await updateDoc(userRef,{
+
+                    clientCandidates:
+                    arrayUnion(
+                        event.candidate.toJSON()
+                    )
+
+                });
+
+            }catch(e){
+
+                console.error(e);
+
+            }
+
+        };
+
+
+        // mode 변경
+        await updateDoc(userRef,{
+
+            online:true,
+            state:"live",
+            mode:"webrtc",
+            updatedAt:serverTimestamp()
+
+        });
+
+
+        // offer 생성
+        const offer=
+        await pc.createOffer();
+
+
+        await pc.setLocalDescription(
+            offer
         );
 
-        location.replace("/");
+
+        await updateDoc(userRef,{
+
+            clientOffer:
+            JSON.stringify(
+                offer.toJSON()
+            )
+
+        });
+
+
+        setStatus("관리자의 연결을 기다리는 중...");
+
+
+    }catch(e){
+
+        console.error(e);
+
+        alert("화면 공유에 실패했습니다.");
+
+        location.href="/";
 
     }
 
-);
+}
+// ==========================================
+// 관리자의 Answer 감시
+// ==========================================
 
+function waitAdminAnswer() {
+
+    unsubscribe = onSnapshot(userRef, async (snapshot) => {
+
+        if (!snapshot.exists()) return;
+
+        const data = snapshot.data();
+
+        // ----------------------------------
+        // Answer 수신
+        // ----------------------------------
+
+        if (
+            data.adminAnswer &&
+            !pc.currentRemoteDescription
+        ) {
+
+            try {
+
+                const answer =
+                    new RTCSessionDescription(
+                        data.adminAnswer
+                    );
+
+                await pc.setRemoteDescription(
+                    answer
+                );
+
+                setStatus(
+                    "관리자와 연결되었습니다."
+                );
+
+                console.log(
+                    "[CLIENT] Answer 적용 완료"
+                );
+
+            } catch (e) {
+
+                console.error(e);
+
+            }
+
+        }
+
+
+        // ----------------------------------
+        // 관리자 ICE Candidate 수신
+        // ----------------------------------
+
+        if (
+            data.adminCandidates &&
+            Array.isArray(
+                data.adminCandidates
+            )
+        ) {
+
+            for (const candidate of data.adminCandidates) {
+
+                try {
+
+                    await pc.addIceCandidate(
+                        new RTCIceCandidate(
+                            candidate
+                        )
+                    );
+
+                } catch (e) {
+
+                    // 이미 추가된 Candidate는 무시
+                    console.warn(e);
+
+                }
+
+            }
+
+        }
+
+    });
+
+}
+// ==========================================
+// 접속 종료 처리
+// ==========================================
+
+async function disconnect() {
+
+    try {
+
+        if (unsubscribe) {
+            unsubscribe();
+        }
+
+        if (stream) {
+            stream.getTracks().forEach(track => {
+                track.stop();
+            });
+        }
+
+        if (pc) {
+            pc.close();
+        }
+
+        await updateDoc(userRef, {
+
+            online: false,
+            state: "offline",
+            mode: "firebase",
+            updatedAt: serverTimestamp()
+
+        });
+
+    } catch (e) {
+
+        console.warn(e);
+
+    }
+
+}
+
+
+// ==========================================
+// 창이 닫히는 경우
+// ==========================================
+
+window.addEventListener("unload", () => {
+
+    disconnect();
+
+});
+
+
+// ==========================================
+// 실행부
+// ==========================================
+
+(async () => {
+
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) {
+
+        alert("계정을 찾을 수 없습니다.");
+        location.href = "/";
+        return;
+
+    }
+
+    await startSharing();
+
+    waitAdminAnswer();
+
+})();
 
 </script>
 
 </body>
-
 </html>
