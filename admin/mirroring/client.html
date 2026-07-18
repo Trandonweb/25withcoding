@@ -1,177 +1,76 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <title>화면 공유</title>
-
 <style>
-
-body{
-    margin:0;
-    font-family:sans-serif;
-    background:#f0f0f0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
-
-.box{
-    width:90%;
-    max-width:600px;
-    background:white;
-    padding:30px;
-    border-radius:20px;
-    box-shadow:0 0 20px rgba(0,0,0,.1);
-}
-
-h1{
-    margin-top:0;
-    color:#27ae60;
-}
-
-.status{
-
-    margin-top:20px;
-    font-size:18px;
-    font-weight:bold;
-
-}
-
-.warn{
-
-    margin-top:25px;
-    color:red;
-    line-height:1.7;
-
-}
-
+body{margin:0;font-family:sans-serif;background:#f0f0f0;display:flex;justify-content:center;align-items:center;height:100vh;}
+.box{width:90%;max-width:600px;background:white;padding:30px;border-radius:20px;box-shadow:0 0 20px rgba(0,0,0,.1);}
+h1{margin-top:0;color:#27ae60;}
+.status{margin-top:20px;font-size:18px;font-weight:bold;}
+.warn{margin-top:25px;color:red;line-height:1.7;}
 </style>
-
 </head>
-
 <body>
 
 <div class="box">
-
 <h1>화면 공유 중</h1>
-
-<p>
-
-관리자에게 화면을 공유하고 있습니다.<br>
-이 창을 닫지 마세요.
-
-</p>
-
-<div class="status" id="status">
-
-연결 준비중...
-
-</div>
-
+<p>관리자에게 화면을 공유하고 있습니다.<br>이 창을 닫지 마세요.</p>
+<div class="status" id="status">연결 준비중...</div>
 <div class="warn">
-
 - 창을 닫으면 화면 공유가 종료됩니다.<br>
 - 새로고침하지 마세요.<br>
 - 뒤로가기 하지 마세요.<br>
 - 공유가 종료되면 다시 로그인해야 합니다.
-
 </div>
-
 </div>
-
 
 <script type="module">
-
-import {initializeApp}
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-
-import {
-getFirestore,
-doc,
-getDoc,
-updateDoc,
-onSnapshot,
-arrayUnion,
-serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import {getFirestore, doc, getDoc, updateDoc, onSnapshot, arrayUnion, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig={
-
-apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-authDomain:"points2026-f5e50.firebaseapp.com",
-projectId:"points2026-f5e50",
-storageBucket:"points2026-f5e50.firebasestorage.app",
-messagingSenderId:"248724251417",
-appId:"1:248724251417:web:02d85cdc4addac98069b88"
-
+    apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+    authDomain:"points2026-f5e50.firebaseapp.com",
+    projectId:"points2026-f5e50",
+    storageBucket:"points2026-f5e50.firebasestorage.app",
+    messagingSenderId:"248724251417",
+    appId:"1:248724251417:web:02d85cdc4addac98069b88"
 };
-
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
-
-
 const userId=localStorage.getItem("userId");
 
-
 if(!userId){
-
     alert("로그인이 필요합니다.");
     location.href="/";
-
 }
-
 
 const userRef=doc(db,"users",userId);
-
-
 const statusEl=document.getElementById("status");
+function setStatus(text){ statusEl.innerText=text; }
 
-
-function setStatus(text){
-
-    statusEl.innerText=text;
-
-}
-
-
-const rtcConfig={
-
-iceServers:[
-{
-urls:"stun:stun.l.google.com:19302"
-}
-]
-
-};
-
-
+const rtcConfig={ iceServers:[{ urls:"stun:stun.l.google.com:19302" }] };
 let pc=null;
 let stream=null;
 let unsubscribe=null;
+
+let answerReceived = false;
+const addedAdminCandidates = new Set();
+
 // ==========================================
 // 창 닫기 방지
 // ==========================================
-
 window.addEventListener("beforeunload",(e)=>{
-
     e.preventDefault();
     e.returnValue="";
-
 });
-
 
 // ==========================================
 // 화면 공유 시작
 // ==========================================
-
-// [학생 코드 내부 startSharing 함수 내부 수정본]
 async function startSharing(){
     try{
         setStatus("화면 선택창을 열고 있습니다...");
@@ -180,7 +79,6 @@ async function startSharing(){
             audio:false
         });
 
-        // 🔍 [진단 로그] 미디어 트랙 상태 확인
         console.log("[CLIENT] 수집된 스트림 전체 트랙:", stream.getTracks());
         console.log("[CLIENT] 비디오 트랙 상세:", stream.getVideoTracks());
 
@@ -207,28 +105,18 @@ async function startSharing(){
         };
 
         pc.onicecandidate = async (event)=>{
-
             if(!event.candidate){
                 console.log("[CLIENT] Candidate 생성 종료");
                 return;
             }
-        
-            console.log(
-                "[CLIENT] Candidate 생성:",
-                event.candidate.candidate
-            );
-        
+            
+            console.log("[CLIENT] Candidate 생성:", event.candidate.candidate);
+            
             try{
                 await updateDoc(userRef,{
-                    clientCandidates:
-                    arrayUnion(
-                        event.candidate.toJSON()
-                    )
+                    clientCandidates: arrayUnion(event.candidate.toJSON())
                 });
-            }catch(e){
-                console.error(e);
-            }
-        
+            }catch(e){ console.error(e); }
         };
 
         await updateDoc(userRef,{
@@ -248,7 +136,6 @@ async function startSharing(){
         console.log("2 : createOffer 성공");
         await pc.setLocalDescription(offer);
         
-        // 🔍 [진단 로그] 로컬 디스크립션 설정 후 시그널링 상태 확인
         console.log("[CLIENT] setLocalDescription 직후 SignalingState:", pc.signalingState);
         
         await updateDoc(userRef,{
@@ -267,182 +154,105 @@ async function startSharing(){
     }
 }
 
-// [waitAdminAnswer 함수 내 Answer 수신부 수정]
-if (data.adminAnswer && !answerReceived && !pc.currentRemoteDescription) {
-    try {
-        const answer = new RTCSessionDescription(data.adminAnswer);
-        
-        // 🔍 [진단 로그] 원격 Answer 적용 전 상태
-        console.log("[CLIENT] Remote Description 설정 전 SignalingState:", pc.signalingState);
-        
-        await pc.setRemoteDescription(answer);
-        
-        // 🔍 [진단 로그] 원격 Answer 적용 후 상태
-        console.log("[CLIENT] Remote Description 설정 후 SignalingState:", pc.signalingState);
-        
-        answerReceived = true;
-        setStatus("관리자와 연결되었습니다.");
-        console.log("[CLIENT] Answer 적용 완료");
-    } catch (e) { console.error(e); }
-}
 // ==========================================
-// 관리자의 Answer 감시
+// 관리자의 Answer 및 Candidate 실시간 감시
 // ==========================================
-
 function waitAdminAnswer() {
-
     unsubscribe = onSnapshot(userRef, async (snapshot) => {
-
         if (!snapshot.exists()) return;
+        if (!pc) return;
 
         const data = snapshot.data();
 
-        // ----------------------------------
-        // Answer 수신
-        // ----------------------------------
-
-        if (
-            data.adminAnswer &&
-            !pc.currentRemoteDescription
-        ) {
-
-            try {
-
-                const answer =
-                    new RTCSessionDescription(
-                        data.adminAnswer
-                    );
-
-                await pc.setRemoteDescription(
-                    answer
-                );
-
-                setStatus(
-                    "관리자와 연결되었습니다."
-                );
-
-                console.log(
-                    "[CLIENT] Answer 적용 완료"
-                );
-
-            } catch (e) {
-
-                console.error(e);
-
-            }
-
+        // 🔍 피드백 반영: 실시간 adminAnswer 수신 감지 로그
+        if (data.adminAnswer) {
+            console.log("[CLIENT] adminAnswer 감지:", data.adminAnswer);
         }
 
+        // 1. Answer 수신 및 원격 Description 적용
+        if (data.adminAnswer && !answerReceived && !pc.currentRemoteDescription) {
+            try {
+                const answer = new RTCSessionDescription(data.adminAnswer);
+                
+                console.log("[CLIENT] Remote Description 설정 전 SignalingState:", pc.signalingState);
+                await pc.setRemoteDescription(answer);
+                console.log("[CLIENT] Remote Description 설정 후 SignalingState:", pc.signalingState);
+                
+                answerReceived = true;
+                setStatus("관리자와 연결되었습니다.");
+                console.log("[CLIENT] Answer 적용 완료");
+            } catch (e) { console.error(e); }
+        }
 
-        // ----------------------------------
-        // 관리자 ICE Candidate 수신
-        // ----------------------------------
-
-        if (
-            data.adminCandidates &&
-            Array.isArray(
-                data.adminCandidates
-            )
-        ) {
+        // 2. 관리자 ICE Candidate 수신 처리
+        if (data.adminCandidates && Array.isArray(data.adminCandidates)) {
+            // 🔍 피드백 반영: 수신된 Candidate 배열 개수 로그
+            console.log("[CLIENT] 관리자 Candidate 개수:", data.adminCandidates.length);
 
             for (const candidate of data.adminCandidates) {
-
-                try {
-
-                    await pc.addIceCandidate(
-                        new RTCIceCandidate(
-                            candidate
-                        )
-                    );
-
-                } catch (e) {
-
-                    // 이미 추가된 Candidate는 무시
-                    console.warn(e);
-
+                if (!answerReceived) {
+                    continue;
                 }
 
+                const key = JSON.stringify(candidate);
+                if (addedAdminCandidates.has(key)) {
+                    continue;
+                }
+
+                try {
+                    await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                    addedAdminCandidates.add(key);
+                    console.log("[CLIENT] 관리자 Candidate 추가 성공");
+                } catch (e) { 
+                    console.warn(e); 
+                }
             }
-
         }
-
     });
-
 }
+
 // ==========================================
 // 접속 종료 처리
 // ==========================================
-
 async function disconnect() {
-
     try {
+        if (unsubscribe) { unsubscribe(); }
+        if (stream) { stream.getTracks().forEach(track => { track.stop(); }); }
+        if (pc) { pc.close(); pc = null; } 
 
-        if (unsubscribe) {
-            unsubscribe();
-        }
-
-        if (stream) {
-            stream.getTracks().forEach(track => {
-                track.stop();
-            });
-        }
-
-        if (pc) {
-            pc.close();
-        }
+        // 피드백 반영: 재연결 세션을 위한 내부 상태 및 Set 초기화
+        answerReceived = false;
+        addedAdminCandidates.clear();
+        console.log("[CLIENT] 세션 상태 초기화 완 (answerReceived = false, Set 비움)");
 
         await updateDoc(userRef, {
-
             online: false,
             state: "offline",
             mode: "firebase",
+            clientOffer: null,
+            adminAnswer: null,
+            clientCandidates: [],
+            adminCandidates: [],
             updatedAt: serverTimestamp()
-
         });
-
-    } catch (e) {
-
-        console.warn(e);
-
-    }
-
+    } catch (e) { console.warn(e); }
 }
 
-
-// ==========================================
-// 창이 닫히는 경우
-// ==========================================
-
-window.addEventListener("unload", () => {
-
-    disconnect();
-
-});
-
+window.addEventListener("unload", () => { disconnect(); });
 
 // ==========================================
 // 실행부
 // ==========================================
-
 (async () => {
-
     const snap = await getDoc(userRef);
-
     if (!snap.exists()) {
-
         alert("계정을 찾을 수 없습니다.");
         location.href = "/";
         return;
-
     }
-
     await startSharing();
-
     waitAdminAnswer();
-
 })();
-
 </script>
-
 </body>
 </html>
