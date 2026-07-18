@@ -268,545 +268,273 @@ playsinline>
 
 
 <script type="module">
-
 // ===================================
-// Firebase 불러오기
+// 1. Firebase 및 모듈 Import (최상단 배치)
 // ===================================
-
-import {initializeApp}
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import {
-
-getFirestore,
-collection,
-onSnapshot,
-doc,
-getDoc,
-updateDoc,
-arrayUnion
-
-}
-
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-
+    getFirestore,
+    collection,
+    onSnapshot,
+    doc,
+    getDoc,
+    updateDoc,
+    arrayUnion
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 // ===================================
-// Firebase 설정
+// 2. Firebase 설정 및 초기화
 // ===================================
-
-const firebaseConfig={
-
-apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-authDomain:"points2026-f5e50.firebaseapp.com",
-projectId:"points2026-f5e50",
-storageBucket:"points2026-f5e50.firebasestorage.app",
-messagingSenderId:"248724251417",
-appId:"1:248724251417:web:02d85cdc4addac98069b88"
-
+const firebaseConfig = {
+    apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+    authDomain: "points2026-f5e50.firebaseapp.com",
+    projectId: "points2026-f5e50",
+    storageBucket: "points2026-f5e50.firebasestorage.app",
+    messagingSenderId: "248724251417",
+    appId: "1:248724251417:web:02d85cdc4addac98069b88"
 };
 
-
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 // ===================================
-// 사용할 변수들
+// 3. 전역 변수 선언
 // ===================================
+let selectedId = null;
+let peerConnection = null;
+let unsubscribeUser = null; // 학생 candidate 감시 취소용 변수
 
-let selectedId=null;
-
-let peerConnection=null;
-
-const rtcConfig={
-
-    iceServers:[
-        {
-            urls:"stun:stun.l.google.com:19302"
-        }
+const rtcConfig = {
+    iceServers: [
+        { urls: "stun:stun.l.google.com:19302" }
     ]
-
 };
-// ===================================
-// 관리자 권한 확인
-// ===================================
 
+// ===================================
+// 4. 초기 인증 및 권한 확인 (동기적 흐름 제어)
+// ===================================
 const adminId = localStorage.getItem("userId");
 
 if (!adminId) {
-
     alert("로그인이 필요합니다.");
     location.href = "/signin?redirect=/admin/mirroring.html";
-
     throw new Error("로그인 필요");
-
 }
 
+// 초기 권한 검증 및 데이터 로딩 시작
+async function initAdmin() {
+    try {
+        const adminSnap = await getDoc(doc(db, "users", adminId));
 
-const adminSnap = await getDoc(
-    doc(db, "users", adminId)
-);
+        if (!adminSnap.exists()) {
+            alert("계정을 찾을 수 없습니다.");
+            location.href = "/";
+            return;
+        }
 
-if (!adminSnap.exists()) {
+        const adminData = adminSnap.data();
 
-    alert("계정을 찾을 수 없습니다.");
-    location.href = "/";
+        // 회장 또는 부회장만 허용
+        if (adminData.role !== "president" && adminData.role !== "vice") {
+            alert("관리자만 접근 가능합니다.");
+            location.href = "/";
+            return;
+        }
 
-    throw new Error("계정 없음");
+        // 권한 확인이 완료된 후 접속자 목록을 불러옴
+        loadUsers();
 
+    } catch (error) {
+        console.error("인증 과정 중 오류 발생:", error);
+        alert("데이터를 불러오는 중 오류가 발생했습니다.");
+    }
 }
-
-
-const adminData = adminSnap.data();
-
-
-// 회장 또는 부회장만 허용
-if (
-    adminData.role !== "president" &&
-    adminData.role !== "vice"
-) {
-
-    alert("관리자만 접근 가능합니다.");
-    location.href = "/";
-
-    throw new Error("권한 없음");
-
-}
-
 
 // ===================================
-// 홈 버튼
+// 5. 기능 함수 정의
 // ===================================
 
+// 홈 버튼 이벤트 바인딩
 document.getElementById("back").onclick = () => {
-
     location.href = "/";
-
 };
 
-
-// ===================================
-// 접속 인원 표시
-// ===================================
-
+// 접속 인원 표시 UI 업데이트
 function updateOnlineCount(count) {
-
-    document.getElementById("online").innerText =
-        `🟢 접속 ${count}명`;
-
+    document.getElementById("online").innerText = `🟢 접속 ${count}명`;
 }
 
-
-// ===================================
-// 카드 생성
-// ===================================
-
+// 카드 HTML 생성
 function createCard(id, data) {
-
     const card = document.createElement("div");
-
     card.className = "card";
-
     card.innerHTML = `
-
         <h3>${data.name ?? id}</h3>
-
         <p>ID : ${id}</p>
-
-        <p>
-            상태 :
-            ${
-                data.online
-                ? "온라인"
-                : "오프라인"
-            }
-        </p>
-
-        <p>
-            모드 :
-            ${data.mode ?? "unknown"}
-        </p>
-
+        <p>상태 : ${data.online ? "온라인" : "오프라인"}</p>
+        <p>모드 : ${data.mode ?? "unknown"}</p>
     `;
 
-
-    // 온라인 상태만 클릭 가능
     if (data.online === true) {
-
         card.onclick = () => {
-
             connectStudent(id);
-
         };
-
     }
-
     return card;
-
 }
 
-
-// ===================================
-// 접속자 목록 불러오기
-// ===================================
-
+// 접속자 목록 실시간 불러오기
 function loadUsers() {
+    onSnapshot(collection(db, "users"), (snapshot) => {
+        const grid = document.getElementById("grid");
+        grid.innerHTML = "";
+        let onlineCount = 0;
 
-    onSnapshot(
-        collection(db, "users"),
+        snapshot.forEach((userDoc) => {
+            const data = userDoc.data();
+            const id = userDoc.id;
 
-        (snapshot) => {
+            // 자기 자신은 목록에서 제외
+            if (id === adminId) return;
 
-            const grid =
-                document.getElementById("grid");
+            if (data.online === true) {
+                onlineCount++;
+            }
 
-            grid.innerHTML = "";
+            const card = createCard(id, data);
+            grid.appendChild(card);
+        });
 
-            let onlineCount = 0;
-
-
-            snapshot.forEach((userDoc) => {
-
-                const data =
-                    userDoc.data();
-
-                const id =
-                    userDoc.id;
-
-
-                // 자기 자신은 표시 X
-                if (id === adminId) {
-                    return;
-                }
-
-
-                // 온라인 인원 카운트
-                if (data.online === true) {
-                    onlineCount++;
-                }
-
-
-                const card =
-                    createCard(id, data);
-
-                grid.appendChild(card);
-
-            });
-
-
-            updateOnlineCount(
-                onlineCount
-            );
-
-        }
-
-    );
-
+        updateOnlineCount(onlineCount);
+    }, (error) => {
+        console.error("목록 불러오기 실패:", error);
+    });
 }
 
-
-// ===================================
-// 최초 실행
-// ===================================
-
-loadUsers();
-// ===================================
-// 학생 연결 시작
-// ===================================
-
-async function connectStudent(userId){
-
-    // 이미 연결되어 있다면 끊기
-    if(peerConnection){
-
-        try{
+// 학생 WebRTC 연결 시작
+async function connectStudent(userId) {
+    // 1. 기존 연결 및 리스너 완벽히 초기화 (중요)
+    if (peerConnection) {
+        try {
             peerConnection.close();
-        }catch(e){
+        } catch (e) {
             console.warn(e);
         }
-
-        peerConnection=null;
-
+        peerConnection = null;
+    }
+    if (unsubscribeUser) {
+        unsubscribeUser();
+        unsubscribeUser = null;
     }
 
+    selectedId = userId;
 
-    selectedId=userId;
+    document.getElementById("viewer").style.display = "flex";
+    document.getElementById("viewerTitle").innerText = `${userId} 화면`;
 
+    const userRef = doc(db, "users", userId);
+    const snap = await getDoc(userRef);
 
-    document.getElementById("viewer").style.display="flex";
-    document.getElementById("viewerTitle").innerText=
-        `${userId} 화면`;
-
-
-    const userRef=
-        doc(db,"users",userId);
-
-
-    const snap=
-        await getDoc(userRef);
-
-
-    if(!snap.exists()){
-
+    if (!snap.exists()) {
         alert("사용자를 찾을 수 없습니다.");
-
         return;
-
     }
 
+    const data = snap.data();
 
-    const data=snap.data();
-
-
-    // -----------------------------------
-    // 아직 OFFER가 없는 경우
-    // -----------------------------------
-
-    if(!data.clientOffer){
-
+    if (!data.clientOffer) {
         alert("학생이 아직 화면 공유를 시작하지 않았습니다.");
-
         return;
-
     }
 
+    // 2. PeerConnection 생성
+    peerConnection = new RTCPeerConnection(rtcConfig);
 
-    // -----------------------------------
-    // PeerConnection 생성
-    // -----------------------------------
-
-    peerConnection=
-        new RTCPeerConnection(rtcConfig);
-
-
-
-    // -----------------------------------
-    // 영상 수신
-    // -----------------------------------
-
-    peerConnection.ontrack=(event)=>{
-
-        const video=
-            document.getElementById("bigVideo");
-
-
-        if(event.streams[0]){
-
-            video.srcObject=
-                event.streams[0];
-
+    // 영상 트랙 수신 설정
+    peerConnection.ontrack = (event) => {
+        const video = document.getElementById("bigVideo");
+        if (event.streams[0]) {
+            video.srcObject = event.streams[0];
         }
-
     };
 
-
-
-    // -----------------------------------
-    // 연결 상태 출력
-    // -----------------------------------
-
-    peerConnection.onconnectionstatechange=()=>{
-
-        console.log(
-            "[ADMIN]",
-            peerConnection.connectionState
-        );
-
+    peerConnection.onconnectionstatechange = () => {
+        console.log("[ADMIN] Connection State:", peerConnection?.connectionState);
     };
 
+    // 관리자 ICE Candidate 생성 시 Firestore에 추가
+    peerConnection.onicecandidate = async (event) => {
+        if (!event.candidate) return;
+        try {
+            await updateDoc(userRef, {
+                adminCandidates: arrayUnion(event.candidate.toJSON())
+            });
+        } catch (e) {
+            console.error("관리자 Candidate 전송 실패:", e);
+        }
+    };
 
+    try {
+        // 3. OFFER 적용 및 ANSWER 전송
+        const offer = JSON.parse(data.clientOffer);
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
 
-    // -----------------------------------
-    // ICE Candidate 생성
-    // -----------------------------------
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
 
-    peerConnection.onicecandidate=
-    async(event)=>{
+        await updateDoc(userRef, {
+            adminAnswer: {
+                type: answer.type,
+                sdp: answer.sdp
+            }
+        });
 
-        if(!event.candidate)
+        console.log("[ADMIN] Answer 전송 완료");
+
+        // 4. ANSWER 전송 완료 후 학생 Candidate 감시 시작
+        watchClientCandidates(userId);
+
+    } catch (error) {
+        console.error("WebRTC 연결 설정 중 에러:", error);
+        alert("연결 설정 중 오류가 발생했습니다.");
+    }
+}
+
+// 학생 ICE Candidate 실시간 감시
+async function watchClientCandidates(userId) {
+    const userRef = doc(db, "users", userId);
+    const addedCandidates = new Set();
+
+    unsubscribeUser = onSnapshot(userRef, async (snapshot) => {
+        if (!snapshot.exists() || !peerConnection) return;
+
+        const data = snapshot.data();
+        if (!data.clientCandidates || !Array.isArray(data.clientCandidates)) return;
+
+        // 원격 Description(Offer)이 적용되기 전에 candidate가 추가되는 것을 방지
+        if (!peerConnection.remoteDescription) {
+            console.warn("아직 remoteDescription이 설정되지 않아 candidate를 보류합니다.");
             return;
-
-
-        try{
-
-            await updateDoc(
-
-                userRef,
-
-                {
-
-                    adminCandidates:
-                    arrayUnion(
-                        event.candidate.toJSON()
-                    )
-
-                }
-
-            );
-
-        }catch(e){
-
-            console.error(e);
-
         }
 
-    };
+        for (const candidate of data.clientCandidates) {
+            const key = JSON.stringify(candidate);
 
+            if (addedCandidates.has(key)) continue;
+            addedCandidates.add(key);
 
-
-    // -----------------------------------
-    // OFFER 적용
-    // -----------------------------------
-
-    const offer=
-        JSON.parse(
-            data.clientOffer
-        );
-
-
-    await peerConnection
-    .setRemoteDescription(
-
-        new RTCSessionDescription(
-            offer
-        )
-
-    );
-
-
-
-    // -----------------------------------
-    // ANSWER 생성
-    // -----------------------------------
-
-    console.log("A");
-
-    const answer =
-    await peerConnection.createAnswer();
-    
-    console.log("B");
-        
-    await peerConnection.setLocalDescription(answer);
-    
-    console.log("C");
-    
-    await updateDoc(userRef,{
-        adminAnswer:{
-            type:answer.type,
-            sdp:answer.sdp
+            try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                console.log("[ADMIN] 학생 Candidate 추가 성공");
+            } catch (e) {
+                console.warn("학생 Candidate 추가 실패:", e);
+            }
         }
     });
-    
-    console.log("D");
-    
-    console.log("[ADMIN] Answer 전송 완료");
-    
-    // 학생의 ICE Candidate 수신 시작
-    watchClientCandidates(userId);
-    
-    }
-// ===================================
-// 학생 ICE Candidate 실시간 감시
-// ===================================
-
-let unsubscribeUser = null;
-
-
-async function watchClientCandidates(userId){
-
-    const userRef =
-        doc(db, "users", userId);
-
-
-    // 이전 리스너 제거
-    if(unsubscribeUser){
-
-        unsubscribeUser();
-
-        unsubscribeUser = null;
-
-    }
-
-
-    const addedCandidates =
-        new Set();
-
-
-    unsubscribeUser = onSnapshot(
-
-        userRef,
-
-        async (snapshot) => {
-
-            if(
-                !snapshot.exists() ||
-                !peerConnection
-            ){
-                return;
-            }
-
-
-            const data =
-                snapshot.data();
-
-
-            if(
-                !data.clientCandidates ||
-                !Array.isArray(
-                    data.clientCandidates
-                )
-            ){
-                return;
-            }
-
-
-            for(
-                const candidate of
-                data.clientCandidates
-            ){
-
-                const key =
-                    JSON.stringify(
-                        candidate
-                    );
-
-
-                // 이미 추가된 Candidate 무시
-                if(
-                    addedCandidates.has(key)
-                ){
-                    continue;
-                }
-
-
-                addedCandidates.add(
-                    key
-                );
-
-
-                try{
-
-                    await peerConnection
-                    .addIceCandidate(
-
-                        new RTCIceCandidate(
-                            candidate
-                        )
-
-                    );
-
-                }catch(e){
-
-                    console.warn(e);
-
-                }
-
-            }
-
-        }
-
-    );
-
 }
+
+// ===================================
+// 6. 실행 (엔트리 포인트)
+// ===================================
+initAdmin();
+</script>
