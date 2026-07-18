@@ -308,11 +308,9 @@ async function startSharing(){
     }catch(e){
 
         console.error(e);
-
-        alert("화면 공유에 실패했습니다.");
-
-        location.href="/";
-
+    
+        alert(e.message);
+    
     }
 
 }
