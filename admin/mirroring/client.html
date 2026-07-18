@@ -171,158 +171,119 @@ window.addEventListener("beforeunload",(e)=>{
 // 화면 공유 시작
 // ==========================================
 
+// [학생 코드 내부 startSharing 함수 내부 수정본]
 async function startSharing(){
-
     try{
-
         setStatus("화면 선택창을 열고 있습니다...");
-
-
         stream=await navigator.mediaDevices.getDisplayMedia({
-
-            video:{
-                frameRate:10
-            },
-
+            video:{ frameRate:10 },
             audio:false
-
         });
 
+        // 🔍 [진단 로그] 미디어 트랙 상태 확인
+        console.log("[CLIENT] 수집된 스트림 전체 트랙:", stream.getTracks());
+        console.log("[CLIENT] 비디오 트랙 상세:", stream.getVideoTracks());
 
-        // 사용자가 공유 종료 버튼 누른 경우
         stream.getVideoTracks()[0].onended=()=>{
-
             alert("화면 공유가 종료되었습니다.");
-
             location.href="/";
-
         };
-
 
         setStatus("WEBRTC 연결 준비중...");
-
-
         pc=new RTCPeerConnection(rtcConfig);
 
-
-        // 영상 트랙 추가
         stream.getTracks().forEach(track=>{
-
             pc.addTrack(track,stream);
-
         });
 
-
-        // 상태 표시
         pc.onconnectionstatechange=()=>{
-
-            console.log(pc.connectionState);
-
+            console.log("[CLIENT] Connection State 변경됨:", pc.connectionState);
             switch(pc.connectionState){
-
-                case "connected":
-
-                    setStatus("관리자와 연결되었습니다.");
-
-                    break;
-
-                case "connecting":
-
-                    setStatus("연결 중...");
-
-                    break;
-
-                case "failed":
-
-                    setStatus("연결 실패");
-
-                    break;
-
-                case "disconnected":
-
-                    setStatus("연결이 끊겼습니다.");
-
-                    break;
-
+                case "connected": setStatus("관리자와 연결되었습니다."); break;
+                case "connecting": setStatus("연결 중..."); break;
+                case "failed": setStatus("연결 실패"); break;
+                case "disconnected": setStatus("연결이 끊겼습니다."); break;
             }
-
         };
 
+        pc.onicecandidate = async (event)=>{
 
-        // ICE Candidate 발생
-        pc.onicecandidate=async(event)=>{
-
-            if(!event.candidate) return;
-
+            if(!event.candidate){
+                console.log("[CLIENT] Candidate 생성 종료");
+                return;
+            }
+        
+            console.log(
+                "[CLIENT] Candidate 생성:",
+                event.candidate.candidate
+            );
+        
             try{
-
                 await updateDoc(userRef,{
-
                     clientCandidates:
                     arrayUnion(
                         event.candidate.toJSON()
                     )
-
                 });
-
             }catch(e){
-
                 console.error(e);
-
             }
-
+        
         };
 
-
-        // mode 변경
         await updateDoc(userRef,{
-
             online:true,
             state:"live",
             mode:"webrtc",
+            clientOffer:null,
+            clientCandidates:[],
+            adminAnswer:null,
+            adminCandidates:[],
             updatedAt:serverTimestamp()
-
         });
 
-
         console.log("1 : createOffer 시작");
-
-        const offer =
-        await pc.createOffer();
+        const offer = await pc.createOffer();
         
         console.log("2 : createOffer 성공");
+        await pc.setLocalDescription(offer);
         
-        await pc.setLocalDescription(
-            offer
-        );
-        
-        console.log("3 : setLocalDescription 성공");
+        // 🔍 [진단 로그] 로컬 디스크립션 설정 후 시그널링 상태 확인
+        console.log("[CLIENT] setLocalDescription 직후 SignalingState:", pc.signalingState);
         
         await updateDoc(userRef,{
-        
-            clientOffer:
-            JSON.stringify({
-        
+            clientOffer: {
                 type: offer.type,
                 sdp: offer.sdp
-        
-            })
-        
+            }
         });
         
         console.log("4 : Firestore 저장 성공");
-        
         setStatus("관리자의 연결을 기다리는 중...");
 
-
     }catch(e){
-
         console.error(e);
-    
         alert(e.message);
-    
     }
+}
 
+// [waitAdminAnswer 함수 내 Answer 수신부 수정]
+if (data.adminAnswer && !answerReceived && !pc.currentRemoteDescription) {
+    try {
+        const answer = new RTCSessionDescription(data.adminAnswer);
+        
+        // 🔍 [진단 로그] 원격 Answer 적용 전 상태
+        console.log("[CLIENT] Remote Description 설정 전 SignalingState:", pc.signalingState);
+        
+        await pc.setRemoteDescription(answer);
+        
+        // 🔍 [진단 로그] 원격 Answer 적용 후 상태
+        console.log("[CLIENT] Remote Description 설정 후 SignalingState:", pc.signalingState);
+        
+        answerReceived = true;
+        setStatus("관리자와 연결되었습니다.");
+        console.log("[CLIENT] Answer 적용 완료");
+    } catch (e) { console.error(e); }
 }
 // ==========================================
 // 관리자의 Answer 감시
