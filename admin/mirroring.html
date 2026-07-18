@@ -303,7 +303,8 @@ const db = getFirestore(app);
 let selectedId = null;
 let peerConnection = null;
 let unsubscribeUser = null; // 학생 candidate 감시 취소용 변수
-
+let adminAnswerCreated = false;
+    
 const rtcConfig = {
     iceServers: [
         { urls: "stun:stun.l.google.com:19302" }
