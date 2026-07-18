@@ -285,10 +285,18 @@ async function startSharing(){
         });
 
 
-        // offer 생성
-        const offer = await pc.createOffer();
+        console.log("1 : createOffer 시작");
 
-        await pc.setLocalDescription(offer);
+        const offer =
+        await pc.createOffer();
+        
+        console.log("2 : createOffer 성공");
+        
+        await pc.setLocalDescription(
+            offer
+        );
+        
+        console.log("3 : setLocalDescription 성공");
         
         await updateDoc(userRef,{
         
@@ -301,7 +309,9 @@ async function startSharing(){
             })
         
         });
-
+        
+        console.log("4 : Firestore 저장 성공");
+        
         setStatus("관리자의 연결을 기다리는 중...");
 
 
