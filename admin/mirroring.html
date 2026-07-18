@@ -447,6 +447,26 @@ async function connectStudent(userId) {
         const video = document.getElementById("bigVideo");
         if (event.streams[0]) {
             video.srcObject = event.streams[0];
+            video.onloadedmetadata=()=>{
+
+                console.log(
+                    "[ADMIN] 영상 메타데이터 로드 완료"
+                );
+            
+                video.play()
+                .then(()=>{
+                    console.log(
+                        "[ADMIN] 영상 재생 성공"
+                    );
+                })
+                .catch((e)=>{
+                    console.error(
+                        "[ADMIN] 영상 재생 실패",
+                        e
+                    );
+                });
+            
+            };
             console.log("[ADMIN] 비디오 엘리먼트에 스트림 바인딩 완");
         }
     };
