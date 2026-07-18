@@ -681,41 +681,32 @@ async function connectStudent(userId){
     // ANSWER 생성
     // -----------------------------------
 
-    const answer=
-        await peerConnection.createAnswer();
+    console.log("A");
 
-
-    await peerConnection
-    .setLocalDescription(
-        answer
-    );
-
-
-
-    // -----------------------------------
-    // ANSWER 저장
-    // -----------------------------------
-
-    await updateDoc(
-
-        userRef,
-
-        {
-
-            adminAnswer:
-            answer.toJSON()
-
+    const answer =
+    await peerConnection.createAnswer();
+    
+    console.log("B");
+        
+    await peerConnection.setLocalDescription(answer);
+    
+    console.log("C");
+    
+    await updateDoc(userRef,{
+        adminAnswer:{
+            type:answer.type,
+            sdp:answer.sdp
         }
-
-    );
-
-
-
-    console.log(
-        "[ADMIN] Answer 전송 완료"
-    );
-
-}
+    });
+    
+    console.log("D");
+    
+    console.log("[ADMIN] Answer 전송 완료");
+    
+    // 학생의 ICE Candidate 수신 시작
+    watchClientCandidates(userId);
+    
+    }
 // ===================================
 // 학생 ICE Candidate 실시간 감시
 // ===================================
