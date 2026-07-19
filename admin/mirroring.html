@@ -1,4 +1,5 @@
 <!-- 스크립트 블록 전체 교체 -->
+<!-- 스크립트 블록 전체 교체 -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
@@ -34,14 +35,30 @@ const adminId = localStorage.getItem("userId");
 
 if (!adminId) { alert("로그인이 필요합니다."); location.href = "/signin?redirect=/admin/mirroring.html"; throw new Error("로그인 필요"); }
 
+// 💡 모든 DOM 관련 이벤트 등록을 HTML 로드 이후 시점인 이 함수 내부에서 처리합니다.
 async function initAdmin() {
     try {
-        // 💡 DOM 요소를 확실히 잡기 위해 이 위치로 이동
         const backBtn = document.getElementById("back");
         if (backBtn) {
             backBtn.onclick = () => { location.href = "/"; };
-        } else {
-            console.warn("id='back'인 버튼을 HTML에서 찾을 수 없습니다.");
+        }
+
+        const closeBtn = document.getElementById("closeViewer");
+        if (closeBtn) {
+            closeBtn.onclick = async () => {
+                document.getElementById("viewer").style.display = "none";
+                document.getElementById("bigVideo").srcObject = null;
+                
+                if (selectedId) {
+                    try {
+                        await updateDoc(doc(db, "users", selectedId), { sharing: false });
+                    } catch (e) { console.error(e); }
+                }
+
+                if (peerConnection) { try { peerConnection.close(); } catch(e){} peerConnection = null; }
+                if (unsubscribeUser) { unsubscribeUser(); unsubscribeUser = null; }
+                selectedId = null; adminAnswerCreated = false; addedClientCandidates.clear();
+            };
         }
 
         const adminSnap = await getDoc(doc(db, "users", adminId));
@@ -52,7 +69,6 @@ async function initAdmin() {
     } catch (error) { console.error(error); }
 }
 
-// 💡 updateOnlineCount 함수는 밖으로 빼두되 내부 엘리먼트 체크 추가
 function updateOnlineCount(count) { 
     const onlineEl = document.getElementById("online");
     if (onlineEl) onlineEl.innerText = `🟢 접속 ${count}명`; 
@@ -66,9 +82,13 @@ function createCard(id, data) {
     return card;
 }
 
+// 💡 윈도우가 완전히 준비된 후 로드되도록 안전장치 추가
 function loadUsers() {
     onSnapshot(collection(db, "users"), (snapshot) => {
-        const grid = document.getElementById("grid"); grid.innerHTML = ""; let onlineCount = 0;
+        const grid = document.getElementById("grid"); 
+        if (!grid) return;
+        grid.innerHTML = ""; 
+        let onlineCount = 0;
         snapshot.forEach((userDoc) => {
             const data = userDoc.data(); const id = userDoc.id; if (id === adminId) return;
             if (data.online === true) onlineCount++;
@@ -77,23 +97,6 @@ function loadUsers() {
         updateOnlineCount(onlineCount);
     });
 }
-
-// 🚀 닫기 버튼 클릭 이벤트 수정
-document.getElementById("closeViewer").onclick = async () => {
-    document.getElementById("viewer").style.display = "none";
-    document.getElementById("bigVideo").srcObject = null;
-    
-    // 🚀 관리자가 창을 닫으면 sharing: false 저장
-    if (selectedId) {
-        try {
-            await updateDoc(doc(db, "users", selectedId), { sharing: false });
-        } catch (e) { console.error(e); }
-    }
-
-    if (peerConnection) { try { peerConnection.close(); } catch(e){} peerConnection = null; }
-    if (unsubscribeUser) { unsubscribeUser(); unsubscribeUser = null; }
-    selectedId = null; adminAnswerCreated = false; addedClientCandidates.clear();
-};
 
 async function connectStudent(userId) {
     if (peerConnection) { try { peerConnection.close(); } catch (e) {} peerConnection = null; }
@@ -108,7 +111,6 @@ async function connectStudent(userId) {
 
     const userRef = doc(db, "users", userId);
     
-    // 🚀 학생 카드를 클릭하면 즉시 sharing: true 저장
     try {
         await updateDoc(userRef, { sharing: true });
     } catch (e) { console.error(e); }
@@ -124,13 +126,12 @@ async function connectStudent(userId) {
     peerConnection.ontrack = (event) => {
         console.log("[ADMIN] ontrack 이벤트 발생! 스트림:", event.streams);
         const video = document.getElementById("bigVideo");
-        if (event.streams[0]) {
+        if (event.streams[0] && video) {
             video.srcObject = event.streams[0];
             video.onloadedmetadata = () => { video.play().catch((e) => console.error(e)); };
         }
     };
 
-    // 🚀 로그만 남기고 상태 문구에 영향을 주지 않도록 설정 유지
     peerConnection.onconnectionstatechange = () => {
         console.log("[ADMIN] Connection State:", peerConnection?.connectionState);
     };
@@ -190,5 +191,6 @@ function watchClientCandidates(userId) {
     });
 }
 
+// 스크립트가 로드되면 초기화 즉시 실행
 initAdmin();
 </script>
