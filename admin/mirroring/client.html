@@ -1,32 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>화면 공유</title>
-<style>
-body{margin:0;font-family:sans-serif;background:#f0f0f0;display:flex;justify-content:center;align-items:center;height:100vh;}
-.box{width:90%;max-width:600px;background:white;padding:30px;border-radius:20px;box-shadow:0 0 20px rgba(0,0,0,.1);}
-h1{margin-top:0;color:#27ae60;}
-.status{margin-top:20px;font-size:18px;font-weight:bold;}
-.warn{margin-top:25px;color:red;line-height:1.7;}
-</style>
-</head>
-<body>
-
-<div class="box">
-<h1>화면 공유 중</h1>
-<p>관리자에게 화면을 공유하고 있습니다.<br>이 창을 닫지 마세요.</p>
-<div class="status" id="status">연결 준비중...</div>
-<div class="warn">
-- 창을 닫으면 화면 공유가 종료됩니다.<br>
-- 새로고침하지 마세요.<br>
-- 뒤로가기 하지 마세요.<br>
-- 공유가 종료되면 다시 로그인해야 합니다.
-</div>
-</div>
-
-<!-- 앞선 HTML/CSS 구조는 동일, 스크립트 블록 전체 교체 -->
+<!-- 스크립트 블록 전체 교체 -->
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import {getFirestore, doc, getDoc, updateDoc, onSnapshot, arrayUnion, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
@@ -50,32 +22,13 @@ const userRef=doc(db,"users",userId);
 const statusEl=document.getElementById("status");
 function setStatus(text){ statusEl.innerText=text; }
 
-// 💡 [5순위] 추후 TURN 서버 정보가 생기면 아래 iceServers 배열에 추가하시면 됩니다.
 const rtcConfig = {
     iceServers: [
-        {
-            urls: "stun:stun.relay.metered.ca:80",
-        },
-        {
-            urls: "turn:standard.relay.metered.ca:80",
-            username: "cc29acf1a234c7ca3a5ae899",
-            credential: "CW4V8T/D1+AnGnED",
-        },
-        {
-            urls: "turn:standard.relay.metered.ca:80?transport=tcp",
-            username: "cc29acf1a234c7ca3a5ae899",
-            credential: "CW4V8T/D1+AnGnED",
-        },
-        {
-            urls: "turn:standard.relay.metered.ca:443",
-            username: "cc29acf1a234c7ca3a5ae899",
-            credential: "CW4V8T/D1+AnGnED",
-        },
-        {
-            urls: "turns:standard.relay.metered.ca:443?transport=tcp",
-            username: "cc29acf1a234c7ca3a5ae899",
-            credential: "CW4V8T/D1+AnGnED",
-        },
+        { urls: "stun:stun.relay.metered.ca:80" },
+        { urls: "turn:standard.relay.metered.ca:80", username: "cc29acf1a234c7ca3a5ae899", credential: "CW4V8T/D1+AnGnED" },
+        { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "cc29acf1a234c7ca3a5ae899", credential: "CW4V8T/D1+AnGnED" },
+        { urls: "turn:standard.relay.metered.ca:443", username: "cc29acf1a234c7ca3a5ae899", credential: "CW4V8T/D1+AnGnED" },
+        { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "cc29acf1a234c7ca3a5ae899", credential: "CW4V8T/D1+AnGnED" }
     ]
 };
 let pc=null;
@@ -83,7 +36,7 @@ let stream=null;
 let unsubscribe=null;
 
 let answerReceived = false;
-let settingRemoteDescription = false; // 🚀 [1순위] 중복 호출 방지 락 플래그
+let settingRemoteDescription = false; 
 const addedAdminCandidates = new Set();
 
 window.addEventListener("beforeunload",(e)=>{ e.preventDefault(); e.returnValue=""; });
@@ -100,15 +53,9 @@ async function startSharing(){
 
         stream.getTracks().forEach(track=>{ pc.addTrack(track,stream); });
 
-        // 🚀 [4순위] 디버깅을 위해 connectionState와 iceConnectionState를 모두 정밀 추적
+        // 🚀 connectionState 변경 시 UI 문구를 바꾸지 않고 로그만 남기도록 수정
         pc.onconnectionstatechange=()=>{
             console.log("[CLIENT] Connection State:", pc.connectionState);
-            switch(pc.connectionState){
-                case "connected": setStatus("관리자와 연결되었습니다."); break;
-                case "connecting": setStatus("연결 중..."); break;
-                case "failed": setStatus("연결 실패 (네트워크 환경 확인 필요)"); break;
-                case "disconnected": setStatus("연결이 끊겼습니다."); break;
-            }
         };
         pc.oniceconnectionstatechange=()=>{
             console.log("[CLIENT] ICE Connection State:", pc.iceConnectionState);
@@ -122,9 +69,9 @@ async function startSharing(){
             }catch(e){ console.error(e); }
         };
 
-        // 공유를 '새로' 누를 때만 완벽하게 초기화 (이후엔 건드리지 않음)
+        // 🚀 초기화할 때 sharing: false 추가
         await updateDoc(userRef,{
-            online:true, state:"live", mode:"webrtc",
+            online:true, state:"live", mode:"webrtc", sharing:false,
             clientOffer:null, clientCandidates:[],
             adminAnswer:null, adminCandidates:[],
             updatedAt:serverTimestamp()
@@ -135,7 +82,9 @@ async function startSharing(){
         console.log("[CLIENT] setLocalDescription 완료. SignalingState:", pc.signalingState);
         
         await updateDoc(userRef,{ clientOffer: { type: offer.type, sdp: offer.sdp } });
-        setStatus("관리자의 연결을 기다리는 중...");
+        
+        // 🚀 기본 문구 즉시 적용
+        setStatus("관리자와 연결됨. (관리자와 공유 대기 중)");
 
     }catch(e){ console.error(e); alert(e.message); }
 }
@@ -145,11 +94,17 @@ function waitAdminAnswer() {
         if (!snapshot.exists() || !pc) return;
         const data = snapshot.data();
 
+        // 🚀 sharing 필드를 감시하여 화면 상태 문구 변경
+        if (data.sharing === true) {
+            setStatus("관리자와 공유 중");
+        } else {
+            setStatus("관리자와 연결됨. (관리자와 공유 대기 중)");
+        }
+
         if (data.adminAnswer) {
             console.log("[CLIENT] adminAnswer 감지됨 (현재 플래그상태 - received:", answerReceived, "/ locking:", settingRemoteDescription, ")");
         }
 
-        // 🚀 [1순위] answerReceived 가드와 settingRemoteDescription 비동기 락을 동시에 걸어 중복 진입 원천 차단
         if (data.adminAnswer && !answerReceived && !settingRemoteDescription && !pc.currentRemoteDescription) {
             settingRemoteDescription = true; 
             try {
@@ -157,14 +112,12 @@ function waitAdminAnswer() {
                 console.log("[CLIENT] 원격 디스크립션 설정 시도. 현재 SignalingState:", pc.signalingState);
                 
                 await pc.setRemoteDescription(answer);
-                answerReceived = true; // 성공 시에만 완료 처리
-                
+                answerReceived = true; 
                 console.log("[CLIENT] setRemoteDescription 성공 완료. 변경된 SignalingState:", pc.signalingState);
-                setStatus("관리자와 연결되었습니다.");
             } catch (e) { 
                 console.error("[CLIENT] 원격 디스크립션 설정 중 에러 발생:", e); 
             } finally {
-                settingRemoteDescription = false; // 락 해제
+                settingRemoteDescription = false; 
             }
         }
 
@@ -172,7 +125,7 @@ function waitAdminAnswer() {
             console.log("[CLIENT] Firestore 보관된 관리자 Candidate 개수:", data.adminCandidates.length);
 
             for (const candidate of data.adminCandidates) {
-                if (!answerReceived) continue; // Answer 적용 전엔 대기
+                if (!answerReceived) continue; 
 
                 const key = JSON.stringify(candidate);
                 if (addedAdminCandidates.has(key)) continue;
@@ -180,7 +133,6 @@ function waitAdminAnswer() {
                 try {
                     await pc.addIceCandidate(new RTCIceCandidate(candidate));
                     addedAdminCandidates.add(key);
-                    // 🚀 [3순위] 성공 로그 구체화 (타입 파악 목적)
                     console.log("[CLIENT] 관리자 Candidate 추가 성공 -> 수신내용:", candidate.candidate);
                 } catch (e) { console.warn("[CLIENT] 관리자 Candidate 추가 실패:", e); }
             }
@@ -199,7 +151,7 @@ async function disconnect() {
         addedAdminCandidates.clear();
 
         await updateDoc(userRef, {
-            online: false, state: "offline", mode: "firebase",
+            online: false, state: "offline", mode: "firebase", sharing: false,
             clientOffer: null, adminAnswer: null,
             clientCandidates: [], adminCandidates: [],
             updatedAt: serverTimestamp()
@@ -212,9 +164,9 @@ window.addEventListener("unload", () => { disconnect(); });
 (async () => {
     const snap = await getDoc(userRef);
     if (!snap.exists()) { alert("계정을 찾을 수 없습니다."); location.href = "/"; return; }
-    await startSharing();
+    
+    // 🚀 타이밍 이슈 방지를 위해 리스너를 먼저 등록하고 공유를 시작합니다.
     waitAdminAnswer();
+    await startSharing();
 })();
 </script>
-</body>
-</html>
