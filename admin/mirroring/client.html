@@ -50,7 +50,6 @@ const userRef=doc(db,"users",userId);
 const statusEl=document.getElementById("status");
 function setStatus(text){ statusEl.innerText=text; }
 
-// 💡 지정하신 Metered TURN 서버 정보 적용 완료
 const rtcConfig = {
     iceServers: [
         { urls: "stun:stun.relay.metered.ca:80" },
@@ -82,7 +81,7 @@ async function startSharing(){
 
         stream.getTracks().forEach(track=>{ pc.addTrack(track,stream); });
 
-        // 🚀 connectionState 변경 시 UI 문구를 건드리지 않고 디버깅 로그만 기록
+        // 상태 연동은 Firestore의 sharing 필드로 일원화하므로 로그만 남깁니다.
         pc.onconnectionstatechange=()=>{
             console.log("[CLIENT] Connection State:", pc.connectionState);
         };
@@ -98,7 +97,7 @@ async function startSharing(){
             }catch(e){ console.error(e); }
         };
 
-        // 🚀 초기화 시 sharing: false 추가
+        // 공유 시작 시 sharing 기본값 false 지정
         await updateDoc(userRef,{
             online:true, state:"live", mode:"webrtc", sharing:false,
             clientOffer:null, clientCandidates:[],
@@ -111,8 +110,6 @@ async function startSharing(){
         console.log("[CLIENT] setLocalDescription 완료. SignalingState:", pc.signalingState);
         
         await updateDoc(userRef,{ clientOffer: { type: offer.type, sdp: offer.sdp } });
-        
-        // 🚀 기존 "기다리는 중" 문구를 지우고 대기 문구 즉시 출력
         setStatus("관리자와 연결됨. (관리자와 공유 대기 중)");
 
     }catch(e){ console.error(e); alert(e.message); }
@@ -123,7 +120,7 @@ function waitAdminAnswer() {
         if (!snapshot.exists() || !pc) return;
         const data = snapshot.data();
 
-        // 🚀 실시간 sharing 필드 감시를 통한 최우선 문구 제어
+        // 🚀 관리자가 내 화면을 보고 있는지 실시간 감시하여 문구 변경
         if (data.sharing === true) {
             setStatus("관리자와 공유 중");
         } else {
@@ -194,7 +191,7 @@ window.addEventListener("unload", () => { disconnect(); });
     const snap = await getDoc(userRef);
     if (!snap.exists()) { alert("계정을 찾을 수 없습니다."); location.href = "/"; return; }
     
-    // 🚀 타이밍 버그 방지: 스냅샷 리스너를 먼저 열고 나서 화면 공유 시작
+    // 리스너 바인딩 후 공유 프로세스 진행
     waitAdminAnswer();
     await startSharing();
 })();
