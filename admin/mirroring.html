@@ -1,4 +1,272 @@
-<!-- 스크립트 블록 전체 교체 -->
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>화면 모니터링</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#f0f0f0;
+    font-family:sans-serif;
+}
+
+
+/* 상단 바 */
+
+header{
+
+    width:100%;
+    height:70px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:0 20px;
+
+    background:white;
+
+    box-shadow:0 0 10px rgba(0,0,0,.1);
+
+}
+
+#back{
+
+    padding:10px 15px;
+
+    border:none;
+    border-radius:10px;
+
+    background:#27ae60;
+    color:white;
+
+    cursor:pointer;
+
+}
+
+#online{
+
+    font-weight:bold;
+    margin-left:20px;
+
+}
+
+.left{
+
+    display:flex;
+    align-items:center;
+
+}
+
+
+/* 학생 카드 */
+
+#grid{
+
+    padding:20px;
+
+    display:grid;
+    grid-template-columns:
+        repeat(auto-fill,minmax(220px,1fr));
+
+    gap:20px;
+
+}
+
+
+.card{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:20px;
+
+    cursor:pointer;
+
+    box-shadow:0 0 10px rgba(0,0,0,.1);
+
+    transition:.2s;
+
+}
+
+
+.card:hover{
+
+    transform:scale(1.03);
+
+}
+
+
+.card h3{
+
+    margin-top:0;
+
+}
+
+
+/* 확대 화면 */
+
+#viewer{
+
+    position:fixed;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    background:rgba(0,0,0,.7);
+
+    display:none;
+
+    justify-content:center;
+    align-items:center;
+
+}
+
+
+#viewerBox{
+
+    width:90%;
+    max-width:1100px;
+
+    background:white;
+
+    border-radius:20px;
+
+    padding:20px;
+
+}
+
+
+#viewerTop{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+}
+
+
+#closeViewer{
+
+    padding:10px 15px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:red;
+    color:white;
+
+    cursor:pointer;
+
+}
+
+
+#bigVideo{
+
+    width:100%;
+
+    margin-top:20px;
+
+    border-radius:15px;
+
+    background:black;
+
+}
+
+
+</style>
+
+</head>
+
+<body>
+
+
+<header>
+
+<div class="left">
+
+<button id="back">
+
+← 홈
+
+</button>
+
+<div id="online">
+
+🟢 접속 0명
+
+</div>
+
+</div>
+
+
+<h2>
+
+화면 모니터링
+
+</h2>
+
+
+</header>
+
+
+
+<div id="grid">
+
+</div>
+
+
+
+<div id="viewer">
+
+<div id="viewerBox">
+
+<div id="viewerTop">
+
+<h2 id="viewerTitle">
+
+학생 화면
+
+</h2>
+
+<button id="closeViewer">
+
+닫기
+
+</button>
+
+</div>
+
+
+<video
+id="bigVideo"
+autoplay
+playsinline>
+
+</video>
+
+
+</div>
+
+</div>
+
+
+
 <!-- 스크립트 블록 전체 교체 -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -22,6 +290,7 @@ let unsubscribeUser = null;
 let adminAnswerCreated = false;
 const addedClientCandidates = new Set();
     
+// 💡 Metered TURN 서버 설정 적용 완료
 const rtcConfig = {
     iceServers: [
         { urls: "stun:stun.relay.metered.ca:80" },
@@ -35,7 +304,7 @@ const adminId = localStorage.getItem("userId");
 
 if (!adminId) { alert("로그인이 필요합니다."); location.href = "/signin?redirect=/admin/mirroring.html"; throw new Error("로그인 필요"); }
 
-// 💡 모든 DOM 관련 이벤트 등록을 HTML 로드 이후 시점인 이 함수 내부에서 처리합니다.
+// 💡 DOM 로드가 보장되는 이 함수 안으로 onclick 핸들러들을 대피시켜 에러를 완전히 차단합니다.
 async function initAdmin() {
     try {
         const backBtn = document.getElementById("back");
@@ -49,6 +318,7 @@ async function initAdmin() {
                 document.getElementById("viewer").style.display = "none";
                 document.getElementById("bigVideo").srcObject = null;
                 
+                // 🚀 뷰어 닫을 때 공유 해제 처리 추가
                 if (selectedId) {
                     try {
                         await updateDoc(doc(db, "users", selectedId), { sharing: false });
@@ -82,7 +352,6 @@ function createCard(id, data) {
     return card;
 }
 
-// 💡 윈도우가 완전히 준비된 후 로드되도록 안전장치 추가
 function loadUsers() {
     onSnapshot(collection(db, "users"), (snapshot) => {
         const grid = document.getElementById("grid"); 
@@ -111,6 +380,7 @@ async function connectStudent(userId) {
 
     const userRef = doc(db, "users", userId);
     
+    // 🚀 학생 카드 선택 시 sharing: true 실시간 반영 시작
     try {
         await updateDoc(userRef, { sharing: true });
     } catch (e) { console.error(e); }
@@ -191,6 +461,7 @@ function watchClientCandidates(userId) {
     });
 }
 
-// 스크립트가 로드되면 초기화 즉시 실행
 initAdmin();
 </script>
+</body>
+</html>
