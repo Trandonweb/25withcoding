@@ -1,273 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<title>화면 모니터링</title>
-
-<style>
-
-*{
-    box-sizing:border-box;
-}
-
-body{
-    margin:0;
-    background:#f0f0f0;
-    font-family:sans-serif;
-}
-
-
-/* 상단 바 */
-
-header{
-
-    width:100%;
-    height:70px;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    padding:0 20px;
-
-    background:white;
-
-    box-shadow:0 0 10px rgba(0,0,0,.1);
-
-}
-
-#back{
-
-    padding:10px 15px;
-
-    border:none;
-    border-radius:10px;
-
-    background:#27ae60;
-    color:white;
-
-    cursor:pointer;
-
-}
-
-#online{
-
-    font-weight:bold;
-    margin-left:20px;
-
-}
-
-.left{
-
-    display:flex;
-    align-items:center;
-
-}
-
-
-/* 학생 카드 */
-
-#grid{
-
-    padding:20px;
-
-    display:grid;
-    grid-template-columns:
-        repeat(auto-fill,minmax(220px,1fr));
-
-    gap:20px;
-
-}
-
-
-.card{
-
-    background:white;
-
-    padding:20px;
-
-    border-radius:20px;
-
-    cursor:pointer;
-
-    box-shadow:0 0 10px rgba(0,0,0,.1);
-
-    transition:.2s;
-
-}
-
-
-.card:hover{
-
-    transform:scale(1.03);
-
-}
-
-
-.card h3{
-
-    margin-top:0;
-
-}
-
-
-/* 확대 화면 */
-
-#viewer{
-
-    position:fixed;
-
-    top:0;
-    left:0;
-
-    width:100%;
-    height:100%;
-
-    background:rgba(0,0,0,.7);
-
-    display:none;
-
-    justify-content:center;
-    align-items:center;
-
-}
-
-
-#viewerBox{
-
-    width:90%;
-    max-width:1100px;
-
-    background:white;
-
-    border-radius:20px;
-
-    padding:20px;
-
-}
-
-
-#viewerTop{
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-}
-
-
-#closeViewer{
-
-    padding:10px 15px;
-
-    border:none;
-
-    border-radius:10px;
-
-    background:red;
-    color:white;
-
-    cursor:pointer;
-
-}
-
-
-#bigVideo{
-
-    width:100%;
-
-    margin-top:20px;
-
-    border-radius:15px;
-
-    background:black;
-
-}
-
-
-</style>
-
-</head>
-
-<body>
-
-
-<header>
-
-<div class="left">
-
-<button id="back">
-
-← 홈
-
-</button>
-
-<div id="online">
-
-🟢 접속 0명
-
-</div>
-
-</div>
-
-
-<h2>
-
-화면 모니터링
-
-</h2>
-
-
-</header>
-
-
-
-<div id="grid">
-
-</div>
-
-
-
-<div id="viewer">
-
-<div id="viewerBox">
-
-<div id="viewerTop">
-
-<h2 id="viewerTitle">
-
-학생 화면
-
-</h2>
-
-<button id="closeViewer">
-
-닫기
-
-</button>
-
-</div>
-
-
-<video
-id="bigVideo"
-autoplay
-playsinline>
-
-</video>
-
-
-</div>
-
-</div>
-
-
-
-<!-- 앞선 HTML/CSS 구조는 동일, 스크립트 블록 전체 교체 -->
+<!-- 스크립트 블록 전체 교체 -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
@@ -292,29 +23,11 @@ const addedClientCandidates = new Set();
     
 const rtcConfig = {
     iceServers: [
-        {
-            urls: "stun:stun.relay.metered.ca:80",
-        },
-        {
-            urls: "turn:standard.relay.metered.ca:80",
-            username: "cc29acf1a234c7ca3a5ae899",
-            credential: "CW4V8T/D1+AnGnED",
-        },
-        {
-            urls: "turn:standard.relay.metered.ca:80?transport=tcp",
-            username: "cc29acf1a234c7ca3a5ae899",
-            credential: "CW4V8T/D1+AnGnED",
-        },
-        {
-            urls: "turn:standard.relay.metered.ca:443",
-            username: "cc29acf1a234c7ca3a5ae899",
-            credential: "CW4V8T/D1+AnGnED",
-        },
-        {
-            urls: "turns:standard.relay.metered.ca:443?transport=tcp",
-            username: "cc29acf1a234c7ca3a5ae899",
-            credential: "CW4V8T/D1+AnGnED",
-        },
+        { urls: "stun:stun.relay.metered.ca:80" },
+        { urls: "turn:standard.relay.metered.ca:80", username: "cc29acf1a234c7ca3a5ae899", credential: "CW4V8T/D1+AnGnED" },
+        { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "cc29acf1a234c7ca3a5ae899", credential: "CW4V8T/D1+AnGnED" },
+        { urls: "turn:standard.relay.metered.ca:443", username: "cc29acf1a234c7ca3a5ae899", credential: "CW4V8T/D1+AnGnED" },
+        { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "cc29acf1a234c7ca3a5ae899", credential: "CW4V8T/D1+AnGnED" }
     ]
 };
 const adminId = localStorage.getItem("userId");
@@ -354,9 +67,18 @@ function loadUsers() {
     });
 }
 
-document.getElementById("closeViewer").onclick = () => {
+// 🚀 닫기 버튼 클릭 이벤트 수정
+document.getElementById("closeViewer").onclick = async () => {
     document.getElementById("viewer").style.display = "none";
     document.getElementById("bigVideo").srcObject = null;
+    
+    // 🚀 관리자가 창을 닫으면 sharing: false 저장
+    if (selectedId) {
+        try {
+            await updateDoc(doc(db, "users", selectedId), { sharing: false });
+        } catch (e) { console.error(e); }
+    }
+
     if (peerConnection) { try { peerConnection.close(); } catch(e){} peerConnection = null; }
     if (unsubscribeUser) { unsubscribeUser(); unsubscribeUser = null; }
     selectedId = null; adminAnswerCreated = false; addedClientCandidates.clear();
@@ -374,6 +96,12 @@ async function connectStudent(userId) {
     document.getElementById("viewerTitle").innerText = `${userId} 화면`;
 
     const userRef = doc(db, "users", userId);
+    
+    // 🚀 학생 카드를 클릭하면 즉시 sharing: true 저장
+    try {
+        await updateDoc(userRef, { sharing: true });
+    } catch (e) { console.error(e); }
+
     const snap = await getDoc(userRef);
     if (!snap.exists()) { alert("사용자를 찾을 수 없습니다."); return; }
 
@@ -391,7 +119,7 @@ async function connectStudent(userId) {
         }
     };
 
-    // 🚀 [4순위] 관리자 측 정밀 연결 상태 로깅
+    // 🚀 로그만 남기고 상태 문구에 영향을 주지 않도록 설정 유지
     peerConnection.onconnectionstatechange = () => {
         console.log("[ADMIN] Connection State:", peerConnection?.connectionState);
     };
@@ -414,7 +142,6 @@ async function connectStudent(userId) {
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
 
-        // 🚀 [2순위] 덮어쓰기 버그 박멸: adminCandidates: [] 를 완벽하게 제거하여 생성된 후보 유실 방지
         await updateDoc(userRef, {
             adminAnswer: { type: answer.type, sdp: answer.sdp }
         });
@@ -445,7 +172,6 @@ function watchClientCandidates(userId) {
                 try {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
                     addedClientCandidates.add(key);
-                    // 🚀 [3순위] 성공 로그 구체화
                     console.log("[ADMIN] 학생 Candidate 추가 성공 -> 수신내용:", candidate.candidate);
                 } catch (e) { console.warn("[ADMIN] 학생 Candidate 추가 실패:", e); }
             }
