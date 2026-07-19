@@ -290,7 +290,33 @@ let unsubscribeUser = null;
 let adminAnswerCreated = false;
 const addedClientCandidates = new Set();
     
-const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+const rtcConfig = {
+    iceServers: [
+        {
+            urls: "stun:stun.relay.metered.ca:80",
+        },
+        {
+            urls: "turn:standard.relay.metered.ca:80",
+            username: "cc29acf1a234c7ca3a5ae899",
+            credential: "CW4V8T/D1+AnGnED",
+        },
+        {
+            urls: "turn:standard.relay.metered.ca:80?transport=tcp",
+            username: "cc29acf1a234c7ca3a5ae899",
+            credential: "CW4V8T/D1+AnGnED",
+        },
+        {
+            urls: "turn:standard.relay.metered.ca:443",
+            username: "cc29acf1a234c7ca3a5ae899",
+            credential: "CW4V8T/D1+AnGnED",
+        },
+        {
+            urls: "turns:standard.relay.metered.ca:443?transport=tcp",
+            username: "cc29acf1a234c7ca3a5ae899",
+            credential: "CW4V8T/D1+AnGnED",
+        },
+    ]
+};
 const adminId = localStorage.getItem("userId");
 
 if (!adminId) { alert("로그인이 필요합니다."); location.href = "/signin?redirect=/admin/mirroring.html"; throw new Error("로그인 필요"); }
