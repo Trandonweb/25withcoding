@@ -1,3 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>화면 공유</title>
+<style>
+body{margin:0;font-family:sans-serif;background:#f0f0f0;display:flex;justify-content:center;align-items:center;height:100vh;}
+.box{width:90%;max-width:600px;background:white;padding:30px;border-radius:20px;box-shadow:0 0 20px rgba(0,0,0,.1);}
+h1{margin-top:0;color:#27ae60;}
+.status{margin-top:20px;font-size:18px;font-weight:bold;}
+.warn{margin-top:25px;color:red;line-height:1.7;}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h1>화면 공유 중</h1>
+<p>관리자에게 화면을 공유하고 있습니다.<br>이 창을 닫지 마세요.</p>
+<div class="status" id="status">연결 준비중...</div>
+<div class="warn">
+- 창을 닫으면 화면 공유가 종료됩니다.<br>
+- 새로고침하지 마세요.<br>
+- 뒤로가기 하지 마세요.<br>
+- 공유가 종료되면 다시 로그인해야 합니다.
+</div>
+</div>
+
 <!-- 스크립트 블록 전체 교체 -->
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -22,6 +50,7 @@ const userRef=doc(db,"users",userId);
 const statusEl=document.getElementById("status");
 function setStatus(text){ statusEl.innerText=text; }
 
+// 💡 지정하신 Metered TURN 서버 정보 적용 완료
 const rtcConfig = {
     iceServers: [
         { urls: "stun:stun.relay.metered.ca:80" },
@@ -53,7 +82,7 @@ async function startSharing(){
 
         stream.getTracks().forEach(track=>{ pc.addTrack(track,stream); });
 
-        // 🚀 connectionState 변경 시 UI 문구를 바꾸지 않고 로그만 남기도록 수정
+        // 🚀 connectionState 변경 시 UI 문구를 건드리지 않고 디버깅 로그만 기록
         pc.onconnectionstatechange=()=>{
             console.log("[CLIENT] Connection State:", pc.connectionState);
         };
@@ -69,7 +98,7 @@ async function startSharing(){
             }catch(e){ console.error(e); }
         };
 
-        // 🚀 초기화할 때 sharing: false 추가
+        // 🚀 초기화 시 sharing: false 추가
         await updateDoc(userRef,{
             online:true, state:"live", mode:"webrtc", sharing:false,
             clientOffer:null, clientCandidates:[],
@@ -83,7 +112,7 @@ async function startSharing(){
         
         await updateDoc(userRef,{ clientOffer: { type: offer.type, sdp: offer.sdp } });
         
-        // 🚀 기본 문구 즉시 적용
+        // 🚀 기존 "기다리는 중" 문구를 지우고 대기 문구 즉시 출력
         setStatus("관리자와 연결됨. (관리자와 공유 대기 중)");
 
     }catch(e){ console.error(e); alert(e.message); }
@@ -94,7 +123,7 @@ function waitAdminAnswer() {
         if (!snapshot.exists() || !pc) return;
         const data = snapshot.data();
 
-        // 🚀 sharing 필드를 감시하여 화면 상태 문구 변경
+        // 🚀 실시간 sharing 필드 감시를 통한 최우선 문구 제어
         if (data.sharing === true) {
             setStatus("관리자와 공유 중");
         } else {
@@ -165,8 +194,10 @@ window.addEventListener("unload", () => { disconnect(); });
     const snap = await getDoc(userRef);
     if (!snap.exists()) { alert("계정을 찾을 수 없습니다."); location.href = "/"; return; }
     
-    // 🚀 타이밍 이슈 방지를 위해 리스너를 먼저 등록하고 공유를 시작합니다.
+    // 🚀 타이밍 버그 방지: 스냅샷 리스너를 먼저 열고 나서 화면 공유 시작
     waitAdminAnswer();
     await startSharing();
 })();
 </script>
+</body>
+</html>
