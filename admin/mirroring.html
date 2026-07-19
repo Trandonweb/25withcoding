@@ -36,6 +36,14 @@ if (!adminId) { alert("로그인이 필요합니다."); location.href = "/signin
 
 async function initAdmin() {
     try {
+        // 💡 DOM 요소를 확실히 잡기 위해 이 위치로 이동
+        const backBtn = document.getElementById("back");
+        if (backBtn) {
+            backBtn.onclick = () => { location.href = "/"; };
+        } else {
+            console.warn("id='back'인 버튼을 HTML에서 찾을 수 없습니다.");
+        }
+
         const adminSnap = await getDoc(doc(db, "users", adminId));
         if (!adminSnap.exists()) { alert("계정을 찾을 수 없습니다."); location.href = "/"; return; }
         const adminData = adminSnap.data();
@@ -44,8 +52,11 @@ async function initAdmin() {
     } catch (error) { console.error(error); }
 }
 
-document.getElementById("back").onclick = () => { location.href = "/"; };
-function updateOnlineCount(count) { document.getElementById("online").innerText = `🟢 접속 ${count}명`; }
+// 💡 updateOnlineCount 함수는 밖으로 빼두되 내부 엘리먼트 체크 추가
+function updateOnlineCount(count) { 
+    const onlineEl = document.getElementById("online");
+    if (onlineEl) onlineEl.innerText = `🟢 접속 ${count}명`; 
+}
 
 function createCard(id, data) {
     const card = document.createElement("div");
