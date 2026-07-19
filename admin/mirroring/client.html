@@ -51,7 +51,33 @@ const statusEl=document.getElementById("status");
 function setStatus(text){ statusEl.innerText=text; }
 
 // 💡 [5순위] 추후 TURN 서버 정보가 생기면 아래 iceServers 배열에 추가하시면 됩니다.
-const rtcConfig={ iceServers:[{ urls:"stun:stun.l.google.com:19302" }] };
+const rtcConfig = {
+    iceServers: [
+        {
+            urls: "stun:stun.relay.metered.ca:80",
+        },
+        {
+            urls: "turn:standard.relay.metered.ca:80",
+            username: "cc29acf1a234c7ca3a5ae899",
+            credential: "CW4V8T/D1+AnGnED",
+        },
+        {
+            urls: "turn:standard.relay.metered.ca:80?transport=tcp",
+            username: "cc29acf1a234c7ca3a5ae899",
+            credential: "CW4V8T/D1+AnGnED",
+        },
+        {
+            urls: "turn:standard.relay.metered.ca:443",
+            username: "cc29acf1a234c7ca3a5ae899",
+            credential: "CW4V8T/D1+AnGnED",
+        },
+        {
+            urls: "turns:standard.relay.metered.ca:443?transport=tcp",
+            username: "cc29acf1a234c7ca3a5ae899",
+            credential: "CW4V8T/D1+AnGnED",
+        },
+    ]
+};
 let pc=null;
 let stream=null;
 let unsubscribe=null;
