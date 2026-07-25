@@ -66,28 +66,36 @@ let pc = null;
 let stream = null;
 let unsubscribe = null;
 let heartbeatTimer = null;
+let reconnectTimer = null; // [지적 반영] 중복 타이머 생성을 막기 위한 변수
 let disconnected = false;
-
-let answerReceived = false;
-let settingRemoteDescription = false; 
+let reconnecting = false;
 const addedAdminCandidates = new Set();
 
-async function disconnect() {
+function cleanupPeerConnection() {
+    if (pc) {
+        try { pc.close(); } catch(e) {}
+        pc = null;
+    }
+}
+
+async function fullDisconnect() {
     if (disconnected) return;
     disconnected = true;
 
-    try {
-        if (heartbeatTimer) clearInterval(heartbeatTimer);
-        if (unsubscribe) unsubscribe();
-        if (stream) stream.getTracks().forEach(track => track.stop());
-        if (pc) { pc.close(); pc = null; } 
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    if (unsubscribe) unsubscribe();
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    cleanupPeerConnection();
 
+    try {
         await updateDoc(userRef, {
             online: false, 
             state: "offline", 
             mode: "firebase", 
             sharing: false, 
             sharingStartedAt: null,
+            sessionId: null, // 세션 초기화
             clientOffer: null, 
             adminAnswer: null,
             clientCandidates: [], 
@@ -98,33 +106,61 @@ async function disconnect() {
 }
 
 window.addEventListener("beforeunload", (e) => { 
-    disconnect();
+    fullDisconnect();
     e.preventDefault(); 
     e.returnValue = ""; 
 });
-window.addEventListener("unload", () => { disconnect(); });
+window.addEventListener("unload", () => { fullDisconnect(); });
 
-async function startSharing(){
-    try{
-        setStatus("화면 선택창을 열고 있습니다...");
-        stream = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:10 }, audio:false });
+async function initWebRTC() {
+    try {
+        if (!stream) {
+            setStatus("화면 선택창을 열고 있습니다...");
+            stream = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:10 }, audio:false });
 
-        stream.getVideoTracks()[0].onended = async () => { 
-            await disconnect();
-            alert("화면 공유가 종료되었습니다."); 
-            location.href = "/"; 
-        };
+            stream.getVideoTracks()[0].onended = async () => { 
+                await fullDisconnect();
+                alert("화면 공유가 종료되었습니다."); 
+                location.href = "/"; 
+            };
+        }
 
-        setStatus("WEBRTC 연결 준비중...");
+        await executeNegotiation();
+
+    } catch(e) { 
+        console.error(e); 
+        alert(e.message); 
+    }
+}
+
+// [지적 반영] 재연결 타이머 중복 실행 원천 방지 및 안전한 재협상 로직
+function triggerRestart() {
+    if (disconnected || reconnecting) return;
+    if (reconnectTimer) return; // 이미 재연결 대기 중이면 중복 예약 안 함
+
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        executeRestartNegotiation();
+    }, 2000);
+}
+
+async function executeNegotiation(isRestart = false) {
+    if (disconnected) return;
+    reconnecting = true;
+
+    try {
+        cleanupPeerConnection();
+        setStatus(isRestart ? "재연결 시도 중..." : "WEBRTC 연결 준비중...");
+        
         pc = new RTCPeerConnection(rtcConfig);
+        if (stream) {
+            stream.getTracks().forEach(track => { pc.addTrack(track, stream); });
+        }
 
-        stream.getTracks().forEach(track => { pc.addTrack(track, stream); });
-
-        // 연결 상태 모니터링
         pc.onconnectionstatechange = () => {
             console.log("[CLIENT] Connection State:", pc.connectionState);
             if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
-                console.warn("[CLIENT] 연결이 끊어졌습니다.");
+                triggerRestart();
             }
         };
 
@@ -135,13 +171,15 @@ async function startSharing(){
             } catch(e){ console.error(e); }
         };
 
-        // 초기 Firestore 데이터 클린업 및 등록
+        // [지적 반영] 고유 세션 ID 생성으로 구버전 Answer/Offer 꼬임(Race Condition) 방지
+        const currentSessionId = 'sess_' + Math.random().toString(36.substring(2)) + Date.now();
+        addedAdminCandidates.clear();
+
         await updateDoc(userRef, {
             online: true, 
             state: "live", 
             mode: "webrtc", 
-            sharing: false, 
-            sharingStartedAt: null,
+            sessionId: currentSessionId,
             clientOffer: null, 
             clientCandidates: [],
             adminAnswer: null, 
@@ -149,56 +187,55 @@ async function startSharing(){
             updatedAt: serverTimestamp()
         });
 
-        // 30초마다 하트비트 갱신 (유령 상태 방지)
-        heartbeatTimer = setInterval(async () => {
-            try {
-                await updateDoc(userRef, { online: true, updatedAt: serverTimestamp() });
-            } catch (e) { console.error("Heartbeat 에러:", e); }
-        }, 30000);
-
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         
-        await updateDoc(userRef, { clientOffer: { type: offer.type, sdp: offer.sdp } });
+        await updateDoc(userRef, { 
+            clientOffer: { type: offer.type, sdp: offer.sdp, sessionId: currentSessionId },
+            updatedAt: serverTimestamp()
+        });
         setStatus("관리자와 연결됨. (관리자와 공유 대기 중)");
 
-    } catch(e) { 
-        console.error(e); 
-        alert(e.message); 
+    } catch(e) {
+        console.error("[CLIENT] 협상 에러:", e);
+    } finally {
+        reconnecting = false;
     }
 }
 
-function waitAdminAnswer() {
+async function executeRestartNegotiation() {
+    await executeNegotiation(true);
+}
+
+function watchAdminSignal() {
     unsubscribe = onSnapshot(userRef, async (snapshot) => {
         if (!snapshot.exists() || !pc) return;
         const data = snapshot.data();
 
-        // 문구 동기화
         if (data.sharing === true) {
             setStatus("관리자와 공유 중");
         } else {
             setStatus("관리자와 연결됨. (관리자와 공유 대기 중)");
         }
 
-        // Admin Answer 처리 (중복 실행 원천 차단)
-        if (data.adminAnswer && !answerReceived && !settingRemoteDescription && !pc.currentRemoteDescription) {
-            settingRemoteDescription = true; 
+        // [지적 반영] 들어온 Answer가 현재 세션의 것인지 검증하여 Race Condition 완벽 차단
+        if (data.adminAnswer && !pc.currentRemoteDescription) {
+            if (data.adminAnswer.sessionId && data.sessionId && data.adminAnswer.sessionId !== data.sessionId) {
+                console.warn("[CLIENT] 지난 세션의 낡은 Answer 무시됨");
+                return;
+            }
             try {
-                const answer = new RTCSessionDescription(data.adminAnswer);
+                const answer = new RTCSessionDescription({ type: data.adminAnswer.type, sdp: data.adminAnswer.sdp });
                 await pc.setRemoteDescription(answer);
-                answerReceived = true; 
                 console.log("[CLIENT] setRemoteDescription 성공");
             } catch (e) { 
                 console.error("[CLIENT] 원격 디스크립션 설정 에러:", e); 
-            } finally {
-                settingRemoteDescription = false; 
             }
         }
 
-        // Admin Candidate 처리
         if (data.adminCandidates && Array.isArray(data.adminCandidates)) {
             for (const candidate of data.adminCandidates) {
-                if (!answerReceived) continue; 
+                if (!pc.currentRemoteDescription) continue; 
                 const key = JSON.stringify(candidate);
                 if (addedAdminCandidates.has(key)) continue;
 
@@ -215,9 +252,14 @@ function waitAdminAnswer() {
     const snap = await getDoc(userRef);
     if (!snap.exists()) { alert("계정을 찾을 수 없습니다."); location.href = "/"; return; }
     
-    // 순서 보장: 공유 스트림 및 Offer 생성 후 리스너 장착
-    await startSharing();
-    waitAdminAnswer();
+    heartbeatTimer = setInterval(async () => {
+        try {
+            await updateDoc(userRef, { online: true, updatedAt: serverTimestamp() });
+        } catch (e) { console.error("Heartbeat 에러:", e); }
+    }, 30000);
+
+    await initWebRTC();
+    watchAdminSignal();
 })();
 </script>
 </body>
