@@ -172,7 +172,7 @@ async function executeNegotiation(isRestart = false) {
         };
 
         // [지적 반영] 고유 세션 ID 생성으로 구버전 Answer/Offer 꼬임(Race Condition) 방지
-        const currentSessionId = 'sess_' + Math.random().toString(36.substring(2)) + Date.now();
+        const currentSessionId = "sess_" + Math.random().toString(36).substring(2) + Date.now();
         addedAdminCandidates.clear();
 
         await updateDoc(userRef, {
