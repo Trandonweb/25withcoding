@@ -66,9 +66,12 @@ let pc = null;
 let stream = null;
 let unsubscribe = null;
 let heartbeatTimer = null;
-let reconnectTimer = null; // [지적 반영] 중복 타이머 생성을 막기 위한 변수
+let reconnectTimer = null;
 let disconnected = false;
 let reconnecting = false;
+let settingAnswer = false;
+let currentSessionId = null;
+let currentSharingState = false;
 const addedAdminCandidates = new Set();
 
 function cleanupPeerConnection() {
@@ -95,7 +98,7 @@ async function fullDisconnect() {
             mode: "firebase", 
             sharing: false, 
             sharingStartedAt: null,
-            sessionId: null, // 세션 초기화
+            sessionId: null,
             clientOffer: null, 
             adminAnswer: null,
             clientCandidates: [], 
@@ -133,15 +136,14 @@ async function initWebRTC() {
     }
 }
 
-// [지적 반영] 재연결 타이머 중복 실행 원천 방지 및 안전한 재협상 로직
-function triggerRestart() {
+function triggerRestart(delayMs) {
     if (disconnected || reconnecting) return;
-    if (reconnectTimer) return; // 이미 재연결 대기 중이면 중복 예약 안 함
+    if (reconnectTimer) return;
 
     reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
         executeRestartNegotiation();
-    }, 2000);
+    }, delayMs);
 }
 
 async function executeNegotiation(isRestart = false) {
@@ -159,8 +161,13 @@ async function executeNegotiation(isRestart = false) {
 
         pc.onconnectionstatechange = () => {
             console.log("[CLIENT] Connection State:", pc.connectionState);
-            if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
-                triggerRestart();
+            if (pc.connectionState === "failed") {
+                if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+                executeRestartNegotiation();
+            } else if (pc.connectionState === "disconnected") {
+                triggerRestart(5000);
+            } else if (pc.connectionState === "connected") {
+                if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
             }
         };
 
@@ -171,8 +178,7 @@ async function executeNegotiation(isRestart = false) {
             } catch(e){ console.error(e); }
         };
 
-        // [지적 반영] 고유 세션 ID 생성으로 구버전 Answer/Offer 꼬임(Race Condition) 방지
-        const currentSessionId = "sess_" + Math.random().toString(36).substring(2) + Date.now();
+        currentSessionId = "sess_" + Math.random().toString(36).substring(2) + Date.now();
         addedAdminCandidates.clear();
 
         await updateDoc(userRef, {
@@ -212,24 +218,27 @@ function watchAdminSignal() {
         if (!snapshot.exists() || !pc) return;
         const data = snapshot.data();
 
-        if (data.sharing === true) {
+        currentSharingState = !!data.sharing;
+        if (currentSharingState) {
             setStatus("관리자와 공유 중");
         } else {
             setStatus("관리자와 연결됨. (관리자와 공유 대기 중)");
         }
 
-        // [지적 반영] 들어온 Answer가 현재 세션의 것인지 검증하여 Race Condition 완벽 차단
-        if (data.adminAnswer && !pc.currentRemoteDescription) {
-            if (data.adminAnswer.sessionId && data.sessionId && data.adminAnswer.sessionId !== data.sessionId) {
+        if (data.adminAnswer && !pc.currentRemoteDescription && !settingAnswer) {
+            if (!data.adminAnswer.sessionId || !currentSessionId || data.adminAnswer.sessionId !== currentSessionId || data.sessionId !== currentSessionId) {
                 console.warn("[CLIENT] 지난 세션의 낡은 Answer 무시됨");
                 return;
             }
+            settingAnswer = true;
             try {
                 const answer = new RTCSessionDescription({ type: data.adminAnswer.type, sdp: data.adminAnswer.sdp });
                 await pc.setRemoteDescription(answer);
                 console.log("[CLIENT] setRemoteDescription 성공");
             } catch (e) { 
                 console.error("[CLIENT] 원격 디스크립션 설정 에러:", e); 
+            } finally {
+                settingAnswer = false;
             }
         }
 
@@ -254,7 +263,13 @@ function watchAdminSignal() {
     
     heartbeatTimer = setInterval(async () => {
         try {
-            await updateDoc(userRef, { online: true, updatedAt: serverTimestamp() });
+            await updateDoc(userRef, { 
+                online: true, 
+                state: pc && pc.connectionState === "connected" ? "live" : "offline",
+                sharing: currentSharingState,
+                sessionId: currentSessionId,
+                updatedAt: serverTimestamp() 
+            });
         } catch (e) { console.error("Heartbeat 에러:", e); }
     }, 30000);
 
