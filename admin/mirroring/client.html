@@ -26,7 +26,6 @@ h1{margin-top:0;color:#27ae60;}
 </div>
 </div>
 
-<!-- 스크립트 블록 전체 교체 -->
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import {getFirestore, doc, getDoc, updateDoc, onSnapshot, arrayUnion, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
@@ -48,7 +47,10 @@ if(!userId){ alert("로그인이 필요합니다."); location.href="/"; }
 
 const userRef=doc(db,"users",userId);
 const statusEl=document.getElementById("status");
-function setStatus(text){ statusEl.innerText=text; }
+
+function setStatus(text){ 
+    statusEl.innerText = text; 
+}
 
 const rtcConfig = {
     iceServers: [
@@ -59,60 +61,111 @@ const rtcConfig = {
         { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "cc29acf1a234c7ca3a5ae899", credential: "CW4V8T/D1+AnGnED" }
     ]
 };
-let pc=null;
-let stream=null;
-let unsubscribe=null;
+
+let pc = null;
+let stream = null;
+let unsubscribe = null;
+let heartbeatTimer = null;
+let disconnected = false;
 
 let answerReceived = false;
 let settingRemoteDescription = false; 
 const addedAdminCandidates = new Set();
 
-window.addEventListener("beforeunload",(e)=>{ e.preventDefault(); e.returnValue=""; });
+async function disconnect() {
+    if (disconnected) return;
+    disconnected = true;
+
+    try {
+        if (heartbeatTimer) clearInterval(heartbeatTimer);
+        if (unsubscribe) unsubscribe();
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        if (pc) { pc.close(); pc = null; } 
+
+        await updateDoc(userRef, {
+            online: false, 
+            state: "offline", 
+            mode: "firebase", 
+            sharing: false, 
+            sharingStartedAt: null,
+            clientOffer: null, 
+            adminAnswer: null,
+            clientCandidates: [], 
+            adminCandidates: [],
+            updatedAt: serverTimestamp()
+        });
+    } catch (e) { console.warn(e); }
+}
+
+window.addEventListener("beforeunload", (e) => { 
+    disconnect();
+    e.preventDefault(); 
+    e.returnValue = ""; 
+});
+window.addEventListener("unload", () => { disconnect(); });
 
 async function startSharing(){
     try{
         setStatus("화면 선택창을 열고 있습니다...");
-        stream=await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:10 }, audio:false });
+        stream = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:10 }, audio:false });
 
-        stream.getVideoTracks()[0].onended=()=>{ alert("화면 공유가 종료되었습니다."); location.href="/"; };
+        stream.getVideoTracks()[0].onended = async () => { 
+            await disconnect();
+            alert("화면 공유가 종료되었습니다."); 
+            location.href = "/"; 
+        };
 
         setStatus("WEBRTC 연결 준비중...");
-        pc=new RTCPeerConnection(rtcConfig);
+        pc = new RTCPeerConnection(rtcConfig);
 
-        stream.getTracks().forEach(track=>{ pc.addTrack(track,stream); });
+        stream.getTracks().forEach(track => { pc.addTrack(track, stream); });
 
-        // 상태 연동은 Firestore의 sharing 필드로 일원화하므로 로그만 남깁니다.
-        pc.onconnectionstatechange=()=>{
+        // 연결 상태 모니터링
+        pc.onconnectionstatechange = () => {
             console.log("[CLIENT] Connection State:", pc.connectionState);
-        };
-        pc.oniceconnectionstatechange=()=>{
-            console.log("[CLIENT] ICE Connection State:", pc.iceConnectionState);
+            if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
+                console.warn("[CLIENT] 연결이 끊어졌습니다.");
+            }
         };
 
-        pc.onicecandidate = async (event)=>{
+        pc.onicecandidate = async (event) => {
             if(!event.candidate) return;
-            console.log("[CLIENT] Candidate 생성 성공 -> Firestore 전송:", event.candidate.candidate);
-            try{
-                await updateDoc(userRef,{ clientCandidates: arrayUnion(event.candidate.toJSON()) });
-            }catch(e){ console.error(e); }
+            try {
+                await updateDoc(userRef, { clientCandidates: arrayUnion(event.candidate.toJSON()) });
+            } catch(e){ console.error(e); }
         };
 
-        // 공유 시작 시 sharing 기본값 false 지정
-        await updateDoc(userRef,{
-            online:true, state:"live", mode:"webrtc", sharing:false,
-            clientOffer:null, clientCandidates:[],
-            adminAnswer:null, adminCandidates:[],
-            updatedAt:serverTimestamp()
+        // 초기 Firestore 데이터 클린업 및 등록
+        await updateDoc(userRef, {
+            online: true, 
+            state: "live", 
+            mode: "webrtc", 
+            sharing: false, 
+            sharingStartedAt: null,
+            clientOffer: null, 
+            clientCandidates: [],
+            adminAnswer: null, 
+            adminCandidates: [],
+            updatedAt: serverTimestamp()
         });
+
+        // 30초마다 하트비트 갱신 (유령 상태 방지)
+        heartbeatTimer = setInterval(async () => {
+            try {
+                await updateDoc(userRef, { online: true, updatedAt: serverTimestamp() });
+            } catch (e) { console.error("Heartbeat 에러:", e); }
+        }, 30000);
 
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        console.log("[CLIENT] setLocalDescription 완료. SignalingState:", pc.signalingState);
         
-        await updateDoc(userRef,{ clientOffer: { type: offer.type, sdp: offer.sdp } });
+        await updateDoc(userRef, { clientOffer: { type: offer.type, sdp: offer.sdp } });
         setStatus("관리자와 연결됨. (관리자와 공유 대기 중)");
 
-    }catch(e){ console.error(e); alert(e.message); }
+    } catch(e) { 
+        console.error(e); 
+        alert(e.message); 
+    }
 }
 
 function waitAdminAnswer() {
@@ -120,80 +173,51 @@ function waitAdminAnswer() {
         if (!snapshot.exists() || !pc) return;
         const data = snapshot.data();
 
-        // 🚀 관리자가 내 화면을 보고 있는지 실시간 감시하여 문구 변경
+        // 문구 동기화
         if (data.sharing === true) {
             setStatus("관리자와 공유 중");
         } else {
             setStatus("관리자와 연결됨. (관리자와 공유 대기 중)");
         }
 
-        if (data.adminAnswer) {
-            console.log("[CLIENT] adminAnswer 감지됨 (현재 플래그상태 - received:", answerReceived, "/ locking:", settingRemoteDescription, ")");
-        }
-
+        // Admin Answer 처리 (중복 실행 원천 차단)
         if (data.adminAnswer && !answerReceived && !settingRemoteDescription && !pc.currentRemoteDescription) {
             settingRemoteDescription = true; 
             try {
                 const answer = new RTCSessionDescription(data.adminAnswer);
-                console.log("[CLIENT] 원격 디스크립션 설정 시도. 현재 SignalingState:", pc.signalingState);
-                
                 await pc.setRemoteDescription(answer);
                 answerReceived = true; 
-                console.log("[CLIENT] setRemoteDescription 성공 완료. 변경된 SignalingState:", pc.signalingState);
+                console.log("[CLIENT] setRemoteDescription 성공");
             } catch (e) { 
-                console.error("[CLIENT] 원격 디스크립션 설정 중 에러 발생:", e); 
+                console.error("[CLIENT] 원격 디스크립션 설정 에러:", e); 
             } finally {
                 settingRemoteDescription = false; 
             }
         }
 
+        // Admin Candidate 처리
         if (data.adminCandidates && Array.isArray(data.adminCandidates)) {
-            console.log("[CLIENT] Firestore 보관된 관리자 Candidate 개수:", data.adminCandidates.length);
-
             for (const candidate of data.adminCandidates) {
                 if (!answerReceived) continue; 
-
                 const key = JSON.stringify(candidate);
                 if (addedAdminCandidates.has(key)) continue;
 
                 try {
                     await pc.addIceCandidate(new RTCIceCandidate(candidate));
                     addedAdminCandidates.add(key);
-                    console.log("[CLIENT] 관리자 Candidate 추가 성공 -> 수신내용:", candidate.candidate);
-                } catch (e) { console.warn("[CLIENT] 관리자 Candidate 추가 실패:", e); }
+                } catch (e) { console.warn("[CLIENT] Candidate 추가 실패:", e); }
             }
         }
     });
 }
 
-async function disconnect() {
-    try {
-        if (unsubscribe) unsubscribe();
-        if (stream) stream.getTracks().forEach(track => track.stop());
-        if (pc) { pc.close(); pc = null; } 
-
-        answerReceived = false;
-        settingRemoteDescription = false;
-        addedAdminCandidates.clear();
-
-        await updateDoc(userRef, {
-            online: false, state: "offline", mode: "firebase", sharing: false,
-            clientOffer: null, adminAnswer: null,
-            clientCandidates: [], adminCandidates: [],
-            updatedAt: serverTimestamp()
-        });
-    } catch (e) { console.warn(e); }
-}
-
-window.addEventListener("unload", () => { disconnect(); });
-
 (async () => {
     const snap = await getDoc(userRef);
     if (!snap.exists()) { alert("계정을 찾을 수 없습니다."); location.href = "/"; return; }
     
-    // 리스너 바인딩 후 공유 프로세스 진행
-    waitAdminAnswer();
+    // 순서 보장: 공유 스트림 및 Offer 생성 후 리스너 장착
     await startSharing();
+    waitAdminAnswer();
 })();
 </script>
 </body>
