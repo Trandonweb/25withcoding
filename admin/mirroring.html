@@ -81,9 +81,9 @@ const db = getFirestore(app);
 let selectedId = null;
 let peerConnection = null;
 let unsubscribeUser = null; 
-let adminAnswerCreated = false;
 const addedClientCandidates = new Set();
-    
+let isConnecting = false;
+
 const rtcConfig = {
     iceServers: [
         { urls: "stun:stun.relay.metered.ca:80" },
@@ -97,33 +97,41 @@ const adminId = localStorage.getItem("userId");
 
 if (!adminId) { alert("로그인이 필요합니다."); location.href = "/signin?redirect=/admin/mirroring.html"; throw new Error("로그인 필요"); }
 
+async function closeViewerSession() {
+    document.getElementById("viewer").style.display = "none";
+    const video = document.getElementById("bigVideo");
+    if (video) video.srcObject = null;
+    
+    if (selectedId) {
+        try {
+            await updateDoc(doc(db, "users", selectedId), { 
+                sharing: false,
+                sharingStartedAt: null,
+                adminAnswer: null,
+                adminCandidates: []
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    if (peerConnection) { 
+        try { peerConnection.close(); } catch(e){} 
+        peerConnection = null; 
+    }
+    if (unsubscribeUser) { 
+        unsubscribeUser(); 
+        unsubscribeUser = null; 
+    }
+    selectedId = null; 
+    addedClientCandidates.clear();
+}
+
 async function initAdmin() {
     try {
         const backBtn = document.getElementById("back");
-        if (backBtn) {
-            backBtn.onclick = () => { location.href = "/"; };
-        }
+        if (backBtn) { backBtn.onclick = () => { location.href = "/"; }; }
 
         const closeBtn = document.getElementById("closeViewer");
-        if (closeBtn) {
-            closeBtn.onclick = async () => {
-                document.getElementById("viewer").style.display = "none";
-                document.getElementById("bigVideo").srcObject = null;
-                
-                if (selectedId) {
-                    try {
-                        await updateDoc(doc(db, "users", selectedId), { 
-                            sharing: false,
-                            sharingStartedAt: null 
-                        });
-                    } catch (e) { console.error(e); }
-                }
-
-                if (peerConnection) { try { peerConnection.close(); } catch(e){} peerConnection = null; }
-                if (unsubscribeUser) { unsubscribeUser(); unsubscribeUser = null; }
-                selectedId = null; adminAnswerCreated = false; addedClientCandidates.clear();
-            };
-        }
+        if (closeBtn) { closeBtn.onclick = async () => { await closeViewerSession(); }; }
 
         const adminSnap = await getDoc(doc(db, "users", adminId));
         if (!adminSnap.exists()) { alert("계정을 찾을 수 없습니다."); location.href = "/"; return; }
@@ -142,7 +150,17 @@ function createCard(id, data) {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `<h3>${data.name ?? id}</h3><p>ID : ${id}</p><p>상태 : ${data.online ? "온라인" : "오프라인"}</p><p>모드 : ${data.mode ?? "unknown"}</p>`;
-    if (data.online === true) { card.onclick = () => { connectStudent(id); }; }
+    if (data.online === true) { 
+        card.onclick = async () => { 
+            if (isConnecting) return;
+            isConnecting = true;
+            try {
+                await connectStudent(id); 
+            } finally {
+                isConnecting = false;
+            }
+        }; 
+    }
     return card;
 }
 
@@ -154,38 +172,32 @@ function loadUsers() {
         let onlineCount = 0;
         
         const now = Date.now();
-        const docsArray = [];
-        snapshot.forEach((docSnap) => { docsArray.push(docSnap); });
-
-        // 유령 유저 자동 오프라인 처리 및 렌더링 최적화
-        for (const userDoc of docsArray) {
+        snapshot.forEach(async (userDoc) => {
             const data = userDoc.data(); 
             const id = userDoc.id; 
-            if (id === adminId) continue;
+            if (id === adminId) return;
 
             if (data.online === true && data.updatedAt) {
                 const updatedAtMs = data.updatedAt.toMillis ? data.updatedAt.toMillis() : new Date(data.updatedAt).getTime();
                 if (now - updatedAtMs > 60000) {
                     try {
                         await updateDoc(doc(db, "users", id), { online: false, state: "offline", sharing: false, sharingStartedAt: null });
-                        continue; 
+                        return; 
                     } catch (e) { console.error(e); }
                 }
             }
 
             if (data.online === true) onlineCount++;
             grid.appendChild(createCard(id, data));
-        }
+        });
         updateOnlineCount(onlineCount);
     });
 }
 
 async function connectStudent(userId) {
-    if (peerConnection) { try { peerConnection.close(); } catch (e) {} peerConnection = null; }
-    if (unsubscribeUser) { unsubscribeUser(); unsubscribeUser = null; }
+    await closeViewerSession();
 
     selectedId = userId;
-    adminAnswerCreated = false;
     addedClientCandidates.clear();
 
     document.getElementById("viewer").style.display = "flex";
@@ -196,7 +208,9 @@ async function connectStudent(userId) {
     try {
         await updateDoc(userRef, { 
             sharing: true,
-            sharingStartedAt: serverTimestamp()
+            sharingStartedAt: serverTimestamp(),
+            adminAnswer: null,
+            adminCandidates: []
         });
     } catch (e) { console.error(e); }
 
@@ -204,7 +218,7 @@ async function connectStudent(userId) {
     if (!snap.exists()) { alert("사용자를 찾을 수 없습니다."); return; }
 
     const data = snap.data();
-    if (!data.clientOffer) { alert("학생이 아직 화면 공유를 시작하지 않았습니다."); return; }
+    if (!data.clientOffer) { alert("학생이 아직 화면 공유 준비가 되지 않았습니다. 잠시 후 다시 시도해주세요."); await closeViewerSession(); return; }
 
     peerConnection = new RTCPeerConnection(rtcConfig);
 
@@ -223,19 +237,29 @@ async function connectStudent(userId) {
         } catch (e) { console.error(e); }
     };
 
+    peerConnection.onconnectionstatechange = () => {
+        console.log("[ADMIN] Connection State:", peerConnection.connectionState);
+    };
+
     try {
-        const offer = data.clientOffer; 
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.clientOffer));
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
 
+        // [지적 반영] Answer에 현재 수신한 clientOffer의 세션 ID를 그대로 동기화하여 전송 (Race Condition 완전 차단)
         await updateDoc(userRef, {
-            adminAnswer: { type: answer.type, sdp: answer.sdp }
+            adminAnswer: { 
+                type: answer.type, 
+                sdp: answer.sdp, 
+                sessionId: data.clientOffer.sessionId 
+            }
         });
 
-        adminAnswerCreated = true;
         watchClientCandidates(userId);
-    } catch (error) { console.error("WebRTC 설정 에러:", error); }
+    } catch (error) { 
+        console.error("WebRTC 설정 에러:", error); 
+        await closeViewerSession();
+    }
 }
 
 function watchClientCandidates(userId) {
@@ -244,9 +268,13 @@ function watchClientCandidates(userId) {
         if (!snapshot.exists() || !peerConnection) return;
         const data = snapshot.data();
 
+        if (!data.clientOffer) {
+            console.warn("[ADMIN] 학생 측에서 세션이 초기화되었습니다.");
+            return;
+        }
+
         if (data.clientCandidates && Array.isArray(data.clientCandidates)) {
             for (const candidate of data.clientCandidates) {
-                if (!adminAnswerCreated) continue;
                 const key = JSON.stringify(candidate);
                 if (addedClientCandidates.has(key)) continue;
 
