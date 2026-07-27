@@ -2,21 +2,206 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Blue Ball Game</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find the Coins</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        canvas {
+            background-color: #333;
+            border: 4px solid #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+    </style>
 </head>
 <body>
 
-<div id="startScreen">
-    <h1>Blue Ball Game</h1>
-    <button id="playButton">Play</button>
-</div>
+<canvas id="gameCanvas" width="800" height="500"></canvas>
 
-<div id="gameScreen" class="hidden">
-    <div id="player"></div>
-</div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-<script src="script.js"></script>
+// 게임 상태
+let score = 0;
+let totalCoins = 5;
+let gameOver = false;
+let gameClear = false;
+
+// 플레이어 객체
+const player = {
+    x: 50,
+    y: 350,
+    width: 30,
+    height: 30,
+    speed: 5,
+    dx: 0,
+    dy: 0,
+    jumpPower: -10,
+    gravity: 0.5,
+    grounded: false,
+    color: '#FFD700'
+};
+
+// 발판(지형) 데이터
+const platforms = [
+    { x: 0, y: 450, width: 800, height: 50 }, // 바닥
+    { x: 150, y: 350, width: 150, height: 20 },
+    { x: 350, y: 260, width: 150, height: 20 },
+    { x: 550, y: 170, width: 150, height: 20 },
+    { x: 100, y: 180, width: 120, height: 20 }
+];
+
+// 코인 데이터 (위치와 획득 여부)
+let coins = [
+    { x: 220, y: 310, radius: 10, collected: false },
+    { x: 420, y: 220, radius: 10, collected: false },
+    { x: 620, y: 130, radius: 10, collected: false },
+    { x: 140, y: 140, radius: 10, collected: false },
+    { x: 750, y: 410, radius: 10, collected: false }
+];
+
+// 키 입력 처리
+const keys = { right: false, left: false, up: false };
+
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+    if ((e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') && player.grounded) {
+        player.dy = player.jumpPower;
+        player.grounded = false;
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+});
+
+// 충돌 감지 함수 (AABB 방식)
+function checkCollision(rect, plat) {
+    return rect.x < plat.x + plat.width &&
+           rect.x + rect.width > plat.x &&
+           rect.y < plat.y + plat.height &&
+           rect.y + rect.height > plat.y;
+}
+
+// 게임 업데이트 로직
+function update() {
+    if (gameClear || gameOver) return;
+
+    // 좌우 움직임
+    player.dx = 0;
+    if (keys.right) player.dx = player.speed;
+    if (keys.left) player.dx = -player.speed;
+
+    player.x += player.dx;
+
+    // 화면 밖으로 나가지 않게 제한
+    if (player.x < 0) player.x = 0;
+    if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+    // 중력 적용
+    player.dy += player.gravity;
+    player.y += player.dy;
+
+    // 발판과의 충돌 체크
+    player.grounded = false;
+    for (let plat of platforms) {
+        if (checkCollision(player, plat)) {
+            // 위에서 아래로 떨어질 때
+            if (player.dy > 0 && player.y + player.height - player.dy <= plat.y) {
+                player.y = plat.y - player.height;
+                player.dy = 0;
+                player.grounded = true;
+            }
+        }
+    }
+
+    // 코인 획득 체크
+    coins.forEach(coin => {
+        if (!coin.collected) {
+            let distX = (player.x + player.width / 2) - coin.x;
+            let distY = (player.y + player.height / 2) - coin.y;
+            let distance = Math.sqrt(distX * distX + distY * distY);
+
+            if (distance < player.width / 2 + coin.radius) {
+                coin.collected = true;
+                score++;
+                if (score === totalCoins) {
+                    gameClear = true;
+                }
+            }
+        }
+    });
+}
+
+// 화면 그리기
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 발판 그리기
+    ctx.fillStyle = '#4CAF50';
+    platforms.forEach(plat => {
+        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+    });
+
+    // 코인 그리기
+    coins.forEach(coin => {
+        if (!coin.collected) {
+            ctx.beginPath();
+            ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFD700';
+            ctx.fill();
+            ctx.closePath();
+            ctx.strokeStyle = '#DAA520';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    });
+
+    // 플레이어 그리기
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    // 점수판 표시
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Coins: ${score} / ${totalCoins}`, 20, 30);
+
+    // 게임 클리어 메시지
+    if (gameClear) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 40px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('YOU WIN!', canvas.width / 2, canvas.height / 2);
+        ctx.font = '20px Arial';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText('모든 코인을 획득했습니다!', canvas.width / 2, canvas.height / 2 + 40);
+        ctx.textAlign = 'left';
+    }
+}
+
+// 게임 루프
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
 
 </body>
 </html>
