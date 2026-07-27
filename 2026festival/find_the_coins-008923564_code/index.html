@@ -1,1 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find the Coins</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="1024" height="576"></canvas>
+        <div id="ui-overlay">
+            <div class="hud-item">HP: <span id="player-hp">100</span></div>
+            <div class="hud-item">점수: <span id="player-score">0</span></div>
+        </div>
+    </div>
 
+    <!-- 스크립트 모듈 순서대로 로드 -->
+    <script src="js/input.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
