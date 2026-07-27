@@ -8,57 +8,87 @@
 </head>
 <body>
 
-    <div id="ui">
-        <div>보스 HP: <span id="boss-hp">30000</span></div>
-        <div>시간: <span id="live-timer">0.00초</span></div>
-        <div>플레이어 HP: <span id="player-hp">3</span></div>
+    <!-- 1. 메인 로비 화면 -->
+    <div id="main-lobby" class="screen" style="display: flex;">
+        <div class="title" style="color: #ff4757;">MEGA BOSS RAID</div>
+        <div class="subtitle">
+            메인 로비에 오신 것을 환영합니다!<br>
+            캐릭터를 클릭하여 <b>코인 장착 창</b>을 열 수 있습니다.
+        </div>
+
+        <!-- 중앙 캐릭터 배치 -->
+        <div id="lobby-character" onclick="openCoinModal()">
+            <div class="char-body"></div>
+            <div class="char-label">내 캐릭터 (클릭)</div>
+        </div>
+
+        <!-- 오른쪽 아래 전투 버튼 -->
+        <button class="btn btn-start btn-battle-pos" onclick="goToRaidMap()">전투</button>
     </div>
 
-    <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        
-        <!-- Ready? GO! 레이어 -->
-        <div id="countdown-overlay">
-            <div id="countdown-text">Ready?</div>
+    <!-- 2. 코인 장착 모달 창 -->
+    <div id="coin-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">장착된 코인 관리</div>
+            <div class="coin-slots-container">
+                <div class="coin-slot equipped">
+                    <div class="red-coin" style="width: 40px; height: 40px; font-size: 16px;"></div>
+                    <span>코란 코인</span>
+                </div>
+                <div class="coin-slot empty">
+                    <span>빈 슬롯</span>
+                </div>
+                <div class="coin-slot empty">
+                    <span>빈 슬롯</span>
+                </div>
+            </div>
+            <button class="btn btn-restart" style="padding: 10px 25px; font-size: 16px;" onclick="closeCoinModal()">닫기</button>
+        </div>
+    </div>
+
+    <!-- 3. 실제 레이드 맵 컨테이너 (처음엔 숨김) -->
+    <div id="raid-container" style="display: none; flex-direction: column; align-items: center;">
+        <div id="ui">
+            <div>보스 HP: <span id="boss-hp">30000</span></div>
+            <div>시간: <span id="live-timer">0.00초</span></div>
+            <div>플레이어 HP: <span id="player-hp">3</span></div>
         </div>
 
-        <!-- 1. 시작 화면 -->
-        <div id="start-screen" class="screen">
-            <div class="title" style="color: #ff4757;">MEGA BOSS RAID</div>
-            <div class="subtitle">
-                보스 체력: <b>30,000</b><br>
-                마우스 좌클릭을 유지하면 연속으로 발사됩니다.<br>
-                가장 빠른 기록으로 보스를 처치하고 <b>일격 코인</b>을 차지하세요!
-            </div>
-            <button class="btn btn-start" onclick="initiateGameFlow()">보스전 시작</button>
-        </div>
-
-        <!-- 2. 승리 결과 화면 -->
-        <div id="victory-screen" class="screen">
-            <div class="title" style="color: #2ed573;">🎉 VICTORY! 🎉</div>
-            <div class="subtitle" id="clear-time-result" style="font-size: 24px; color: #fff; margin-bottom: 20px;">
-                클리어 시간: 0.00초
-            </div>
+        <div id="game-container">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
             
-            <div class="red-coin-box">
-                <div class="red-coin"></div>
-                <div class="reward-text">[일격 코인]을 획득했습니다!</div>
+            <!-- Ready? GO! 레이어 -->
+            <div id="countdown-overlay">
+                <div id="countdown-text">Ready?</div>
             </div>
 
-            <button class="btn btn-restart" onclick="resetToTitle()">타이틀로 돌아가기</button>
+            <!-- 승리 결과 화면 -->
+            <div id="victory-screen" class="screen">
+                <div class="title" style="color: #2ed573;">🎉 VICTORY! 🎉</div>
+                <div class="subtitle" id="clear-time-result" style="font-size: 24px; color: #fff; margin-bottom: 20px;">
+                    클리어 시간: 0.00초
+                </div>
+                
+                <div class="red-coin-box">
+                    <div class="red-coin"></div>
+                    <div class="reward-text">[일격 코인]을 획득했습니다!</div>
+                </div>
+
+                <button class="btn btn-restart" onclick="resetToLobby()">로비로 돌아가기</button>
+            </div>
+
+            <!-- 게임 오버 화면 -->
+            <div id="gameover-screen" class="screen">
+                <div class="title" style="color: #ff4757;">GAME OVER</div>
+                <div class="subtitle">체력이 다 달아 쓰러졌습니다.</div>
+                <button class="btn btn-restart" onclick="resetToLobby()">로비로 돌아가기</button>
+            </div>
         </div>
 
-        <!-- 3. 게임 오버 화면 -->
-        <div id="gameover-screen" class="screen">
-            <div class="title" style="color: #ff4757;">GAME OVER</div>
-            <div class="subtitle">체력이 다 달아 쓰러졌습니다.</div>
-            <button class="btn btn-restart" onclick="resetToTitle()">다시 시도하기</button>
-        </div>
+        <p style="color: #aaa; margin-top: 15px;">
+            이동: <b>WASD / 방향키</b> | 공격: <b>마우스 좌클릭 드래그(연사)</b>
+        </p>
     </div>
-
-    <p style="color: #aaa; margin-top: 15px;">
-        이동: <b>WASD / 방향키</b> | 공격: <b>마우스 좌클릭 드래그(연사)</b>
-    </p>
 
     <script src="script.js"></script>
 </body>
