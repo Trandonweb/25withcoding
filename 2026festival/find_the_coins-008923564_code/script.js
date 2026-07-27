@@ -6,7 +6,9 @@ const playerHpEl = document.getElementById("player-hp");
 const liveTimerEl = document.getElementById("live-timer");
 
 // 화면 엘리먼트들
-const startScreen = document.getElementById("start-screen");
+const mainLobby = document.getElementById("main-lobby");
+const raidContainer = document.getElementById("raid-container");
+const coinModal = document.getElementById("coin-modal");
 const victoryScreen = document.getElementById("victory-screen");
 const gameoverScreen = document.getElementById("gameover-screen");
 const countdownOverlay = document.getElementById("countdown-overlay");
@@ -55,6 +57,34 @@ let isMouseDown = false;
 let mouseX = 0;
 let mouseY = 0;
 
+// --- 코인 모달창 제어 함수 ---
+function openCoinModal() {
+    coinModal.style.display = "flex";
+}
+
+function closeCoinModal() {
+    coinModal.style.display = "none";
+}
+
+// --- 로비에서 레이드 맵으로 이동 ---
+function goToRaidMap() {
+    mainLobby.style.display = "none";
+    raidContainer.style.display = "flex";
+    initiateGameFlow();
+}
+
+// --- 로비로 돌아가기 ---
+function resetToLobby() {
+    victoryScreen.style.display = "none";
+    gameoverScreen.style.display = "none";
+    raidContainer.style.display = "none";
+    mainLobby.style.display = "flex";
+    
+    gameActive = false;
+    battleStarted = false;
+    liveTimerEl.innerText = `0.00초`;
+}
+
 // --- 이벤트 바인딩 ---
 window.addEventListener("keydown", (e) => {
     if (gameActive && battleStarted) keys[e.key.toLowerCase()] = true;
@@ -83,7 +113,6 @@ function updateMousePos(e) {
 // --- 게임 흐름 제어 (카운트다운 포함) ---
 
 function initiateGameFlow() {
-    startScreen.style.display = "none";
     resetGameStats(); 
 
     gameActive = true;
@@ -288,16 +317,6 @@ function showGameOverScreen() {
     battleStarted = false;
     isMouseDown = false;
     gameoverScreen.style.display = "flex";
-}
-
-function resetToTitle() {
-    victoryScreen.style.display = "none";
-    gameoverScreen.style.display = "none";
-    startScreen.style.display = "flex";
-    gameActive = false;
-    battleStarted = false;
-    liveTimerEl.innerText = `0.00초`;
-    drawInitialScene();
 }
 
 function resetGameStats() {
