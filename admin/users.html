@@ -6,48 +6,134 @@
   <style>
 
     body {
-      font-family: sans-serif;
-      padding: 20px;
-      background-color: #f0f0f0;
+      font-family: 'Malgun Gothic', sans-serif;
+      padding: 30px;
+      background-color: #f4f6f9;
+      color: #333;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
     }
 
     h2 {
-      margin-bottom: 10px;
+      margin: 0;
+      color: #2c3e50;
     }
 
     .card {
       background: white;
-      padding: 15px;
-      border-radius: 20px;
+      padding: 25px;
+      border-radius: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    h3 {
+      margin-top: 0;
       margin-bottom: 15px;
+      color: #34495e;
+      font-size: 1.1rem;
     }
 
     input, select {
-      padding: 10px;
-      border-radius: 12px;
-      border: none;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: 1px solid #e1e8ed;
       margin: 5px;
-      background: #f5f5f5;
+      background: #f8fafc;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: #3498db;
+      background: white;
     }
 
     button {
-      padding: 10px 14px;
+      padding: 12px 20px;
       border: none;
-      border-radius: 12px;
-      background: white;
+      border-radius: 16px;
+      background: #3498db;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
       margin: 5px;
+      transition: background 0.2s;
     }
 
     button:hover {
-      background: #e6e6e6;
+      background: #2980b9;
     }
 
+    /* 위험한 액션 (삭제 등) 버튼 스타일 구분 */
+    button.danger {
+      background: #e74c3c;
+    }
+
+    button.danger:hover {
+      background: #c0392b;
+    }
+
+    /* 사용자 목록 한 줄 정렬 레이아웃 */
     .user {
-      padding: 10px;
-      border-radius: 12px;
-      background: #f9f9f9;
-      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-radius: 16px;
+      background: #fdfdfe;
+      border: 1px solid #edf2f7;
+      margin-top: 10px;
+      transition: transform 0.1s;
+    }
+
+    .user:hover {
+      background: #f8fafc;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 15px;
+    }
+
+    .user-info input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .role-badge {
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: bold;
+      background: #edf2f7;
+      color: #4a5568;
+    }
+
+    .role-president {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .role-vice {
+      background: #e0e7ff;
+      color: #4f46e5;
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
   </style>
@@ -58,7 +144,7 @@
 <div class="top-bar">
 
   <button onclick="goBack()">
-    뒤로가기
+    ← 뒤로가기
   </button>
 
   <h2>사용자 관리</h2>
@@ -69,21 +155,14 @@
 
   <h3>학생 추가</h3>
 
-  <input id="newId" placeholder="학번">
-
-  <input id="newName" placeholder="이름">
-
-  <select id="newRole">
-
-    <option value="student">
-      학생
-    </option>
-
-  </select>
-
-  <button onclick="createUser()">
-    추가
-  </button>
+  <div class="action-row">
+    <input id="newId" placeholder="학번 (예: 10101)">
+    <input id="newName" placeholder="이름">
+    <select id="newRole">
+      <option value="student">학생</option>
+    </select>
+    <button onclick="createUser()">추가하기</button>
+  </div>
 
 </div>
 
@@ -91,7 +170,7 @@
 
   <h3>사용자 검색</h3>
 
-  <input id="searchInput" placeholder="학번 또는 이름 검색" oninput="filterUsers()" style="width: 80%;">
+  <input id="searchInput" placeholder="학번 또는 이름 검색" oninput="filterUsers()" style="width: 100%; box-sizing: border-box;">
 
 </div>
 
@@ -99,25 +178,18 @@
 
   <h3 id="selectedCountText">선택된 사용자 : 0명</h3>
 
-  <div id="selectedUserList" style="margin-bottom: 10px; color: #555; max-height: 150px; overflow-y: auto;">
+  <div id="selectedUserList" style="margin-bottom: 15px; color: #718096; max-height: 150px; overflow-y: auto; font-size: 14px; line-height: 1.6;">
     선택된 사용자가 없습니다.
   </div>
 
-  <button onclick="batchChangeRole()">
-    권한 변경
-  </button>
-
-  <button onclick="batchResetPassword()">
-    비밀번호 초기화
-  </button>
-
-  <button onclick="batchDeleteUsers()">
-    삭제
-  </button>
-
-  <select id="batchRoleSelect" style="margin-left: 10px;">
-    <option value="student">학생</option>
-  </select>
+  <div class="action-row">
+    <select id="batchRoleSelect">
+      <option value="student">학생</option>
+    </select>
+    <button onclick="batchChangeRole()">권한 변경</button>
+    <button onclick="batchResetPassword()">비밀번호 초기화</button>
+    <button class="danger" onclick="batchDeleteUsers()">선택 삭제</button>
+  </div>
 
 </div>
 
@@ -218,20 +290,22 @@ if (myData.role === "president") {
 }
 
 /*--------------------------------------------------
-  권한 한글화 함수
+  권한 한글화 및 배지 디자인 함수
 --------------------------------------------------*/
-function roleToText(role) {
-
+function roleToBadge(role) {
   if (role === "president") {
-    return "회장";
+    return `<span class="role-badge role-president">회장</span>`;
   }
-
   if (role === "vice") {
-    return "부회장";
+    return `<span class="role-badge role-vice">부회장</span>`;
   }
+  return `<span class="role-badge">학생</span>`;
+}
 
+function roleToText(role) {
+  if (role === "president") return "회장";
+  if (role === "vice") return "부회장";
   return "학생";
-
 }
 
 /*--------------------------------------------------
@@ -372,20 +446,23 @@ function renderUserList(users) {
       }
     }
 
-    let checkboxHTML = "";
+    let leftHTML = "";
     if (selectable) {
       const isChecked = selectedUsers.includes(user.id) ? "checked" : "";
-      checkboxHTML = `<label><input type="checkbox" value="${user.id}" onchange="toggleSelectUser('${user.id}')" ${isChecked}> 선택</label>`;
+      leftHTML = `<input type="checkbox" value="${user.id}" onchange="toggleSelectUser('${user.id}')" ${isChecked}>`;
     } else {
-      checkboxHTML = `<span>${statusText}</span>`;
+      leftHTML = `<span style="font-size: 13px; color: #a0aec0; font-weight: bold;">${statusText}</span>`;
     }
 
     div.innerHTML = `
-      <b>${user.id}</b> ${user.name}
-      <br><br>
-      [${roleToText(user.role)}]
-      <br><br>
-      ${checkboxHTML}
+      <div class="user-info">
+        ${leftHTML}
+        <b>${user.id}</b>
+        <span>${user.name}</span>
+      </div>
+      <div>
+        ${roleToBadge(user.role)}
+      </div>
     `;
 
     userListDiv.appendChild(div);
@@ -451,7 +528,7 @@ function updateSelectedUI() {
     }
   }
 
-  selectedListDiv.innerHTML = textArray.join("<br>");
+  selectedListDiv.innerHTML = textArray.join(" | ");
 }
 
 /*--------------------------------------------------
@@ -522,7 +599,7 @@ window.batchChangeRole = async () => {
 --------------------------------------------------*/
 window.batchResetPassword = async () => {
   if (selectedUsers.length === 0) {
-    alert("선택된 사용자가 없습니다.");
+    alert("선택된 사용자 목록이 없습니다.");
     return;
   }
 
