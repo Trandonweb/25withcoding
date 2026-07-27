@@ -47,6 +47,29 @@
       letter-spacing: 1px;
     }
 
+    .admin-btn {
+      position: absolute;
+      left: 20px;
+      top: 16px;
+
+      border: none;
+      border-radius: 10px;
+
+      padding: 10px 15px;
+
+      background: #e0e0e0;
+      color: #333;
+
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      display: none; /* 권한 확인 전 숨김 처리 */
+    }
+
+    .admin-btn:hover {
+      background: #d0d0d0;
+    }
+
     .auth-btn {
       position: absolute;
       right: 20px;
@@ -108,6 +131,10 @@
 <body>
 
   <header>
+    <button id="adminBtn" class="admin-btn" onclick="location.href='/admin'">
+      관리자
+    </button>
+
     코딩과 함께라면
 
     <button id="authBtn" class="auth-btn">
@@ -143,11 +170,39 @@
     2026 Coding With Together
   </div>
 
- <script>
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+
+  authDomain:
+    "points2026-f5e50.firebaseapp.com",
+
+  projectId:
+    "points2026-f5e50"
+
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 function go(path){
     location.href = path;
 }
+
+window.go = go;
 
 function goPoint(){
     const user = localStorage.getItem("userId");
@@ -159,10 +214,28 @@ function goPoint(){
     }
 }
 
-function updateUI(){
+window.goPoint = goPoint;
+
+async function updateUI(){
 
     const user = localStorage.getItem("userId");
     const btn = document.getElementById("authBtn");
+    const adminBtn = document.getElementById("adminBtn");
+
+    // 관리자(회장, 부회장) 권한인 경우에만 왼쪽 상단 관리자 버튼 표시
+    if (user) {
+        try {
+            const userSnap = await getDoc(doc(db, "users", user));
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                if (userData.role === "president" || userData.role === "vice") {
+                    adminBtn.style.display = "block";
+                }
+            }
+        } catch (e) {
+            console.error("권한 확인 실패", e);
+        }
+    }
 
     // 이번 탭에서 이미 물어봤는가?
     const askedMirror =
