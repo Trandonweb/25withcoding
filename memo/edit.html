@@ -1,132 +1,140 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>코딩과 함께라면_메모장_메모 수정</title>
 
   <style>
     body {
-      font-family: sans-serif;
-      background: #f0f0f0;
-      padding: 20px;
+      font-family: 'Malgun Gothic', sans-serif;
+      background: #f4f6f9;
+      padding: 15px 20px;
+      color: #333;
     }
 
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     button {
-      padding: 10px 14px;
+      padding: 8px 14px;
       border: none;
-      border-radius: 14px;
-      background: white;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #333;
+      font-weight: bold;
       cursor: pointer;
       margin: 3px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: background 0.2s;
+      font-size: 13px;
     }
 
     button:hover {
-      background: #e6e6e6;
+      background-color: #e6e6e6;
     }
 
     .card {
       background: white;
-      padding: 20px;
-      border-radius: 20px;
+      padding: 16px 20px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 14px;
+      color: #2c3e50;
+      font-size: 1.1rem;
     }
 
     input,
     textarea {
       width: 100%;
       box-sizing: border-box;
-      border: none;
-      border-radius: 14px;
-      padding: 12px;
-      margin-top: 10px;
-      background: #f5f5f5;
-      font-family: sans-serif;
+      border: 1px solid #e1e8ed;
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-top: 6px;
+      background: #f8fafc;
+      font-family: 'Malgun Gothic', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #27ae60;
+      background: white;
     }
 
     textarea {
       resize: vertical;
       min-height: 300px;
-      font-family: monospace;
+      font-family: 'Malgun Gothic', sans-serif;
+      line-height: 1.5;
     }
 
     .label {
-      margin-top: 15px;
+      margin-top: 12px;
       font-weight: bold;
+      font-size: 14px;
+      color: #34495e;
     }
 
     .bottom {
-      margin-top: 20px;
+      margin-top: 16px;
       text-align: right;
     }
 
     #version {
       position: fixed;
       right: 15px;
-      bottom: 15px;
+      bottom: 10px;
       background: rgba(0,0,0,0.7);
       color: white;
-      padding: 6px 10px;
-      border-radius: 10px;
-      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
       z-index: 9999;
     }
-
   </style>
 </head>
 
 <body>
 
 <div class="top-bar">
-
-  <button onclick="goBack()">
-    뒤로가기
-  </button>
-
+  <button onclick="goBack()">뒤로가기</button>
 </div>
 
 <div class="card">
-
   <h2>✏ 메모 수정</h2>
 
-  <div class="label">
-    제목
-  </div>
+  <div class="label">제목</div>
+  <input id="titleInput" placeholder="제목을 입력하세요">
 
-  <input id="titleInput">
-
-  <div class="label">
-    내용
-  </div>
-
-  <textarea id="contentInput"></textarea>
+  <div class="label">내용</div>
+  <textarea id="contentInput" placeholder="내용을 입력하세요"></textarea>
 
   <div class="bottom">
-
-    <button onclick="saveEdit()">
-      저장
-    </button>
-
+    <button onclick="saveEdit()" style="background: #27ae60; color: white;">저장</button>
   </div>
-
 </div>
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 
 import {
   getFirestore,
   doc,
   getDoc,
   updateDoc
-}
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
@@ -136,56 +144,32 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-const id =
-  new URLSearchParams(location.search)
-  .get("id");
+const id = new URLSearchParams(location.search).get("id");
 
 let noteData = null;
 
-/* 🔥 데이터 불러오기 */
 async function load() {
-
-  const snap =
-    await getDoc(doc(db, "notes", id));
+  const snap = await getDoc(doc(db, "notes", id));
 
   if (!snap.exists()) {
-
     alert("메모 없음");
-
-    location.href =
-      "index.html";
-
+    location.href = "index.html";
     return;
-
   }
 
   noteData = snap.data();
 
-  document.getElementById("titleInput").value =
-    noteData.title || "";
-
-  document.getElementById("contentInput").value =
-    noteData.content || "";
-
+  document.getElementById("titleInput").value = noteData.title || "";
+  document.getElementById("contentInput").value = noteData.content || "";
 }
 
-/* 🔥 저장 */
 async function saveEdit() {
-
-  const title =
-    document.getElementById("titleInput")
-    .value
-    .trim();
-
-  const content =
-    document.getElementById("contentInput")
-    .value;
+  const title = document.getElementById("titleInput").value.trim();
+  const content = document.getElementById("contentInput").value;
 
   if (!title) {
-
     alert("제목을 입력해주세요.");
     return;
-
   }
 
   await updateDoc(
@@ -197,17 +181,11 @@ async function saveEdit() {
   );
 
   alert("수정 완료!");
-
-  location.href =
-    "view.html?id=" + id;
-
+  location.href = "view.html?id=" + id;
 }
 
 function goBack() {
-
-  location.href =
-    "view.html?id=" + id;
-
+  location.href = "view.html?id=" + id;
 }
 
 window.saveEdit = saveEdit;
@@ -217,9 +195,7 @@ load();
 
 </script>
 
-<div id="version">
-  v26.6.27.2  
-</div>
+<div id="version">v26.6.27.2</div>
 
 </body>
 </html>
