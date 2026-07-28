@@ -133,7 +133,7 @@
 <body>
 
 <div class="top-bar">
-  <button onclick="goBack()">← 목록</button>
+  <button onclick="goBack()">← 홈</button>
   <div>
     <button onclick="clearBoard()" style="background: #f8d7da; color: #842029;">전체 지우기</button>
   </div>
@@ -340,7 +340,6 @@
     ctx.restore();
   }
 
-  // 캔버스 내부에서만 이벤트가 정상 작동하도록 수정하여 목록 버튼 클릭 방해 방지
   canvas.addEventListener("mousedown", startDrawing);
   canvas.addEventListener("mousemove", draw);
   window.addEventListener("mouseup", stopDrawing);
@@ -365,7 +364,7 @@
   }
 
   function goBack() {
-    location.href = "index.html";
+    location.href = "/NOTE/index.html";
   }
 
   window.setTool = setTool;
