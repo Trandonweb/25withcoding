@@ -6,7 +6,7 @@
   <style>
     body {
       font-family: 'Malgun Gothic', sans-serif;
-      padding: 30px;
+      padding: 15px 20px;
       background-color: #f4f6f9;
       color: #333;
     }
@@ -15,24 +15,24 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     .top-left-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     button {
-      padding: 12px 20px;
+      padding: 8px 14px;
       border: none;
-      border-radius: 16px;
+      border-radius: 12px;
       background: #ffffff;
       color: #333;
       font-weight: bold;
       cursor: pointer;
-      margin: 5px;
+      margin: 3px;
       transition: background 0.2s;
     }
 
@@ -41,8 +41,8 @@
     }
 
     .home-icon {
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       position: relative;
       display: inline-block;
     }
@@ -50,8 +50,8 @@
     .home-icon::before {
       content: "";
       position: absolute;
-      width: 20px;
-      height: 14px;
+      width: 16px;
+      height: 12px;
       background: black;
       bottom: 0;
       left: 2px;
@@ -60,37 +60,37 @@
     .home-icon::after {
       content: "";
       position: absolute;
-      border-left: 12px solid transparent;
-      border-right: 12px solid transparent;
-      border-bottom: 12px solid black;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid black;
       top: -2px;
       left: 0;
     }
 
     .card {
       background: white;
-      padding: 25px;
-      border-radius: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      padding: 14px 18px;
+      border-radius: 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     h3 {
       margin-top: 0;
-      margin-bottom: 15px;
+      margin-bottom: 8px;
       color: #34495e;
-      font-size: 1.1rem;
+      font-size: 1rem;
     }
 
     .user-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 20px;
-      border-radius: 16px;
+      padding: 8px 14px;
+      border-radius: 12px;
       background: #fdfdfe;
       border: 1px solid #edf2f7;
-      margin-top: 10px;
+      margin-top: 6px;
       cursor: pointer;
       transition: transform 0.1s;
     }
@@ -112,27 +112,27 @@
     .user-info {
       display: flex;
       align-items: center;
-      gap: 20px;
-      font-size: 15px;
+      gap: 15px;
+      font-size: 14px;
     }
 
     .user-item input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       cursor: pointer;
       accent-color: #27ae60;
     }
 
     input[type="text"] {
-      padding: 12px 16px;
-      border-radius: 16px;
+      padding: 8px 12px;
+      border-radius: 12px;
       border: 1px solid #e1e8ed;
-      margin: 5px;
+      margin: 3px;
       background: #f8fafc;
       font-size: 14px;
       outline: none;
       transition: all 0.2s;
-      width: 180px;
+      width: 160px;
     }
 
     input[type="text"]:focus {
@@ -142,10 +142,10 @@
 
     .footer {
       position: fixed;
-      bottom: 10px;
+      bottom: 6px;
       right: 15px;
-      font-size: 12px;
-      color: #555;
+      font-size: 11px;
+      color: #777;
     }
 
     .plus {
@@ -164,9 +164,9 @@
     }
 
     .role-badge {
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
       font-weight: bold;
       background: #edf2f7;
       color: #4a5568;
@@ -185,7 +185,7 @@
     .action-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
@@ -230,35 +230,35 @@
   <button onclick="logout()">로그아웃</button>
 </div>
 
-<div class="card" id="myInfo">
+<div class="card" id="myInfo" style="padding: 10px 18px; margin-bottom: 8px;">
   로딩중...
 </div>
 
 <!-- 공동 목표 카드 -->
-<div class="card" id="rewardBox">
+<div class="card" id="rewardBox" style="padding: 10px 18px; margin-bottom: 8px;">
   로딩중...
 </div>
 
 <!-- 학생인 경우 컨트롤 버튼들 비활성화 처리 -->
-<div class="card">
+<div class="card" style="padding: 10px 18px; margin-bottom: 8px;">
   <div class="action-row">
     <button id="selectAllBtn" onclick="selectAll()">모두 선택</button>
     <button id="clearAllBtn" onclick="clearAll()">모두 해제</button>
   </div>
 </div>
 
-<div class="card">
+<div class="card" style="margin-bottom: 8px;">
   <h3>사용자 목록</h3>
-  <div id="userList">로딩중...</div>
+  <div id="userList" style="max-height: 220px; overflow-y: auto;">로딩중...</div>
 </div>
 
-<div class="card">
+<div class="card" style="margin-bottom: 8px;">
   <h3>점수 부여/차감</h3>
   <div class="action-row">
-    <input id="scoreInput" type="text" placeholder="점수를 입력하세요.">
+    <input id="scoreInput" type="text" placeholder="점수 입력">
     <button id="applyBtn" onclick="apply()" style="background: #27ae60; color: white;">적용</button>
   </div>
-  <div id="loadingBox" style="display:none; margin-top:10px;">
+  <div id="loadingBox" style="display:none; margin-top:5px;">
     <div class="loading-inline">
       <span>적용 중...</span>
       <div class="spinner"></div>
@@ -405,21 +405,21 @@ async function init() {
   let percentage = Math.min(100, (totalScore / target) * 100).toFixed(1);
 
   let rewardHtml = `
-    <strong>공동 목표</strong><br><br>
-    현재 총점 : ${totalScore}점<br>
-    다음 목표 : ${target}점<br>
-    ${remain > 0 ? `${remain}점 남았습니다.<br>` : ""}
-    달성률 : ${percentage}%<br>
-    달성 보상 : +${bonus}점
+    <strong>공동 목표</strong> &nbsp;|&nbsp; 
+    현재 총점 : ${totalScore}점 &nbsp;|&nbsp; 
+    다음 목표 : ${target}점 
+    ${remain > 0 ? `(${remain}점 남음)` : ""} &nbsp;|&nbsp; 
+    달성률 : ${percentage}% &nbsp;|&nbsp; 
+    보상 : +${bonus}점
   `;
 
   const isAchieved = totalScore >= target;
 
   if (isAchieved) {
-    rewardHtml += `<br><br><span style="color: green; font-weight: bold;">목표를 달성했습니다!</span>`;
+    rewardHtml += ` &nbsp;<span style="color: green; font-weight: bold;">[목표 달성!]</span>`;
     
     if (myData.role === "president" || myData.role === "vice") {
-      rewardHtml += `<br><button id="bonusBtn" style="margin-top:8px; background-color: #d1e7dd; font-weight: bold;" onclick="claimBonus()">보너스 지급</button>`;
+      rewardHtml += ` <button id="bonusBtn" style="padding: 4px 8px; font-size: 11px; background-color: #d1e7dd; font-weight: bold;" onclick="claimBonus()">보너스 지급</button>`;
     }
   }
 
