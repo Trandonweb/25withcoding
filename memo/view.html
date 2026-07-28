@@ -5,186 +5,178 @@
   <title>메모 보기</title>
 
   <style>
-
     body {
-      font-family: sans-serif;
-      background: #f0f0f0;
-      padding: 20px;
+      font-family: 'Malgun Gothic', sans-serif;
+      background: #f4f6f9;
+      padding: 15px 20px;
+      color: #333;
     }
 
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     button {
-      padding: 10px 14px;
+      padding: 8px 14px;
       border: none;
-      border-radius: 14px;
-      background: white;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #333;
+      font-weight: bold;
       cursor: pointer;
       margin: 3px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: background 0.2s;
+      font-size: 13px;
     }
 
     button:hover {
-      background: #e6e6e6;
+      background-color: #e6e6e6;
     }
 
     .card {
       background: white;
-      padding: 20px;
-      border-radius: 20px;
+      padding: 16px 20px;
+      border-radius: 16px;
       position: relative;
-      min-height: 400px;
+      min-height: 350px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     h2 {
       margin-top: 0;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
+      color: #2c3e50;
+      font-size: 1.2rem;
     }
 
     .meta {
-      font-size: 13px;
-      color: gray;
-      margin-bottom: 20px;
+      font-size: 12px;
+      color: #718096;
+      margin-bottom: 16px;
     }
 
     .content {
       white-space: pre-wrap;
-      line-height: 1.7;
+      line-height: 1.6;
       display: none;
-      background: #f5f5f5;
-      padding: 16px;
-      border-radius: 14px;
+      background: #f8fafc;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid #edf2f7;
+      font-size: 14px;
     }
 
     .pin-box {
       text-align: center;
-      margin-top: 80px;
+      margin-top: 60px;
+    }
+
+    .pin-box p {
+      font-weight: bold;
+      color: #34495e;
+      font-size: 14px;
+      margin-bottom: 6px;
     }
 
     input {
-      width: 200px;
+      width: 180px;
       box-sizing: border-box;
-      border: none;
-      border-radius: 14px;
-      padding: 12px;
-      margin-top: 10px;
-      background: #f5f5f5;
-      font-family: sans-serif;
+      border: 1px solid #e1e8ed;
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-top: 4px;
+      background: #f8fafc;
+      font-family: 'Malgun Gothic', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    input:focus {
+      border-color: #27ae60;
+      background: white;
     }
 
     .actions {
-      margin-top: 20px;
+      margin-top: 16px;
       display: none;
       justify-content: flex-end;
-      gap: 10px;
+      gap: 6px;
     }
 
     .edit {
-      background: #111;
+      background: #2c3e50;
       color: white;
     }
 
+    .edit:hover {
+      background: #1a252f;
+    }
+
     .delete {
-      background: #ff4d4d;
+      background: #e74c3c;
       color: white;
+    }
+
+    .delete:hover {
+      background: #c0392b;
     }
 
     #version {
       position: fixed;
       right: 15px;
-      bottom: 15px;
+      bottom: 10px;
       background: rgba(0,0,0,0.7);
       color: white;
-      padding: 6px 10px;
-      border-radius: 10px;
-      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
       z-index: 9999;
     }
-
   </style>
 </head>
 
 <body>
 
 <div class="top-bar">
-
-  <button onclick="goBack()">
-    뒤로가기
-  </button>
-
+  <button onclick="goBack()">뒤로가기</button>
 </div>
 
 <div class="card">
-
-  <h2 id="title">
-    로딩중...
-  </h2>
-
+  <h2 id="title">로딩중...</h2>
   <div class="meta" id="meta"></div>
 
   <!-- PIN 입력 -->
   <div class="pin-box" id="pinBox">
-
     <p>PIN 입력</p>
-
-    <input
-      id="pinInput"
-      type="password"
-      placeholder="4자리 PIN"
-    >
-
-    <button onclick="checkPin()">
-      확인
-    </button>
-
+    <input id="pinInput" type="password" maxlength="8" placeholder="PIN 입력">
+    <button onclick="checkPin()" style="background: #27ae60; color: white;">확인</button>
   </div>
 
   <!-- 내용 -->
-  <div
-    class="content"
-    id="content"
-  ></div>
+  <div class="content" id="content"></div>
 
   <!-- 버튼 -->
-  <div
-    class="actions"
-    id="actions"
-  >
-
-    <button
-      class="edit"
-      onclick="goEdit()"
-    >
-      수정
-    </button>
-
-    <button
-      class="delete"
-      onclick="deleteMemo()"
-    >
-      삭제
-    </button>
-
+  <div class="actions" id="actions">
+    <button class="edit" onclick="goEdit()">수정</button>
+    <button class="delete" onclick="deleteMemo()">삭제</button>
   </div>
-
 </div>
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
   doc,
   getDoc,
   updateDoc
-}
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
@@ -192,213 +184,117 @@ const firebaseConfig = {
   projectId: "memo-5123c"
 };
 
-const app =
-  initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-const db =
-  getFirestore(app);
-
-const id =
-  new URLSearchParams(location.search)
-  .get("id");
+const id = new URLSearchParams(location.search).get("id");
 
 let memoRef;
 let memoData;
-
-// 마스터키
 const MASTER_KEY = "20262326";
 
 function isNotice(title) {
-
   if (!title) return false;
-
-  return (
-    title.startsWith("!@#") &&
-    title.endsWith("#@!")
-  );
-
+  return title.startsWith("!@#") && title.endsWith("#@!");
 }
 
 async function load() {
-
-  memoRef =
-    doc(db, "notes", id);
-
-  const snap =
-    await getDoc(memoRef);
+  memoRef = doc(db, "notes", id);
+  const snap = await getDoc(memoRef);
 
   if (!snap.exists()) {
-
     alert("메모 없음");
-
-    location.href =
-      "index.html";
-
+    location.href = "index.html";
     return;
-
   }
 
-  memoData =
-    snap.data();
+  memoData = snap.data();
 
   document.getElementById("title").innerText =
-    (memoData.title || "")
-      .replace("!@#", "")
-      .replace("#@!", "")
-      .trim() || "제목 없음";
+    (memoData.title || "").replace("!@#", "").replace("#@!", "").trim() || "제목 없음";
+
+  let dateString = "알 수 없음";
+  if (memoData.createdAt) {
+    const d = new Date(memoData.createdAt);
+    if (!isNaN(d.getTime())) dateString = d.toLocaleString();
+  }
 
   document.getElementById("meta").innerText =
-    `작성자: ${memoData.authorName || "unknown"}`;
+    `👤 ${memoData.authorName || "unknown"} &nbsp;|&nbsp; 🕒 ${dateString}`;
 
-  // 공지사항이면 자동 공개
   if (isNotice(memoData.title)) {
-
-    document.getElementById("pinBox").style.display =
-      "none";
-
-    document.getElementById("content").style.display =
-      "block";
-
-    document.getElementById("actions").style.display =
-      "flex";
-
-    document.getElementById("content").innerText =
-      memoData.content || "";
-
+    document.getElementById("pinBox").style.display = "none";
+    document.getElementById("content").style.display = "block";
+    document.getElementById("actions").style.display = "flex";
+    document.getElementById("content").innerText = memoData.content || "";
   }
-
 }
 
-const pinInput =
-  document.getElementById("pinInput");
+const pinInput = document.getElementById("pinInput");
 
 pinInput.addEventListener("input", () => {
+  let value = pinInput.value.replace(/\D/g, "");
+  const isMasterPrefix = MASTER_KEY.startsWith(value);
 
-  let value =
-    pinInput.value;
-
-  value =
-    value.replace(/\D/g, "");
-
-  const isMasterPrefix =
-    MASTER_KEY.startsWith(value);
-
-  if (!isMasterPrefix &&
-      value.length > 4) {
-
-    value =
-      value.slice(0, 4);
-
+  if (!isMasterPrefix && value.length > 4) {
+    value = value.slice(0, 4);
   }
 
-  if (value.length >
-      MASTER_KEY.length) {
-
-    value =
-      value.slice(
-        0,
-        MASTER_KEY.length
-      );
-
+  if (value.length > MASTER_KEY.length) {
+    value = value.slice(0, MASTER_KEY.length);
   }
 
-  pinInput.value =
-    value;
-
+  pinInput.value = value;
 });
 
 function checkPin() {
-
-  const pin =
-    document.getElementById("pinInput")
-    .value;
-
-  const ok =
-    pin === memoData.pin ||
-    pin === MASTER_KEY;
+  const pin = document.getElementById("pinInput").value;
+  const ok = pin === memoData.pin || pin === MASTER_KEY;
 
   if (!ok) {
-
     alert("PIN 틀림");
     return;
-
   }
 
-  document.getElementById("pinBox").style.display =
-    "none";
-
-  document.getElementById("content").style.display =
-    "block";
-
-  document.getElementById("actions").style.display =
-    "flex";
-
-  document.getElementById("content").innerText =
-    memoData.content || "";
-
+  document.getElementById("pinBox").style.display = "none";
+  document.getElementById("content").style.display = "block";
+  document.getElementById("actions").style.display = "flex";
+  document.getElementById("content").innerText = memoData.content || "";
 }
 
 async function deleteMemo() {
-
-  // 공지사항만 관리자 비번 필요
   if (isNotice(memoData.title)) {
-
-    const password =
-      prompt("관리자 마스터키 입력");
-
+    const password = prompt("관리자 마스터키 입력");
     if (password !== MASTER_KEY) {
-
       alert("마스터키 틀림");
       return;
-
     }
-
   }
 
-  const ok =
-    confirm("삭제할까?");
-
+  const ok = confirm("삭제할까요?");
   if (!ok) return;
 
-  await updateDoc(
-    memoRef,
-    {
-      deleted: true
-    }
-  );
+  await updateDoc(memoRef, {
+    deleted: true
+  });
 
-  location.href =
-    "index.html";
-
+  location.href = "index.html";
 }
 
 function goEdit() {
-
-  // 공지사항만 관리자 비번 필요
   if (isNotice(memoData.title)) {
-
-    const password =
-      prompt("관리자 마스터키 입력");
-
+    const password = prompt("관리자 마스터키 입력");
     if (password !== MASTER_KEY) {
-
       alert("마스터키 틀림");
       return;
-
     }
-
   }
 
-  location.href =
-    "edit.html?id=" + id;
-
+  location.href = "edit.html?id=" + id;
 }
 
 function goBack() {
-
-  location.href =
-    "index.html";
-
+  location.href = "index.html";
 }
 
 window.checkPin = checkPin;
@@ -410,9 +306,7 @@ load();
 
 </script>
 
-<div id="version">
-  v26.6.27.2
-</div>
+<div id="version">v26.6.27.2</div>
 
 </body>
 </html>
