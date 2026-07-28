@@ -1,1 +1,229 @@
-NOTE
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>코딩과 함께라면_화이트보드</title>
+
+  <style>
+    body {
+      font-family: 'Malgun Gothic', sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 15px 20px;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+    }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 3px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: background 0.2s;
+      font-size: 13px;
+    }
+
+    button:hover {
+      background-color: #e6e6e6;
+    }
+
+    .card {
+      background: white;
+      padding: 16px 20px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 14px;
+      color: #2c3e50;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .board-container {
+      flex: 1;
+      border: 1px solid #e1e8ed;
+      border-radius: 12px;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+      min-height: 300px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .color-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      padding: 0;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .color-btn.active {
+      border-color: #2c3e50;
+      transform: scale(1.1);
+    }
+
+    #version {
+      position: fixed;
+      right: 15px;
+      bottom: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      z-index: 9999;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="top-bar">
+  <button onclick="goBack()">← 목록</button>
+  <div>
+    <button onclick="clearBoard()" style="background: #f8d7da; color: #842029;">전체 지우기</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>🎨 화이트보드</h2>
+
+  <div class="board-container">
+    <canvas id="whiteboard"></canvas>
+  </div>
+
+  <div class="controls">
+    <span style="font-size: 13px; font-weight: bold; color: #34495e;">색상:</span>
+    <button class="color-btn active" style="background: #333333;" onclick="setColor('#333333', this)"></button>
+    <button class="color-btn" style="background: #e74c3c;" onclick="setColor('#e74c3c', this)"></button>
+    <button class="color-btn" style="background: #3498db;" onclick="setColor('#3498db', this)"></button>
+    <button class="color-btn" style="background: #27ae60;" onclick="setColor('#27ae60', this)"></button>
+    <button class="color-btn" style="background: #f1c40f;" onclick="setColor('#f1c40f', this)"></button>
+    
+    <div style="margin-left: auto; display: flex; gap: 6px; align-items: center;">
+      <span style="font-size: 13px; font-weight: bold; color: #34495e;">두께:</span>
+      <input type="range" id="lineWidth" min="1" max="20" value="3" style="width: 100px; cursor: pointer;">
+    </div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById("whiteboard");
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }
+
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+
+  let isDrawing = false;
+  let currentColor = "#333333";
+
+  function setColor(color, btn) {
+    currentColor = color;
+    document.querySelectorAll(".color-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+
+  function startDrawing(e) {
+    isDrawing = true;
+    ctx.beginPath();
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    ctx.moveTo(x, y);
+  }
+
+  function draw(e) {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = document.getElementById("lineWidth").value;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+
+  function stopDrawing() {
+    isDrawing = false;
+  }
+
+  canvas.addEventListener("mousedown", startDrawing);
+  canvas.addEventListener("mousemove", draw);
+  canvas.addEventListener("mouseup", stopDrawing);
+  canvas.addEventListener("mouseleave", stopDrawing);
+
+  canvas.addEventListener("touchstart", startDrawing);
+  canvas.addEventListener("touchmove", draw);
+  canvas.addEventListener("touchend", stopDrawing);
+
+  function clearBoard() {
+    if (confirm("화이트보드를 비우시겠습니까?")) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  function goBack() {
+    location.href = "index.html";
+  }
+
+  window.setColor = setColor;
+  window.clearBoard = clearBoard;
+  window.goBack = goBack;
+</script>
+
+<div id="version">v26.6.27.2</div>
+
+</body>
+</html>
