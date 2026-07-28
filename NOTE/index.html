@@ -148,7 +148,8 @@
   <div class="controls">
     <span style="font-size: 13px; font-weight: bold; color: #34495e;">도구:</span>
     <button class="tool-btn active" id="penTool" onclick="setTool('pen')">✏️ 펜</button>
-    <button class="tool-btn" id="eraserTool" onclick="setTool('eraser')">🧹 지우개</button>
+    <button class="tool-btn" id="strokeEraserTool" onclick="setTool('strokeEraser')">🧹 획지우개</button>
+    <button class="tool-btn" id="eraserTool" onclick="setTool('eraser')">⚪ 지우개</button>
 
     <div id="colorContainer" style="display: flex; gap: 6px; align-items: center; margin-left: 10px;">
       <span style="font-size: 13px; font-weight: bold; color: #34495e;">색상:</span>
@@ -174,24 +175,25 @@
     const rect = canvas.parentElement.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+    redraw();
   }
 
   window.addEventListener("resize", resizeCanvas);
-  resizeCanvas();
 
   let isDrawing = false;
-  let currentTool = "pen"; // 'pen' or 'eraser'
+  let currentTool = "pen"; // 'pen', 'strokeEraser', 'eraser'
   let currentColor = "#333333";
+  let paths = []; // 그려진 모든 획 저장 배열
+  let currentPath = null;
 
   function setTool(tool) {
     currentTool = tool;
     document.getElementById("penTool").classList.toggle("active", tool === "pen");
+    document.getElementById("strokeEraserTool").classList.toggle("active", tool === "strokeEraser");
     document.getElementById("eraserTool").classList.toggle("active", tool === "eraser");
     
-    if (tool === "eraser") {
-      canvas.style.cursor = "grab";
+    if (tool === "eraser" || tool === "strokeEraser") {
+      canvas.style.cursor = "pointer";
     } else {
       canvas.style.cursor = "crosshair";
     }
@@ -203,13 +205,41 @@
     btn.classList.add("active");
   }
 
+  function redraw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    paths.forEach(p => {
+      if (p.points.length === 0) return;
+      ctx.beginPath();
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = p.width;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.moveTo(p.points[0].x, p.points[0].y);
+      for (let i = 1; i < p.points.length; i++) {
+        ctx.lineTo(p.points[i].x, p.points[i].y);
+      }
+      ctx.stroke();
+    });
+  }
+
   function startDrawing(e) {
     isDrawing = true;
-    ctx.beginPath();
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX || e.touches[0].clientX) - rect.left;
     const y = (e.clientY || e.touches[0].clientY) - rect.top;
-    ctx.moveTo(x, y);
+
+    if (currentTool === "pen") {
+      currentPath = {
+        color: currentColor,
+        width: parseInt(document.getElementById("lineWidth").value),
+        points: [{x, y}]
+      };
+      paths.push(currentPath);
+    } else if (currentTool === "strokeEraser") {
+      eraseStrokeAt(x, y);
+    } else if (currentTool === "eraser") {
+      erasePixelAt(x, y);
+    }
   }
 
   function draw(e) {
@@ -219,20 +249,85 @@
     const x = (e.clientX || e.touches[0].clientX) - rect.left;
     const y = (e.clientY || e.touches[0].clientY) - rect.top;
 
-    if (currentTool === "eraser") {
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = Math.max(document.getElementById("lineWidth").value * 2, 15); // 지우개는 좀 더 두껍게
-    } else {
-      ctx.strokeStyle = currentColor;
-      ctx.lineWidth = document.getElementById("lineWidth").value;
+    if (currentTool === "pen") {
+      currentPath.points.push({x, y});
+      redraw();
+    } else if (currentTool === "strokeEraser") {
+      eraseStrokeAt(x, y);
+    } else if (currentTool === "eraser") {
+      erasePixelAt(x, y);
     }
-
-    ctx.lineTo(x, y);
-    ctx.stroke();
   }
 
   function stopDrawing() {
     isDrawing = false;
+    currentPath = null;
+  }
+
+  // 획 지우개: 클릭/드래그한 위치와 가까운 획(Path) 전체를 삭제
+  function eraseStrokeAt(x, y) {
+    const eraserRadius = Math.max(document.getElementById("lineWidth").value * 1.5, 15);
+    let modified = false;
+
+    paths = paths.filter(p => {
+      let hit = false;
+      for (let pt of p.points) {
+        const dist = Math.hypot(pt.x - x, pt.y - y);
+        if (dist < eraserRadius + p.width / 2) {
+          hit = true;
+          break;
+        }
+      }
+      if (hit) modified = true;
+      return !hit;
+    });
+
+    if (modified) {
+      redraw();
+    }
+  }
+
+  // 동그란 지우개: 자유롭게 지나간 자리에 동그란 영역만큼 픽셀/획을 지우거나 구멍을 냄
+  // 구현 편의상 해당 반경 안에 있는 점들을 path에서 제거하거나, 배경색으로 덮어쓰기 대신 path에서 해당 세그먼트를 필터링
+  function erasePixelAt(x, y) {
+    const eraserRadius = Math.max(document.getElementById("lineWidth").value * 2, 15);
+    let modified = false;
+
+    // 각 패스의 포인트들 중 지우개 반경 내에 있는 점들을 제거하거나 패스를 쪼갬
+    paths = paths.map(p => {
+      let newPoints = [];
+      let splitPaths = [];
+      
+      for (let pt of p.points) {
+        const dist = Math.hypot(pt.x - x, pt.y - y);
+        if (dist < eraserRadius) {
+          modified = true;
+          if (newPoints.length > 0) {
+            splitPaths.push({ ...p, points: newPoints });
+            newPoints = [];
+          }
+        } else {
+          newPoints.push(pt);
+        }
+      }
+      if (newPoints.length > 0) {
+        splitPaths.push({ ...p, points: newPoints });
+      }
+      return splitPaths;
+    }).flat();
+
+    if (modified) {
+      redraw();
+      // 지우는 동안 마우스 커서 위치에 동그란 지우개 가이드를 살짝 보여주거나 실시간 반영
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, eraserRadius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   canvas.addEventListener("mousedown", startDrawing);
@@ -246,7 +341,8 @@
 
   function clearBoard() {
     if (confirm("화이트보드를 비우시겠습니까?")) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      paths = [];
+      redraw();
     }
   }
 
