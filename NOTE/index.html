@@ -173,8 +173,17 @@
 
   function resizeCanvas() {
     const rect = canvas.parentElement.getBoundingClientRect();
+    // 캔버스 크기 변경 시 기존 그려진 내용이 유실되지 않도록 임시 이미지 저장
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext("2d");
+    tempCtx.drawImage(canvas, 0, 0);
+
     canvas.width = rect.width;
     canvas.height = rect.height;
+    
+    // 다시 그리기
     redraw();
   }
 
@@ -185,6 +194,11 @@
   let currentColor = "#333333";
   let paths = []; // 그려진 모든 획 저장 배열
   let currentPath = null;
+
+  // 최초 로드 시 캔버스 크기 확실히 설정
+  const initialRect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = initialRect.width;
+  canvas.height = initialRect.height;
 
   function setTool(tool) {
     currentTool = tool;
@@ -225,8 +239,8 @@
   function startDrawing(e) {
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches[0].clientX) - rect.left;
-    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
 
     if (currentTool === "pen") {
       currentPath = {
@@ -244,14 +258,15 @@
 
   function draw(e) {
     if (!isDrawing) return;
-    e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches[0].clientX) - rect.left;
-    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
 
     if (currentTool === "pen") {
-      currentPath.points.push({x, y});
-      redraw();
+      if (currentPath) {
+        currentPath.points.push({x, y});
+        redraw();
+      }
     } else if (currentTool === "strokeEraser") {
       eraseStrokeAt(x, y);
     } else if (currentTool === "eraser") {
@@ -264,7 +279,6 @@
     currentPath = null;
   }
 
-  // 획 지우개: 클릭/드래그한 위치와 가까운 획(Path) 전체를 삭제
   function eraseStrokeAt(x, y) {
     const eraserRadius = Math.max(document.getElementById("lineWidth").value * 1.5, 15);
     let modified = false;
@@ -287,13 +301,10 @@
     }
   }
 
-  // 동그란 지우개: 자유롭게 지나간 자리에 동그란 영역만큼 픽셀/획을 지우거나 구멍을 냄
-  // 구현 편의상 해당 반경 안에 있는 점들을 path에서 제거하거나, 배경색으로 덮어쓰기 대신 path에서 해당 세그먼트를 필터링
   function erasePixelAt(x, y) {
     const eraserRadius = Math.max(document.getElementById("lineWidth").value * 2, 15);
     let modified = false;
 
-    // 각 패스의 포인트들 중 지우개 반경 내에 있는 점들을 제거하거나 패스를 쪼갬
     paths = paths.map(p => {
       let newPoints = [];
       let splitPaths = [];
@@ -318,26 +329,36 @@
 
     if (modified) {
       redraw();
-      // 지우는 동안 마우스 커서 위치에 동그란 지우개 가이드를 살짝 보여주거나 실시간 반영
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(x, y, eraserRadius, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
-      ctx.stroke();
-      ctx.restore();
     }
+
+    // 지우개 가이드 표시
+    redraw();
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, eraserRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.stroke();
+    ctx.restore();
   }
 
+  // 이벤트 리스너 등록 (passive: false 설정으로 모바일 스크롤 방해 및 캔버스 드로잉 오류 해결)
   canvas.addEventListener("mousedown", startDrawing);
-  canvas.addEventListener("mousemove", draw);
-  canvas.addEventListener("mouseup", stopDrawing);
-  canvas.addEventListener("mouseleave", stopDrawing);
+  window.addEventListener("mousemove", draw);
+  window.addEventListener("mouseup", stopDrawing);
 
-  canvas.addEventListener("touchstart", startDrawing);
-  canvas.addEventListener("touchmove", draw);
-  canvas.addEventListener("touchend", stopDrawing);
+  canvas.addEventListener("touchstart", (e) => {
+    startDrawing(e);
+    e.preventDefault();
+  }, { passive: false });
+
+  window.addEventListener("touchmove", (e) => {
+    draw(e);
+    e.preventDefault();
+  }, { passive: false });
+
+  window.addEventListener("touchend", stopDrawing);
 
   function clearBoard() {
     if (confirm("화이트보드를 비우시겠습니까?")) {
