@@ -1,81 +1,107 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>코딩과 함께라면_메모장_메모 생성</title>
 
   <style>
     body {
-      font-family: sans-serif;
-      background: #f0f0f0;
-      padding: 20px;
+      font-family: 'Malgun Gothic', sans-serif;
+      background: #f4f6f9;
+      padding: 15px 20px;
+      color: #333;
     }
 
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     button {
-      padding: 10px 14px;
+      padding: 8px 14px;
       border: none;
-      border-radius: 14px;
-      background: white;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #333;
+      font-weight: bold;
       cursor: pointer;
       margin: 3px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: background 0.2s;
+      font-size: 13px;
     }
 
     button:hover {
-      background: #e6e6e6;
+      background-color: #e6e6e6;
     }
 
     .card {
       background: white;
-      padding: 20px;
-      border-radius: 20px;
+      padding: 16px 20px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 14px;
+      color: #2c3e50;
+      font-size: 1.1rem;
     }
 
     input,
     textarea {
       width: 100%;
       box-sizing: border-box;
-      border: none;
-      border-radius: 14px;
-      padding: 12px;
-      margin-top: 10px;
-      background: #f5f5f5;
-      font-family: sans-serif;
+      border: 1px solid #e1e8ed;
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-top: 6px;
+      background: #f8fafc;
+      font-family: 'Malgun Gothic', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #27ae60;
+      background: white;
     }
 
     textarea {
       resize: vertical;
       min-height: 300px;
-      font-family: monospace;
+      font-family: 'Malgun Gothic', sans-serif;
+      line-height: 1.5;
     }
 
     .label {
-      margin-top: 15px;
+      margin-top: 12px;
       font-weight: bold;
+      font-size: 14px;
+      color: #34495e;
     }
 
     .bottom {
-      margin-top: 20px;
+      margin-top: 16px;
       text-align: right;
     }
 
-            #version {
-  position: fixed;
-  right: 15px;
-  bottom: 15px;
-  background: rgba(0,0,0,0.7);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  z-index: 9999;
-}
-    
+    #version {
+      position: fixed;
+      right: 15px;
+      bottom: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      z-index: 9999;
+    }
   </style>
 </head>
 
@@ -92,28 +118,27 @@
   <input id="titleInput" placeholder="제목을 입력하세요.">
 
   <div class="label">PIN (4자리)</div>
-  <input id="pinInput" type="password" maxlength="4" inputmode="numeric" placeholder="PIN 입력">
+  <input id="pinInput" type="password" maxlength="4" inputmode="numeric" placeholder="숫자 4자리 입력">
 
   <div class="label">내용</div>
   <textarea id="contentInput" placeholder="내용을 입력하세요."></textarea>
 
   <div class="bottom">
-    <button onclick="saveMemo()">저장</button>
+    <button onclick="saveMemo()" style="background: #27ae60; color: white;">저장</button>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    where
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
   
-  // 🔥 Firebase 설정
   const firebaseConfig = {
     apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
     authDomain: "memo-5123c.firebaseapp.com",
@@ -126,12 +151,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // 🔥 ID 생성
-  function generateId() {
-    return Math.random().toString(36).substring(2, 10);
-  }
-
-  // 🔥 저장
   async function saveMemo() {
     const title = document.getElementById("titleInput").value.trim();
     const pin = document.getElementById("pinInput").value.trim();
@@ -156,21 +175,15 @@
       alert("PIN은 4자리여야 합니다.");
       return;
     }
-    const q =
-      query(
-        collection(db, "notes"),
-        where("title", "==", title)
-      );
-    
-    const snap =
-      await getDocs(q);
+
+    const q = query(collection(db, "notes"), where("title", "==", title));
+    const snap = await getDocs(q);
     
     if (!snap.empty) {
-    
       alert("이미 존재하는 제목입니다.");
       return;
-    
     }
+
     try {
       await addDoc(collection(db, "notes"), {
         title: title,
@@ -194,12 +207,11 @@
     location.href = "index.html";
   }
 
-  // 🔥 module 대응 (필수)
   window.saveMemo = saveMemo;
   window.goBack = goBack;
 </script>
-<div id="version">
-  v26.6.27.2
-</div>
+
+<div id="version">v26.6.27.2</div>
+
 </body>
 </html>
