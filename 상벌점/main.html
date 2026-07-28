@@ -173,7 +173,10 @@
 <div class="card" id="myInfo">
   로딩중...
 </div>
-
+<div class="card" id="rewardBox">
+로딩중...
+</div>
+  
 <button onclick="selectAll()">모두 선택</button>
 <button onclick="clearAll()">모두 해제</button>
 
@@ -206,7 +209,8 @@ import {
   doc,
   getDoc,
   updateDoc,
-  increment
+  increment,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -240,7 +244,18 @@ const myData = mySnap.data();
 if (myData.role === "president") {
   document.getElementById("adminBtn").style.display = "inline-block";
 }
+const rewardRef = doc(db,"reward","main");
 
+const rewardSnap = await getDoc(rewardRef);
+
+if(!rewardSnap.exists()){
+
+  await setDoc(rewardRef,{
+    stage:0,
+    totalScore:0
+  });
+
+}
 /* 점수 색상 */
 function formatScore(score) {
 
@@ -270,6 +285,47 @@ document.getElementById("myInfo").innerHTML =
   " / 점수: " + formatScore(myData.score) +
   " / 권한: " + roleToText(myData.role);
 
+/*대충 아무대나 붙여넣음*/
+const rewardData =
+(await getDoc(rewardRef)).data();
+
+const stage =
+rewardData.stage;
+
+const totalScore =
+rewardData.totalScore;
+
+const target =
+250*(2**stage);
+
+const bonus =
+2**stage;
+
+const percent =
+Math.min(
+100,
+(totalScore/target*100)
+).toFixed(1);
+
+document
+.getElementById("rewardBox")
+.innerHTML=
+
+`
+<b>공동 목표</b><br><br>
+
+현재 총점 :
+${totalScore}점<br>
+
+다음 목표 :
+${target}점<br>
+
+달성률 :
+${percent}%<br>
+
+달성 보상 :
++${bonus}점
+`;
 /* 유저 목록 */
 const listDiv = document.getElementById("userList");
 
@@ -446,9 +502,15 @@ window.apply = async () => {
 
     for (const id of selectedUsers) {
 
-      await updateDoc(doc(db, "users", id), {
-        score: increment(val)
-      });
+      await updateDoc(
+      rewardRef,
+      {
+        totalScore:
+        increment(
+          val * selectedUsers.size
+        )
+      }
+    );
 
     }
 
