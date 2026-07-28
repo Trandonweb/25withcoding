@@ -6,108 +6,165 @@
   <title>코딩과 함께라면_메모장_휴지통</title>
 
   <style>
-
     body {
-      font-family: sans-serif;
-      background: #f0f0f0;
+      font-family: 'Malgun Gothic', sans-serif;
+      background: #f4f6f9;
       margin: 0;
-      padding: 20px;
+      padding: 15px 20px;
+      color: #333;
     }
 
-    .top {
-      margin-bottom: 15px;
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .left-buttons {
       display: flex;
       gap: 8px;
     }
 
     button {
-      padding: 10px 14px;
+      padding: 8px 14px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #333;
+      font-weight: bold;
       cursor: pointer;
-      background: white;
+      margin: 3px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: background 0.2s;
+      font-size: 13px;
     }
 
     button:hover {
-      background: #eee;
+      background-color: #e6e6e6;
     }
 
     .admin-btn {
-      background: #ffe9b8;
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .admin-btn:hover {
+      background: #fde68a;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 14px;
+      color: #2c3e50;
+      font-size: 1.1rem;
     }
 
     .card {
       background: white;
-      padding: 15px;
+      padding: 16px 20px;
       border-radius: 16px;
-      margin-top: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .memo {
-      background: #f9f9f9;
-      padding: 12px;
+      background: #fdfdfe;
+      padding: 12px 16px;
       border-radius: 12px;
+      border: 1px solid #edf2f7;
       margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    .memo:hover {
+      background: #f8fafc;
+      border-color: #cbd5e0;
+    }
+
+    .memo-info {
+      flex: 1;
+    }
+
+    .memo-title {
+      font-weight: bold;
+      font-size: 15px;
+      color: #2c3e50;
+    }
+
+    .memo-meta {
+      font-size: 12px;
+      color: #718096;
+      margin-top: 4px;
     }
 
     .empty {
-      color: gray;
+      color: #a0aec0;
       text-align: center;
-      margin-top: 30px;
+      padding: 20px;
+      font-size: 14px;
     }
 
     .buttons {
-      margin-top: 10px;
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .restore {
-      background: #dfffe0;
+      background: #d1e7dd;
+      color: #0f5132;
+    }
+
+    .restore:hover {
+      background: #badbcc;
     }
 
     .delete {
-      background: #ffdede;
+      background: #f8d7da;
+      color: #842029;
+    }
+
+    .delete:hover {
+      background: #f5c2c7;
     }
 
     .admin-badge {
-      color: red;
-      font-size: 12px;
-      margin-top: 5px;
+      display: inline-block;
+      background: #f8d7da;
+      color: #842029;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin-top: 4px;
       font-weight: bold;
     }
 
     #version {
       position: fixed;
       right: 15px;
-      bottom: 15px;
+      bottom: 10px;
       background: rgba(0,0,0,0.7);
       color: white;
-      padding: 6px 10px;
-      border-radius: 10px;
-      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
       z-index: 9999;
     }
-
   </style>
 </head>
 
 <body>
 
-<div class="top">
-
-  <button onclick="goList()">
-    ← 목록
-  </button>
-
-  <button
-    class="admin-btn"
-    onclick="adminLogin()"
-  >
-    관리자
-  </button>
-
+<div class="top-bar">
+  <div class="left-buttons">
+    <button onclick="goList()">← 목록</button>
+  </div>
+  <button class="admin-btn" onclick="adminLogin()">관리자</button>
 </div>
 
 <h2>🗑 휴지통</h2>
@@ -118,9 +175,7 @@
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -128,8 +183,7 @@ import {
   updateDoc,
   doc,
   deleteDoc
-}
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const MASTER_KEY = "20262326";
 
@@ -140,188 +194,87 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
-
-const listDiv =
-  document.getElementById("list");
-
-// 관리자 여부
-
+const listDiv = document.getElementById("list");
 let isAdmin = false;
 
 async function loadTrash() {
-
-  const snap =
-    await getDocs(collection(db, "notes"));
-
+  const snap = await getDocs(collection(db, "notes"));
   listDiv.innerHTML = "";
-
   let hasData = false;
 
   snap.forEach(docu => {
-
     const data = docu.data();
 
-    // 휴지통만 표시
-
     if (!data.deleted) return;
-
-    // 최종삭제는 관리자만
-
     if (data.delete && !isAdmin) return;
 
     hasData = true;
-
-    const div =
-      document.createElement("div");
-
+    const div = document.createElement("div");
     div.className = "memo";
 
     div.innerHTML = `
-
-      <b>${data.title}</b><br>
-
-      <small>
-        👤 ${data.authorName || "unknown"}
-      </small>
-
-      ${
-        data.delete
-        ? `
-          <div class="admin-badge">
-            ⛔ 최종삭제됨
-          </div>
-        `
-        : ""
-      }
-
+      <div class="memo-info">
+        <div class="memo-title">📄 ${data.title}</div>
+        <div class="memo-meta">👤 ${data.authorName || "unknown"}</div>
+        ${data.delete ? `<div class="admin-badge">⛔ 최종삭제됨</div>` : ""}
+      </div>
       <div class="buttons">
-
-        <button
-          class="restore"
-          onclick="restoreMemo('${docu.id}')"
-        >
-          복구
-        </button>
-
-        ${
-          !data.delete
-          ? `
-            <button
-              class="delete"
-              onclick="deleteForever('${docu.id}')"
-            >
-              영구삭제
-            </button>
-          `
-          : ""
-        }
-
-        ${
-          isAdmin && data.delete
-          ? `
-            <button
-              class="delete"
-              onclick="realDelete('${docu.id}')"
-            >
-              DB삭제
-            </button>
-          `
-          : ""
-        }
-
+        <button class="restore" onclick="restoreMemo('${docu.id}')">복구</button>
+        ${!data.delete ? `<button class="delete" onclick="deleteForever('${docu.id}')">영구삭제</button>` : ""}
+        ${isAdmin && data.delete ? `<button class="delete" onclick="realDelete('${docu.id}')">DB삭제</button>` : ""}
       </div>
     `;
 
     listDiv.appendChild(div);
-
   });
 
   if (!hasData) {
-
-    listDiv.innerHTML =
-      "<div class='empty'>휴지통이 비어있음</div>";
-
+    listDiv.innerHTML = "<div class='empty'>휴지통이 비어있습니다.</div>";
   }
-
 }
 
 function adminLogin() {
-
-  const pw =
-    prompt("마스터키 입력");
-
+  const pw = prompt("마스터키 입력");
   if (pw !== MASTER_KEY) {
-
     alert("마스터키 틀림");
     return;
-
   }
-
   isAdmin = true;
-
   alert("관리자 모드 활성화");
-
   loadTrash();
-
 }
 
 async function restoreMemo(id) {
-
-  await updateDoc(
-    doc(db, "notes", id),
-    {
-      deleted: false,
-      delete: false
-    }
-  );
-
+  await updateDoc(doc(db, "notes", id), {
+    deleted: false,
+    delete: false
+  });
   loadTrash();
-
 }
 
 async function deleteForever(id) {
-
-  const ok =
-    confirm("영구삭제할까요?");
-
+  const ok = confirm("영구삭제할까요?");
   if (!ok) return;
 
-  await updateDoc(
-    doc(db, "notes", id),
-    {
-      delete: true
-    }
-  );
-
+  await updateDoc(doc(db, "notes", id), {
+    delete: true
+  });
   alert("영구삭제 완료");
-
   loadTrash();
-
 }
 
 async function realDelete(id) {
-
   if (!isAdmin) return;
-
-  const ok =
-    confirm("진짜 DB에서 삭제할까요?");
-
+  const ok = confirm("진짜 DB에서 삭제할까요?");
   if (!ok) return;
 
-  await deleteDoc(
-    doc(db, "notes", id)
-  );
-
+  await deleteDoc(doc(db, "notes", id));
   alert("DB삭제 완료");
-
   loadTrash();
-
 }
 
 function goList() {
-
   location.href = "index.html";
-
 }
 
 window.restoreMemo = restoreMemo;
@@ -334,9 +287,7 @@ loadTrash();
 
 </script>
 
-<div id="version">
-  v26.6.27.2
-</div>
+<div id="version">v26.6.27.2</div>
 
 </body>
 </html>
