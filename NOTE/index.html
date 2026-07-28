@@ -104,6 +104,17 @@
       transform: scale(1.1);
     }
 
+    .tool-btn {
+      background: #ffffff;
+      border: 1px solid #e1e8ed;
+    }
+
+    .tool-btn.active {
+      background: #2c3e50;
+      color: white;
+      border-color: #2c3e50;
+    }
+
     #version {
       position: fixed;
       right: 15px;
@@ -135,16 +146,22 @@
   </div>
 
   <div class="controls">
-    <span style="font-size: 13px; font-weight: bold; color: #34495e;">색상:</span>
-    <button class="color-btn active" style="background: #333333;" onclick="setColor('#333333', this)"></button>
-    <button class="color-btn" style="background: #e74c3c;" onclick="setColor('#e74c3c', this)"></button>
-    <button class="color-btn" style="background: #3498db;" onclick="setColor('#3498db', this)"></button>
-    <button class="color-btn" style="background: #27ae60;" onclick="setColor('#27ae60', this)"></button>
-    <button class="color-btn" style="background: #f1c40f;" onclick="setColor('#f1c40f', this)"></button>
+    <span style="font-size: 13px; font-weight: bold; color: #34495e;">도구:</span>
+    <button class="tool-btn active" id="penTool" onclick="setTool('pen')">✏️ 펜</button>
+    <button class="tool-btn" id="eraserTool" onclick="setTool('eraser')">🧹 지우개</button>
+
+    <div id="colorContainer" style="display: flex; gap: 6px; align-items: center; margin-left: 10px;">
+      <span style="font-size: 13px; font-weight: bold; color: #34495e;">색상:</span>
+      <button class="color-btn active" style="background: #333333;" onclick="setColor('#333333', this)"></button>
+      <button class="color-btn" style="background: #e74c3c;" onclick="setColor('#e74c3c', this)"></button>
+      <button class="color-btn" style="background: #3498db;" onclick="setColor('#3498db', this)"></button>
+      <button class="color-btn" style="background: #27ae60;" onclick="setColor('#27ae60', this)"></button>
+      <button class="color-btn" style="background: #f1c40f;" onclick="setColor('#f1c40f', this)"></button>
+    </div>
     
     <div style="margin-left: auto; display: flex; gap: 6px; align-items: center;">
       <span style="font-size: 13px; font-weight: bold; color: #34495e;">두께:</span>
-      <input type="range" id="lineWidth" min="1" max="20" value="3" style="width: 100px; cursor: pointer;">
+      <input type="range" id="lineWidth" min="1" max="40" value="3" style="width: 100px; cursor: pointer;">
     </div>
   </div>
 </div>
@@ -165,7 +182,20 @@
   resizeCanvas();
 
   let isDrawing = false;
+  let currentTool = "pen"; // 'pen' or 'eraser'
   let currentColor = "#333333";
+
+  function setTool(tool) {
+    currentTool = tool;
+    document.getElementById("penTool").classList.toggle("active", tool === "pen");
+    document.getElementById("eraserTool").classList.toggle("active", tool === "eraser");
+    
+    if (tool === "eraser") {
+      canvas.style.cursor = "grab";
+    } else {
+      canvas.style.cursor = "crosshair";
+    }
+  }
 
   function setColor(color, btn) {
     currentColor = color;
@@ -189,8 +219,14 @@
     const x = (e.clientX || e.touches[0].clientX) - rect.left;
     const y = (e.clientY || e.touches[0].clientY) - rect.top;
 
-    ctx.strokeStyle = currentColor;
-    ctx.lineWidth = document.getElementById("lineWidth").value;
+    if (currentTool === "eraser") {
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = Math.max(document.getElementById("lineWidth").value * 2, 15); // 지우개는 좀 더 두껍게
+    } else {
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = document.getElementById("lineWidth").value;
+    }
+
     ctx.lineTo(x, y);
     ctx.stroke();
   }
@@ -218,6 +254,7 @@
     location.href = "index.html";
   }
 
+  window.setTool = setTool;
   window.setColor = setColor;
   window.clearBoard = clearBoard;
   window.goBack = goBack;
