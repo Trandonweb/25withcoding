@@ -6,42 +6,50 @@
 
   <style>
     body {
-      font-family: sans-serif;
-      background: #f0f0f0;
-      padding: 20px;
+      font-family: 'Malgun Gothic', sans-serif;
+      background: #f4f6f9;
+      padding: 15px 20px;
+      color: #333;
     }
 
     .notice-box {
-      background: #fff7d1;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 15px;
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .notice-title {
       font-weight: bold;
-      margin-bottom: 10px;
-      font-size: 18px;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      color: #d97706;
     }
 
     .notice-item {
       background: white;
-      border-radius: 10px;
-      padding: 12px;
-      margin-top: 8px;
-      transition: 0.2s;
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-top: 6px;
+      border: 1px solid #fef3c7;
+      transition: background 0.2s;
       font-weight: bold;
+      font-size: 14px;
+      color: #b45309;
     }
 
     .notice-item:hover {
-      background: #f3f3f3;
+      background: #fffdef;
     }
 
     .top-bar {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       margin-bottom: 10px;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
@@ -52,58 +60,98 @@
     }
 
     button {
-      padding: 10px 14px;
+      padding: 8px 14px;
       border: none;
       border-radius: 12px;
-      background: white;
+      background: #ffffff;
+      color: #333;
+      font-weight: bold;
       cursor: pointer;
+      margin: 3px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: background 0.2s;
+      font-size: 13px;
     }
 
     button:hover {
-      background: #e8e8e8;
+      background-color: #e6e6e6;
+    }
+
+    .card {
+      background: white;
+      padding: 14px 18px;
+      border-radius: 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .memo {
-      background: white;
-      padding: 15px;
-      margin-top: 10px;
+      background: #fdfdfe;
+      padding: 12px 16px;
+      margin-top: 8px;
       border-radius: 12px;
+      border: 1px solid #edf2f7;
       cursor: pointer;
       display: flex;
-      align-items: flex-start;
-      gap: 10px;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    .memo:hover {
+      background: #f8fafc;
+      border-color: #cbd5e0;
     }
 
     .memo-content {
       flex: 1;
     }
 
+    .memo-check {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #27ae60;
+    }
+
     .title {
       font-weight: bold;
-      font-size: 17px;
+      font-size: 15px;
+      color: #2c3e50;
     }
 
     .info {
       font-size: 12px;
-      color: gray;
-      margin-top: 5px;
+      color: #718096;
+      margin-top: 4px;
     }
 
     #search {
       width: 100%;
-      padding: 10px;
-      border: none;
+      padding: 10px 14px;
+      border: 1px solid #e1e8ed;
       border-radius: 12px;
       box-sizing: border-box;
+      background: #f8fafc;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    #search:focus {
+      border-color: #27ae60;
+      background: white;
     }
 
     .empty {
       background: white;
       padding: 20px;
-      border-radius: 12px;
+      border-radius: 16px;
       text-align: center;
-      color: gray;
-      margin-top: 10px;
+      color: #a0aec0;
+      margin-top: 8px;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .select-bar {
@@ -116,24 +164,24 @@
     #version {
       position: fixed;
       right: 15px;
-      bottom: 15px;
+      bottom: 10px;
       background: rgba(0,0,0,0.7);
       color: white;
-      padding: 6px 10px;
-      border-radius: 10px;
-      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
       z-index: 9999;
     }
 
     #warning {
       position: fixed;
       left: 15px;
-      bottom: 15px;
+      bottom: 10px;
       background: rgba(0,0,0,0.7);
       color: white;
-      padding: 6px 10px;
-      border-radius: 10px;
-      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
       z-index: 9999;
     }
   </style>
@@ -154,17 +202,21 @@
     <button onclick="goTrash()">휴지통</button>
     <button onclick="resetAll()">초기화</button>
   </div>
-  <button onclick="goCreate()">+ 새 메모</button>
+  <button onclick="goCreate()" style="background: #27ae60; color: white;">+ 새 메모</button>
 </div>
 
-<div class="select-bar">
-  <button onclick="selectAll()">전체 선택</button>
-  <button onclick="deleteSelected()">선택 삭제</button>
+<div class="card" style="padding: 12px 18px; margin-bottom: 10px;">
+  <div class="select-bar" style="margin-bottom: 0;">
+    <button onclick="selectAll()">전체 선택</button>
+    <button onclick="deleteSelected()" style="background: #e74c3c; color: white;">선택 삭제</button>
+  </div>
 </div>
 
-<div style="display:flex; gap:8px; margin-bottom:10px;">
-  <input id="search" placeholder="검색..." onkeydown="handleSearchKey(event)" style="flex:1;">
-  <button onclick="render()">검색</button>
+<div class="card" style="padding: 12px 18px; margin-bottom: 10px;">
+  <div style="display:flex; gap:8px; align-items: center;">
+    <input id="search" placeholder="검색어를 입력하세요..." onkeydown="handleSearchKey(event)">
+    <button onclick="render()">검색</button>
+  </div>
 </div>
 
 <div id="list"></div>
@@ -199,7 +251,6 @@ function isNotice(title) {
 
 async function load() {
   try {
-    // ❗ 쿼리 폭파 및 먹통 방지를 위해 orderBy 구문 제거하고 단순 수집
     const q = query(collection(db, "notes"));
     const snap = await getDocs(q);
 
@@ -208,7 +259,6 @@ async function load() {
       ...d.data()
     }));
 
-    // ❗ 데이터 필드 가리지 않고 유연하게 정렬해주는 JS 단 내림차순 정렬
     notes = rawNotes.sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -269,7 +319,6 @@ function render() {
     const div = document.createElement("div");
     div.className = "memo";
 
-    // 문자열 날짜 포맷팅 방어 조치
     let dateString = "알 수 없음";
     if (n.createdAt) {
       const d = new Date(n.createdAt);
@@ -281,7 +330,7 @@ function render() {
       <div class="memo-content">
         <div class="title">📄 ${n.title}</div>
         <div class="info">
-          👤 ${n.authorName || "guest"} · 🕒 ${dateString}
+          👤 ${n.authorName || "guest"} &nbsp;|&nbsp; 🕒 ${dateString}
         </div>
       </div>
     `;
@@ -340,7 +389,6 @@ async function deleteSelected() {
   load();
 }
 
-// 전역 window 스코프에 바인딩 처리
 window.goHome = goHome;
 window.goCreate = goCreate;
 window.goTrash = goTrash;
@@ -350,7 +398,6 @@ window.deleteSelected = deleteSelected;
 window.handleSearchKey = handleSearchKey;
 window.render = render;
 
-// DOM이 완벽히 그려진 다음 로딩을 개시하여 바인딩 오류 원천 방지
 document.addEventListener("DOMContentLoaded", () => {
   load();
 });
