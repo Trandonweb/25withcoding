@@ -475,7 +475,7 @@ window.clearAll = () => {
   });
 };
 
-/* 점수 적용 */
+/* 점수 적용 (±20점 제한 해제됨) */
 window.apply = async () => {
   if (myData.role === "student") {
     alert("권한이 없습니다.");
@@ -501,11 +501,6 @@ window.apply = async () => {
 
   if (val === 0) {
     alert("0점은 적용할 수 없습니다.");
-    return;
-  }
-
-  if (Math.abs(val) > 20) {
-    alert("최대 ±20점까지 가능합니다.");
     return;
   }
 
