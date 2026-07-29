@@ -23,8 +23,8 @@
       --card-bg: #ffffff;
       --text-color: #111111;
       --header-bg: #F0F0F0;
-      --border-color: #27ae60;
-      --header-text: #27ae60;
+      --border-color: var(--primary-color, #27ae60);
+      --header-text: var(--primary-color, #27ae60);
       --card-hover-bg: #eafff1;
       --btn-bg: #e0e0e0;
       --btn-text: #333333;
@@ -294,21 +294,24 @@
       height: 26px;
       border-radius: 50%;
       cursor: pointer;
-      border: 2px solid transparent;
-      transition: transform 0.2s;
+      border: 3px solid transparent;
+      transition: transform 0.2s, border-color 0.2s;
     }
 
     .color-circle:hover {
       transform: scale(1.1);
     }
 
+    /* 라이트/다크모드 공통 명확한 선택 표시 스타일 수정 */
     .color-circle.selected {
-      border-color: #111;
+      border-color: #111111;
       transform: scale(1.15);
+      box-shadow: 0 0 0 2px var(--card-bg), 0 0 6px rgba(0,0,0,0.3);
     }
 
     body.dark-mode .color-circle.selected {
-      border-color: #fff;
+      border-color: #ffffff;
+      box-shadow: 0 0 0 2px var(--card-bg), 0 0 6px rgba(255,255,255,0.4);
     }
 
     .badge-disabled {
@@ -499,7 +502,6 @@ window.toggleSetting = async function(key, value) {
   saveStoredSettings(settings);
   applySettings(settings);
 
-  // 로그인 상태라면 파이어베이스에도 즉시 동기화 (setDoc + merge 사용으로 안전하게 처리)
   const user = localStorage.getItem("userId");
   if (user) {
     try {
@@ -522,7 +524,6 @@ window.changeThemeColor = async function(color) {
   saveStoredSettings(settings);
   applySettings(settings);
 
-  // 로그인 상태라면 파이어베이스에도 즉시 동기화
   const user = localStorage.getItem("userId");
   if (user) {
     try {
@@ -558,7 +559,6 @@ function goPoint(){
 }
 window.goPoint = goPoint;
 
-// Firestore 설정 확인, 자동 생성 및 로컬 동기화 함수 (setDoc 안전장치 적용)
 async function checkUserSettings(userId) {
     const userRef = doc(db, "users", userId);
     const snap = await getDoc(userRef);
@@ -588,10 +588,8 @@ async function checkUserSettings(userId) {
 
     if (Object.keys(updateData).length > 0) {
         await setDoc(userRef, { settings: updateData }, { merge: true });
-        console.log("기본 설정 생성", updateData);
     }
 
-    // Firebase 값 기준으로 localStorage 및 UI 갱신
     saveStoredSettings(settings);
     applySettings(settings);
 }
@@ -603,7 +601,6 @@ async function updateUI(){
     const adminBtn = document.getElementById("adminBtn");
 
     if (user) {
-        // 로그인 시 파이어베이스 설정 체크 및 동기화 수행
         await checkUserSettings(user);
 
         try {
@@ -666,7 +663,6 @@ async function updateUI(){
 
 updateUI();
 
-// 모달 제어 함수
 window.openSettingsModal = function() {
     syncSettingsUI();
     document.getElementById("settingsModal").classList.add("active");
