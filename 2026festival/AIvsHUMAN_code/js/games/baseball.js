@@ -1,95 +1,96 @@
 // baseball.js
 
-let baseball = {
-    scoreHuman: 0,
-    scoreAI: 0,
+let baseballDifficulty = null;
 
-    inning: 1,
-    maxInning: 3,
 
-    balls: 0,
-    strikes: 0,
+const baseballSettings = {
 
-    mode: "HUMAN_ATTACK",
+    easy:{
+        hitRate:0.55,
+        aiScoreRate:0.25,
+        speed:1200
+    },
 
-    pitch: null,
-    swingTiming: 0,
-    gameEnd: false
+    normal:{
+        hitRate:0.40,
+        aiScoreRate:0.45,
+        speed:900
+    },
+
+    hard:{
+        hitRate:0.25,
+        aiScoreRate:0.70,
+        speed:600
+    }
+
 };
 
 
-// 게임 시작
-function startBaseball() {
 
-    baseball.scoreHuman = 0;
-    baseball.scoreAI = 0;
+// 난이도 선택
+function selectBaseballDifficulty(level){
 
-    baseball.inning = 1;
+    baseballDifficulty = level;
 
-    baseball.balls = 0;
-    baseball.strikes = 0;
+    console.log(
+        "Difficulty:",
+        level
+    );
 
-    baseball.mode = "HUMAN_ATTACK";
-
-    baseball.gameEnd = false;
-
-    renderBaseball();
-
-    console.log("Baseball Start");
-}
-
-
-// 투구
-function pitchBall(type){
-
-    if(baseball.mode !== "AI_ATTACK") return;
-
-    baseball.pitch = type;
-
-    let speed;
-
-    if(type==="fast"){
-        speed = 700;
-    }
-    else if(type==="curve"){
-        speed = 1000;
-    }
-    else{
-        speed = 850;
-    }
-
-
-    setTimeout(()=>{
-
-        baseball.swingTiming = Date.now();
-
-        console.log(
-            "Pitch:",
-            type
-        );
-
-    }, speed);
+    startBaseball();
 
 }
+
+
+
+// 시작 화면
+function baseballMenu(){
+
+    let game=document.getElementById("game");
+
+    game.innerHTML=`
+
+    <h2>⚾ Baseball</h2>
+
+    <h3>난이도 선택</h3>
+
+
+    <button onclick="selectBaseballDifficulty('easy')">
+    🟢 쉬움
+    </button>
+
+
+    <button onclick="selectBaseballDifficulty('normal')">
+    🟡 보통
+    </button>
+
+
+    <button onclick="selectBaseballDifficulty('hard')">
+    🔴 어려움
+    </button>
+
+    `;
+
+}
+
 
 
 
 // 타격
 function swing(){
 
-    if(baseball.mode !== "AI_ATTACK")
+    if(!baseballDifficulty)
         return;
 
 
-    let result = Math.random();
+    let setting =
+    baseballSettings[baseballDifficulty];
 
 
-    if(result < 0.15){
+    let result=Math.random();
 
-        hit("HOME RUN");
 
-    }
-    else if(result < 0.45){
+    if(result < setting.hitRate){
 
         hit("HIT");
 
@@ -104,83 +105,18 @@ function swing(){
 
 
 
-// 안타 처리
-function hit(type){
-
-    console.log(type);
-
-
-    if(type==="HOME RUN"){
-
-        baseball.scoreHuman += 2;
-
-    }
-    else{
-
-        baseball.scoreHuman += 1;
-
-    }
-
-
-    nextTurn();
-}
-
-
-
-// 스트라이크
-function strike(){
-
-    baseball.strikes++;
-
-
-    if(baseball.strikes>=3){
-
-        console.log("Strike Out");
-
-        nextTurn();
-
-    }
-
-    renderBaseball();
-
-}
-
-
-
-// 다음 타석
-function nextTurn(){
-
-    baseball.strikes=0;
-    baseball.balls=0;
-
-
-    if(baseball.mode==="AI_ATTACK"){
-
-        baseball.mode="HUMAN_ATTACK";
-
-    }
-    else{
-
-        baseball.mode="AI_ATTACK";
-
-        aiAttack();
-
-    }
-
-
-    renderBaseball();
-
-}
-
-
 
 // AI 공격
 function aiAttack(){
 
+    let setting =
+    baseballSettings[baseballDifficulty];
+
+
     let result=Math.random();
 
 
-    if(result<0.4){
+    if(result < setting.aiScoreRate){
 
         baseball.scoreAI++;
 
@@ -191,71 +127,17 @@ function aiAttack(){
 
         nextTurn();
 
-    },1000);
+    },setting.speed);
 
 }
 
 
 
-// 결과 표시
-function renderBaseball(){
+// 외부 실행
+window.Baseball={
 
-    let screen=document.getElementById("game");
-
-
-    if(!screen) return;
-
-
-    screen.innerHTML=`
-
-    <h2>⚾ Baseball</h2>
-
-    <h3>
-    HUMAN ${baseball.scoreHuman}
-    :
-    ${baseball.scoreAI} AI
-    </h3>
-
-
-    <p>
-    ${baseball.inning}회
-    </p>
-
-
-    <p>
-    ${baseball.mode==="AI_ATTACK"
-    ?"AI 투구 중"
-    :"타격 준비"}
-    </p>
-
-
-    <button onclick="swing()">
-    🏏 Swing
-    </button>
-
-    <button onclick="pitchBall('fast')">
-    🔥 직구
-    </button>
-
-    <button onclick="pitchBall('curve')">
-    🌀 커브
-    </button>
-
-    <button onclick="pitchBall('slider')">
-    ↔ 슬라이더
-    </button>
-
-    `;
-
-}
-
-
-
-// 외부 호출용
-window.Baseball = {
-
+    menu:baseballMenu,
     start:startBaseball,
-    swing:swing,
-    pitch:pitchBall
+    swing:swing
 
 };
