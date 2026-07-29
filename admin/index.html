@@ -17,6 +17,9 @@
       --header-text: var(--primary-color, #27ae60);
       --card-hover-bg: color-mix(in srgb, var(--primary-color) 8%, white);
       --primary-color: #27ae60;
+      --btn-bg: #e0e0e0;
+      --btn-text: #333333;
+      --btn-hover: #d0d0d0;
     }
 
     body.dark-mode {
@@ -27,6 +30,9 @@
       --border-color: var(--primary-color);
       --header-text: var(--primary-color);
       --card-hover-bg: color-mix(in srgb, var(--primary-color) 15%, #1E1E1E);
+      --btn-bg: #2C2C2C;
+      --btn-text: #FFFFFF;
+      --btn-hover: #3A3A3A;
     }
 
     *{
@@ -63,6 +69,28 @@
         margin-top: 5px;
     }
 
+    .header-right {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .header-btn {
+        background: var(--btn-bg);
+        border: none;
+        color: var(--btn-text);
+        padding: 10px 18px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: background 0.2s;
+    }
+
+    .header-btn:hover {
+        background: var(--btn-hover);
+    }
+
     #logout{
         background: #ff5b5b;
         border: none;
@@ -70,6 +98,8 @@
         padding: 10px 18px;
         border-radius: 12px;
         cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
         transition: filter 0.2s;
     }
 
@@ -162,9 +192,14 @@
 </div>
 
 
-<button id="logout">
-로그아웃
-</button>
+<div class="header-right">
+    <button id="homeBtn" class="header-btn">
+        홈
+    </button>
+    <button id="logout">
+        로그아웃
+    </button>
+</div>
 
 
 </header>
@@ -297,24 +332,22 @@ console.error(e);
 
 }
 
-document.getElementById("logout").onclick=()=>{
-
-localStorage.removeItem("userId");
-
-location.href="/signin/";
-
+// 홈 버튼 클릭 시 /index.html로 이동
+document.getElementById("homeBtn").onclick = () => {
+    location.href = "/index.html";
 };
 
-document.getElementById("mirroring").onclick=()=>{
-
-location.href="/admin/mirroring.html";
-
+document.getElementById("logout").onclick = () => {
+    localStorage.removeItem("userId");
+    location.href = "/signin/";
 };
 
-document.getElementById("users").onclick=()=>{
+document.getElementById("mirroring").onclick = () => {
+    location.href = "/admin/mirroring.html";
+};
 
-location.href="/admin/users.html";
-
+document.getElementById("users").onclick = () => {
+    location.href = "/admin/users.html";
 };
 
 </script>
