@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -12,196 +14,606 @@
 
 <body>
 
-
+<!-- ========================= -->
 <!-- 시작 화면 -->
+<!-- ========================= -->
 
 <div id="start-screen">
 
+    <div id="title-box">
 
-    <h1>
-        METALBUILD
-    </h1>
+        <h1 id="game-title">
+            METALBUILD
+        </h1>
 
-
-    <p class="subtitle">
-        BUILD YOUR OWN MECHA
-    </p>
-
-
-    <button id="start-btn">
-        GAME START
-    </button>
-
-
-</div>
-
-
-
-<!-- 홈 화면 -->
-
-<div id="home-screen" class="hidden">
-
-
-    <div id="coin-area">
-        🪙 Coin : 
-        <span id="coin">
-            0
-        </span>
-    </div>
-
-
-
-    <button id="gacha-btn">
-        🎲 뽑기
-    </button>
-
-
-
-    <div id="stage-area">
-
-        Stage
-
-        <span id="stage">
-            1
-        </span>
-        /100
-
-    </div>
-
-
-
-    <!-- 중앙 메카 -->
-
-    <div id="robot-area">
-
-        🤖
-
-        <p>
-            PLAYER MECHA
+        <p id="sub-title">
+            BUILD • UPGRADE • FIGHT
         </p>
 
     </div>
 
+    <div id="start-buttons">
 
+        <button id="start-btn">
+            ▶ GAME START
+        </button>
 
-    <button id="custom-btn">
+        <button id="guide-btn">
+            📖 게임 방법
+        </button>
 
-        🔧
-        커스터마이징
+        <button id="setting-btn">
+            ⚙ 설정
+        </button>
 
-    </button>
-
-
-
-    <button id="battle-btn">
-
-        ⚔
-        전투
-
-    </button>
-
+    </div>
 
 </div>
 
+<!-- ========================= -->
+<!-- 홈 화면 -->
+<!-- ========================= -->
 
+<div id="home-screen" class="hidden">
 
+    <!-- 좌측 상단 -->
 
+    <div id="top-left">
+
+        <div id="coin-box">
+
+            🪙
+            <span id="coin">
+                0
+            </span>
+
+        </div>
+
+        <button id="gacha-btn">
+
+            🎲 뽑기
+
+        </button>
+
+    </div>
+
+    <!-- 우측 상단 -->
+
+    <div id="top-right">
+
+        <h2>
+
+            STAGE
+
+        </h2>
+
+        <div id="stage-list">
+
+            <!-- JS가 자동 생성 -->
+
+        </div>
+
+    </div>
+
+    <!-- 메카 -->
+
+    <div id="garage-area">
+
+        <canvas
+            id="robotCanvas"
+            width="500"
+            height="650">
+        </canvas>
+
+    </div>
+
+    <!-- 좌측 하단 -->
+
+    <div id="bottom-left">
+
+        <button id="custom-btn">
+
+            🔧 커스터마이징
+
+        </button>
+
+    </div>
+
+    <!-- 우측 하단 -->
+
+    <div id="bottom-right">
+
+        <button id="battle-btn">
+
+            ⚔ 전투 시작
+
+        </button>
+
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 스크립트 -->
+<!-- ========================= -->
+
+<script src="js/main.js"></script>
+<script src="js/robot.js"></script>
+<script src="js/parts.js"></script>
+<script src="js/garage.js"></script>
+<script src="js/enemy.js"></script>
+<script src="js/battle.js"></script>
+
+</body>
+
+</html>
+<!-- ========================= -->
 <!-- 커스터마이징 화면 -->
+<!-- ========================= -->
 
 <div id="custom-screen" class="hidden">
 
-<h2>
-    MECHA CUSTOM
-</h2>
+    <div class="window">
 
+        <div class="window-header">
 
-<div id="parts">
+            <h2>🔧 MECHA CUSTOMIZATION</h2>
 
-<button>
-왼팔
-</button>
+            <button id="close-custom-btn">
+                ✖
+            </button>
 
-<button>
-오른팔
-</button>
+        </div>
 
-<button>
-등1
-</button>
+        <div class="custom-container">
 
-<button>
-등2
-</button>
+            <!-- 메카 미리보기 -->
 
-<button>
-몸통
-</button>
+            <div class="custom-preview">
 
-<button>
-왼쪽 다리
-</button>
+                <canvas
+                    id="customRobotCanvas"
+                    width="420"
+                    height="620">
+                </canvas>
 
-<button>
-오른쪽 다리
-</button>
+            </div>
 
+            <!-- 슬롯 -->
+
+            <div class="custom-slots">
+
+                <button class="slot-btn" data-slot="leftArm">
+                    🛡 왼팔
+                </button>
+
+                <button class="slot-btn" data-slot="rightArm">
+                    🚀 오른팔
+                </button>
+
+                <button class="slot-btn" data-slot="back1">
+                    🎒 등1
+                </button>
+
+                <button class="slot-btn" data-slot="back2">
+                    🎒 등2
+                </button>
+
+                <button class="slot-btn" data-slot="body">
+                    🧩 몸통
+                </button>
+
+                <button class="slot-btn" data-slot="leftLeg">
+                    🦿 왼쪽 다리
+                </button>
+
+                <button class="slot-btn" data-slot="rightLeg">
+                    🦿 오른쪽 다리
+                </button>
+
+            </div>
+
+            <!-- 보유 파츠 -->
+
+            <div id="inventory">
+
+                <h3>보유 파츠</h3>
+
+                <div id="inventory-list">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 
+<!-- ========================= -->
+<!-- 뽑기 화면 -->
+<!-- ========================= -->
 
-<button id="back-btn">
-뒤로가기
-</button>
+<div id="gacha-screen" class="hidden">
 
+    <div class="window">
+
+        <div class="window-header">
+
+            <h2>🎲 GACHA</h2>
+
+            <button id="close-gacha-btn">
+
+                ✖
+
+            </button>
+
+        </div>
+
+        <div id="gacha-content">
+
+            <h3>
+
+                현재 코인
+
+            </h3>
+
+            <p id="gacha-coin">
+
+                0
+
+            </p>
+
+            <button id="normal-gacha">
+
+                일반 뽑기 (100 코인)
+
+            </button>
+
+            <button id="premium-gacha">
+
+                고급 뽑기 (500 코인)
+
+            </button>
+
+            <div id="gacha-result">
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 
+<!-- ========================= -->
+<!-- 파츠 정보창 -->
+<!-- ========================= -->
 
+<div id="part-info" class="hidden">
 
+    <div class="window">
 
+        <h2 id="part-name">
 
+            PART
+
+        </h2>
+
+        <p id="part-rarity">
+
+        </p>
+
+        <p id="part-stat">
+
+        </p>
+
+        <p id="part-description">
+
+        </p>
+
+        <button id="equip-btn">
+
+            장착
+
+        </button>
+
+        <button id="close-info-btn">
+
+            닫기
+
+        </button>
+
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 알림 팝업 -->
+<!-- ========================= -->
+
+<div id="popup" class="hidden">
+
+    <div id="popup-box">
+
+        <h2 id="popup-title">
+
+        </h2>
+
+        <p id="popup-message">
+
+        </p>
+
+        <button id="popup-ok">
+
+            확인
+
+        </button>
+
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 로딩 화면 -->
+<!-- ========================= -->
+
+<div id="loading-screen" class="hidden">
+
+    <div id="loading-box">
+
+        <h2>
+
+            LOADING...
+
+        </h2>
+
+        <div id="loading-bar">
+
+            <div id="loading-fill">
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- ========================= -->
 <!-- 전투 화면 -->
+<!-- ========================= -->
 
 <div id="battle-screen" class="hidden">
 
+    <div id="battle-ui">
 
-<h2>
-BATTLE
-</h2>
+        <!-- 플레이어 -->
 
+        <div class="battle-panel player">
 
-<div id="battle-field">
+            <h2 id="player-name">
+                PLAYER
+            </h2>
 
+            <canvas
+                id="playerBattleCanvas"
+                width="350"
+                height="500">
+            </canvas>
 
-<div>
-🤖 PLAYER
+            <div class="hp-bar">
+
+                <div id="player-hp-fill">
+
+                </div>
+
+            </div>
+
+            <p id="player-hp-text">
+
+                HP 1000 / 1000
+
+            </p>
+
+        </div>
+
+        <!-- 중앙 -->
+
+        <div id="battle-center">
+
+            <h1>
+
+                VS
+
+            </h1>
+
+            <div id="battle-effect">
+
+            </div>
+
+        </div>
+
+        <!-- 적 -->
+
+        <div class="battle-panel enemy">
+
+            <h2 id="enemy-name">
+
+                ENEMY
+
+            </h2>
+
+            <canvas
+                id="enemyBattleCanvas"
+                width="350"
+                height="500">
+            </canvas>
+
+            <div class="hp-bar">
+
+                <div id="enemy-hp-fill">
+
+                </div>
+
+            </div>
+
+            <p id="enemy-hp-text">
+
+                HP 1000 / 1000
+
+            </p>
+
+        </div>
+
+    </div>
+
 </div>
 
+<!-- ========================= -->
+<!-- 승리 화면 -->
+<!-- ========================= -->
 
-VS
+<div id="victory-screen" class="hidden">
 
+    <div class="result-window">
 
-<div>
-🤖 ENEMY
+        <h1>
+
+            MISSION COMPLETE
+
+        </h1>
+
+        <h2>
+
+            승리!
+
+        </h2>
+
+        <p id="reward-coin">
+
+        </p>
+
+        <p id="reward-part">
+
+        </p>
+
+        <button id="victory-home-btn">
+
+            홈으로
+
+        </button>
+
+    </div>
+
 </div>
 
+<!-- ========================= -->
+<!-- 패배 화면 -->
+<!-- ========================= -->
+
+<div id="defeat-screen" class="hidden">
+
+    <div class="result-window">
+
+        <h1>
+
+            MISSION FAILED
+
+        </h1>
+
+        <p>
+
+            메카가 파손되었습니다.
+
+        </p>
+
+        <button id="repair-btn">
+
+            창고로 돌아가기
+
+        </button>
+
+    </div>
 
 </div>
 
+<!-- ========================= -->
+<!-- 엔딩 -->
+<!-- ========================= -->
 
-<button id="result-btn">
+<div id="ending-screen" class="hidden">
 
-전투 결과 확인
+    <div id="ending-box">
 
-</button>
+        <h1>
 
+            THE END
+
+        </h1>
+
+        <h2>
+
+            OMEGA-X 격파 성공
+
+        </h2>
+
+        <p>
+
+            인류는 다시 평화를 되찾았습니다.
+
+        </p>
+
+        <button id="restart-btn">
+
+            처음부터 시작
+
+        </button>
+
+    </div>
 
 </div>
 
+<!-- ========================= -->
+<!-- 효과음 -->
+<!-- ========================= -->
 
+<audio id="bgm" loop></audio>
+
+<audio id="clickSound"></audio>
+
+<audio id="battleSound"></audio>
+
+<audio id="explosionSound"></audio>
+
+<audio id="laserSound"></audio>
+
+<audio id="winSound"></audio>
+
+<audio id="loseSound"></audio>
+
+<audio id="gachaSound"></audio>
+
+<!-- ========================= -->
+<!-- JavaScript -->
+<!-- ========================= -->
 
 <script src="js/main.js"></script>
 
+<script src="js/robot.js"></script>
 
-</body>
-</html>
+<script src="js/parts.js"></script>
+
+<script src="js/garage.js"></script>
+
+<script src="js/enemy.js"></script>
+
+<script src="js/battle.js"></script>
+
+<script src="js/gacha.js"></script>
+
+<script src="js/stage.js"></script>
+
+<script src="js/save.js"></script>
+
+<script src="js/render.js"></script>
