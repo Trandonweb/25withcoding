@@ -1,1 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>가라사대 집중력 게임</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- 배경 효과 -->
+    <div id="backgroundEffect"></div>
+
+    <!-- 메인 -->
+    <div id="game">
+
+        <!-- 타이틀 -->
+        <header>
+
+            <h1>🎮 가라사대 집중력 게임</h1>
+
+            <p>
+                "가라사대"가 붙은 명령만 수행하세요!
+            </p>
+
+        </header>
+
+        <!-- 점수판 -->
+        <section id="scoreBoard">
+
+            <div class="card">
+                <span>점수</span>
+                <h2 id="score">0</h2>
+            </div>
+
+            <div class="card">
+                <span>레벨</span>
+                <h2 id="level">1</h2>
+            </div>
+
+            <div class="card">
+                <span>콤보</span>
+                <h2 id="combo">0</h2>
+            </div>
+
+            <div class="card">
+                <span>최고점수</span>
+                <h2 id="bestScore">0</h2>
+            </div>
+
+        </section>
+
+        <!-- 진행바 -->
+        <section id="timerArea">
+
+            <div id="timerBar">
+
+                <div id="timerFill"></div>
+
+            </div>
+
+            <span id="timeText">5초</span>
+
+        </section>
+
+        <!-- 명령 -->
+        <section id="commandArea">
+
+            <div id="commandBox">
+
+                게임 시작을 눌러주세요!
+
+            </div>
+
+        </section>
+
+        <!-- 버튼 -->
+        <section id="buttons">
+
+            <button id="correctBtn">
+
+                ✅ 수행
+
+            </button>
+
+            <button id="wrongBtn">
+
+                ❌ 무시
+
+            </button>
+
+        </section>
+
+        <!-- 상태 -->
+        <section id="status">
+
+            준비!
+
+        </section>
+
+        <!-- 시작 -->
+        <section id="menu">
+
+            <button id="startBtn">
+
+                ▶ 게임 시작
+
+            </button>
+
+            <button id="restartBtn">
+
+                🔄 다시하기
+
+            </button>
+
+        </section>
+
+        <!-- 업적 -->
+        <section id="achievement">
+
+            <h3>🏆 업적</h3>
+
+            <ul id="achievementList">
+
+                <li>아직 없습니다.</li>
+
+            </ul>
+
+        </section>
+
+        <!-- 통계 -->
+        <section id="statistics">
+
+            <h3>📊 통계</h3>
+
+            <table>
+
+                <tr>
+
+                    <td>정답</td>
+
+                    <td id="correctCount">0</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>오답</td>
+
+                    <td id="wrongCount">0</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>성공률</td>
+
+                    <td id="accuracy">0%</td>
+
+                </tr>
+
+            </table>
+
+        </section>
+
+    </div>
+
+    <!-- 게임 종료 -->
+    <div id="gameOver">
+
+        <h1>🎉 게임 종료!</h1>
+
+        <h2 id="finalScore">
+
+            점수 : 0
+
+        </h2>
+
+        <button id="playAgain">
+
+            다시 플레이
+
+        </button>
+
+    </div>
+
+    <!-- 효과음 -->
+    <audio id="correctSound"></audio>
+
+    <audio id="wrongSound"></audio>
+
+    <audio id="levelUpSound"></audio>
+
+    <audio id="bgm" loop></audio>
+
+    <!-- JS -->
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
