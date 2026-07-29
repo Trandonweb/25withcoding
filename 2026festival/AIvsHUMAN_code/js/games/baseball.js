@@ -1,5 +1,8 @@
 // baseball.js
 
+let gameArea = null;
+
+
 let baseball = {
 
     difficulty: null,
@@ -43,85 +46,94 @@ const baseballLevel = {
 
 
 
-// =====================
-// 시작 메뉴
-// =====================
 
-function openBaseball(){
+// 시작 화면
 
+function openBaseball(container){
 
-    let game=document.getElementById("game");
+    gameArea = container;
 
 
-    game.innerHTML=`
+    gameArea.innerHTML = `
 
     <h1>⚾ Baseball</h1>
 
     <h2>난이도 선택</h2>
 
 
-    <button onclick="selectBaseball('easy')">
+    <button id="easyBtn">
     🟢 쉬움
     </button>
 
 
-    <button onclick="selectBaseball('normal')">
+    <button id="normalBtn">
     🟡 보통
     </button>
 
 
-    <button onclick="selectBaseball('hard')">
+    <button id="hardBtn">
     🔴 어려움
     </button>
-
 
     `;
 
 
+    document
+    .getElementById("easyBtn")
+    .onclick=()=>selectBaseball("easy");
+
+
+    document
+    .getElementById("normalBtn")
+    .onclick=()=>selectBaseball("normal");
+
+
+    document
+    .getElementById("hardBtn")
+    .onclick=()=>selectBaseball("hard");
+
 }
 
 
 
-// =====================
+
+
 // 난이도 선택
-// =====================
 
 function selectBaseball(level){
 
 
-    baseball.difficulty=level;
+    baseball.difficulty = level;
 
 
-    baseball.scoreHuman=0;
-    baseball.scoreAI=0;
+    baseball.scoreHuman = 0;
+    baseball.scoreAI = 0;
 
-    baseball.inning=1;
-    baseball.strikes=0;
+    baseball.inning = 1;
 
-    baseball.mode="HUMAN";
+    baseball.strikes = 0;
+
+    baseball.mode = "HUMAN";
 
 
     renderBaseball();
-
 
 }
 
 
 
-// =====================
-// 화면
-// =====================
+
+
+// 화면 출력
 
 function renderBaseball(){
 
 
-    let game=document.getElementById("game");
+    let lv =
+    baseballLevel[baseball.difficulty];
 
 
-    let lv=baseballLevel[baseball.difficulty];
-
-
-    game.innerHTML=`
+    gameArea.innerHTML = `
 
     <h1>⚾ Baseball</h1>
 
@@ -146,21 +158,30 @@ function renderBaseball(){
     </p>
 
 
-    <button onclick="swing()">
+    <p>
+    스트라이크 : ${baseball.strikes}
+    </p>
+
+
+    <button id="swingBtn">
     🏏 타격
     </button>
 
-
     `;
+
+
+    document
+    .getElementById("swingBtn")
+    .onclick=swing;
 
 
 }
 
 
 
-// =====================
+
+
 // 타격
-// =====================
 
 function swing(){
 
@@ -169,30 +190,32 @@ function swing(){
         return;
 
 
-    let lv=
+
+    let lv =
     baseballLevel[baseball.difficulty];
 
 
-    let result=Math.random();
+    let result = Math.random();
 
 
 
     if(result < lv.hit){
 
 
-        let hit=Math.random();
+        if(Math.random()<0.2){
 
 
-        if(hit<0.2){
+            baseball.scoreHuman += 2;
 
-            baseball.scoreHuman+=2;
 
             alert("🔥 홈런!");
 
         }
         else{
 
+
             baseball.scoreHuman++;
+
 
             alert("⚾ 안타!");
 
@@ -207,17 +230,20 @@ function swing(){
 
 
         alert(
-        "스트라이크 "
-        +
-        baseball.strikes
+            "스트라이크 "
+            +
+            baseball.strikes
         );
 
 
         if(baseball.strikes>=3){
 
+
             baseball.strikes=0;
 
+
             aiTurn();
+
 
             return;
 
@@ -232,9 +258,9 @@ function swing(){
 
 
 
-// =====================
+
+
 // AI 공격
-// =====================
 
 function aiTurn(){
 
@@ -249,8 +275,9 @@ function aiTurn(){
     setTimeout(()=>{
 
 
-        let lv=
+        let lv =
         baseballLevel[baseball.difficulty];
+
 
 
         if(Math.random()<lv.ai){
@@ -259,12 +286,13 @@ function aiTurn(){
             baseball.scoreAI++;
 
 
-            alert("AI 안타!");
+            alert("🤖 AI 안타!");
 
         }
         else{
 
-            alert("AI 아웃!");
+
+            alert("🤖 AI 아웃!");
 
         }
 
@@ -276,19 +304,23 @@ function aiTurn(){
         renderBaseball();
 
 
-
     },1000);
-
 
 
 }
 
 
 
-// 전역 연결
 
-window.openBaseball=openBaseball;
 
-window.selectBaseball=selectBaseball;
+// module export
 
-window.swing=swing;
+export {
+
+    openBaseball,
+
+    selectBaseball,
+
+    swing
+
+};
