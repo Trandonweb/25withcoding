@@ -6,12 +6,76 @@
   <title>코딩과 함께라면_메모장_휴지통</title>
 
   <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --input-bg: #f8fafc;
+      --input-border: #e1e8ed;
+      --btn-bg: #ffffff;
+      --btn-text: #333333;
+      --btn-hover: #e6e6e6;
+      --primary-color: #27ae60;
+
+      --memo-bg: #fdfdfe;
+      --memo-border: #edf2f7;
+      --memo-hover-bg: #f8fafc;
+      --memo-hover-border: #cbd5e0;
+      --title-color: #2c3e50;
+      --info-color: #718096;
+
+      --admin-btn-bg: #fef3c7;
+      --admin-btn-text: #d97706;
+      --admin-btn-hover: #fde68a;
+
+      --restore-bg: #d1e7dd;
+      --restore-text: #0f5132;
+      --restore-hover: #badbcc;
+
+      --delete-bg: #f8d7da;
+      --delete-text: #842029;
+      --delete-hover: #f5c2c7;
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1E1E1E;
+      --text-color: #FFFFFF;
+      --input-bg: #2C2C2C;
+      --input-border: #3A3A3A;
+      --btn-bg: #2C2C2C;
+      --btn-text: #FFFFFF;
+      --btn-hover: #3A3A3A;
+
+      --memo-bg: #1E1E1E;
+      --memo-border: #2C2C2C;
+      --memo-hover-bg: #252525;
+      --memo-hover-border: #3A3A3A;
+      --title-color: #FFFFFF;
+      --info-color: #A0AEC0;
+
+      --admin-btn-bg: #3a3219;
+      --admin-btn-text: #f6ad55;
+      --admin-btn-hover: #4a3e1d;
+
+      --restore-bg: #0f3822;
+      --restore-text: #75b798;
+      --restore-hover: #14492c;
+
+      --delete-bg: #4c1d21;
+      --delete-text: #ea868f;
+      --delete-hover: #5d2228;
+    }
+
     body {
       font-family: 'Malgun Gothic', sans-serif;
-      background: #f4f6f9;
+      background: var(--bg-color);
       margin: 0;
       padding: 15px 20px;
-      color: #333;
+      color: var(--text-color);
+      transition: background 0.2s, color 0.2s;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
 
     .top-bar {
@@ -30,8 +94,8 @@
       padding: 8px 14px;
       border: none;
       border-radius: 12px;
-      background: #ffffff;
-      color: #333;
+      background: var(--btn-bg);
+      color: var(--btn-text);
       font-weight: bold;
       cursor: pointer;
       margin: 3px;
@@ -41,37 +105,38 @@
     }
 
     button:hover {
-      background-color: #e6e6e6;
+      background-color: var(--btn-hover);
     }
 
     .admin-btn {
-      background: #fef3c7;
-      color: #d97706;
+      background: var(--admin-btn-bg);
+      color: var(--admin-btn-text);
     }
 
     .admin-btn:hover {
-      background: #fde68a;
+      background: var(--admin-btn-hover);
     }
 
     h2 {
       margin-top: 0;
       margin-bottom: 14px;
-      color: #2c3e50;
+      color: var(--title-color);
       font-size: 1.1rem;
     }
 
     .card {
-      background: white;
+      background: var(--card-bg);
       padding: 16px 20px;
       border-radius: 16px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--input-border);
     }
 
     .memo {
-      background: #fdfdfe;
+      background: var(--memo-bg);
       padding: 12px 16px;
       border-radius: 12px;
-      border: 1px solid #edf2f7;
+      border: 1px solid var(--memo-border);
       margin: 8px 0;
       display: flex;
       justify-content: space-between;
@@ -81,8 +146,8 @@
     }
 
     .memo:hover {
-      background: #f8fafc;
-      border-color: #cbd5e0;
+      background: var(--memo-hover-bg);
+      border-color: var(--memo-hover-border);
     }
 
     .memo-info {
@@ -92,17 +157,17 @@
     .memo-title {
       font-weight: bold;
       font-size: 15px;
-      color: #2c3e50;
+      color: var(--title-color);
     }
 
     .memo-meta {
       font-size: 12px;
-      color: #718096;
+      color: var(--info-color);
       margin-top: 4px;
     }
 
     .empty {
-      color: #a0aec0;
+      color: var(--info-color);
       text-align: center;
       padding: 20px;
       font-size: 14px;
@@ -116,27 +181,27 @@
     }
 
     .restore {
-      background: #d1e7dd;
-      color: #0f5132;
+      background: var(--restore-bg);
+      color: var(--restore-text);
     }
 
     .restore:hover {
-      background: #badbcc;
+      background: var(--restore-hover);
     }
 
     .delete {
-      background: #f8d7da;
-      color: #842029;
+      background: var(--delete-bg);
+      color: var(--delete-text);
     }
 
     .delete:hover {
-      background: #f5c2c7;
+      background: var(--delete-hover);
     }
 
     .admin-badge {
       display: inline-block;
-      background: #f8d7da;
-      color: #842029;
+      background: var(--delete-bg);
+      color: var(--delete-text);
       font-size: 11px;
       padding: 2px 6px;
       border-radius: 6px;
@@ -180,6 +245,8 @@ import {
   getFirestore,
   collection,
   getDocs,
+  getDoc,
+  setDoc,
   updateDoc,
   doc,
   deleteDoc
@@ -196,6 +263,81 @@ const app = initializeApp({
 const db = getFirestore(app);
 const listDiv = document.getElementById("list");
 let isAdmin = false;
+
+// --- 설정 시스템 모듈화 (localStorage 우선 적용 + Firebase 동기화) ---
+const SETTINGS_KEY = "coding_with_ramen_settings";
+const defaultSettings = {
+  darkMode: false,
+  primaryColor: "#27ae60",
+  keepLogin: true
+};
+
+function getStoredSettings() {
+  const saved = localStorage.getItem(SETTINGS_KEY);
+  if (saved) {
+    try {
+      return { ...defaultSettings, ...JSON.parse(saved) };
+    } catch (e) {
+      return defaultSettings;
+    }
+  }
+  return defaultSettings;
+}
+
+function saveStoredSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function applySettings(settings) {
+  if (settings.darkMode) {
+    document.body.classList.add("dark-mode");
+  } else {
+    document.body.classList.remove("dark-mode");
+  }
+
+  if (settings.primaryColor) {
+    document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+  }
+}
+
+// 1. 페이지 로드 시 localStorage 설정 먼저 즉시 적용 (깜빡임 방지)
+const initialSettings = getStoredSettings();
+applySettings(initialSettings);
+
+// 2. Firebase 설정 체크 및 동기화 함수
+async function checkUserSettings(userId) {
+  const userRef = doc(db, "users", userId);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const firebaseSettings = data.settings || {};
+
+  const settings = {
+    darkMode: firebaseSettings.darkMode ?? defaultSettings.darkMode,
+    primaryColor: firebaseSettings.primaryColor ?? defaultSettings.primaryColor,
+    keepLogin: firebaseSettings.keepLogin ?? defaultSettings.keepLogin
+  };
+
+  const updateData = {};
+  if (firebaseSettings.darkMode === undefined) updateData.darkMode = settings.darkMode;
+  if (firebaseSettings.primaryColor === undefined) updateData.primaryColor = settings.primaryColor;
+  if (firebaseSettings.keepLogin === undefined) updateData.keepLogin = settings.keepLogin;
+
+  if (Object.keys(updateData).length > 0) {
+    await setDoc(userRef, { settings: updateData }, { merge: true });
+  }
+
+  saveStoredSettings(settings);
+  applySettings(settings);
+}
+
+// 로그인 상태인 경우 Firebase 동기화 실행
+const currentUser = localStorage.getItem("userId");
+if (currentUser) {
+  checkUserSettings(currentUser);
+}
 
 async function loadTrash() {
   const snap = await getDocs(collection(db, "notes"));
