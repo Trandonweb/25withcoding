@@ -5,11 +5,66 @@
   <title>메모 보기</title>
 
   <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --input-bg: #f8fafc;
+      --input-border: #e1e8ed;
+      --btn-bg: #ffffff;
+      --btn-text: #333333;
+      --btn-hover: #e6e6e6;
+      --primary-color: #27ae60;
+
+      --content-bg: #f8fafc;
+      --content-border: #edf2f7;
+      --title-color: #2c3e50;
+      --info-color: #718096;
+      --pin-title-color: #34495e;
+
+      --edit-btn-bg: #2c3e50;
+      --edit-btn-text: #ffffff;
+      --edit-btn-hover: #1a252f;
+
+      --delete-btn-bg: #e74c3c;
+      --delete-btn-text: #ffffff;
+      --delete-btn-hover: #c0392b;
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1E1E1E;
+      --text-color: #FFFFFF;
+      --input-bg: #2C2C2C;
+      --input-border: #3A3A3A;
+      --btn-bg: #2C2C2C;
+      --btn-text: #FFFFFF;
+      --btn-hover: #3A3A3A;
+
+      --content-bg: #252525;
+      --content-border: #3A3A3A;
+      --title-color: #FFFFFF;
+      --info-color: #A0AEC0;
+      --pin-title-color: #FFFFFF;
+
+      --edit-btn-bg: #334155;
+      --edit-btn-text: #FFFFFF;
+      --edit-btn-hover: #475569;
+
+      --delete-btn-bg: #991b1b;
+      --delete-btn-text: #FFFFFF;
+      --delete-btn-hover: #7f1d1d;
+    }
+
     body {
       font-family: 'Malgun Gothic', sans-serif;
-      background: #f4f6f9;
+      background: var(--bg-color);
       padding: 15px 20px;
-      color: #333;
+      color: var(--text-color);
+      transition: background 0.2s, color 0.2s;
+      min-height: 100vh;
+      box-sizing: border-box;
+      margin: 0;
     }
 
     .top-bar {
@@ -23,8 +78,8 @@
       padding: 8px 14px;
       border: none;
       border-radius: 12px;
-      background: #ffffff;
-      color: #333;
+      background: var(--btn-bg);
+      color: var(--btn-text);
       font-weight: bold;
       cursor: pointer;
       margin: 3px;
@@ -34,28 +89,29 @@
     }
 
     button:hover {
-      background-color: #e6e6e6;
+      background-color: var(--btn-hover);
     }
 
     .card {
-      background: white;
+      background: var(--card-bg);
       padding: 16px 20px;
       border-radius: 16px;
       position: relative;
       min-height: 350px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--input-border);
     }
 
     h2 {
       margin-top: 0;
       margin-bottom: 6px;
-      color: #2c3e50;
+      color: var(--title-color);
       font-size: 1.2rem;
     }
 
     .meta {
       font-size: 12px;
-      color: #718096;
+      color: var(--info-color);
       margin-bottom: 16px;
     }
 
@@ -63,11 +119,12 @@
       white-space: pre-wrap;
       line-height: 1.6;
       display: none;
-      background: #f8fafc;
+      background: var(--content-bg);
       padding: 14px 16px;
       border-radius: 12px;
-      border: 1px solid #edf2f7;
+      border: 1px solid var(--content-border);
       font-size: 14px;
+      color: var(--text-color);
     }
 
     .pin-box {
@@ -77,7 +134,7 @@
 
     .pin-box p {
       font-weight: bold;
-      color: #34495e;
+      color: var(--pin-title-color);
       font-size: 14px;
       margin-bottom: 6px;
     }
@@ -85,11 +142,12 @@
     input {
       width: 180px;
       box-sizing: border-box;
-      border: 1px solid #e1e8ed;
+      border: 1px solid var(--input-border);
       border-radius: 12px;
       padding: 10px 14px;
       margin-top: 4px;
-      background: #f8fafc;
+      background: var(--input-bg);
+      color: var(--text-color);
       font-family: 'Malgun Gothic', sans-serif;
       font-size: 14px;
       outline: none;
@@ -98,8 +156,8 @@
     }
 
     input:focus {
-      border-color: #27ae60;
-      background: white;
+      border-color: var(--primary-color);
+      background: var(--card-bg);
     }
 
     .actions {
@@ -110,21 +168,21 @@
     }
 
     .edit {
-      background: #2c3e50;
-      color: white;
+      background: var(--edit-btn-bg);
+      color: var(--edit-btn-text);
     }
 
     .edit:hover {
-      background: #1a252f;
+      background: var(--edit-btn-hover);
     }
 
     .delete {
-      background: #e74c3c;
-      color: white;
+      background: var(--delete-btn-bg);
+      color: var(--delete-btn-text);
     }
 
     .delete:hover {
-      background: #c0392b;
+      background: var(--delete-btn-hover);
     }
 
     #version {
@@ -155,7 +213,7 @@
   <div class="pin-box" id="pinBox">
     <p>PIN 입력</p>
     <input id="pinInput" type="password" maxlength="8" placeholder="PIN 입력">
-    <button onclick="checkPin()" style="background: #27ae60; color: white;">확인</button>
+    <button onclick="checkPin()" style="background: var(--primary-color); color: white;">확인</button>
   </div>
 
   <!-- 내용 -->
@@ -175,6 +233,7 @@ import {
   getFirestore,
   doc,
   getDoc,
+  setDoc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -192,6 +251,81 @@ const id = new URLSearchParams(location.search).get("id");
 let memoRef;
 let memoData;
 const MASTER_KEY = "20262326";
+
+// --- 설정 시스템 모듈화 (localStorage 우선 적용 + Firebase 동기화) ---
+const SETTINGS_KEY = "coding_with_ramen_settings";
+const defaultSettings = {
+  darkMode: false,
+  primaryColor: "#27ae60",
+  keepLogin: true
+};
+
+function getStoredSettings() {
+  const saved = localStorage.getItem(SETTINGS_KEY);
+  if (saved) {
+    try {
+      return { ...defaultSettings, ...JSON.parse(saved) };
+    } catch (e) {
+      return defaultSettings;
+    }
+  }
+  return defaultSettings;
+}
+
+function saveStoredSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function applySettings(settings) {
+  if (settings.darkMode) {
+    document.body.classList.add("dark-mode");
+  } else {
+    document.body.classList.remove("dark-mode");
+  }
+
+  if (settings.primaryColor) {
+    document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+  }
+}
+
+// 1. 페이지 로드 시 localStorage 설정 먼저 즉시 적용 (깜빡임 방지)
+const initialSettings = getStoredSettings();
+applySettings(initialSettings);
+
+// 2. Firebase 설정 체크 및 동기화 함수
+async function checkUserSettings(userId) {
+  const userRef = doc(db, "users", userId);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const firebaseSettings = data.settings || {};
+
+  const settings = {
+    darkMode: firebaseSettings.darkMode ?? defaultSettings.darkMode,
+    primaryColor: firebaseSettings.primaryColor ?? defaultSettings.primaryColor,
+    keepLogin: firebaseSettings.keepLogin ?? defaultSettings.keepLogin
+  };
+
+  const updateData = {};
+  if (firebaseSettings.darkMode === undefined) updateData.darkMode = settings.darkMode;
+  if (firebaseSettings.primaryColor === undefined) updateData.primaryColor = settings.primaryColor;
+  if (firebaseSettings.keepLogin === undefined) updateData.keepLogin = settings.keepLogin;
+
+  if (Object.keys(updateData).length > 0) {
+    await setDoc(userRef, { settings: updateData }, { merge: true });
+  }
+
+  saveStoredSettings(settings);
+  applySettings(settings);
+}
+
+// 로그인 상태인 경우 Firebase 동기화 실행
+const currentUser = localStorage.getItem("userId");
+if (currentUser) {
+  checkUserSettings(currentUser);
+}
 
 function isNotice(title) {
   if (!title) return false;
