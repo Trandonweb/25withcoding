@@ -1,1 +1,697 @@
+/* =====================================
+   METALBUILD MAIN STYLE
+===================================== */
 
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Arial", sans-serif;
+}
+
+
+body {
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
+    background:
+    linear-gradient(
+        135deg,
+        #050505,
+        #111827,
+        #020617
+    );
+
+    color:white;
+
+}
+
+
+
+
+/* =====================================
+   공통
+===================================== */
+
+
+.hidden {
+
+    display:none;
+
+}
+
+
+button {
+
+    cursor:pointer;
+
+    border:none;
+
+    color:white;
+
+    font-size:18px;
+
+    font-weight:bold;
+
+    border-radius:12px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #2563eb,
+        #06b6d4
+    );
+
+    padding:15px 35px;
+
+    box-shadow:
+    0 0 15px #06b6d4;
+
+    transition:0.3s;
+
+}
+
+
+
+button:hover {
+
+
+    transform:scale(1.1);
+
+
+    box-shadow:
+
+    0 0 30px #22d3ee;
+
+
+}
+
+
+
+/* =====================================
+   시작 화면
+===================================== */
+
+
+#start-screen {
+
+
+    width:100%;
+    height:100%;
+
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+
+    background:
+
+
+    linear-gradient(
+
+        rgba(0,0,0,0.65),
+
+        rgba(0,0,0,0.9)
+
+    ),
+
+
+    url();
+
+
+}
+
+
+
+
+
+#start-screen h1 {
+
+
+    position:absolute;
+
+    top:120px;
+
+
+    font-size:80px;
+
+
+    letter-spacing:10px;
+
+
+    color:#22d3ee;
+
+
+    text-shadow:
+
+
+    0 0 10px #22d3ee,
+
+    0 0 30px #2563eb,
+
+    0 0 60px #06b6d4;
+
+
+    animation:
+
+    titleGlow 2s infinite alternate;
+
+
+}
+
+
+
+.subtitle {
+
+
+    margin-top:100px;
+
+
+    font-size:22px;
+
+
+    color:#94a3b8;
+
+
+    letter-spacing:5px;
+
+
+}
+
+
+
+#start-btn {
+
+
+    margin-top:80px;
+
+
+    width:280px;
+
+
+    height:70px;
+
+
+    font-size:25px;
+
+
+}
+
+
+
+@keyframes titleGlow {
+
+
+from{
+
+    text-shadow:
+
+    0 0 10px #22d3ee;
+
+}
+
+
+to{
+
+
+    text-shadow:
+
+    0 0 50px #06b6d4;
+
+
+}
+
+
+}
+
+
+
+
+
+
+/* =====================================
+   홈 화면 (창고)
+===================================== */
+
+
+#home-screen {
+
+
+    width:100%;
+
+    height:100%;
+
+
+    position:relative;
+
+
+    background:
+
+
+    radial-gradient(
+
+        circle,
+
+        #334155,
+
+        #020617
+
+    );
+
+
+}
+
+
+
+
+/* 코인 */
+
+#coin-area {
+
+
+    position:absolute;
+
+
+    top:30px;
+
+    left:40px;
+
+
+    font-size:25px;
+
+
+}
+
+
+
+
+
+/* 뽑기 버튼 */
+
+
+#gacha-btn {
+
+
+    position:absolute;
+
+
+    top:80px;
+
+    left:40px;
+
+
+}
+
+
+
+
+
+/* 스테이지 표시 */
+
+
+#stage-area {
+
+
+    position:absolute;
+
+
+    right:50px;
+
+    top:40px;
+
+
+    font-size:30px;
+
+
+    color:#facc15;
+
+
+    text-shadow:
+
+    0 0 15px gold;
+
+
+}
+
+
+
+
+
+
+/* =====================================
+   메카 표시
+===================================== */
+
+
+#robot-area {
+
+
+    position:absolute;
+
+
+    top:50%;
+
+    left:50%;
+
+
+    transform:
+
+    translate(-50%,-50%);
+
+
+    width:300px;
+
+    height:350px;
+
+
+    display:flex;
+
+
+    flex-direction:column;
+
+
+    justify-content:center;
+
+    align-items:center;
+
+
+
+    font-size:120px;
+
+
+
+    background:
+
+    rgba(15,23,42,0.7);
+
+
+    border:
+
+    3px solid #22d3ee;
+
+
+
+    border-radius:30px;
+
+
+    box-shadow:
+
+
+    0 0 40px #06b6d4;
+
+
+
+}
+
+
+
+
+#robot-area p {
+
+
+    font-size:20px;
+
+    color:#67e8f9;
+
+}
+
+
+
+
+
+/* =====================================
+   홈 버튼
+===================================== */
+
+
+#custom-btn {
+
+
+    position:absolute;
+
+
+    bottom:40px;
+
+    left:40px;
+
+
+}
+
+
+
+#battle-btn {
+
+
+    position:absolute;
+
+
+    bottom:40px;
+
+    right:40px;
+
+
+    background:
+
+    linear-gradient(
+
+    135deg,
+
+    #ef4444,
+
+    #f97316
+
+    );
+
+
+    box-shadow:
+
+    0 0 20px red;
+
+
+}
+
+
+
+
+
+
+
+/* =====================================
+   커스터마이징 화면
+===================================== */
+
+
+#custom-screen {
+
+
+    width:100%;
+
+    height:100%;
+
+
+    background:
+
+    linear-gradient(
+
+    135deg,
+
+    #020617,
+
+    #1e293b
+
+    );
+
+
+    text-align:center;
+
+
+    padding-top:50px;
+
+
+}
+
+
+
+
+
+#custom-screen h2 {
+
+
+    font-size:45px;
+
+
+    color:#22d3ee;
+
+
+}
+
+
+
+
+
+
+#parts {
+
+
+    margin-top:80px;
+
+
+    display:grid;
+
+
+    grid-template-columns:
+
+    repeat(3,200px);
+
+
+    justify-content:center;
+
+
+    gap:30px;
+
+
+}
+
+
+
+
+#parts button {
+
+
+    height:80px;
+
+
+}
+
+
+
+
+
+
+/* =====================================
+   전투 화면
+===================================== */
+
+
+#battle-screen {
+
+
+    width:100%;
+
+    height:100%;
+
+
+    background:
+
+
+    radial-gradient(
+
+    circle,
+
+    #450a0a,
+
+    #020617
+
+    );
+
+
+    text-align:center;
+
+
+    padding-top:50px;
+
+
+}
+
+
+
+
+#battle-screen h2 {
+
+
+    font-size:60px;
+
+
+    color:#f87171;
+
+
+}
+
+
+
+#battle-field {
+
+
+    margin-top:120px;
+
+
+    display:flex;
+
+
+    justify-content:center;
+
+
+    align-items:center;
+
+
+    gap:100px;
+
+
+
+    font-size:50px;
+
+
+}
+
+
+
+
+
+#result-btn {
+
+
+    margin-top:100px;
+
+
+}
+
+
+
+
+
+
+/* =====================================
+   반응형
+===================================== */
+
+
+@media(max-width:800px){
+
+
+#start-screen h1{
+
+
+    font-size:45px;
+
+}
+
+
+#robot-area{
+
+    width:220px;
+
+    height:280px;
+
+}
+
+
+}
