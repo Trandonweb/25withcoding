@@ -25,7 +25,8 @@
       --header-bg: #F0F0F0;
       --border-color: var(--primary-color, #27ae60);
       --header-text: var(--primary-color, #27ae60);
-      --card-hover-bg: #eafff1;
+      /* 수정된 부분: 고정 초록색 대신 테마 컬러를 활용한 연한 배경색 생성 */
+      --card-hover-bg: color-mix(in srgb, var(--primary-color) 8%, white); 
       --btn-bg: #e0e0e0;
       --btn-text: #333333;
       --btn-hover: #d0d0d0;
@@ -39,7 +40,8 @@
       --header-bg: #121212;
       --border-color: var(--primary-color);
       --header-text: var(--primary-color);
-      --card-hover-bg: #252525;
+      /* 다크모드 호버 배경도 테마 컬러와 어우러지도록 수정 */
+      --card-hover-bg: color-mix(in srgb, var(--primary-color) 15%, #1E1E1E);
       --btn-bg: #2C2C2C;
       --btn-text: #FFFFFF;
       --btn-hover: #3A3A3A;
@@ -115,11 +117,11 @@
       cursor: pointer;
       font-size: 14px;
       font-weight: bold;
-      transition: background 0.2s;
+      transition: filter 0.2s, background 0.2s;
     }
 
     .auth-btn:hover {
-      opacity: 0.9;
+      filter: brightness(0.9);
     }
 
     .container {
@@ -302,7 +304,6 @@
       transform: scale(1.1);
     }
 
-    /* 라이트/다크모드 공통 명확한 선택 표시 스타일 수정 */
     .color-circle.selected {
       border-color: #111111;
       transform: scale(1.15);
