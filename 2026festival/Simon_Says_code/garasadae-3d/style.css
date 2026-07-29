@@ -1,1 +1,1323 @@
+/* =========================================================
+   Garasadae 3D
+   style.css
+   Part 1
+========================================================= */
 
+/* ===========================
+   기본 설정
+=========================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    user-select:none;
+}
+
+html,
+body{
+
+    width:100%;
+    height:100%;
+
+    overflow:hidden;
+
+    font-family:
+    "Pretendard",
+    sans-serif;
+
+    background:#000;
+
+    color:white;
+
+}
+
+/* ===========================
+   Canvas
+=========================== */
+
+#gameCanvas{
+
+    position:fixed;
+
+    inset:0;
+
+    width:100vw;
+
+    height:100vh;
+
+    display:block;
+
+    background:#87ceeb;
+
+}
+
+/* ===========================
+   HUD
+=========================== */
+
+#hud{
+
+    position:fixed;
+
+    top:20px;
+
+    left:20px;
+
+    z-index:50;
+
+}
+
+/* ===========================
+   점수판
+=========================== */
+
+#scorePanel{
+
+    min-width:260px;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    backdrop-filter:blur(20px);
+
+    background:rgba(30,30,40,.45);
+
+    border:1px solid
+    rgba(255,255,255,.15);
+
+    box-shadow:
+
+    0 10px 30px
+    rgba(0,0,0,.4);
+
+}
+
+#scorePanel div{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin:12px 0;
+
+    font-size:20px;
+
+}
+
+#scorePanel span{
+
+    font-weight:bold;
+
+    color:#FFD54A;
+
+}
+
+/* ===========================
+   시작 메뉴
+=========================== */
+
+#menu{
+
+    position:fixed;
+
+    inset:0;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:30px;
+
+    z-index:500;
+
+    background:
+
+    linear-gradient(
+
+    135deg,
+
+    #3A7BD5,
+
+    #00D2FF
+
+    );
+
+}
+
+#menu h1{
+
+    font-size:70px;
+
+    font-weight:bold;
+
+    text-shadow:
+
+    0 0 25px
+
+    rgba(255,255,255,.4);
+
+}
+
+#menu p{
+
+    font-size:22px;
+
+    text-align:center;
+
+    line-height:1.7;
+
+}
+
+/* ===========================
+   버튼
+=========================== */
+
+button{
+
+    border:none;
+
+    outline:none;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+#startBtn,
+#restartBtn{
+
+    padding:
+
+    18px 60px;
+
+    font-size:24px;
+
+    font-weight:bold;
+
+    color:white;
+
+    border-radius:18px;
+
+    background:
+
+    linear-gradient(
+
+    45deg,
+
+    #2ECC71,
+
+    #27AE60
+
+    );
+
+    box-shadow:
+
+    0 8px 25px
+
+    rgba(0,0,0,.35);
+
+}
+
+#startBtn:hover,
+#restartBtn:hover{
+
+    transform:
+
+    scale(1.08);
+
+}
+
+#startBtn:active,
+#restartBtn:active{
+
+    transform:
+
+    scale(.95);
+
+}
+
+/* ===========================
+   조준점
+=========================== */
+
+#crosshair{
+
+    position:fixed;
+
+    left:50%;
+
+    top:50%;
+
+    transform:
+
+    translate(-50%,-50%);
+
+    z-index:200;
+
+    font-size:36px;
+
+    color:white;
+
+    text-shadow:
+
+    0 0 15px black;
+
+    pointer-events:none;
+
+}
+
+/* ===========================
+   게임 종료
+=========================== */
+
+#gameOver{
+
+    position:fixed;
+
+    inset:0;
+
+    display:none;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-direction:column;
+
+    gap:30px;
+
+    background:
+
+    rgba(0,0,0,.8);
+
+    z-index:700;
+
+}
+
+#gameOver h1{
+
+    font-size:72px;
+
+}
+
+#gameOver h2{
+
+    font-size:38px;
+
+}
+
+/* ===========================
+   로딩
+=========================== */
+
+#loading{
+
+    position:fixed;
+
+    inset:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:#111;
+
+    font-size:38px;
+
+    z-index:1000;
+
+}
+
+/* ===========================
+   애니메이션
+=========================== */
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+    }
+
+    to{
+
+        opacity:1;
+
+    }
+
+}
+
+@keyframes popup{
+
+    from{
+
+        transform:
+
+        scale(.8);
+
+        opacity:0;
+
+    }
+
+    to{
+
+        transform:
+
+        scale(1);
+
+        opacity:1;
+
+    }
+
+}
+
+#menu{
+
+    animation:
+
+    fadeIn
+
+    .8s;
+
+}
+
+#scorePanel{
+
+    animation:
+
+    popup
+
+    .5s;
+
+}
+/* =========================================================
+   Garasadae 3D
+   style.css
+   Part 2
+========================================================= */
+
+
+/* ===========================
+   명령창
+=========================== */
+
+#commandUI{
+
+    position:fixed;
+
+    left:50%;
+
+    bottom:30px;
+
+    transform:translateX(-50%);
+
+    width:650px;
+
+    max-width:90vw;
+
+    padding:22px;
+
+    border-radius:22px;
+
+    background:rgba(25,25,35,.72);
+
+    backdrop-filter:blur(18px);
+
+    border:1px solid rgba(255,255,255,.15);
+
+    box-shadow:
+
+    0 12px 35px rgba(0,0,0,.45);
+
+    z-index:300;
+
+}
+
+#commandUI h2{
+
+    text-align:center;
+
+    font-size:24px;
+
+    margin-bottom:15px;
+
+    color:#FFD54A;
+
+}
+
+#commandText{
+
+    min-height:70px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    font-size:28px;
+
+    font-weight:bold;
+
+    line-height:1.5;
+
+}
+
+
+/* ===========================
+   타이머
+=========================== */
+
+#timerBar{
+
+    margin-top:20px;
+
+    width:100%;
+
+    height:18px;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+    background:#222;
+
+}
+
+#timerFill{
+
+    width:100%;
+
+    height:100%;
+
+    background:
+
+    linear-gradient(
+
+    90deg,
+
+    #2ECC71,
+
+    #F1C40F,
+
+    #E74C3C
+
+    );
+
+    transition:width .1s linear;
+
+}
+
+
+/* ===========================
+   NPC 대화창
+=========================== */
+
+#npcDialog{
+
+    position:fixed;
+
+    left:50%;
+
+    top:40px;
+
+    transform:translateX(-50%);
+
+    width:500px;
+
+    max-width:90vw;
+
+    padding:20px;
+
+    border-radius:20px;
+
+    background:
+
+    rgba(30,30,40,.78);
+
+    backdrop-filter:blur(15px);
+
+    border:1px solid rgba(255,255,255,.12);
+
+    display:none;
+
+    z-index:400;
+
+}
+
+#npcDialog h3{
+
+    color:#66CCFF;
+
+    margin-bottom:10px;
+
+    font-size:26px;
+
+}
+
+#dialogText{
+
+    font-size:22px;
+
+    line-height:1.6;
+
+}
+
+
+/* ===========================
+   상호작용 안내
+=========================== */
+
+#interact{
+
+    position:fixed;
+
+    left:50%;
+
+    bottom:180px;
+
+    transform:translateX(-50%);
+
+    padding:15px 35px;
+
+    border-radius:15px;
+
+    background:
+
+    rgba(0,0,0,.75);
+
+    display:none;
+
+    font-size:22px;
+
+    z-index:450;
+
+}
+
+
+/* ===========================
+   성공 효과
+=========================== */
+
+.correctFlash{
+
+    animation:correctFlash .5s;
+
+}
+
+@keyframes correctFlash{
+
+    0%{
+
+        background:#2ECC71;
+
+    }
+
+    100%{
+
+        background:rgba(25,25,35,.72);
+
+    }
+
+}
+
+
+/* ===========================
+   실패 효과
+=========================== */
+
+.wrongFlash{
+
+    animation:wrongFlash .5s;
+
+}
+
+@keyframes wrongFlash{
+
+    0%{
+
+        background:#E74C3C;
+
+    }
+
+    100%{
+
+        background:rgba(25,25,35,.72);
+
+    }
+
+}
+
+
+/* ===========================
+   레벨업 표시
+=========================== */
+
+.levelUp{
+
+    position:fixed;
+
+    left:50%;
+
+    top:45%;
+
+    transform:translate(-50%,-50%);
+
+    font-size:70px;
+
+    font-weight:bold;
+
+    color:#FFD700;
+
+    text-shadow:
+
+    0 0 20px gold;
+
+    animation:levelAnimation 1.2s forwards;
+
+    z-index:900;
+
+}
+
+@keyframes levelAnimation{
+
+    0%{
+
+        transform:
+
+        translate(-50%,-50%)
+
+        scale(.5);
+
+        opacity:0;
+
+    }
+
+    30%{
+
+        opacity:1;
+
+    }
+
+    100%{
+
+        transform:
+
+        translate(-50%,-50%)
+
+        scale(1.5);
+
+        opacity:0;
+
+    }
+
+}
+
+
+/* ===========================
+   버튼 Hover
+=========================== */
+
+button:hover{
+
+    filter:brightness(110%);
+
+}
+
+
+/* ===========================
+   버튼 클릭
+=========================== */
+
+button:active{
+
+    transform:scale(.95);
+
+}
+
+
+/* ===========================
+   HUD 애니메이션
+=========================== */
+
+#scorePanel{
+
+    transition:.3s;
+
+}
+
+#scorePanel:hover{
+
+    transform:scale(1.02);
+
+}
+
+
+/* ===========================
+   점수 증가
+=========================== */
+
+.scorePopup{
+
+    position:fixed;
+
+    color:#00FF66;
+
+    font-size:34px;
+
+    font-weight:bold;
+
+    pointer-events:none;
+
+    animation:scoreMove 1s forwards;
+
+    z-index:999;
+
+}
+
+@keyframes scoreMove{
+
+    from{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+    to{
+
+        opacity:0;
+
+        transform:translateY(-70px);
+
+    }
+
+}
+/* =========================================================
+   Garasadae 3D
+   style.css
+   Part 3 (Final)
+========================================================= */
+
+
+/* ===========================
+   화면 흔들림
+=========================== */
+
+.shake{
+
+    animation:shake .45s;
+
+}
+
+@keyframes shake{
+
+    0%{transform:translate(0);}
+    20%{transform:translate(-8px,4px);}
+    40%{transform:translate(8px,-4px);}
+    60%{transform:translate(-6px,2px);}
+    80%{transform:translate(6px,-2px);}
+    100%{transform:translate(0);}
+
+}
+
+
+/* ===========================
+   업적 팝업
+=========================== */
+
+.achievementPopup{
+
+    position:fixed;
+
+    right:30px;
+
+    top:30px;
+
+    min-width:320px;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    background:
+
+    linear-gradient(
+
+    135deg,
+
+    #FFD700,
+
+    #FFB300
+
+    );
+
+    color:#222;
+
+    font-weight:bold;
+
+    font-size:22px;
+
+    box-shadow:
+
+    0 10px 30px rgba(0,0,0,.4);
+
+    animation:
+
+    achievementMove
+
+    3s forwards;
+
+    z-index:999;
+
+}
+
+@keyframes achievementMove{
+
+    0%{
+
+        transform:
+
+        translateX(350px);
+
+        opacity:0;
+
+    }
+
+    20%{
+
+        transform:
+
+        translateX(0);
+
+        opacity:1;
+
+    }
+
+    80%{
+
+        opacity:1;
+
+    }
+
+    100%{
+
+        transform:
+
+        translateX(350px);
+
+        opacity:0;
+
+    }
+
+}
+
+
+/* ===========================
+   폭죽
+=========================== */
+
+.particle{
+
+    position:fixed;
+
+    width:12px;
+
+    height:12px;
+
+    border-radius:50%;
+
+    pointer-events:none;
+
+    animation:
+
+    particleFall linear forwards;
+
+}
+
+@keyframes particleFall{
+
+    from{
+
+        transform:
+
+        translateY(0)
+
+        rotate(0deg);
+
+        opacity:1;
+
+    }
+
+    to{
+
+        transform:
+
+        translateY(120vh)
+
+        rotate(720deg);
+
+        opacity:0;
+
+    }
+
+}
+
+
+/* ===========================
+   페이드
+=========================== */
+
+.fadeIn{
+
+    animation:
+
+    fadeIn .5s;
+
+}
+
+.fadeOut{
+
+    animation:
+
+    fadeOut .5s forwards;
+
+}
+
+@keyframes fadeOut{
+
+    from{
+
+        opacity:1;
+
+    }
+
+    to{
+
+        opacity:0;
+
+    }
+
+}
+
+
+/* ===========================
+   로딩 회전
+=========================== */
+
+#loading::after{
+
+    content:"";
+
+    width:70px;
+
+    height:70px;
+
+    margin-left:20px;
+
+    border-radius:50%;
+
+    border:
+
+    8px solid rgba(255,255,255,.2);
+
+    border-top:
+
+    8px solid white;
+
+    animation:
+
+    spin 1s linear infinite;
+
+}
+
+@keyframes spin{
+
+    to{
+
+        transform:
+
+        rotate(360deg);
+
+    }
+
+}
+
+
+/* ===========================
+   스크롤바
+=========================== */
+
+::-webkit-scrollbar{
+
+    width:10px;
+
+}
+
+::-webkit-scrollbar-track{
+
+    background:#111;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#666;
+
+    border-radius:10px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:#999;
+
+}
+
+
+/* ===========================
+   선택 방지
+=========================== */
+
+img{
+
+    user-select:none;
+
+    pointer-events:none;
+
+}
+
+
+/* ===========================
+   모바일
+=========================== */
+
+@media(max-width:900px){
+
+#menu h1{
+
+    font-size:42px;
+
+}
+
+#menu p{
+
+    font-size:18px;
+
+}
+
+#commandUI{
+
+    width:95vw;
+
+}
+
+#commandText{
+
+    font-size:22px;
+
+}
+
+#npcDialog{
+
+    width:94vw;
+
+}
+
+#scorePanel{
+
+    min-width:180px;
+
+    font-size:16px;
+
+}
+
+#gameOver h1{
+
+    font-size:48px;
+
+}
+
+#gameOver h2{
+
+    font-size:28px;
+
+}
+
+}
+
+
+/* ===========================
+   작은 화면
+=========================== */
+
+@media(max-width:600px){
+
+#crosshair{
+
+    font-size:24px;
+
+}
+
+#interact{
+
+    font-size:18px;
+
+    padding:10px 20px;
+
+}
+
+button{
+
+    font-size:18px;
+
+}
+
+}
+
+
+/* ===========================
+   포인터락
+=========================== */
+
+body.pointerLock{
+
+    cursor:none;
+
+}
+
+
+/* ===========================
+   UI 등장
+=========================== */
+
+.uiShow{
+
+    animation:
+
+    popup .35s;
+
+}
+
+
+/* ===========================
+   UI 숨김
+=========================== */
+
+.uiHide{
+
+    animation:
+
+    fadeOut .3s forwards;
+
+}
+
+
+/* ===========================
+   그림자
+=========================== */
+
+.shadow{
+
+    box-shadow:
+
+    0 15px 40px
+
+    rgba(0,0,0,.45);
+
+}
+
+
+/* ===========================
+   유리 효과
+=========================== */
+
+.glass{
+
+    backdrop-filter:
+
+    blur(18px);
+
+}
+
+
+/* ===========================
+   텍스트 반짝임
+=========================== */
+
+.glow{
+
+    animation:
+
+    glowText
+
+    1.5s infinite alternate;
+
+}
+
+@keyframes glowText{
+
+    from{
+
+        text-shadow:
+
+        0 0 8px white;
+
+    }
+
+    to{
+
+        text-shadow:
+
+        0 0 25px gold;
+
+    }
+
+}
+
+
+/* ===========================
+   숨김
+=========================== */
+
+.hidden{
+
+    display:none !important;
+
+}
+
+
+/* ===========================
+   표시
+=========================== */
+
+.show{
+
+    display:block !important;
+
+}
+
+
+/* ===========================
+   Flex 표시
+=========================== */
+
+.flex{
+
+    display:flex !important;
+
+}
