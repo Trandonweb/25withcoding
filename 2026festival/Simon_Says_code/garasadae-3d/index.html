@@ -1,1 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1.0">
+
+<title>가라사대 3D</title>
+
+<link rel="stylesheet"
+href="style.css">
+
+</head>
+
+<body>
+
+<!-- ===========================
+     시작 메뉴
+=========================== -->
+
+<div id="menu">
+
+    <h1>
+
+        🎮 가라사대 3D
+
+    </h1>
+
+    <p>
+
+        WASD로 이동<br>
+        마우스로 시점 회전<br>
+        NPC에게 다가가 게임을 시작하세요.
+
+    </p>
+
+    <button id="startBtn">
+
+        게임 시작
+
+    </button>
+
+</div>
+
+
+
+<!-- ===========================
+     HUD
+=========================== -->
+
+<div id="hud">
+
+    <div id="scorePanel">
+
+        <div>
+
+            점수
+
+            <span id="score">
+
+                0
+
+            </span>
+
+        </div>
+
+        <div>
+
+            레벨
+
+            <span id="level">
+
+                1
+
+            </span>
+
+        </div>
+
+        <div>
+
+            콤보
+
+            <span id="combo">
+
+                0
+
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ===========================
+     조준점
+=========================== -->
+
+<div id="crosshair">
+
++
+
+</div>
+
+
+
+<!-- ===========================
+     명령창
+=========================== -->
+
+<div id="commandUI">
+
+    <h2>
+
+        명령
+
+    </h2>
+
+    <div id="commandText">
+
+        NPC에게 다가가세요.
+
+    </div>
+
+    <div id="timerBar">
+
+        <div id="timerFill"></div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ===========================
+     NPC 대화
+=========================== -->
+
+<div id="npcDialog">
+
+    <h3>
+
+        😀 사회자
+
+    </h3>
+
+    <p id="dialogText">
+
+        안녕하세요!
+
+    </p>
+
+</div>
+
+
+
+<!-- ===========================
+     상호작용 안내
+=========================== -->
+
+<div id="interact">
+
+[E]
+
+대화하기
+
+</div>
+
+
+
+<!-- ===========================
+     게임 종료
+=========================== -->
+
+<div id="gameOver">
+
+    <h1>
+
+        GAME OVER
+
+    </h1>
+
+    <h2>
+
+        점수
+
+        <span id="finalScore">
+
+            0
+
+        </span>
+
+    </h2>
+
+    <button id="restartBtn">
+
+        다시 시작
+
+    </button>
+
+</div>
+
+
+
+<!-- ===========================
+     로딩 화면
+=========================== -->
+
+<div id="loading">
+
+    Loading...
+
+</div>
+
+
+
+<!-- ===========================
+     Canvas
+=========================== -->
+
+<canvas id="gameCanvas"></canvas>
+
+
+
+<!-- ===========================
+     라이브러리
+=========================== -->
+
+<script type="module"
+src="https://unpkg.com/three@0.179.1/build/three.module.js"></script>
+
+
+
+<!-- ===========================
+     JS
+=========================== -->
+
+<script src="js/storage.js"></script>
+
+<script src="js/sound.js"></script>
+
+<script src="js/tts.js"></script>
+
+<script src="js/effects.js"></script>
+
+<script src="js/command.js"></script>
+
+<script src="js/ui.js"></script>
+
+<script src="js/player.js"></script>
+
+<script src="js/camera.js"></script>
+
+<script src="js/npc.js"></script>
+
+<script src="js/game.js"></script>
+
+<script src="js/main.js"></script>
+
+</body>
+
+</html>
