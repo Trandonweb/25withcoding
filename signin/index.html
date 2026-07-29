@@ -240,6 +240,15 @@ window.login = async () => {
     alert("로그인 중 오류 발생");
   }
 };
+
+// 엔터키 입력 시 로그인 실행 이벤트 추가
+document.getElementById("id").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") login();
+});
+
+document.getElementById("pw").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") login();
+});
 </script>
 
 </body>
