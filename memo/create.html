@@ -5,11 +5,38 @@
   <title>코딩과 함께라면_메모장_메모 생성</title>
 
   <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --input-bg: #f8fafc;
+      --input-border: #e1e8ed;
+      --btn-bg: #ffffff;
+      --btn-text: #333333;
+      --btn-hover: #e6e6e6;
+      --primary-color: #27ae60;
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1E1E1E;
+      --text-color: #FFFFFF;
+      --input-bg: #2C2C2C;
+      --input-border: #3A3A3A;
+      --btn-bg: #2C2C2C;
+      --btn-text: #FFFFFF;
+      --btn-hover: #3A3A3A;
+    }
+
     body {
       font-family: 'Malgun Gothic', sans-serif;
-      background: #f4f6f9;
+      background: var(--bg-color);
       padding: 15px 20px;
-      color: #333;
+      color: var(--text-color);
+      transition: background 0.2s, color 0.2s;
+      min-height: 100vh;
+      box-sizing: border-box;
+      margin: 0;
     }
 
     .top-bar {
@@ -23,8 +50,8 @@
       padding: 8px 14px;
       border: none;
       border-radius: 12px;
-      background: #ffffff;
-      color: #333;
+      background: var(--btn-bg);
+      color: var(--btn-text);
       font-weight: bold;
       cursor: pointer;
       margin: 3px;
@@ -34,20 +61,21 @@
     }
 
     button:hover {
-      background-color: #e6e6e6;
+      background-color: var(--btn-hover);
     }
 
     .card {
-      background: white;
+      background: var(--card-bg);
       padding: 16px 20px;
       border-radius: 16px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--input-border);
     }
 
     h2 {
       margin-top: 0;
       margin-bottom: 14px;
-      color: #2c3e50;
+      color: var(--text-color);
       font-size: 1.1rem;
     }
 
@@ -55,11 +83,12 @@
     textarea {
       width: 100%;
       box-sizing: border-box;
-      border: 1px solid #e1e8ed;
+      border: 1px solid var(--input-border);
       border-radius: 12px;
       padding: 10px 14px;
       margin-top: 6px;
-      background: #f8fafc;
+      background: var(--input-bg);
+      color: var(--text-color);
       font-family: 'Malgun Gothic', sans-serif;
       font-size: 14px;
       outline: none;
@@ -68,14 +97,13 @@
 
     input:focus,
     textarea:focus {
-      border-color: #27ae60;
-      background: white;
+      border-color: var(--primary-color);
+      background: var(--card-bg);
     }
 
     textarea {
       resize: vertical;
       min-height: 300px;
-      font-family: 'Malgun Gothic', sans-serif;
       line-height: 1.5;
     }
 
@@ -83,7 +111,7 @@
       margin-top: 12px;
       font-weight: bold;
       font-size: 14px;
-      color: #34495e;
+      color: var(--text-color);
     }
 
     .bottom {
@@ -124,7 +152,7 @@
   <textarea id="contentInput" placeholder="내용을 입력하세요."></textarea>
 
   <div class="bottom">
-    <button onclick="saveMemo()" style="background: #27ae60; color: white;">저장</button>
+    <button onclick="saveMemo()" style="background: var(--primary-color); color: white;">저장</button>
   </div>
 </div>
 
@@ -135,6 +163,9 @@
     collection,
     addDoc,
     getDocs,
+    getDoc,
+    setDoc,
+    doc,
     query,
     where
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -150,6 +181,81 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+
+  // --- 설정 시스템 모듈화 (localStorage 우선 적용 + Firebase 동기화) ---
+  const SETTINGS_KEY = "coding_with_ramen_settings";
+  const defaultSettings = {
+    darkMode: false,
+    primaryColor: "#27ae60",
+    keepLogin: true
+  };
+
+  function getStoredSettings() {
+    const saved = localStorage.getItem(SETTINGS_KEY);
+    if (saved) {
+      try {
+        return { ...defaultSettings, ...JSON.parse(saved) };
+      } catch (e) {
+        return defaultSettings;
+      }
+    }
+    return defaultSettings;
+  }
+
+  function saveStoredSettings(settings) {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  }
+
+  function applySettings(settings) {
+    if (settings.darkMode) {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+
+    if (settings.primaryColor) {
+      document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+    }
+  }
+
+  // 1. 페이지 로드 시 localStorage 설정 먼저 즉시 적용 (깜빡임 방지)
+  const initialSettings = getStoredSettings();
+  applySettings(initialSettings);
+
+  // 2. Firebase 설정 체크 및 동기화 함수
+  async function checkUserSettings(userId) {
+    const userRef = doc(db, "users", userId);
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+    const firebaseSettings = data.settings || {};
+
+    const settings = {
+      darkMode: firebaseSettings.darkMode ?? defaultSettings.darkMode,
+      primaryColor: firebaseSettings.primaryColor ?? defaultSettings.primaryColor,
+      keepLogin: firebaseSettings.keepLogin ?? defaultSettings.keepLogin
+    };
+
+    const updateData = {};
+    if (firebaseSettings.darkMode === undefined) updateData.darkMode = settings.darkMode;
+    if (firebaseSettings.primaryColor === undefined) updateData.primaryColor = settings.primaryColor;
+    if (firebaseSettings.keepLogin === undefined) updateData.keepLogin = settings.keepLogin;
+
+    if (Object.keys(updateData).length > 0) {
+      await setDoc(userRef, { settings: updateData }, { merge: true });
+    }
+
+    saveStoredSettings(settings);
+    applySettings(settings);
+  }
+
+  // 로그인 상태인 경우 Firebase 동기화 실행
+  const currentUser = localStorage.getItem("userId");
+  if (currentUser) {
+    checkUserSettings(currentUser);
+  }
 
   async function saveMemo() {
     const title = document.getElementById("titleInput").value.trim();
@@ -189,7 +295,7 @@
         title: title,
         pin: pin,
         content: content,
-        authorName: localStorage.getItem("userId") || "unknown",
+        authorName: currentUser || "unknown",
         deleted: false,
         createdAt: Date.now()
       });
