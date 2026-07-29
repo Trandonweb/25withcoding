@@ -1,1 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>METALBUILD</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+
+<!-- 시작 화면 -->
+
+<div id="start-screen">
+
+
+    <h1>
+        METALBUILD
+    </h1>
+
+
+    <p class="subtitle">
+        BUILD YOUR OWN MECHA
+    </p>
+
+
+    <button id="start-btn">
+        GAME START
+    </button>
+
+
+</div>
+
+
+
+<!-- 홈 화면 -->
+
+<div id="home-screen" class="hidden">
+
+
+    <div id="coin-area">
+        🪙 Coin : 
+        <span id="coin">
+            0
+        </span>
+    </div>
+
+
+
+    <button id="gacha-btn">
+        🎲 뽑기
+    </button>
+
+
+
+    <div id="stage-area">
+
+        Stage
+
+        <span id="stage">
+            1
+        </span>
+        /100
+
+    </div>
+
+
+
+    <!-- 중앙 메카 -->
+
+    <div id="robot-area">
+
+        🤖
+
+        <p>
+            PLAYER MECHA
+        </p>
+
+    </div>
+
+
+
+    <button id="custom-btn">
+
+        🔧
+        커스터마이징
+
+    </button>
+
+
+
+    <button id="battle-btn">
+
+        ⚔
+        전투
+
+    </button>
+
+
+</div>
+
+
+
+
+<!-- 커스터마이징 화면 -->
+
+<div id="custom-screen" class="hidden">
+
+<h2>
+    MECHA CUSTOM
+</h2>
+
+
+<div id="parts">
+
+<button>
+왼팔
+</button>
+
+<button>
+오른팔
+</button>
+
+<button>
+등1
+</button>
+
+<button>
+등2
+</button>
+
+<button>
+몸통
+</button>
+
+<button>
+왼쪽 다리
+</button>
+
+<button>
+오른쪽 다리
+</button>
+
+
+</div>
+
+
+<button id="back-btn">
+뒤로가기
+</button>
+
+
+</div>
+
+
+
+
+
+<!-- 전투 화면 -->
+
+<div id="battle-screen" class="hidden">
+
+
+<h2>
+BATTLE
+</h2>
+
+
+<div id="battle-field">
+
+
+<div>
+🤖 PLAYER
+</div>
+
+
+VS
+
+
+<div>
+🤖 ENEMY
+</div>
+
+
+</div>
+
+
+<button id="result-btn">
+
+전투 결과 확인
+
+</button>
+
+
+</div>
+
+
+
+<script src="js/main.js"></script>
+
+
+</body>
+</html>
