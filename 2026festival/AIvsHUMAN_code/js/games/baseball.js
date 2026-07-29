@@ -1,5 +1,5 @@
 // baseball.js
-// ⚾ AI 투수 챌린지 (Baseball) - ES Module (Final Polish Version)
+// ⚾ AI 투수 챌린지 (Baseball) - ES Module (Layout Fixed Version)
 
 let gameAreaRef = null;
 let canvasRef = null;
@@ -15,26 +15,26 @@ let baseball = {
     gameOver: false,
     selectedPitches: [], // 오늘 선택된 3개의 구종
     currentPitch: null,  // 현재 날아오는 공 객체
-    gameMode: 'DIFFICULTY', // 'DIFFICULTY', 'THINKING', 'READY', 'PITCHING', 'RESULT', 'GAMEOVER'
-    consecutiveHits: 0,  // 연속 안타/홈런 횟수 (콤보 보너스용)
+    gameMode: 'DIFFICULTY', 
+    consecutiveHits: 0,  
     playerHistory: {
         total: 0,
         hits: 0,
-        pitchStats: {} // 구종별 성적 기록
+        pitchStats: {} 
     },
     lastResultText: '',
     lastResultColor: '#ffffff',
-    lastPitchInfo: null // 투구 종료 후 공개될 구종 정보
+    lastPitchInfo: null 
 };
 
-// 난이도 설정 (AI 적응 확률 조정)
+// 난이도 설정
 const baseballLevels = {
     easy: { name: '쉬움', speedMul: 0.7, aiAdapt: 0.2 },
     normal: { name: '보통', speedMul: 0.95, aiAdapt: 0.5 },
     hard: { name: '어려움', speedMul: 1.2, aiAdapt: 0.8 }
 };
 
-// 6개의 구종 정의 및 극대화된 궤적/속도 특성
+// 6개의 구종 정의 및 특성 설정
 const allPitchTypes = [
     { id: 'four-seam', name: '포심 패스트볼', speed: 15.5, hBreak: 0, vBreak: 0, type: 'fast', desc: '직선으로 꽂히는 최고 구속의 직구' },
     { id: 'two-seam', name: '투심 패스트볼', speed: 14.0, hBreak: 1.2, vBreak: 1.5, type: 'fast', desc: '홈판 앞에서 살짝 가라앉는 공' },
@@ -73,41 +73,44 @@ function showDifficultyScreen() {
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        width: 100%;
         height: 100%;
+        min-height: 100%;
         background-color: #121212;
         color: #ffffff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        padding: 20px;
+        padding: 15px;
         box-sizing: border-box;
+        overflow-y: auto;
     ">
         <div style="
             background: #1e1e1e;
             border: 2px solid #1ea857;
             border-radius: 16px;
-            padding: 30px;
+            padding: 25px;
             width: 100%;
             max-width: 420px;
             text-align: center;
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
-            <h2 style="color: #1ea857; margin-bottom: 10px; font-size: 2rem;">⚾ AI 투수 챌린지</h2>
-            <p style="color: #b0b0b0; margin-bottom: 25px; font-size: 0.95rem;">카메라 줌인 시점과 역대급 구종 차이를 극복하라!</p>
+            <h2 style="color: #1ea857; margin-bottom: 8px; font-size: 1.8rem;">⚾ AI 투수 챌린지</h2>
+            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.9rem;">카메라 줌인 시점과 역대급 구종 차이를 극복하라!</p>
             
-            <h3 style="margin-bottom: 15px; font-size: 1.1rem;">난이도 선택</h3>
+            <h3 style="margin-bottom: 12px; font-size: 1rem;">난이도 선택</h3>
             
-            <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
                 <button class="game-btn" data-level="easy" style="
-                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 14px;
+                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 12px;
                     border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
                     transition: all 0.2s;
                 ">쉬움 (Easy)</button>
                 <button class="game-btn" data-level="normal" style="
-                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 14px;
+                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 12px;
                     border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
                     transition: all 0.2s;
                 ">보통 (Normal)</button>
                 <button class="game-btn" data-level="hard" style="
-                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 14px;
+                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 12px;
                     border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
                     transition: all 0.2s;
                 ">어려움 (Hard)</button>
@@ -171,53 +174,57 @@ function renderGameScreen() {
     <div style="
         display: flex;
         flex-direction: column;
+        width: 100%;
         height: 100%;
+        min-height: 100%;
         background-color: #121212;
         color: #ffffff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         box-sizing: border-box;
         overflow: hidden;
     ">
-        <!-- 상단 스코어바 -->
+        <!-- 상단 스코어바 (고정 높이) -->
         <div style="
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: #1e1e1e;
-            padding: 12px 20px;
+            padding: 10px 15px;
             border-bottom: 2px solid #1ea857;
+            flex-shrink: 0;
         ">
             <div>
-                <span style="font-size: 0.85rem; color: #888;">난이도:</span> 
-                <strong style="color: #1ea857;">${lv.name}</strong>
+                <span style="font-size: 0.8rem; color: #888;">난이도:</span> 
+                <strong style="color: #1ea857; font-size: 0.9rem;">${lv.name}</strong>
             </div>
             <div>
-                <span style="font-size: 0.85rem; color: #888;">투구:</span> 
-                <strong id="pitch-counter">${baseball.pitchCount}</strong> / ${baseball.maxPitches}
+                <span style="font-size: 0.8rem; color: #888;">투구:</span> 
+                <strong id="pitch-counter" style="font-size: 0.9rem;">${baseball.pitchCount}</strong><span style="font-size: 0.8rem; color: #888;">/${baseball.maxPitches}</span>
             </div>
             <div>
-                <span style="font-size: 0.85rem; color: #888;">점수:</span> 
-                <strong id="score-display" style="color: #1ea857; font-size: 1.2rem;">${baseball.score}</strong>점
-                <span id="combo-display" style="font-size: 0.8rem; color: #ffeb3b; margin-left: 5px;"></span>
+                <span style="font-size: 0.8rem; color: #888;">점수:</span> 
+                <strong id="score-display" style="color: #1ea857; font-size: 1.1rem;">${baseball.score}</strong>점
+                <span id="combo-display" style="font-size: 0.75rem; color: #ffeb3b; margin-left: 4px;"></span>
             </div>
         </div>
 
-        <!-- 오늘의 구종 안내 -->
+        <!-- 오늘의 구종 안내 (고정 높이) -->
         <div style="
             background: #181818;
-            padding: 8px 15px;
+            padding: 6px 10px;
             display: flex;
             justify-content: center;
-            gap: 15px;
-            font-size: 0.85rem;
+            gap: 12px;
+            font-size: 0.8rem;
             border-bottom: 1px solid #2a2a2a;
             flex-wrap: wrap;
+            flex-shrink: 0;
         ">
             <span style="color: #888;">오늘의 구종:</span>
             ${baseball.selectedPitches.map(p => `<span style="color: #a0e8af;">✅ ${p.name}</span>`).join('')}
         </div>
 
-        <!-- 야구장 Canvas 영역 -->
+        <!-- 야구장 Canvas 영역 (남은 공간을 유연하게 차지) -->
         <div style="
             flex: 1;
             position: relative;
@@ -227,49 +234,55 @@ function renderGameScreen() {
             background: radial-gradient(circle at center, #1a3c27 0%, #0d1a12 100%);
             overflow: hidden;
             cursor: pointer;
+            min-height: 0;
         " id="canvas-container">
             <canvas id="baseballCanvas" style="display: block; width: 100%; height: 100%;"></canvas>
             
             <!-- 상태 메시지/결과 오버레이 -->
             <div id="status-overlay" style="
                 position: absolute;
-                top: 15%;
-                font-size: 1.8rem;
+                top: 10%;
+                font-size: 1.5rem;
                 font-weight: 900;
                 text-align: center;
                 text-shadow: 0 4px 12px rgba(0,0,0,0.8);
                 pointer-events: none;
                 transition: opacity 0.3s;
                 opacity: 0;
+                padding: 0 10px;
+                box-sizing: border-box;
+                width: 100%;
             "></div>
+        </div>
 
-            <!-- 하단 안내 및 스윙 버튼 -->
-            <div style="
-                position: absolute;
-                bottom: 20px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 8px;
-                pointer-events: none;
-            ">
-                <div style="font-size: 0.9rem; color: #bbb; background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 20px;">
-                    마우스 클릭 또는 [SPACE]로 스윙!
-                </div>
-                <button id="swing-btn" style="
-                    background: #1ea857;
-                    color: white;
-                    border: none;
-                    padding: 14px 40px;
-                    border-radius: 30px;
-                    font-size: 1.1rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    box-shadow: 0 4px 15px rgba(30,168,87,0.4);
-                    pointer-events: auto;
-                    transition: transform 0.1s;
-                ">🏏 스윙!</button>
+        <!-- 하단 안내 및 스윙 버튼 영역 (고정 높이) -->
+        <div style="
+            background: #181818;
+            padding: 12px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            border-top: 1px solid #2a2a2a;
+            flex-shrink: 0;
+        ">
+            <div style="font-size: 0.8rem; color: #aaa;">
+                마우스 클릭 또는 [SPACE]로 스윙!
             </div>
+            <button id="swing-btn" style="
+                background: #1ea857;
+                color: white;
+                border: none;
+                padding: 10px 35px;
+                border-radius: 25px;
+                font-size: 1rem;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(30,168,87,0.4);
+                transition: transform 0.1s;
+                width: 100%;
+                max-width: 250px;
+            ">🏏 스윙!</button>
         </div>
     </div>
     `;
@@ -321,7 +334,6 @@ function selectNextPitch() {
     const lv = baseballLevels[baseball.difficulty];
     const pitches = baseball.selectedPitches;
 
-    // AI의 페이크 및 역이용 전략 (플레이어 약점 분석 + 70% 약점 공략 / 30% 역습 페이크)
     if (Math.random() < lv.aiAdapt && baseball.playerHistory.total > 2) {
         let weakestPitch = pitches[0];
         let lowestRate = 1.1;
@@ -335,7 +347,6 @@ function selectNextPitch() {
             }
         });
 
-        // 30% 확률로 페이크 (약점을 노릴 것이라 예상하고 반대 구종 선택)
         if (Math.random() < 0.3) {
             const otherPitches = pitches.filter(p => p.id !== weakestPitch.id);
             if (otherPitches.length > 0) {
@@ -350,7 +361,7 @@ function selectNextPitch() {
 }
 
 // =====================
-// 게임 흐름 제어 (생각 -> 카운트다운 -> 투구)
+// 게임 흐름 제어
 // =====================
 function startAIPondering() {
     if (baseball.pitchCount >= baseball.maxPitches) {
@@ -391,7 +402,7 @@ function runCountdown(count) {
 }
 
 // =====================
-// 다단계 카메라 줌인 & 시점 전환 엔진 (2루심 -> 1루심/줌 -> 포수 시점)
+// 다단계 카메라 줌인 & 시점 전환 엔진
 // =====================
 function startPitchAnimation() {
     baseball.gameMode = 'PITCHING';
@@ -399,7 +410,7 @@ function startPitchAnimation() {
     const lv = baseballLevels[baseball.difficulty];
 
     p.active = true;
-    p.progress = 0; // 0 (투수 마운드) -> 1 (홈플레이트 도달) -> 1.2 (포수 캐치)
+    p.progress = 0; 
     p.speed = (p.pitchObj.speed * 0.0065) * lv.speedMul;
 
     const render = () => {
@@ -416,7 +427,6 @@ function startPitchAnimation() {
             return;
         }
 
-        // 카메라 줌인 단계별 필드 드로잉
         drawCameraPerspective(p.progress);
 
         const w = canvasRef.width;
@@ -427,7 +437,6 @@ function startPitchAnimation() {
         const targetX = w / 2;
         const targetY = h * 0.70;
 
-        // 구종별 극대화된 변화 궤적 계산
         const hOffset = p.pitchObj.hBreak * Math.sin(p.progress * Math.PI) * 45;
         
         let vDropFactor = Math.pow(p.progress, 2);
@@ -442,16 +451,13 @@ function startPitchAnimation() {
         p.x = currentX;
         p.y = currentY;
 
-        // 원근감에 따른 공 크기 확대 연출
         const radius = 6 + (Math.pow(p.progress, 1.5) * 30);
 
-        // 공 그림자
         ctxRef.beginPath();
         ctxRef.fillStyle = 'rgba(0, 0, 0, 0.45)';
         ctxRef.ellipse(currentX, currentY + radius + 4, radius * 0.7, radius * 0.25, 0, 0, Math.PI * 2);
         ctxRef.fill();
 
-        // 야구공 본체
         ctxRef.beginPath();
         ctxRef.arc(currentX, currentY, radius, 0, Math.PI * 2);
         ctxRef.fillStyle = '#f4f4f4';
@@ -484,25 +490,21 @@ function drawCameraPerspective(progress) {
     ctxRef.save();
 
     if (progress > 0.85) {
-        // [단계 4: 0.85~] 스트라이크존 확대 및 포수 1인칭
         ctxRef.beginPath();
         ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.8)';
         ctxRef.lineWidth = 4;
         ctxRef.strokeRect(w / 2 - 80, h * 0.50, 160, 140);
     } else if (progress > 0.6) {
-        // [단계 3: 0.6~0.85] 포수 시점 진입
         ctxRef.beginPath();
         ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.5)';
         ctxRef.lineWidth = 2;
         ctxRef.strokeRect(w / 2 - 60, h * 0.55, 120, 100);
     } else if (progress > 0.3) {
-        // [단계 2: 0.3~0.6] 카메라 줌인 (투수 앞에서 다가오는 중)
         ctxRef.beginPath();
         ctxRef.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctxRef.lineWidth = 1.5;
         ctxRef.strokeRect(w / 2 - 40, h * 0.58, 80, 70);
     } else {
-        // [단계 1: 0~0.3] 2루심 원경 시점
         ctxRef.beginPath();
         ctxRef.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         ctxRef.lineWidth = 1;
@@ -526,7 +528,6 @@ function executeSwing() {
 
     let result = 'miss';
 
-    // 적정 타이밍 구간 (0.92 ~ 1.02)
     if (timing >= 0.92 && timing <= 1.02) {
         result = pitchObj.type === 'fast' 
             ? (Math.random() < 0.6 ? 'homerun' : 'hit') 
@@ -543,7 +544,7 @@ function executeSwing() {
 }
 
 // =====================
-// 결과 처리, 콤보 보너스 및 구종 교육 안내
+// 결과 처리 및 구종 안내
 // =====================
 function processHitResult(result, isTimeout) {
     if (!baseball.currentPitch) return;
@@ -563,7 +564,7 @@ function processHitResult(result, isTimeout) {
         baseball.consecutiveHits++;
         let bonus = (baseball.consecutiveHits >= 2) ? (baseball.consecutiveHits - 1) * 20 : 0;
         points = 50 + bonus;
-        text = `🔥 HOME RUN!! (+50${bonus > '0' ? ` +콤보${bonus}` : ''})`;
+        text = `🔥 HOME RUN!! (+50${bonus > 0 ? ` +콤보${bonus}` : ''})`;
         color = '#ff5252';
         baseball.score += points;
         baseball.playerHistory.hits++;
@@ -572,13 +573,12 @@ function processHitResult(result, isTimeout) {
         baseball.consecutiveHits++;
         let bonus = (baseball.consecutiveHits >= 2) ? (baseball.consecutiveHits - 1) * 10 : 0;
         points = 20 + bonus;
-        text = `⚾ 안타! (+20${bonus > '0' ? ` +콤보${bonus}` : ''})`;
+        text = `⚾ 안타! (+20${bonus > 0 ? ` +콤보${bonus}` : ''})`;
         color = '#4caf50';
         baseball.score += points;
         baseball.playerHistory.hits++;
         baseball.playerHistory.pitchStats[pitchId].success++;
     } else if (result === 'foul') {
-        // 파울은 콤보 유지 안 함 혹은 끊김
         baseball.consecutiveHits = 0;
         points = 5;
         text = '⚠️ 파울 (+5점)';
@@ -594,7 +594,6 @@ function processHitResult(result, isTimeout) {
     showStatusOverlay(text, color);
     updateUIStats();
 
-    // 구종 학습 교육 가이드 팝업 연출 (투구 종류 및 특징 안내)
     setTimeout(() => {
         if (baseball.gameOver) return;
         showStatusOverlay(`이번 구종: [${pitchObj.name}]\n${pitchObj.desc}`, "#00e5ff");
@@ -610,7 +609,6 @@ function processHitResult(result, isTimeout) {
 function showStatusOverlay(text, color) {
     const overlay = document.getElementById('status-overlay');
     if (!overlay) return;
-    // 줄바꿈 대응을 위해 innerHTML 사용
     overlay.innerHTML = text.replace(/\n/g, '<br>');
     overlay.style.color = color;
     overlay.style.opacity = '1';
@@ -630,12 +628,12 @@ function updateUIStats() {
     if (scoreEl) scoreEl.innerText = baseball.score;
     if (counterEl) counterEl.innerText = baseball.pitchCount;
     if (comboEl) {
-        comboEl.innerText = baseball.consecutiveHits >= 2 ? `🔥 ${baseball.consecutiveHits}연속 콤보!` : '';
+        comboEl.innerText = baseball.consecutiveHits >= 2 ? `🔥 ${baseball.consecutiveHits}콤보!` : '';
     }
 }
 
 // =====================
-// GAME OVER 및 결과 화면 (축제 랭킹 자극형)
+// GAME OVER 및 결과 화면
 // =====================
 function endGame() {
     baseball.gameOver = true;
@@ -652,35 +650,38 @@ function endGame() {
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        width: 100%;
         height: 100%;
+        min-height: 100%;
         background-color: #121212;
         color: #ffffff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         padding: 20px;
         box-sizing: border-box;
+        overflow-y: auto;
     ">
         <div style="
             background: #1e1e1e;
             border: 2px solid #1ea857;
             border-radius: 16px;
-            padding: 35px 30px;
+            padding: 30px 25px;
             width: 100%;
             max-width: 420px;
             text-align: center;
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
-            <h2 style="color: #ff5252; margin-bottom: 5px; font-size: 2.2rem;">GAME OVER</h2>
-            <p style="color: #888; margin-bottom: 20px; font-size: 0.95rem;">축제 최고의 타자에 도전하세요!</p>
+            <h2 style="color: #ff5252; margin-bottom: 5px; font-size: 2rem;">GAME OVER</h2>
+            <p style="color: #888; margin-bottom: 18px; font-size: 0.9rem;">축제 최고의 타자에 도전하세요!</p>
             
             <div style="
                 background: #252525;
-                padding: 20px;
+                padding: 16px;
                 border-radius: 12px;
-                margin-bottom: 25px;
+                margin-bottom: 20px;
             ">
-                <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">HUMAN FINAL SCORE</div>
-                <div style="font-size: 2.8rem; font-weight: 900; color: #1ea857;">${baseball.score} 점</div>
-                <div style="font-size: 0.85rem; color: #888; margin-top: 8px;">
+                <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 4px;">HUMAN FINAL SCORE</div>
+                <div style="font-size: 2.5rem; font-weight: 900; color: #1ea857;">${baseball.score} 점</div>
+                <div style="font-size: 0.8rem; color: #888; margin-top: 6px;">
                     타격 성공률: ${successRate}% (${baseball.playerHistory.hits}/${baseball.maxPitches})
                 </div>
             </div>
@@ -689,7 +690,7 @@ function endGame() {
                 background: #1ea857;
                 color: white;
                 border: none;
-                padding: 14px;
+                padding: 12px;
                 width: 100%;
                 border-radius: 8px;
                 font-size: 1rem;
