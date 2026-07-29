@@ -4,11 +4,80 @@
   <title>코딩과 함께라면_상벌점</title>
 
   <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --input-bg: #f8fafc;
+      --input-border: #e1e8ed;
+      --btn-bg: #ffffff;
+      --btn-text: #333333;
+      --btn-hover: #e6e6e6;
+      --primary-color: #27ae60;
+
+      --home-icon-bg: #000000;
+      --h3-color: #34495e;
+      --user-item-bg: #fdfdfe;
+      --user-item-border: #edf2f7;
+      --user-item-hover: #f8fafc;
+      --user-item-selected-bg: #edf2f7;
+      --user-item-selected-border: #cbd5e0;
+
+      --footer-color: #777777;
+      --role-badge-bg: #edf2f7;
+      --role-badge-text: #4a5568;
+
+      --role-pres-bg: #fef3c7;
+      --role-pres-text: #d97706;
+
+      --role-vice-bg: #e0e7ff;
+      --role-vice-text: #4f46e5;
+
+      --warning-bg: #ffffff;
+      --warning-text: #000000;
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1E1E1E;
+      --text-color: #FFFFFF;
+      --input-bg: #2C2C2C;
+      --input-border: #3A3A3A;
+      --btn-bg: #2C2C2C;
+      --btn-text: #FFFFFF;
+      --btn-hover: #3A3A3A;
+
+      --home-icon-bg: #FFFFFF;
+      --h3-color: #FFFFFF;
+      --user-item-bg: #1E1E1E;
+      --user-item-border: #2C2C2C;
+      --user-item-hover: #252525;
+      --user-item-selected-bg: #2C2C2C;
+      --user-item-selected-border: #3A3A3A;
+
+      --footer-color: #A0AEC0;
+      --role-badge-bg: #2C2C2C;
+      --role-badge-text: #A0AEC0;
+
+      --role-pres-bg: #3a3219;
+      --role-pres-text: #f6ad55;
+
+      --role-vice-bg: #1e1b4b;
+      --role-vice-text: #818cf8;
+
+      --warning-bg: #1E1E1E;
+      --warning-text: #FFFFFF;
+    }
+
     body {
       font-family: 'Malgun Gothic', sans-serif;
       padding: 15px 20px;
-      background-color: #f4f6f9;
-      color: #333;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background 0.2s, color 0.2s;
+      min-height: 100vh;
+      box-sizing: border-box;
+      margin: 0;
     }
 
     .top-bar {
@@ -28,16 +97,17 @@
       padding: 8px 14px;
       border: none;
       border-radius: 12px;
-      background: #ffffff;
-      color: #333;
+      background: var(--btn-bg);
+      color: var(--btn-text);
       font-weight: bold;
       cursor: pointer;
       margin: 3px;
       transition: background 0.2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
     button:hover {
-      background-color: #e6e6e6;
+      background-color: var(--btn-hover);
     }
 
     .home-icon {
@@ -52,7 +122,7 @@
       position: absolute;
       width: 16px;
       height: 12px;
-      background: black;
+      background: var(--home-icon-bg);
       bottom: 0;
       left: 2px;
     }
@@ -62,23 +132,24 @@
       position: absolute;
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-bottom: 10px solid black;
+      border-bottom: 10px solid var(--home-icon-bg);
       top: -2px;
       left: 0;
     }
 
     .card {
-      background: white;
+      background: var(--card-bg);
       padding: 14px 18px;
       border-radius: 16px;
       margin-bottom: 10px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--input-border);
     }
 
     h3 {
       margin-top: 0;
       margin-bottom: 8px;
-      color: #34495e;
+      color: var(--h3-color);
       font-size: 1rem;
     }
 
@@ -88,20 +159,20 @@
       justify-content: space-between;
       padding: 8px 14px;
       border-radius: 12px;
-      background: #fdfdfe;
-      border: 1px solid #edf2f7;
+      background: var(--user-item-bg);
+      border: 1px solid var(--user-item-border);
       margin-top: 6px;
       cursor: pointer;
-      transition: transform 0.1s;
+      transition: transform 0.1s, background 0.2s, border-color 0.2s;
     }
 
     .user-item:hover {
-      background: #f8fafc;
+      background: var(--user-item-hover);
     }
 
     .user-item.selected {
-      background-color: #edf2f7;
-      border-color: #cbd5e0;
+      background-color: var(--user-item-selected-bg);
+      border-color: var(--user-item-selected-border);
     }
 
     .user-item.disabled {
@@ -120,15 +191,16 @@
       width: 16px;
       height: 16px;
       cursor: pointer;
-      accent-color: #27ae60;
+      accent-color: var(--primary-color);
     }
 
     input[type="text"] {
       padding: 8px 12px;
       border-radius: 12px;
-      border: 1px solid #e1e8ed;
+      border: 1px solid var(--input-border);
       margin: 3px;
-      background: #f8fafc;
+      background: var(--input-bg);
+      color: var(--text-color);
       font-size: 14px;
       outline: none;
       transition: all 0.2s;
@@ -136,8 +208,8 @@
     }
 
     input[type="text"]:focus {
-      border-color: #27ae60;
-      background: white;
+      border-color: var(--primary-color);
+      background: var(--card-bg);
     }
 
     .footer {
@@ -145,7 +217,7 @@
       bottom: 6px;
       right: 15px;
       font-size: 11px;
-      color: #777;
+      color: var(--footer-color);
     }
 
     .plus {
@@ -159,7 +231,7 @@
     }
 
     .zero {
-      color: #333;
+      color: var(--text-color);
       font-weight: bold;
     }
 
@@ -168,18 +240,18 @@
       border-radius: 8px;
       font-size: 12px;
       font-weight: bold;
-      background: #edf2f7;
-      color: #4a5568;
+      background: var(--role-badge-bg);
+      color: var(--role-badge-text);
     }
 
     .role-president {
-      background: #fef3c7;
-      color: #d97706;
+      background: var(--role-pres-bg);
+      color: var(--role-pres-text);
     }
 
     .role-vice {
-      background: #e0e7ff;
-      color: #4f46e5;
+      background: var(--role-vice-bg);
+      color: var(--role-vice-text);
     }
 
     .action-row {
@@ -193,11 +265,12 @@
       position: fixed;
       width: 420px;
       max-width: 70vw;
-      background: white;
-      color: black;
+      background: var(--warning-bg);
+      color: var(--warning-text);
       padding: 14px;
       border-radius: 16px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      border: 1px solid var(--input-border);
       font-size: 13px;
       z-index: 9999;
       display: none;
@@ -256,7 +329,7 @@
   <h3>점수 부여/차감</h3>
   <div class="action-row">
     <input id="scoreInput" type="text" placeholder="점수 입력">
-    <button id="applyBtn" onclick="apply()" style="background: #27ae60; color: white;">적용</button>
+    <button id="applyBtn" onclick="apply()" style="background: var(--primary-color); color: white;">적용</button>
   </div>
   <div id="loadingBox" style="display:none; margin-top:5px;">
     <div class="loading-inline">
@@ -302,6 +375,80 @@ let rewardRef = doc(db, "reward", "main");
 let stage = 0;
 let bonus = 1;
 let usersSnap = null;
+
+// --- 설정 시스템 모듈화 (localStorage 우선 적용 + Firebase 동기화) ---
+const SETTINGS_KEY = "coding_with_ramen_settings";
+const defaultSettings = {
+  darkMode: false,
+  primaryColor: "#27ae60",
+  keepLogin: true
+};
+
+function getStoredSettings() {
+  const saved = localStorage.getItem(SETTINGS_KEY);
+  if (saved) {
+    try {
+      return { ...defaultSettings, ...JSON.parse(saved) };
+    } catch (e) {
+      return defaultSettings;
+    }
+  }
+  return defaultSettings;
+}
+
+function saveStoredSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function applySettings(settings) {
+  if (settings.darkMode) {
+    document.body.classList.add("dark-mode");
+  } else {
+    document.body.classList.remove("dark-mode");
+  }
+
+  if (settings.primaryColor) {
+    document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+  }
+}
+
+// 1. 페이지 로드 시 localStorage 설정 먼저 즉시 적용 (깜빡임 방지)
+const initialSettings = getStoredSettings();
+applySettings(initialSettings);
+
+// 2. Firebase 설정 체크 및 동기화 함수
+async function checkUserSettings(userId) {
+  const userRef = doc(db, "users", userId);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const firebaseSettings = data.settings || {};
+
+  const settings = {
+    darkMode: firebaseSettings.darkMode ?? defaultSettings.darkMode,
+    primaryColor: firebaseSettings.primaryColor ?? defaultSettings.primaryColor,
+    keepLogin: firebaseSettings.keepLogin ?? defaultSettings.keepLogin
+  };
+
+  const updateData = {};
+  if (firebaseSettings.darkMode === undefined) updateData.darkMode = settings.darkMode;
+  if (firebaseSettings.primaryColor === undefined) updateData.primaryColor = settings.primaryColor;
+  if (firebaseSettings.keepLogin === undefined) updateData.keepLogin = settings.keepLogin;
+
+  if (Object.keys(updateData).length > 0) {
+    await setDoc(userRef, { settings: updateData }, { merge: true });
+  }
+
+  saveStoredSettings(settings);
+  applySettings(settings);
+}
+
+// 로그인 상태인 경우 Firebase 동기화 실행
+if (myId) {
+  checkUserSettings(myId);
+}
 
 // 점수 색상
 window.formatScore = function(score) {
@@ -416,10 +563,10 @@ async function init() {
   const isAchieved = totalScore >= target;
 
   if (isAchieved) {
-    rewardHtml += ` &nbsp;<span style="color: green; font-weight: bold;">[목표 달성!]</span>`;
+    rewardHtml += ` &nbsp;<span style="color: var(--primary-color); font-weight: bold;">[목표 달성!]</span>`;
     
     if (myData.role === "president" || myData.role === "vice") {
-      rewardHtml += ` <button id="bonusBtn" style="padding: 4px 8px; font-size: 11px; background-color: #d1e7dd; font-weight: bold;" onclick="claimBonus()">보너스 지급</button>`;
+      rewardHtml += ` <button id="bonusBtn" style="padding: 4px 8px; font-size: 11px; background-color: #d1e7dd; color: #0f5132; font-weight: bold;" onclick="claimBonus()">보너스 지급</button>`;
     }
   }
 
