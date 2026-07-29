@@ -5,39 +5,179 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>화면 모니터링</title>
 <style>
-*{ box-sizing:border-box; }
-body{ margin:0; background:#f0f0f0; font-family:sans-serif; }
-header{
-    width:100%; height:70px;
-    display:flex; justify-content:space-between; align-items:center;
-    padding:0 20px; background:white;
-    box-shadow:0 0 10px rgba(0,0,0,.1);
-}
-#back{
-    padding:10px 15px; border:none; border-radius:10px;
-    background:#27ae60; color:white; cursor:pointer;
-}
-#online{ font-weight:bold; margin-left:20px; }
-.left{ display:flex; align-items:center; }
-#grid{
-    padding:20px;
-    display:grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
-    gap:20px;
-}
-.card{
-    background:white; padding:20px; border-radius:20px;
-    cursor:pointer; box-shadow:0 0 10px rgba(0,0,0,.1); transition:.2s;
-}
-.card:hover{ transform:scale(1.03); }
-.card h3{ margin-top:0; }
-#viewer{
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    background:rgba(0,0,0,.7); display:none; justify-content:center; align-items:center;
-}
-#viewerBox{ width:90%; max-width:1100px; background:white; border-radius:20px; padding:20px; }
-#viewerTop{ display:flex; justify-content:space-between; align-items:center; }
-#closeViewer{ padding:10px 15px; border:none; border-radius:10px; background:red; color:white; cursor:pointer; }
-#bigVideo{ width:100%; margin-top:20px; border-radius:15px; background:black; }
+    :root {
+      --bg-color: #f0f0f0;
+      --card-bg: #ffffff;
+      --text-color: #111111;
+      --header-bg: #ffffff;
+      --border-color: var(--primary-color, #27ae60);
+      --header-text: var(--primary-color, #27ae60);
+      --card-hover-bg: color-mix(in srgb, var(--primary-color) 8%, white);
+      --primary-color: #27ae60;
+      --btn-bg: #27ae60;
+      --btn-text: #ffffff;
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1E1E1E;
+      --text-color: #FFFFFF;
+      --header-bg: #1E1E1E;
+      --border-color: var(--primary-color);
+      --header-text: var(--primary-color);
+      --card-hover-bg: color-mix(in srgb, var(--primary-color) 15%, #1E1E1E);
+      --btn-bg: var(--primary-color);
+      --btn-text: #FFFFFF;
+    }
+
+    *{ box-sizing:border-box; }
+    
+    body{ 
+        margin:0; 
+        background: var(--bg-color); 
+        color: var(--text-color); 
+        font-family:sans-serif; 
+        transition: background 0.2s, color 0.2s;
+    }
+
+    header{
+        width: 100%; 
+        height: 70px;
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        padding: 0 20px; 
+        background: var(--header-bg);
+        box-shadow: 0 2px 10px rgba(0,0,0,.08);
+        border-bottom: 3px solid var(--border-color);
+    }
+
+    header h2 {
+        color: var(--header-text);
+        font-size: 22px;
+    }
+
+    #back{
+        padding: 10px 15px; 
+        border: none; 
+        border-radius: 10px;
+        background: var(--primary-color); 
+        color: white; 
+        cursor: pointer;
+        font-weight: bold;
+        transition: filter 0.2s;
+    }
+
+    #back:hover {
+        filter: brightness(0.9);
+    }
+
+    #online{ 
+        font-weight: bold; 
+        margin-left: 20px; 
+        color: var(--text-color);
+    }
+
+    .left{ 
+        display: flex; 
+        align-items: center; 
+    }
+
+    #grid{
+        padding: 20px;
+        display: grid; 
+        grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+        gap: 20px;
+        max-width: 1200px;
+        margin: auto;
+    }
+
+    .card{
+        background: var(--card-bg); 
+        color: var(--text-color);
+        padding: 20px; 
+        border-radius: 20px;
+        cursor: pointer; 
+        box-shadow: 0 2px 8px rgba(0,0,0,.08); 
+        transition: transform .2s, background .2s, border .2s;
+        border: 2px solid var(--border-color);
+    }
+
+    .card:hover{ 
+        transform: translateY(-3px); 
+        background: var(--card-hover-bg);
+    }
+
+    .card h3{ 
+        margin-top: 0; 
+        color: var(--header-text);
+    }
+
+    .card p {
+        color: var(--text-color);
+        opacity: 0.8;
+    }
+
+    #viewer{
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%;
+        background: rgba(0,0,0,0.7); 
+        display: none; 
+        justify-content: center; 
+        align-items: center;
+        z-index: 1000;
+    }
+
+    #viewerBox{ 
+        width: 90%; 
+        max-width: 1100px; 
+        background: var(--card-bg); 
+        color: var(--text-color);
+        border-radius: 20px; 
+        padding: 20px; 
+        border: 2px solid var(--border-color);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    #viewerTop{ 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+    }
+
+    #viewerTitle {
+        color: var(--header-text);
+        margin: 0;
+    }
+
+    #closeViewer{ 
+        padding: 10px 15px; 
+        border: none; 
+        border-radius: 10px; 
+        background: #ff5b5b; 
+        color: white; 
+        cursor: pointer; 
+        font-weight: bold;
+        transition: filter 0.2s;
+    }
+
+    #closeViewer:hover {
+        filter: brightness(0.9);
+    }
+
+    #bigVideo{ 
+        width: 100%; 
+        margin-top: 20px; 
+        border-radius: 15px; 
+        background: black; 
+        max-height: 70vh;
+        object-fit: contain;
+    }
 </style>
 </head>
 <body>
@@ -77,6 +217,31 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// 테마 동기화 로직
+const SETTINGS_KEY = "coding_with_ramen_settings";
+
+function applyStoredSettings() {
+    const saved = localStorage.getItem(SETTINGS_KEY);
+    if (saved) {
+        try {
+            const settings = JSON.parse(saved);
+            if (settings.darkMode) {
+                document.body.classList.add("dark-mode");
+            } else {
+                document.body.classList.remove("dark-mode");
+            }
+            if (settings.primaryColor) {
+                document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+            }
+        } catch (e) {
+            console.error("설정 로드 실패", e);
+        }
+    }
+}
+
+// 페이지 로드 즉시 테마 적용 (깜빡임 방지)
+applyStoredSettings();
 
 let selectedId = null;
 let peerConnection = null;
@@ -128,7 +293,7 @@ async function closeViewerSession() {
 async function initAdmin() {
     try {
         const backBtn = document.getElementById("back");
-        if (backBtn) { backBtn.onclick = () => { location.href = "/"; }; }
+        if (backBtn) { backBtn.onclick = () => { location.href = "/admin/index.html"; }; }
 
         const closeBtn = document.getElementById("closeViewer");
         if (closeBtn) { closeBtn.onclick = async () => { await closeViewerSession(); }; }
