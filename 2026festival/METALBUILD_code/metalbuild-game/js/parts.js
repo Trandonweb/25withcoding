@@ -1,492 +1,377 @@
-// =====================================
-// METALBUILD PART DATABASE
-// =====================================
+/*
+=========================================================
+ METALBUILD
+ parts.js
+ 파츠 데이터베이스
+=========================================================
+*/
 
+"use strict";
 
+// =====================================================
+// 등급
+// =====================================================
 
-// =====================================
-// 파츠 등급
-// =====================================
+const PART_RARITY = {
+    COMMON: "Common",
+    RARE: "Rare",
+    EPIC: "Epic",
+    LEGENDARY: "Legendary",
+    MYTHIC: "Mythic"
+};
 
+// =====================================================
+// 파츠 DB
+// =====================================================
 
-const RARITY = {
+const PARTS = {
 
+    /* ==========================
+       오른팔
+    ========================== */
 
-    BASIC : {
+    basic_launcher:{
 
-        name : "Basic",
+        id:"basic_launcher",
 
-        color : "gray",
+        name:"기본 런처",
 
-        rate : 60
+        slot:"rightArm",
+
+        rarity:PART_RARITY.COMMON,
+
+        attack:20,
+
+        defense:0,
+
+        hp:0,
+
+        description:"기본 미사일 런처"
+
+    },
+
+    machine_gun:{
+
+        id:"machine_gun",
+
+        name:"머신건",
+
+        slot:"rightArm",
+
+        rarity:PART_RARITY.RARE,
+
+        attack:45,
+
+        defense:0,
+
+        hp:0,
+
+        description:"빠른 연사"
+
+    },
+
+    laser_cannon:{
+
+        id:"laser_cannon",
+
+        name:"레이저 캐논",
+
+        slot:"rightArm",
+
+        rarity:PART_RARITY.EPIC,
+
+        attack:90,
+
+        defense:5,
+
+        hp:0,
+
+        description:"고출력 레이저"
 
     },
 
 
-    COMMON : {
 
-        name : "Common",
+    /* ==========================
+       왼팔
+    ========================== */
 
-        color : "green",
+    basic_shield:{
 
-        rate : 25
+        id:"basic_shield",
+
+        name:"기본 쉴드",
+
+        slot:"leftArm",
+
+        rarity:PART_RARITY.COMMON,
+
+        attack:0,
+
+        defense:20,
+
+        hp:100,
+
+        description:"기본 방패"
+
+    },
+
+    energy_shield:{
+
+        id:"energy_shield",
+
+        name:"에너지 쉴드",
+
+        slot:"leftArm",
+
+        rarity:PART_RARITY.EPIC,
+
+        attack:0,
+
+        defense:60,
+
+        hp:300,
+
+        description:"에너지 보호막"
 
     },
 
 
-    RARE : {
 
-        name : "Rare",
+    /* ==========================
+       몸통
+    ========================== */
 
-        color : "blue",
+    heavy_body:{
 
-        rate : 10
+        id:"heavy_body",
+
+        name:"중장갑 몸통",
+
+        slot:"body",
+
+        rarity:PART_RARITY.RARE,
+
+        attack:10,
+
+        defense:60,
+
+        hp:400,
+
+        description:"무거운 장갑"
+
+    },
+
+    energy_core:{
+
+        id:"energy_core",
+
+        name:"에너지 코어",
+
+        slot:"body",
+
+        rarity:PART_RARITY.LEGENDARY,
+
+        attack:80,
+
+        defense:40,
+
+        hp:500,
+
+        description:"고출력 코어"
 
     },
 
 
-    EPIC : {
 
-        name : "Epic",
+    /* ==========================
+       등
+    ========================== */
 
-        color : "purple",
+    booster:{
 
-        rate : 4
+        id:"booster",
+
+        name:"부스터",
+
+        slot:"back1",
+
+        rarity:PART_RARITY.RARE,
+
+        attack:20,
+
+        defense:10,
+
+        hp:100,
+
+        description:"이동속도 증가"
+
+    },
+
+    missile_pack:{
+
+        id:"missile_pack",
+
+        name:"미사일 팩",
+
+        slot:"back2",
+
+        rarity:PART_RARITY.EPIC,
+
+        attack:70,
+
+        defense:0,
+
+        hp:0,
+
+        description:"미사일 추가 발사"
 
     },
 
 
-    LEGENDARY : {
 
-        name : "Legendary",
+    /* ==========================
+       다리
+    ========================== */
 
-        color : "gold",
+    tank_leg:{
 
-        rate : 1
+        id:"tank_leg",
+
+        name:"탱크 다리",
+
+        slot:"leftLeg",
+
+        rarity:PART_RARITY.RARE,
+
+        attack:15,
+
+        defense:70,
+
+        hp:250,
+
+        description:"무거운 다리"
+
+    },
+
+    speed_leg:{
+
+        id:"speed_leg",
+
+        name:"고속 다리",
+
+        slot:"rightLeg",
+
+        rarity:PART_RARITY.EPIC,
+
+        attack:30,
+
+        defense:15,
+
+        hp:120,
+
+        description:"빠른 이동"
 
     }
 
+};
+
+// =====================================================
+// 기본 장비
+// =====================================================
+
+const DEFAULT_LOADOUT = {
+
+    leftArm:"basic_shield",
+
+    rightArm:"basic_launcher",
+
+    body:null,
+
+    back1:null,
+
+    back2:null,
+
+    leftLeg:null,
+
+    rightLeg:null
 
 };
 
+// =====================================================
+// 초기화
+// =====================================================
 
+function initializeParts(){
 
+    Game.unlockedParts = [
 
+        "basic_launcher",
 
+        "basic_shield"
 
-
-
-// =====================================
-// 모든 파츠 데이터
-// =====================================
-
-
-const PARTS = [
-
-
-
-// =====================================
-// 왼팔 / 오른팔 무기
-// =====================================
-
-
-
-{
-
-    id:"basic_launcher",
-
-    name:"기본 런처",
-
-    slot:"rightArm",
-
-    type:"weapon",
-
-    rarity:"Basic",
-
-
-    attack:50,
-
-    range:200,
-
-
-    description:
-
-    "초보 메카용 기본 원거리 무기"
-
-},
-
-
-
-{
-
-    id:"basic_shield",
-
-    name:"기본 쉴드",
-
-    slot:"leftArm",
-
-    type:"shield",
-
-    rarity:"Basic",
-
-
-    defense:30,
-
-
-    description:
-
-    "기본 방어 장비"
-
-},
-
-
-
-
-
-{
-
-    id:"machine_gun",
-
-    name:"기관총 팔",
-
-    slot:"rightArm",
-
-    type:"weapon",
-
-    rarity:"Common",
-
-
-    attack:80,
-
-    attackSpeed:2,
-
-
-    description:
-
-    "빠른 연사 공격을 하는 무기"
-
-},
-
-
-
-
-
-{
-
-    id:"laser_arm",
-
-    name:"레이저 캐논",
-
-    slot:"rightArm",
-
-    type:"weapon",
-
-    rarity:"Rare",
-
-
-    attack:150,
-
-    range:500,
-
-
-    description:
-
-    "강력한 레이저 공격"
-
-},
-
-
-
-
-
-{
-
-    id:"energy_shield",
-
-    name:"에너지 쉴드",
-
-    slot:"leftArm",
-
-    type:"shield",
-
-    rarity:"Rare",
-
-
-    defense:120,
-
-
-    description:
-
-    "에너지로 만든 고급 방패"
-
-},
-
-
-
-
-
-// =====================================
-// 등 파츠
-// =====================================
-
-
-
-{
-
-    id:"missile_pack",
-
-    name:"미사일 팩",
-
-    slot:"back1",
-
-    type:"weapon",
-
-    rarity:"Epic",
-
-
-    attack:200,
-
-
-    description:
-
-    "등에 장착하는 다연장 미사일"
-
-},
-
-
-
-
-{
-
-    id:"jet_engine",
-
-    name:"제트 부스터",
-
-    slot:"back2",
-
-    type:"engine",
-
-    rarity:"Rare",
-
-
-    speed:50,
-
-
-    description:
-
-    "빠른 이동이 가능한 부스터"
-
-},
-
-
-
-
-
-// =====================================
-// 몸통
-// =====================================
-
-
-
-{
-
-    id:"heavy_body",
-
-    name:"중장갑 몸통",
-
-    slot:"body",
-
-    type:"armor",
-
-    rarity:"Common",
-
-
-    hp:700,
-
-    defense:100,
-
-
-    description:
-
-    "방어력을 높인 튼튼한 몸체"
-
-},
-
-
-
-
-
-{
-
-    id:"energy_core_body",
-
-    name:"에너지 코어 바디",
-
-    slot:"body",
-
-    type:"core",
-
-    rarity:"Legendary",
-
-
-    hp:1500,
-
-    attack:200,
-
-
-    description:
-
-    "전설급 에너지를 사용하는 몸체"
-
-},
-
-
-
-
-
-
-// =====================================
-// 다리
-// =====================================
-
-
-
-{
-
-    id:"speed_leg",
-
-    name:"스피드 다리",
-
-    slot:"leftLeg",
-
-    type:"leg",
-
-    rarity:"Rare",
-
-
-    speed:40,
-
-
-    description:
-
-    "기동력을 증가시키는 다리"
-
-},
-
-
-
-
-
-{
-
-    id:"tank_leg",
-
-    name:"탱크 다리",
-
-    slot:"rightLeg",
-
-    type:"leg",
-
-    rarity:"Epic",
-
-
-    hp:500,
-
-    defense:80,
-
-
-    description:
-
-    "무거운 장갑형 다리"
+    ];
 
 }
 
-
-
-
-];
-
-
-
-
-
-
-
-// =====================================
-// 슬롯별 파츠 검색
-// =====================================
-
-
-function getPartsBySlot(slot){
-
-
-    return PARTS.filter(
-
-        part=>part.slot===slot
-
-    );
-
-
-}
-
-
-
-
-
-
-
-// =====================================
-// ID로 파츠 찾기
-// =====================================
-
+// =====================================================
+// 파츠 조회
+// =====================================================
 
 function getPart(id){
 
-
-    return PARTS.find(
-
-        part=>part.id===id
-
-    );
-
+    return PARTS[id] || null;
 
 }
 
+// =====================================================
+// 슬롯별 파츠
+// =====================================================
 
+function getPartsBySlot(slot){
 
+    return Object.values(PARTS).filter(part=>part.slot===slot);
 
+}
 
+// =====================================================
+// 보유 여부
+// =====================================================
 
+function hasPart(id){
 
-// =====================================
-// 랜덤 파츠 획득
-// (전투 보상/뽑기 연결용)
-// =====================================
+    return Game.unlockedParts.includes(id);
 
+}
+
+// =====================================================
+// 획득
+// =====================================================
+
+function unlockPart(id){
+
+    if(!PARTS[id]) return false;
+
+    if(hasPart(id)) return false;
+
+    Game.unlockedParts.push(id);
+
+    return true;
+
+}
+
+// =====================================================
+// 랜덤 드롭
+// =====================================================
 
 function getRandomPart(){
 
+    const list = Object.values(PARTS);
 
-    const random =
-
-    Math.floor(
-
-        Math.random()*PARTS.length
-
-    );
-
-
-    return PARTS[random];
-
+    return list[
+        Math.floor(Math.random()*list.length)
+    ];
 
 }
 
-
-
-
-
-
-
-console.log(
-    "PART DATABASE READY"
-);
+console.log("parts.js loaded");
