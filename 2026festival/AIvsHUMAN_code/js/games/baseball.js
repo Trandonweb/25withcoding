@@ -1,22 +1,21 @@
 // baseball.js
 
-let gameArea = null;
+
+let gameAreaRef = null;
 
 
 let baseball = {
 
-    difficulty: null,
+    difficulty:null,
 
-    scoreHuman: 0,
-    scoreAI: 0,
+    scoreHuman:0,
+    scoreAI:0,
 
-    inning: 1,
+    strikes:0,
 
-    strikes: 0,
+    mode:"HUMAN",
 
-    mode: "HUMAN",
-
-    gameOver: false
+    gameOver:false
 
 };
 
@@ -47,50 +46,86 @@ const baseballLevel = {
 
 
 
-// 시작 화면
+// =====================
+// ENTRY
+// =====================
 
-function openBaseball(container){
+export function openBaseball(gameArea){
 
-    gameArea = container;
+    gameAreaRef = gameArea;
 
+    showDifficulty();
 
-    gameArea.innerHTML = `
-
-    <h1>⚾ Baseball</h1>
-
-    <h2>난이도 선택</h2>
-
-
-    <button id="easyBtn">
-    🟢 쉬움
-    </button>
+}
 
 
-    <button id="normalBtn">
-    🟡 보통
-    </button>
 
 
-    <button id="hardBtn">
-    🔴 어려움
-    </button>
+// =====================
+// DIFFICULTY
+// =====================
+
+function showDifficulty(){
+
+
+    gameAreaRef.innerHTML=`
+
+    <div style="text-align:center">
+
+        <h2>⚾ 야구</h2>
+
+
+        <h3 style="margin:20px 0;">
+            난이도 선택
+        </h3>
+
+
+        <div style="
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            max-width:300px;
+            margin:0 auto;
+        ">
+
+
+            <button class="game-select-btn" id="easy">
+                쉬움
+            </button>
+
+
+            <button class="game-select-btn" id="normal">
+                보통
+            </button>
+
+
+            <button class="game-select-btn" id="hard">
+                어려움
+            </button>
+
+
+        </div>
+
+
+    </div>
 
     `;
 
 
     document
-    .getElementById("easyBtn")
-    .onclick=()=>selectBaseball("easy");
+    .getElementById("easy")
+    .onclick=()=>startGame("easy");
 
 
     document
-    .getElementById("normalBtn")
-    .onclick=()=>selectBaseball("normal");
+    .getElementById("normal")
+    .onclick=()=>startGame("normal");
 
 
     document
-    .getElementById("hardBtn")
-    .onclick=()=>selectBaseball("hard");
+    .getElementById("hard")
+    .onclick=()=>startGame("hard");
+
 
 }
 
@@ -98,25 +133,28 @@ function openBaseball(container){
 
 
 
-// 난이도 선택
+// =====================
+// START
+// =====================
 
-function selectBaseball(level){
+function startGame(level){
 
 
     baseball.difficulty = level;
 
 
-    baseball.scoreHuman = 0;
-    baseball.scoreAI = 0;
+    baseball.scoreHuman=0;
+    baseball.scoreAI=0;
 
-    baseball.inning = 1;
+    baseball.strikes=0;
 
-    baseball.strikes = 0;
+    baseball.mode="HUMAN";
 
-    baseball.mode = "HUMAN";
+    baseball.gameOver=false;
 
 
-    renderBaseball();
+    renderUI();
+
 
 }
 
@@ -124,50 +162,111 @@ function selectBaseball(level){
 
 
 
-// 화면 출력
+// =====================
+// UI
+// =====================
 
-function renderBaseball(){
+function renderUI(){
 
 
     let lv =
     baseballLevel[baseball.difficulty];
 
 
-    gameArea.innerHTML = `
+    gameAreaRef.innerHTML=`
 
-    <h1>⚾ Baseball</h1>
-
-
-    <h2>
-    HUMAN ${baseball.scoreHuman}
-    :
-    ${baseball.scoreAI}
-    AI
-    </h2>
+    <div style="
+        display:flex;
+        flex-direction:column;
+        height:100%;
+    ">
 
 
-    <p>
-    난이도 : ${lv.name}
-    </p>
+        <div style="
+            text-align:center;
+        ">
 
 
-    <p>
-    ${baseball.mode==="HUMAN"
-    ?"타격하세요!"
-    :"AI 공격 중"}
-    </p>
+            <h2>
+            ⚾ Baseball
+            </h2>
 
 
-    <p>
-    스트라이크 : ${baseball.strikes}
-    </p>
+            <h3 style="margin:15px 0;">
+
+            HUMAN
+            ${baseball.scoreHuman}
+
+            :
+
+            ${baseball.scoreAI}
+            AI
+
+            </h3>
 
 
-    <button id="swingBtn">
-    🏏 타격
-    </button>
+            <p>
+            난이도 : ${lv.name}
+            </p>
+
+
+        </div>
+
+
+
+        <div style="
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            gap:20px;
+        ">
+
+
+            <div style="
+                font-size:1.2rem;
+                font-weight:bold;
+            ">
+
+            ${
+                baseball.mode==="HUMAN"
+                ?"타격하세요!"
+                :"AI 공격 중..."
+            }
+
+            </div>
+
+
+
+            <p>
+            스트라이크 :
+            ${baseball.strikes}
+            </p>
+
+
+
+            <button
+            id="swingBtn"
+            class="game-select-btn"
+            style="
+                width:220px;
+                min-height:90px;
+            ">
+
+            🏏 타격
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
 
     `;
+
 
 
     document
@@ -181,12 +280,17 @@ function renderBaseball(){
 
 
 
-// 타격
+// =====================
+// PLAYER
+// =====================
 
 function swing(){
 
 
-    if(baseball.mode!=="HUMAN")
+    if(
+        baseball.mode!=="HUMAN" ||
+        baseball.gameOver
+    )
         return;
 
 
@@ -195,7 +299,8 @@ function swing(){
     baseballLevel[baseball.difficulty];
 
 
-    let result = Math.random();
+
+    let result=Math.random();
 
 
 
@@ -205,8 +310,7 @@ function swing(){
         if(Math.random()<0.2){
 
 
-            baseball.scoreHuman += 2;
-
+            baseball.scoreHuman+=2;
 
             alert("🔥 홈런!");
 
@@ -216,43 +320,48 @@ function swing(){
 
             baseball.scoreHuman++;
 
-
             alert("⚾ 안타!");
 
         }
 
 
-    }
-    else{
+        renderUI();
 
-
-        baseball.strikes++;
-
-
-        alert(
-            "스트라이크 "
-            +
-            baseball.strikes
-        );
-
-
-        if(baseball.strikes>=3){
-
-
-            baseball.strikes=0;
-
-
-            aiTurn();
-
-
-            return;
-
-        }
+        return;
 
     }
 
 
-    renderBaseball();
+
+
+    baseball.strikes++;
+
+
+    alert(
+        "스트라이크 "
+        +
+        baseball.strikes
+    );
+
+
+
+    if(baseball.strikes>=3){
+
+
+        baseball.strikes=0;
+
+
+        aiTurn();
+
+
+        return;
+
+    }
+
+
+
+    renderUI();
+
 
 }
 
@@ -260,7 +369,9 @@ function swing(){
 
 
 
-// AI 공격
+// =====================
+// AI
+// =====================
 
 function aiTurn(){
 
@@ -268,7 +379,7 @@ function aiTurn(){
     baseball.mode="AI";
 
 
-    renderBaseball();
+    renderUI();
 
 
 
@@ -301,26 +412,11 @@ function aiTurn(){
         baseball.mode="HUMAN";
 
 
-        renderBaseball();
+        renderUI();
+
 
 
     },1000);
 
 
 }
-
-
-
-
-
-// module export
-
-export {
-
-    openBaseball,
-
-    selectBaseball,
-
-    swing
-
-};
