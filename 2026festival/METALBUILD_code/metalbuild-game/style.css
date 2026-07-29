@@ -1,55 +1,94 @@
-/* =====================================
-   METALBUILD MAIN STYLE
-===================================== */
+/* =====================================================
+   METALBUILD
+   STYLE.CSS
+   PART 1
+===================================================== */
 
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Arial", sans-serif;
+/* ===========================
+   Reset
+=========================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI",sans-serif;
 }
 
+html,body{
 
-body {
+    width:100%;
+    height:100%;
 
-    width: 100vw;
-    height: 100vh;
+    overflow:hidden;
 
-    overflow: hidden;
-
-    background:
-    linear-gradient(
-        135deg,
-        #050505,
-        #111827,
-        #020617
-    );
+    background:#05080d;
 
     color:white;
 
 }
 
+body{
 
-
-
-/* =====================================
-   공통
-===================================== */
-
-
-.hidden {
-
-    display:none;
+    background:
+    radial-gradient(circle at center,
+    #1b2735 0%,
+    #090a0f 60%,
+    #000000 100%);
 
 }
 
 
-button {
+/* ===========================
+   Scroll
+=========================== */
+
+::-webkit-scrollbar{
+
+    width:10px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#00d5ff;
+
+    border-radius:20px;
+
+}
+
+::-webkit-scrollbar-track{
+
+    background:#111;
+
+}
+
+
+/* ===========================
+   Hidden
+=========================== */
+
+.hidden{
+
+    display:none !important;
+
+}
+
+
+/* ===========================
+   Button
+=========================== */
+
+button{
+
+    border:none;
 
     cursor:pointer;
 
-    border:none;
+    border-radius:12px;
+
+    transition:.25s;
 
     color:white;
 
@@ -57,641 +96,1658 @@ button {
 
     font-weight:bold;
 
-    border-radius:12px;
+}
 
-    background:
-    linear-gradient(
-        135deg,
-        #2563eb,
-        #06b6d4
-    );
+button:hover{
 
-    padding:15px 35px;
+    transform:scale(1.05);
 
-    box-shadow:
-    0 0 15px #06b6d4;
+}
 
-    transition:0.3s;
+button:active{
+
+    transform:scale(.96);
 
 }
 
 
 
-button:hover {
+/* =====================================================
+                START SCREEN
+===================================================== */
 
 
-    transform:scale(1.1);
+#start-screen{
 
-
-    box-shadow:
-
-    0 0 30px #22d3ee;
-
-
-}
-
-
-
-/* =====================================
-   시작 화면
-===================================== */
-
-
-#start-screen {
-
+    position:absolute;
 
     width:100%;
     height:100%;
 
-
     display:flex;
-
-    flex-direction:column;
 
     justify-content:center;
 
     align-items:center;
 
+    flex-direction:column;
 
-    background:
-
-
-    linear-gradient(
-
-        rgba(0,0,0,0.65),
-
-        rgba(0,0,0,0.9)
-
-    ),
-
-
-    url();
-
+    overflow:hidden;
 
 }
 
 
+/* 배경 */
 
+#start-screen::before{
 
-
-#start-screen h1 {
-
+    content:"";
 
     position:absolute;
 
-    top:120px;
+    inset:0;
+
+    background:
+
+    linear-gradient(
+
+    rgba(0,0,0,.55),
+
+    rgba(0,0,0,.75)
+
+    ),
+
+    url("images/backgrounds/title.jpg");
+
+    background-size:cover;
+
+    background-position:center;
+
+    filter:brightness(.8);
+
+    z-index:-2;
+
+}
 
 
-    font-size:80px;
+/* 움직이는 빛 */
+
+#start-screen::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+
+    linear-gradient(
+
+    120deg,
+
+    transparent,
+
+    rgba(0,255,255,.12),
+
+    transparent
+
+    );
+
+    animation:lightMove 6s linear infinite;
+
+    z-index:-1;
+
+}
 
 
-    letter-spacing:10px;
+@keyframes lightMove{
+
+    from{
+
+        transform:translateX(-100%);
+
+    }
+
+    to{
+
+        transform:translateX(100%);
+
+    }
+
+}
 
 
-    color:#22d3ee;
+/* 제목 */
 
+#game-title{
+
+    font-size:90px;
+
+    letter-spacing:12px;
+
+    color:#6df4ff;
 
     text-shadow:
 
+    0 0 15px cyan,
 
-    0 0 10px #22d3ee,
+    0 0 40px cyan,
 
-    0 0 30px #2563eb,
+    0 0 80px #00aaff;
 
-    0 0 60px #06b6d4;
+    animation:titleGlow 2s infinite alternate;
+
+}
 
 
-    animation:
+@keyframes titleGlow{
 
-    titleGlow 2s infinite alternate;
+    from{
 
+        text-shadow:
+
+        0 0 10px cyan,
+
+        0 0 30px cyan;
+
+    }
+
+    to{
+
+        text-shadow:
+
+        0 0 20px white,
+
+        0 0 60px cyan,
+
+        0 0 100px cyan;
+
+    }
+
+}
+
+
+#sub-title{
+
+    margin-top:18px;
+
+    color:#d0d0d0;
+
+    letter-spacing:6px;
+
+    font-size:20px;
+
+}
+
+
+/* 버튼 */
+
+#start-buttons{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+    margin-top:70px;
+
+}
+
+
+#start-buttons button{
+
+    width:320px;
+
+    height:65px;
+
+    background:
+
+    linear-gradient(
+
+    135deg,
+
+    #008cff,
+
+    #00d9ff
+
+    );
+
+    box-shadow:
+
+    0 0 20px #00d9ff;
+
+}
+
+
+#start-buttons button:hover{
+
+    box-shadow:
+
+    0 0 40px cyan;
 
 }
 
 
 
-.subtitle {
+/* =====================================================
+                HOME
+===================================================== */
 
-
-    margin-top:100px;
-
-
-    font-size:22px;
-
-
-    color:#94a3b8;
-
-
-    letter-spacing:5px;
-
-
-}
-
-
-
-#start-btn {
-
-
-    margin-top:80px;
-
-
-    width:280px;
-
-
-    height:70px;
-
-
-    font-size:25px;
-
-
-}
-
-
-
-@keyframes titleGlow {
-
-
-from{
-
-    text-shadow:
-
-    0 0 10px #22d3ee;
-
-}
-
-
-to{
-
-
-    text-shadow:
-
-    0 0 50px #06b6d4;
-
-
-}
-
-
-}
-
-
-
-
-
-
-/* =====================================
-   홈 화면 (창고)
-===================================== */
-
-
-#home-screen {
-
+#home-screen{
 
     width:100%;
 
     height:100%;
 
+    position:absolute;
 
-    position:relative;
+    overflow:hidden;
 
+}
+
+
+/* 격납고 배경 */
+
+#home-screen::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
 
     background:
 
+    linear-gradient(
 
-    radial-gradient(
+    rgba(5,8,12,.75),
 
-        circle,
+    rgba(5,8,12,.85)
 
-        #334155,
+    ),
 
-        #020617
+    url("images/backgrounds/garage.jpg");
+
+    background-size:cover;
+
+    background-position:center;
+
+    z-index:-2;
+
+}
+
+
+/* 격자 */
+
+#home-screen::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+
+    repeating-linear-gradient(
+
+    90deg,
+
+    transparent 0,
+
+    transparent 39px,
+
+    rgba(0,255,255,.04) 40px
 
     );
 
+    z-index:-1;
 
 }
 
 
+/* =====================================================
+                좌측 상단
+===================================================== */
 
-
-/* 코인 */
-
-#coin-area {
-
+#top-left{
 
     position:absolute;
 
+    left:30px;
 
     top:30px;
 
-    left:40px;
-
-
-    font-size:25px;
-
-
 }
 
 
-
-
-
-/* 뽑기 버튼 */
-
-
-#gacha-btn {
-
-
-    position:absolute;
-
-
-    top:80px;
-
-    left:40px;
-
-
-}
-
-
-
-
-
-/* 스테이지 표시 */
-
-
-#stage-area {
-
-
-    position:absolute;
-
-
-    right:50px;
-
-    top:40px;
-
+#coin-box{
 
     font-size:30px;
 
+    margin-bottom:18px;
 
-    color:#facc15;
-
+    color:#ffd84d;
 
     text-shadow:
 
     0 0 15px gold;
 
+}
+
+
+#gacha-btn{
+
+    width:190px;
+
+    height:60px;
+
+    background:
+
+    linear-gradient(
+
+    #d83bff,
+
+    #7a2dff
+
+    );
 
 }
 
 
 
+/* =====================================================
+                우측 상단
+===================================================== */
 
-
-
-/* =====================================
-   메카 표시
-===================================== */
-
-
-#robot-area {
-
+#top-right{
 
     position:absolute;
 
+    right:30px;
 
-    top:50%;
+    top:30px;
+
+    width:250px;
+
+}
+
+
+#top-right h2{
+
+    text-align:center;
+
+    margin-bottom:10px;
+
+    color:#66eeff;
+
+}
+
+
+#stage-list{
+
+    height:420px;
+
+    overflow-y:auto;
+
+    border:2px solid #00d9ff;
+
+    border-radius:12px;
+
+    background:rgba(0,0,0,.45);
+
+    padding:12px;
+
+}
+
+
+
+/* =====================================================
+                중앙 메카
+===================================================== */
+
+#garage-area{
+
+    position:absolute;
 
     left:50%;
 
+    top:52%;
 
-    transform:
+    transform:translate(-50%,-50%);
 
-    translate(-50%,-50%);
-
-
-    width:300px;
-
-    height:350px;
+}
 
 
-    display:flex;
+#robotCanvas{
 
+    width:500px;
 
-    flex-direction:column;
+    height:650px;
 
+    border:3px solid #00d9ff;
 
-    justify-content:center;
-
-    align-items:center;
-
-
-
-    font-size:120px;
-
-
+    border-radius:20px;
 
     background:
 
-    rgba(15,23,42,0.7);
-
-
-    border:
-
-    3px solid #22d3ee;
-
-
-
-    border-radius:30px;
-
+    rgba(15,20,30,.55);
 
     box-shadow:
 
-
-    0 0 40px #06b6d4;
-
-
+    0 0 40px cyan;
 
 }
 
 
 
+/* =====================================================
+                하단 버튼
+===================================================== */
 
-#robot-area p {
-
-
-    font-size:20px;
-
-    color:#67e8f9;
-
-}
-
-
-
-
-
-/* =====================================
-   홈 버튼
-===================================== */
-
-
-#custom-btn {
-
+#bottom-left{
 
     position:absolute;
-
-
-    bottom:40px;
 
     left:40px;
 
+    bottom:40px;
 
 }
 
-
-
-#battle-btn {
-
+#bottom-right{
 
     position:absolute;
 
+    right:40px;
 
     bottom:40px;
 
-    right:40px;
+}
 
+
+#custom-btn{
+
+    width:240px;
+
+    height:70px;
 
     background:
 
     linear-gradient(
 
-    135deg,
+    #00b0ff,
 
-    #ef4444,
-
-    #f97316
+    #0066ff
 
     );
 
+}
+
+
+#battle-btn{
+
+    width:240px;
+
+    height:70px;
+
+    background:
+
+    linear-gradient(
+
+    #ff4b2b,
+
+    #ff1e56
+
+    );
 
     box-shadow:
 
-    0 0 20px red;
+    0 0 25px red;
 
+}
+/* =====================================================
+                CUSTOMIZATION
+===================================================== */
+
+#custom-screen{
+
+    position:absolute;
+
+    inset:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:rgba(0,0,0,.82);
+
+    backdrop-filter:blur(8px);
+
+    z-index:100;
+
+}
+
+.window{
+
+    width:92%;
+
+    max-width:1400px;
+
+    height:88%;
+
+    background:linear-gradient(180deg,#1a2433,#101722);
+
+    border:2px solid #00d9ff;
+
+    border-radius:20px;
+
+    box-shadow:0 0 30px rgba(0,217,255,.5);
+
+    display:flex;
+
+    flex-direction:column;
+
+    overflow:hidden;
+
+}
+
+.window-header{
+
+    height:70px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 25px;
+
+    background:#162131;
+
+    border-bottom:2px solid #00d9ff;
+
+}
+
+.window-header h2{
+
+    color:#79f6ff;
+
+    letter-spacing:2px;
+
+}
+
+.window-header button{
+
+    width:48px;
+
+    height:48px;
+
+    border-radius:10px;
+
+    background:#d63031;
+
+    font-size:20px;
 
 }
 
 
 
+/* =====================================================
+                CUSTOM BODY
+===================================================== */
+
+.custom-container{
+
+    flex:1;
+
+    display:grid;
+
+    grid-template-columns:360px 300px 1fr;
+
+    gap:25px;
+
+    padding:25px;
+
+}
+
+.custom-preview{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    border:2px solid #00d9ff;
+
+    border-radius:15px;
+
+    background:#0f1720;
+
+}
+
+#customRobotCanvas{
+
+    width:320px;
+
+    height:520px;
+
+}
 
 
 
+/* =====================================================
+                SLOT
+===================================================== */
 
-/* =====================================
-   커스터마이징 화면
-===================================== */
+.custom-slots{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+
+.slot-btn{
+
+    height:65px;
+
+    background:#24374b;
+
+    border:2px solid transparent;
+
+    color:white;
+
+    font-size:17px;
+
+    transition:.25s;
+
+}
+
+.slot-btn:hover{
+
+    border-color:#00d9ff;
+
+    background:#304964;
+
+    box-shadow:0 0 15px #00d9ff;
+
+}
 
 
-#custom-screen {
 
+/* =====================================================
+                INVENTORY
+===================================================== */
+
+#inventory{
+
+    display:flex;
+
+    flex-direction:column;
+
+    background:#111922;
+
+    border:2px solid #00d9ff;
+
+    border-radius:15px;
+
+    overflow:hidden;
+
+}
+
+#inventory h3{
+
+    padding:18px;
+
+    text-align:center;
+
+    background:#172433;
+
+    color:#66eeff;
+
+    border-bottom:2px solid #00d9ff;
+
+}
+
+#inventory-list{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    padding:15px;
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+
+    gap:15px;
+
+}
+
+
+
+/* 파츠 카드 */
+
+.part-card{
+
+    min-height:150px;
+
+    background:#1d2937;
+
+    border:2px solid #2d435c;
+
+    border-radius:12px;
+
+    padding:10px;
+
+    transition:.25s;
+
+    cursor:pointer;
+
+}
+
+.part-card:hover{
+
+    transform:translateY(-5px);
+
+    border-color:#00d9ff;
+
+    box-shadow:0 0 18px rgba(0,217,255,.4);
+
+}
+
+.part-card h4{
+
+    margin-bottom:8px;
+
+    color:#ffffff;
+
+}
+
+.part-card p{
+
+    font-size:13px;
+
+    color:#c7d0d9;
+
+    margin-top:4px;
+
+}
+
+
+
+/* =====================================================
+                GACHA
+===================================================== */
+
+#gacha-screen{
+
+    position:absolute;
+
+    inset:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:rgba(0,0,0,.82);
+
+    backdrop-filter:blur(8px);
+
+    z-index:120;
+
+}
+
+#gacha-content{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:20px;
+
+    flex:1;
+
+}
+
+#gacha-coin{
+
+    font-size:34px;
+
+    color:gold;
+
+    text-shadow:0 0 15px gold;
+
+}
+
+#normal-gacha,
+#premium-gacha{
+
+    width:300px;
+
+    height:70px;
+
+    font-size:20px;
+
+}
+
+#normal-gacha{
+
+    background:linear-gradient(135deg,#00b4db,#0083b0);
+
+}
+
+#premium-gacha{
+
+    background:linear-gradient(135deg,#ff9800,#ff5722);
+
+}
+
+#gacha-result{
+
+    width:90%;
+
+    max-width:600px;
+
+    min-height:180px;
+
+    border:2px dashed #00d9ff;
+
+    border-radius:15px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    padding:20px;
+
+    font-size:24px;
+
+}
+
+
+
+/* =====================================================
+                PART INFO
+===================================================== */
+
+#part-info{
+
+    position:absolute;
+
+    inset:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:rgba(0,0,0,.75);
+
+    z-index:130;
+
+}
+
+#part-info .window{
+
+    width:500px;
+
+    height:auto;
+
+    padding:30px;
+
+    text-align:center;
+
+}
+
+#part-name{
+
+    font-size:34px;
+
+    margin-bottom:15px;
+
+}
+
+#part-rarity{
+
+    font-size:22px;
+
+    color:gold;
+
+    margin-bottom:12px;
+
+}
+
+#part-stat{
+
+    font-size:18px;
+
+    margin-bottom:18px;
+
+    color:#bdefff;
+
+}
+
+#part-description{
+
+    line-height:1.7;
+
+    color:#d6d6d6;
+
+    margin-bottom:25px;
+
+}
+
+#equip-btn{
+
+    width:180px;
+
+    height:55px;
+
+    background:#00a86b;
+
+    margin-right:10px;
+
+}
+
+#close-info-btn{
+
+    width:180px;
+
+    height:55px;
+
+    background:#666;
+
+}
+
+
+
+/* =====================================================
+                POPUP
+===================================================== */
+
+#popup{
+
+    position:absolute;
+
+    inset:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:rgba(0,0,0,.55);
+
+    z-index:150;
+
+}
+
+#popup-box{
+
+    width:420px;
+
+    background:#162130;
+
+    border:2px solid #00d9ff;
+
+    border-radius:16px;
+
+    text-align:center;
+
+    padding:30px;
+
+}
+
+#popup-title{
+
+    color:#6cf3ff;
+
+    margin-bottom:18px;
+
+}
+
+#popup-message{
+
+    line-height:1.8;
+
+    margin-bottom:25px;
+
+}
+
+#popup-ok{
+
+    width:180px;
+
+    height:55px;
+
+    background:#0099ff;
+
+}
+
+
+
+/* =====================================================
+                LOADING
+===================================================== */
+
+#loading-screen{
+
+    position:absolute;
+
+    inset:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:#02060b;
+
+    z-index:999;
+
+}
+
+#loading-box{
+
+    width:600px;
+
+    text-align:center;
+
+}
+
+#loading-box h2{
+
+    margin-bottom:25px;
+
+    color:#6cf3ff;
+
+    letter-spacing:5px;
+
+}
+
+#loading-bar{
 
     width:100%;
 
+    height:28px;
+
+    background:#1d2735;
+
+    border-radius:30px;
+
+    overflow:hidden;
+
+}
+
+#loading-fill{
+
+    width:0%;
+
     height:100%;
 
+    background:linear-gradient(90deg,#00d9ff,#00ff95);
+
+    transition:width .25s;
+
+}
+/* =====================================================
+                BATTLE SCREEN
+===================================================== */
+
+#battle-screen{
+
+    position:absolute;
+    inset:0;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:
+    radial-gradient(circle at center,
+    #182434 0%,
+    #0a1018 70%,
+    #000 100%);
+
+    overflow:hidden;
+
+}
+
+#battle-ui{
+
+    width:95%;
+    height:90%;
+
+    display:grid;
+    grid-template-columns:1fr 220px 1fr;
+
+    align-items:center;
+
+}
+
+.battle-panel{
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+
+}
+
+.battle-panel h2{
+
+    font-size:34px;
+
+    color:#6cf4ff;
+
+    margin-bottom:15px;
+
+}
+
+.battle-panel canvas{
+
+    width:320px;
+    height:480px;
+
+    border:2px solid #00d9ff;
+
+    border-radius:20px;
+
+    background:#101924;
+
+    box-shadow:0 0 25px rgba(0,217,255,.4);
+
+}
+
+#battle-center{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+#battle-center h1{
+
+    font-size:90px;
+
+    color:white;
+
+    text-shadow:
+    0 0 20px cyan;
+
+}
+
+#battle-effect{
+
+    width:180px;
+    height:180px;
+
+    margin-top:25px;
+
+}
+
+
+
+/* =====================================================
+                HP BAR
+===================================================== */
+
+.hp-bar{
+
+    width:320px;
+    height:24px;
+
+    background:#222;
+
+    border-radius:30px;
+
+    margin-top:20px;
+
+    overflow:hidden;
+
+    border:2px solid #555;
+
+}
+
+#player-hp-fill,
+#enemy-hp-fill{
+
+    width:100%;
+    height:100%;
 
     background:
 
     linear-gradient(
-
-    135deg,
-
-    #020617,
-
-    #1e293b
-
+    90deg,
+    #00ff66,
+    #00cc44
     );
 
+    transition:width .25s linear;
 
-    text-align:center;
+}
 
+#player-hp-text,
+#enemy-hp-text{
 
-    padding-top:50px;
+    margin-top:8px;
 
+    font-weight:bold;
 
 }
 
 
 
+/* =====================================================
+                RESULT
+===================================================== */
 
+#victory-screen,
+#defeat-screen,
+#ending-screen{
 
-#custom-screen h2 {
+    position:absolute;
 
-
-    font-size:45px;
-
-
-    color:#22d3ee;
-
-
-}
-
-
-
-
-
-
-#parts {
-
-
-    margin-top:80px;
-
-
-    display:grid;
-
-
-    grid-template-columns:
-
-    repeat(3,200px);
-
-
-    justify-content:center;
-
-
-    gap:30px;
-
-
-}
-
-
-
-
-#parts button {
-
-
-    height:80px;
-
-
-}
-
-
-
-
-
-
-/* =====================================
-   전투 화면
-===================================== */
-
-
-#battle-screen {
-
-
-    width:100%;
-
-    height:100%;
-
-
-    background:
-
-
-    radial-gradient(
-
-    circle,
-
-    #450a0a,
-
-    #020617
-
-    );
-
-
-    text-align:center;
-
-
-    padding-top:50px;
-
-
-}
-
-
-
-
-#battle-screen h2 {
-
-
-    font-size:60px;
-
-
-    color:#f87171;
-
-
-}
-
-
-
-#battle-field {
-
-
-    margin-top:120px;
-
+    inset:0;
 
     display:flex;
 
-
     justify-content:center;
-
 
     align-items:center;
 
+    background:rgba(0,0,0,.88);
 
-    gap:100px;
+    z-index:250;
 
+}
 
+.result-window,
+#ending-box{
 
-    font-size:50px;
+    width:700px;
 
+    padding:50px;
+
+    text-align:center;
+
+    border-radius:20px;
+
+    border:2px solid #00d9ff;
+
+    background:#172130;
+
+    box-shadow:
+
+    0 0 35px rgba(0,217,255,.4);
+
+}
+
+.result-window h1{
+
+    font-size:55px;
+
+    color:#6cf4ff;
+
+    margin-bottom:25px;
+
+}
+
+.result-window h2{
+
+    color:gold;
+
+    margin-bottom:20px;
+
+}
+
+#reward-coin{
+
+    font-size:26px;
+
+    color:#ffd84d;
+
+    margin:18px 0;
+
+}
+
+#reward-part{
+
+    font-size:22px;
+
+    color:#ffffff;
+
+    margin-bottom:30px;
+
+}
+
+.result-window button,
+#ending-box button{
+
+    width:260px;
+
+    height:65px;
+
+    background:
+
+    linear-gradient(
+    #00b0ff,
+    #0077ff
+    );
 
 }
 
 
 
+/* =====================================================
+                ENDING
+===================================================== */
 
+#ending-box h1{
 
-#result-btn {
+    font-size:72px;
 
+    color:gold;
 
-    margin-top:100px;
+    text-shadow:
 
+    0 0 25px gold;
+
+}
+
+#ending-box h2{
+
+    margin:30px 0;
+
+    color:#6cf4ff;
+
+}
+
+#ending-box p{
+
+    font-size:22px;
+
+    line-height:1.8;
+
+    margin-bottom:35px;
 
 }
 
 
 
+/* =====================================================
+                EFFECT
+===================================================== */
 
+.laser{
 
-
-/* =====================================
-   반응형
-===================================== */
-
-
-@media(max-width:800px){
-
-
-#start-screen h1{
-
-
-    font-size:45px;
-
-}
-
-
-#robot-area{
+    position:absolute;
 
     width:220px;
 
-    height:280px;
+    height:6px;
+
+    background:
+
+    linear-gradient(
+    90deg,
+    cyan,
+    white,
+    cyan
+    );
+
+    box-shadow:
+
+    0 0 20px cyan;
+
+    animation:laserShot .25s linear;
 
 }
 
+@keyframes laserShot{
+
+    from{
+
+        transform:scaleX(0);
+
+        opacity:1;
+
+    }
+
+    to{
+
+        transform:scaleX(1);
+
+        opacity:0;
+
+    }
+
+}
+
+
+
+.explosion{
+
+    position:absolute;
+
+    width:140px;
+
+    height:140px;
+
+    border-radius:50%;
+
+    background:
+
+    radial-gradient(
+    circle,
+    yellow,
+    orange,
+    red,
+    transparent
+    );
+
+    animation:explode .45s ease-out;
+
+}
+
+@keyframes explode{
+
+    from{
+
+        transform:scale(.2);
+
+        opacity:1;
+
+    }
+
+    to{
+
+        transform:scale(2);
+
+        opacity:0;
+
+    }
+
+}
+
+
+
+/* =====================================================
+                FLOAT
+===================================================== */
+
+#robotCanvas,
+#customRobotCanvas,
+#playerBattleCanvas,
+#enemyBattleCanvas{
+
+    animation:robotFloat 2.8s ease-in-out infinite;
+
+}
+
+@keyframes robotFloat{
+
+    0%{
+
+        transform:translateY(0px);
+
+    }
+
+    50%{
+
+        transform:translateY(-8px);
+
+    }
+
+    100%{
+
+        transform:translateY(0px);
+
+    }
+
+}
+
+
+
+/* =====================================================
+                STAGE ITEM
+===================================================== */
+
+.stage-item{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:10px 14px;
+
+    margin-bottom:8px;
+
+    border-radius:8px;
+
+    background:#1d2b39;
+
+}
+
+.stage-item.clear{
+
+    background:#007d4f;
+
+}
+
+.stage-item.current{
+
+    border:2px solid gold;
+
+}
+
+
+
+/* =====================================================
+                RESPONSIVE
+===================================================== */
+
+@media (max-width:1100px){
+
+    #battle-ui{
+
+        grid-template-columns:1fr;
+
+        gap:25px;
+
+    }
+
+    #battle-center{
+
+        order:-1;
+
+    }
+
+    .custom-container{
+
+        grid-template-columns:1fr;
+
+        overflow:auto;
+
+    }
+
+    #garage-area{
+
+        transform:translate(-50%,-50%) scale(.8);
+
+    }
+
+}
+
+@media (max-width:700px){
+
+    #game-title{
+
+        font-size:54px;
+
+        letter-spacing:4px;
+
+    }
+
+    #start-buttons button{
+
+        width:260px;
+
+        height:55px;
+
+    }
+
+    #robotCanvas{
+
+        width:320px;
+
+        height:420px;
+
+    }
+
+    #top-right{
+
+        width:170px;
+
+    }
+
+    .result-window,
+    #ending-box{
+
+        width:92%;
+
+        padding:25px;
+
+    }
 
 }
