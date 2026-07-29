@@ -1,288 +1,266 @@
-// =====================================
-// METALBUILD MAIN SYSTEM
-// =====================================
+/*
+=========================================================
+ METALBUILD
+ main.js
+ 게임 시작 및 전체 초기화
+=========================================================
+*/
 
+"use strict";
 
-// 게임 데이터
+// =====================================================
+// 전역 객체
+// =====================================================
 
-let gameData = {
-
-    coin: 0,
-
-    stage: 1,
-
-    maxStage: 100
-
+const App = {
+    initialized: false,
+    currentScreen: "start"
 };
 
+// =====================================================
+// DOM
+// =====================================================
 
+const UI = {
 
+    screens: {
+        start: document.getElementById("startScreen"),
+        garage: document.getElementById("garageScreen"),
+        customize: document.getElementById("customScreen"),
+        gacha: document.getElementById("gachaScreen"),
+        battle: document.getElementById("battleScreen"),
+        victory: document.getElementById("victoryScreen"),
+        defeat: document.getElementById("defeatScreen"),
+        ending: document.getElementById("endingScreen")
+    },
 
+    startBtn: document.getElementById("startBtn"),
+    howBtn: document.getElementById("howBtn"),
+    settingBtn: document.getElementById("settingBtn"),
 
-// =====================================
-// 화면 가져오기
-// =====================================
+    battleBtn: document.getElementById("battleBtn"),
+    customBtn: document.getElementById("customBtn"),
+    gachaBtn: document.getElementById("gachaBtn"),
 
+    closeCustomBtn: document.getElementById("closeCustomBtn"),
+    closeGachaBtn: document.getElementById("closeGachaBtn")
+};
 
-const startScreen = document.getElementById(
-    "start-screen"
-);
+// =====================================================
+// 시작
+// =====================================================
 
+window.addEventListener("DOMContentLoaded", initializeGame);
 
-const homeScreen = document.getElementById(
-    "home-screen"
-);
+// =====================================================
+// 초기화
+// =====================================================
 
+function initializeGame() {
 
-const customScreen = document.getElementById(
-    "custom-screen"
-);
+    if (App.initialized) return;
 
+    App.initialized = true;
 
-const battleScreen = document.getElementById(
-    "battle-screen"
-);
+    console.log("METALBUILD Start");
 
+    bindEvents();
 
+    loadSaveData();
 
+    initializeGameData();
 
-// =====================================
-// 버튼
-// =====================================
+    showScreen("start");
 
-
-const startBtn =
-document.getElementById(
-    "start-btn"
-);
-
-
-const customBtn =
-document.getElementById(
-    "custom-btn"
-);
-
-
-const battleBtn =
-document.getElementById(
-    "battle-btn"
-);
-
-
-const backBtn =
-document.getElementById(
-    "back-btn"
-);
-
-
-
-
-
-// =====================================
-// 시작 화면
-// =====================================
-
-
-startBtn.addEventListener(
-"click",
-
-()=>{
-
-
-    startScreen.classList.add(
-        "hidden"
-    );
-
-
-    homeScreen.classList.remove(
-        "hidden"
-    );
-
-
-    updateUI();
-
+    startGameLoop();
 
 }
 
-);
+// =====================================================
+// 이벤트 연결
+// =====================================================
 
+function bindEvents() {
 
+    UI.startBtn?.addEventListener("click", startGame);
 
+    UI.howBtn?.addEventListener("click", showHowToPlay);
 
+    UI.settingBtn?.addEventListener("click", showSettings);
 
-// =====================================
-// 커스터마이징 이동
-// =====================================
+    UI.battleBtn?.addEventListener("click", enterBattle);
 
+    UI.customBtn?.addEventListener("click", () => {
 
-customBtn.addEventListener(
-"click",
+        showScreen("customize");
 
-()=>{
+    });
 
+    UI.gachaBtn?.addEventListener("click", () => {
 
-    homeScreen.classList.add(
-        "hidden"
-    );
+        showScreen("gacha");
 
+    });
 
-    customScreen.classList.remove(
-        "hidden"
-    );
+    UI.closeCustomBtn?.addEventListener("click", () => {
 
+        showScreen("garage");
 
-}
+    });
 
-);
+    UI.closeGachaBtn?.addEventListener("click", () => {
 
+        showScreen("garage");
 
-
-
-
-// =====================================
-// 전투 이동
-// =====================================
-
-
-battleBtn.addEventListener(
-"click",
-
-()=>{
-
-
-    homeScreen.classList.add(
-        "hidden"
-    );
-
-
-    battleScreen.classList.remove(
-        "hidden"
-    );
-
+    });
 
 }
 
-);
+// =====================================================
+// 화면 전환
+// =====================================================
 
+function showScreen(name) {
 
+    Object.values(UI.screens).forEach(screen => {
 
+        if (!screen) return;
 
+        screen.classList.add("hidden");
 
+    });
 
-// =====================================
-// 뒤로가기
-// =====================================
+    const target = UI.screens[name];
 
+    if (target) {
 
-backBtn.addEventListener(
-"click",
+        target.classList.remove("hidden");
 
-()=>{
-
-
-    customScreen.classList.add(
-        "hidden"
-    );
-
-
-    homeScreen.classList.remove(
-        "hidden"
-    );
-
-
-}
-
-);
-
-
-
-
-
-
-// =====================================
-// UI 업데이트
-// =====================================
-
-
-function updateUI(){
-
-
-    document.getElementById(
-        "coin"
-    ).innerText =
-    gameData.coin;
-
-
-
-    document.getElementById(
-        "stage"
-    ).innerText =
-    gameData.stage;
-
-
-
-}
-
-
-
-
-
-
-
-// =====================================
-// 전투 결과 테스트용
-// 추후 battle.js에서 연결
-// =====================================
-
-
-function winBattle(){
-
-
-    gameData.stage++;
-
-
-    gameData.coin += 100;
-
-
-    if(gameData.stage >
-    gameData.maxStage){
-
-
-        gameData.stage =
-        gameData.maxStage;
-
+        App.currentScreen = name;
 
     }
 
+}
 
+// =====================================================
+// 게임 시작
+// =====================================================
 
-    updateUI();
+function startGame() {
 
+    showScreen("garage");
 
 }
 
+// =====================================================
+// 게임 설명
+// =====================================================
 
-
-
-
-
-function loseBattle(){
-
+function showHowToPlay() {
 
     alert(
-        "MISSION FAILED"
-    );
+`METALBUILD
 
+• 스테이지를 클리어하세요.
+• 파츠를 획득하세요.
+• 메카를 강화하세요.
+• Stage 100의 보스를 쓰러뜨리세요.`
+    );
 
 }
 
+// =====================================================
+// 설정
+// =====================================================
 
+function showSettings() {
 
+    alert("설정 화면은 추후 구현됩니다.");
 
+}
 
-// =====================================
-// 게임 시작
-// =====================================
+// =====================================================
+// 전투 진입
+// =====================================================
 
+function enterBattle() {
 
-updateUI();
+    showScreen("battle");
+
+    if (typeof startBattle === "function") {
+
+        startBattle();
+
+    }
+
+}
+
+// =====================================================
+// 게임 루프
+// =====================================================
+
+function startGameLoop() {
+
+    function loop() {
+
+        if (typeof updateGame === "function") {
+
+            updateGame();
+
+        }
+
+        if (typeof renderGame === "function") {
+
+            renderGame();
+
+        }
+
+        requestAnimationFrame(loop);
+
+    }
+
+    requestAnimationFrame(loop);
+
+}
+
+// =====================================================
+// 저장 불러오기
+// =====================================================
+
+function loadSaveData() {
+
+    if (typeof loadGame === "function") {
+
+        loadGame();
+
+    }
+
+}
+
+// =====================================================
+// 게임 데이터 초기화
+// =====================================================
+
+function initializeGameData() {
+
+    if (typeof createPlayer === "function") {
+
+        createPlayer();
+
+    }
+
+    if (typeof initializeParts === "function") {
+
+        initializeParts();
+
+    }
+
+    if (typeof initializeStages === "function") {
+
+        initializeStages();
+
+    }
+
+}
+
+console.log("main.js loaded");
