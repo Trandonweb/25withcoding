@@ -381,6 +381,13 @@ pinInput.addEventListener("input", () => {
   pinInput.value = value;
 });
 
+// 엔터키 입력 이벤트 추가
+pinInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    checkPin();
+  }
+});
+
 function checkPin() {
   const pin = document.getElementById("pinInput").value;
   const ok = pin === memoData.pin || pin === MASTER_KEY;
