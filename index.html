@@ -18,6 +18,39 @@
 
   <style>
 
+    :root {
+      --bg-color: #F0F0F0;
+      --card-bg: #ffffff;
+      --text-color: #111111;
+      --header-bg: #F0F0F0;
+      --header-text: #1e7f4b;
+      --border-color: #27ae60;
+      --card-hover-bg: #eafff1;
+      --btn-bg: #e0e0e0;
+      --btn-text: #333333;
+      --btn-hover: #d0d0d0;
+      --transition-val: 0.2s;
+      --transform-val: scale(1.03);
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1E1E1E;
+      --text-color: #FFFFFF;
+      --header-bg: #121212;
+      --header-text: #33CC77;
+      --border-color: #33CC77;
+      --card-hover-bg: #252525;
+      --btn-bg: #2C2C2C;
+      --btn-text: #FFFFFF;
+      --btn-hover: #3A3A3A;
+    }
+
+    body.no-anim {
+      --transition-val: 0s;
+      --transform-val: none;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -25,64 +58,66 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #F0F0F0;
-      color: #111;
+      background: var(--bg-color);
+      color: var(--text-color);
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
+      transition: background var(--transition-val), color var(--transition-val);
     }
 
     header {
       position: relative;
       width: 100%;
       padding: 22px;
-      background: #F0F0F0;
-      color: #1e7f4b;
+      background: var(--header-bg);
+      color: var(--header-text);
       text-align: center;
       font-size: 26px;
       font-weight: bold;
-      border-bottom: 3px solid #27ae60;
+      border-bottom: 3px solid var(--border-color);
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
       letter-spacing: 1px;
     }
 
-    .admin-btn {
+    .header-left {
       position: absolute;
       left: 20px;
       top: 16px;
+      display: flex;
+      gap: 10px;
+    }
 
+    .header-btn {
       border: none;
       border-radius: 10px;
-
       padding: 10px 15px;
-
-      background: #e0e0e0;
-      color: #333;
-
+      background: var(--btn-bg);
+      color: var(--btn-text);
       cursor: pointer;
       font-size: 14px;
       font-weight: bold;
-      display: none; /* 권한 확인 전 숨김 처리 */
+      transition: background var(--transition-val);
     }
 
-    .admin-btn:hover {
-      background: #d0d0d0;
+    .header-btn:hover {
+      background: var(--btn-hover);
+    }
+
+    #adminBtn {
+      display: none; /* 권한 확인 전 숨김 처리 */
     }
 
     .auth-btn {
       position: absolute;
       right: 20px;
       top: 16px;
-
       border: none;
       border-radius: 10px;
-
       padding: 10px 15px;
-
       background: #27ae60;
       color: white;
-
       cursor: pointer;
       font-size: 14px;
       font-weight: bold;
@@ -99,23 +134,23 @@
     }
 
     .card {
-      background: white;
+      background: var(--card-bg);
       padding: 22px;
       margin: 18px 0;
       border-radius: 18px;
       cursor: pointer;
-      transition: 0.2s;
-      border: 2px solid #27ae60;
+      transition: transform var(--transition-val), background var(--transition-val), border var(--transition-val);
+      border: 2px solid var(--border-color);
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       text-align: center;
       font-size: 18px;
       font-weight: bold;
-      color: #111;
+      color: var(--text-color);
     }
 
     .card:hover {
-      transform: scale(1.03);
-      background: #eafff1;
+      transform: var(--transform-val);
+      background: var(--card-hover-bg);
     }
 
     .footer {
@@ -125,15 +160,161 @@
       font-size: 13px;
     }
 
+    /* 설정 모달 스타일 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      color: var(--text-color);
+      width: 90%;
+      max-width: 450px;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      border: 2px solid var(--border-color);
+      max-height: 85vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .setting-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .setting-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .setting-desc {
+      font-size: 12px;
+      color: #888;
+    }
+
+    /* 토글 스위치 디자인 */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 26px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #27ae60;
+    }
+
+    body.dark-mode input:checked + .slider {
+      background-color: #33CC77;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    .badge-disabled {
+      font-size: 11px;
+      background: #ccc;
+      color: #666;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
   </style>
 </head>
 
 <body>
 
   <header>
-    <button id="adminBtn" class="admin-btn" onclick="location.href='/admin'">
-      관리자
-    </button>
+    <div class="header-left">
+      <button id="adminBtn" class="header-btn" onclick="location.href='/admin'">
+        관리자
+      </button>
+      <button id="settingsBtn" class="header-btn" onclick="openSettingsModal()">
+        설정
+      </button>
+    </div>
 
     코딩과 함께라면
 
@@ -170,38 +351,157 @@
     2026 코딩과함께라면 | SINCE 2025
   </div>
 
+  <!-- 설정 모달 창 -->
+  <div id="settingsModal" class="modal-overlay" onclick="handleModalOutsideClick(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>환경 설정</span>
+        <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-title">다크 모드</span>
+          <span class="setting-desc">화면을 어둡게 표시합니다.</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="darkModeToggle" onchange="toggleSetting('darkMode', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-title">애니메이션 효과</span>
+          <span class="setting-desc">각종 전환 효과 및 반응 애니메이션을 활성화합니다.</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="animationToggle" onchange="toggleSetting('animation', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-title">화면 공유 확인창</span>
+          <span class="setting-desc">로그인 시 화면 공유 확인창을 띄웁니다.</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="mirrorConfirmToggle" onchange="toggleSetting('mirrorConfirm', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-title">카드 확대 효과</span>
+          <span class="setting-desc">마우스 오버 시 카드가 확대됩니다.</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="cardScaleToggle" onchange="toggleSetting('cardScale', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-title">개발 중 기능</span>
+          <span class="setting-desc">추후 추가될 새로운 기능입니다.</span>
+        </div>
+        <span class="badge-disabled">준비 중</span>
+      </div>
+
+    </div>
+  </div>
+
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-
-import {
-  getFirestore,
-  doc,
-  getDoc
-}
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
-
-  apiKey:
-    "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-
-  authDomain:
-    "points2026-f5e50.firebaseapp.com",
-
-  projectId:
-    "points2026-f5e50"
-
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain: "points2026-f5e50.firebaseapp.com",
+  projectId: "points2026-f5e50"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// 설정 시스템 모듈화
+const SETTINGS_KEY = "coding_with_ramen_settings";
+
+const defaultSettings = {
+  darkMode: false,
+  animation: true,
+  mirrorConfirm: true,
+  cardScale: true
+};
+
+function getStoredSettings() {
+  const saved = localStorage.getItem(SETTINGS_KEY);
+  if (saved) {
+    try {
+      return { ...defaultSettings, ...JSON.parse(saved) };
+    } catch (e) {
+      return defaultSettings;
+    }
+  }
+  return defaultSettings;
+}
+
+function saveStoredSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+// 설정값 즉시 적용 함수
+function applySettings(settings) {
+  // 1. 테마 설정
+  if (settings.darkMode) {
+    document.body.classList.add("dark-mode");
+  } else {
+    document.body.classList.remove("dark-mode");
+  }
+
+  // 2. 애니메이션 설정
+  if (!settings.animation) {
+    document.body.classList.add("no-anim");
+  } else {
+    document.body.classList.remove("no-anim");
+  }
+
+  // 4. 카드 확대 효과 (애니메이션 토글과 연계되거나 개별 제어)
+  if (!settings.cardScale) {
+    document.documentElement.style.setProperty('--transform-val', 'none');
+  } else {
+    document.documentElement.style.setProperty('--transform-val', 'scale(1.03)');
+  }
+}
+
+// UI 토글 요소와 동기화
+function syncSettingsUI() {
+  const settings = getStoredSettings();
+  document.getElementById("darkModeToggle").checked = settings.darkMode;
+  document.getElementById("animationToggle").checked = settings.animation;
+  document.getElementById("mirrorConfirmToggle").checked = settings.mirrorConfirm;
+  document.getElementById("cardScaleToggle").checked = settings.cardScale;
+}
+
+// 설정 변경 핸들러
+window.toggleSetting = function(key, value) {
+  const settings = getStoredSettings();
+  settings[key] = value;
+  saveStoredSettings(settings);
+  applySettings(settings);
+};
+
+// 페이지 로드 시 즉시 설정 적용 (깜빡임 방지)
+const initialSettings = getStoredSettings();
+applySettings(initialSettings);
+
 function go(path){
     location.href = path;
 }
-
 window.go = go;
 
 function goPoint(){
@@ -213,7 +513,6 @@ function goPoint(){
         location.href="/signin?redirect=/상벌점/main.html";
     }
 }
-
 window.goPoint = goPoint;
 
 async function updateUI(){
@@ -222,7 +521,7 @@ async function updateUI(){
     const btn = document.getElementById("authBtn");
     const adminBtn = document.getElementById("adminBtn");
 
-    // 관리자(회장, 부회장) 권한인 경우에만 왼쪽 상단 관리자 버튼 표시
+    // 관리자(회장, 부회장) 권한인 경우에만 관리자 버튼 표시
     if (user) {
         try {
             const userSnap = await getDoc(doc(db, "users", user));
@@ -237,9 +536,11 @@ async function updateUI(){
         }
     }
 
-    // 이번 탭에서 이미 물어봤는가?
-    const askedMirror =
-        sessionStorage.getItem("askedMirror");
+    // 설정 UI 동기화
+    syncSettingsUI();
+
+    const settings = getStoredSettings();
+    const askedMirror = sessionStorage.getItem("askedMirror");
 
     if(user){
 
@@ -249,8 +550,8 @@ async function updateUI(){
             location.href="/signout?redirect=/";
         };
 
-        // 처음 로그인한 경우에만 물어보기
-        if(!askedMirror){
+        // 처음 로그인한 경우 & 설정에서 화면 공유 확인창이 ON인 경우에만 물어보기
+        if(!askedMirror && settings.mirrorConfirm){
 
             setTimeout(()=>{
 
@@ -258,17 +559,13 @@ async function updateUI(){
                     "화면 공유를 시작하시겠습니까?\n\n관리자가 화면을 실시간으로 확인할 수 있습니다."
                 );
 
-                // 이번 탭에서는 다시 안 물어봄
                 sessionStorage.setItem(
                     "askedMirror",
                     "true"
                 );
 
                 if(ok){
-
-                    location.href =
-                    "/admin/mirroring/client.html";
-
+                    location.href = "/admin/mirroring/client.html";
                 }
 
             },300);
@@ -280,8 +577,7 @@ async function updateUI(){
         btn.textContent="로그인";
 
         btn.onclick=()=>{
-            location.href=
-            "/signin?redirect=/";
+            location.href = "/signin?redirect=/";
         };
 
     }
@@ -289,6 +585,23 @@ async function updateUI(){
 }
 
 updateUI();
+
+// 모달 제어 함수
+window.openSettingsModal = function() {
+    syncSettingsUI();
+    document.getElementById("settingsModal").classList.add("active");
+};
+
+window.closeSettingsModal = function() {
+    document.getElementById("settingsModal").classList.remove("active");
+};
+
+window.handleModalOutsideClick = function(event) {
+    const modalOverlay = document.getElementById("settingsModal");
+    if (event.target === modalOverlay) {
+        closeSettingsModal();
+    }
+};
 
 </script>
 </body>
