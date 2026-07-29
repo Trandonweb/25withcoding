@@ -1258,3 +1258,86 @@ text-shadow:
 /* =========================
    끝
 ========================= */
+.shake{
+    animation:shake .4s;
+}
+
+@keyframes shake{
+    0%{transform:translateX(0);}
+    25%{transform:translateX(-8px);}
+    50%{transform:translateX(8px);}
+    75%{transform:translateX(-8px);}
+    100%{transform:translateX(0);}
+}
+
+.correctFlash{
+    background:#22c55e !important;
+}
+
+.wrongFlash{
+    background:#ef4444 !important;
+}
+
+.levelUpEffect{
+    position:fixed;
+    top:45%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:60px;
+    font-weight:bold;
+    color:#ffd700;
+    z-index:9999;
+    animation:zoomFade 1.5s forwards;
+}
+
+.scorePopup{
+    position:fixed;
+    top:20%;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:36px;
+    color:#00ff66;
+    animation:popup 1s forwards;
+}
+
+.achievementPopup{
+    position:fixed;
+    right:20px;
+    top:20px;
+    background:#222;
+    color:white;
+    padding:15px 25px;
+    border-radius:12px;
+    animation:popup 2.5s forwards;
+}
+
+.buttonPop{
+    transform:scale(.9);
+}
+
+.particle{
+    position:fixed;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    animation:fall linear forwards;
+}
+
+@keyframes popup{
+    0%{opacity:0;transform:translateY(20px);}
+    20%{opacity:1;}
+    80%{opacity:1;}
+    100%{opacity:0;transform:translateY(-30px);}
+}
+
+@keyframes zoomFade{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.5);}
+    30%{opacity:1;}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(1.8);}
+}
+
+@keyframes fall{
+    to{
+        transform:translateY(110vh) rotate(720deg);
+    }
+}
