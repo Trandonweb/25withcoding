@@ -75,11 +75,11 @@ function showDifficultyScreen() {
         align-items: center;
         width: 100%;
         height: 100%;
-        min-height: 100%;
+        min-height: 750px;
         background-color: #121212;
         color: #ffffff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        padding: 15px;
+        padding: 25px;
         box-sizing: border-box;
         overflow-y: auto;
     ">
@@ -87,31 +87,31 @@ function showDifficultyScreen() {
             background: #1e1e1e;
             border: 2px solid #1ea857;
             border-radius: 16px;
-            padding: 25px;
+            padding: 35px;
             width: 100%;
-            max-width: 420px;
+            max-width: 480px;
             text-align: center;
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
-            <h2 style="color: #1ea857; margin-bottom: 8px; font-size: 1.8rem;">⚾ AI 투수 챌린지</h2>
-            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.9rem;">카메라 줌인 시점과 역대급 구종 차이를 극복하라!</p>
+            <h2 style="color: #1ea857; margin-bottom: 12px; font-size: 2.1rem;">⚾ AI 투수 챌린지</h2>
+            <p style="color: #b0b0b0; margin-bottom: 25px; font-size: 1rem;">카메라 줌인 시점과 역대급 구종 차이를 극복하라!</p>
             
-            <h3 style="margin-bottom: 12px; font-size: 1rem;">난이도 선택</h3>
+            <h3 style="margin-bottom: 15px; font-size: 1.1rem;">난이도 선택</h3>
             
-            <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
                 <button class="game-btn" data-level="easy" style="
-                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 12px;
-                    border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
+                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 15px;
+                    border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
                     transition: all 0.2s;
                 ">쉬움 (Easy)</button>
                 <button class="game-btn" data-level="normal" style="
-                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 12px;
-                    border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
+                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 15px;
+                    border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
                     transition: all 0.2s;
                 ">보통 (Normal)</button>
                 <button class="game-btn" data-level="hard" style="
-                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 12px;
-                    border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
+                    background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 15px;
+                    border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
                     transition: all 0.2s;
                 ">어려움 (Hard)</button>
             </div>
@@ -176,7 +176,7 @@ function renderGameScreen() {
         flex-direction: column;
         width: 100%;
         height: 100%;
-        min-height: 100%;
+        min-height: 750px;
         background-color: #121212;
         color: #ffffff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -189,33 +189,33 @@ function renderGameScreen() {
             justify-content: space-between;
             align-items: center;
             background: #1e1e1e;
-            padding: 10px 15px;
+            padding: 14px 20px;
             border-bottom: 2px solid #1ea857;
             flex-shrink: 0;
         ">
             <div>
-                <span style="font-size: 0.8rem; color: #888;">난이도:</span> 
-                <strong style="color: #1ea857; font-size: 0.9rem;">${lv.name}</strong>
+                <span style="font-size: 0.9rem; color: #888;">난이도:</span> 
+                <strong style="color: #1ea857; font-size: 1rem;">${lv.name}</strong>
             </div>
             <div>
-                <span style="font-size: 0.8rem; color: #888;">투구:</span> 
-                <strong id="pitch-counter" style="font-size: 0.9rem;">${baseball.pitchCount}</strong><span style="font-size: 0.8rem; color: #888;">/${baseball.maxPitches}</span>
+                <span style="font-size: 0.9rem; color: #888;">투구:</span> 
+                <strong id="pitch-counter" style="font-size: 1rem;">${baseball.pitchCount}</strong><span style="font-size: 0.9rem; color: #888;">/${baseball.maxPitches}</span>
             </div>
             <div>
-                <span style="font-size: 0.8rem; color: #888;">점수:</span> 
-                <strong id="score-display" style="color: #1ea857; font-size: 1.1rem;">${baseball.score}</strong>점
-                <span id="combo-display" style="font-size: 0.75rem; color: #ffeb3b; margin-left: 4px;"></span>
+                <span style="font-size: 0.9rem; color: #888;">점수:</span> 
+                <strong id="score-display" style="color: #1ea857; font-size: 1.25rem;">${baseball.score}</strong>점
+                <span id="combo-display" style="font-size: 0.85rem; color: #ffeb3b; margin-left: 6px;"></span>
             </div>
         </div>
 
         <!-- 오늘의 구종 안내 (고정 높이) -->
         <div style="
             background: #181818;
-            padding: 6px 10px;
+            padding: 10px 15px;
             display: flex;
             justify-content: center;
-            gap: 12px;
-            font-size: 0.8rem;
+            gap: 18px;
+            font-size: 0.9rem;
             border-bottom: 1px solid #2a2a2a;
             flex-wrap: wrap;
             flex-shrink: 0;
@@ -224,7 +224,7 @@ function renderGameScreen() {
             ${baseball.selectedPitches.map(p => `<span style="color: #a0e8af;">✅ ${p.name}</span>`).join('')}
         </div>
 
-        <!-- 야구장 Canvas 영역 (남은 공간을 유연하게 차지) -->
+        <!-- 야구장 Canvas 영역 (남은 공간을 유연하게 차지, 3배 높이에 맞춰 넉넉한 공간 제공) -->
         <div style="
             flex: 1;
             position: relative;
@@ -234,22 +234,22 @@ function renderGameScreen() {
             background: radial-gradient(circle at center, #1a3c27 0%, #0d1a12 100%);
             overflow: hidden;
             cursor: pointer;
-            min-height: 0;
+            min-height: 480px;
         " id="canvas-container">
             <canvas id="baseballCanvas" style="display: block; width: 100%; height: 100%;"></canvas>
             
             <!-- 상태 메시지/결과 오버레이 -->
             <div id="status-overlay" style="
                 position: absolute;
-                top: 10%;
-                font-size: 1.5rem;
+                top: 12%;
+                font-size: 1.8rem;
                 font-weight: 900;
                 text-align: center;
                 text-shadow: 0 4px 12px rgba(0,0,0,0.8);
                 pointer-events: none;
                 transition: opacity 0.3s;
                 opacity: 0;
-                padding: 0 10px;
+                padding: 0 15px;
                 box-sizing: border-box;
                 width: 100%;
             "></div>
@@ -258,30 +258,30 @@ function renderGameScreen() {
         <!-- 하단 안내 및 스윙 버튼 영역 (고정 높이) -->
         <div style="
             background: #181818;
-            padding: 12px 15px;
+            padding: 18px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             border-top: 1px solid #2a2a2a;
             flex-shrink: 0;
         ">
-            <div style="font-size: 0.8rem; color: #aaa;">
+            <div style="font-size: 0.9rem; color: #aaa;">
                 마우스 클릭 또는 [SPACE]로 스윙!
             </div>
             <button id="swing-btn" style="
                 background: #1ea857;
                 color: white;
                 border: none;
-                padding: 10px 35px;
-                border-radius: 25px;
-                font-size: 1rem;
+                padding: 14px 45px;
+                border-radius: 30px;
+                font-size: 1.1rem;
                 font-weight: bold;
                 cursor: pointer;
                 box-shadow: 0 4px 15px rgba(30,168,87,0.4);
                 transition: transform 0.1s;
                 width: 100%;
-                max-width: 250px;
+                max-width: 300px;
             ">🏏 스윙!</button>
         </div>
     </div>
@@ -411,7 +411,7 @@ function startPitchAnimation() {
 
     p.active = true;
     p.progress = 0; 
-    p.speed = (p.pitchObj.speed * 0.0065) * lv.speedMul;
+    p.speed = (p.pitchObj.speed * 0.0055) * lv.speedMul;
 
     const render = () => {
         if (!ctxRef || !canvasRef || !p.active) return;
@@ -433,17 +433,17 @@ function startPitchAnimation() {
         const h = canvasRef.height;
 
         const startX = w / 2;
-        const startY = h * 0.25;
+        const startY = h * 0.22;
         const targetX = w / 2;
-        const targetY = h * 0.70;
+        const targetY = h * 0.75;
 
-        const hOffset = p.pitchObj.hBreak * Math.sin(p.progress * Math.PI) * 45;
+        const hOffset = p.pitchObj.hBreak * Math.sin(p.progress * Math.PI) * 55;
         
         let vDropFactor = Math.pow(p.progress, 2);
         if (p.pitchObj.id === 'fork' || p.pitchObj.id === 'curve') {
             vDropFactor = p.progress > 0.55 ? Math.pow(p.progress, 4.5) * 1.8 : Math.pow(p.progress, 2);
         }
-        const vOffset = p.pitchObj.vBreak * vDropFactor * 55;
+        const vOffset = p.pitchObj.vBreak * vDropFactor * 65;
 
         const currentX = startX + (targetX - startX) * p.progress + hOffset;
         const currentY = startY + (targetY - startY) * p.progress + vOffset;
@@ -451,7 +451,7 @@ function startPitchAnimation() {
         p.x = currentX;
         p.y = currentY;
 
-        const radius = 6 + (Math.pow(p.progress, 1.5) * 30);
+        const radius = 5 + (Math.pow(p.progress, 1.5) * 35);
 
         ctxRef.beginPath();
         ctxRef.fillStyle = 'rgba(0, 0, 0, 0.45)';
@@ -493,22 +493,22 @@ function drawCameraPerspective(progress) {
         ctxRef.beginPath();
         ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.8)';
         ctxRef.lineWidth = 4;
-        ctxRef.strokeRect(w / 2 - 80, h * 0.50, 160, 140);
+        ctxRef.strokeRect(w / 2 - 90, h * 0.52, 180, 150);
     } else if (progress > 0.6) {
         ctxRef.beginPath();
         ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.5)';
         ctxRef.lineWidth = 2;
-        ctxRef.strokeRect(w / 2 - 60, h * 0.55, 120, 100);
+        ctxRef.strokeRect(w / 2 - 70, h * 0.57, 140, 110);
     } else if (progress > 0.3) {
         ctxRef.beginPath();
         ctxRef.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctxRef.lineWidth = 1.5;
-        ctxRef.strokeRect(w / 2 - 40, h * 0.58, 80, 70);
+        ctxRef.strokeRect(w / 2 - 45, h * 0.61, 90, 80);
     } else {
         ctxRef.beginPath();
         ctxRef.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         ctxRef.lineWidth = 1;
-        ctxRef.strokeRect(w / 2 - 25, h * 0.62, 50, 50);
+        ctxRef.strokeRect(w / 2 - 25, h * 0.65, 50, 50);
     }
 
     ctxRef.restore();
@@ -652,11 +652,11 @@ function endGame() {
         align-items: center;
         width: 100%;
         height: 100%;
-        min-height: 100%;
+        min-height: 750px;
         background-color: #121212;
         color: #ffffff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        padding: 20px;
+        padding: 25px;
         box-sizing: border-box;
         overflow-y: auto;
     ">
@@ -664,24 +664,24 @@ function endGame() {
             background: #1e1e1e;
             border: 2px solid #1ea857;
             border-radius: 16px;
-            padding: 30px 25px;
+            padding: 35px 30px;
             width: 100%;
-            max-width: 420px;
+            max-width: 480px;
             text-align: center;
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
-            <h2 style="color: #ff5252; margin-bottom: 5px; font-size: 2rem;">GAME OVER</h2>
-            <p style="color: #888; margin-bottom: 18px; font-size: 0.9rem;">축제 최고의 타자에 도전하세요!</p>
+            <h2 style="color: #ff5252; margin-bottom: 8px; font-size: 2.2rem;">GAME OVER</h2>
+            <p style="color: #888; margin-bottom: 22px; font-size: 1rem;">축제 최고의 타자에 도전하세요!</p>
             
             <div style="
                 background: #252525;
-                padding: 16px;
+                padding: 20px;
                 border-radius: 12px;
-                margin-bottom: 20px;
+                margin-bottom: 25px;
             ">
-                <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 4px;">HUMAN FINAL SCORE</div>
-                <div style="font-size: 2.5rem; font-weight: 900; color: #1ea857;">${baseball.score} 점</div>
-                <div style="font-size: 0.8rem; color: #888; margin-top: 6px;">
+                <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 6px;">HUMAN FINAL SCORE</div>
+                <div style="font-size: 3rem; font-weight: 900; color: #1ea857;">${baseball.score} 점</div>
+                <div style="font-size: 0.9rem; color: #888; margin-top: 8px;">
                     타격 성공률: ${successRate}% (${baseball.playerHistory.hits}/${baseball.maxPitches})
                 </div>
             </div>
@@ -690,10 +690,10 @@ function endGame() {
                 background: #1ea857;
                 color: white;
                 border: none;
-                padding: 12px;
+                padding: 15px;
                 width: 100%;
                 border-radius: 8px;
-                font-size: 1rem;
+                font-size: 1.1rem;
                 font-weight: bold;
                 cursor: pointer;
                 transition: background 0.2s;
