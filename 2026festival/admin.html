@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>코딩과 함께라면 2026 Festival 관리자</title>
+
 
 <style>
 
@@ -12,55 +14,58 @@
   box-sizing:border-box;
 }
 
+
 body{
+
   margin:0;
   padding:20px;
+
   background:#0b0b10;
   color:white;
+
   font-family:'Malgun Gothic',sans-serif;
+
 }
 
 
-/* 상단 */
-h1{
-  margin:0 -20px 25px;
-  padding:20px;
+/* 헤더 */
+
+header{
+
+  margin:-20px -20px 25px;
+
+  padding:22px;
 
   text-align:center;
 
-  background:linear-gradient(
-    90deg,
-    #00c853,
-    #64dd17
-  );
-
-  color:white;
-
   font-size:26px;
+
+  font-weight:bold;
+
+  background:
+  linear-gradient(90deg,#00c853,#64dd17);
 
   box-shadow:
   0 5px 20px rgba(0,0,0,.4);
+
 }
 
 
-/* 전체 영역 */
+
+/* 앱 */
+
 #app{
+
   max-width:900px;
+
   margin:auto;
+
 }
 
 
-/* 제목 */
-h2{
-  margin-top:0;
-  padding-bottom:10px;
 
-  border-bottom:
-  1px solid rgba(255,255,255,.15);
-}
+/* 박스 */
 
-
-/* 카드 */
 .panel{
 
   background:#171720;
@@ -72,12 +77,43 @@ h2{
   margin-bottom:25px;
 
   box-shadow:
-  0 10px 30px rgba(0,0,0,.3);
+  0 10px 30px rgba(0,0,0,.35);
 
 }
 
 
+
+/* 제목 */
+
+h2{
+
+  margin-top:0;
+
+  border-bottom:
+  1px solid #333;
+
+  padding-bottom:10px;
+
+}
+
+
+
 /* 입력 */
+
+label{
+
+  display:block;
+
+  margin-bottom:6px;
+
+  color:#ddd;
+
+  font-weight:bold;
+
+}
+
+
+
 input,
 textarea,
 select{
@@ -86,20 +122,20 @@ select{
 
   padding:13px;
 
-  margin-top:8px;
   margin-bottom:18px;
-
-  border-radius:10px;
-
-  border:1px solid #333;
 
   background:#111118;
 
   color:white;
 
+  border:1px solid #333;
+
+  border-radius:10px;
+
   font-size:15px;
 
 }
+
 
 
 input:focus,
@@ -110,38 +146,21 @@ select:focus{
 
   border-color:#00c853;
 
-  box-shadow:
-  0 0 10px rgba(0,200,83,.4);
-
 }
+
 
 
 textarea{
 
   min-height:100px;
 
-  resize:vertical;
-
-}
-
-
-
-/* 라벨 */
-label{
-
-  font-weight:bold;
-
-  display:block;
-
-  margin-top:10px;
-
-  color:#ddd;
-
 }
 
 
 
 /* URL */
+
+
 .url-box{
 
   display:flex;
@@ -151,26 +170,26 @@ label{
 }
 
 
+
 .url-prefix{
 
   display:flex;
 
   align-items:center;
 
-  padding:0 14px;
+  padding:0 15px;
 
   background:#252530;
-
-  border-radius:
-  10px 0 0 10px;
-
-  font-size:14px;
 
   color:#aaa;
 
   white-space:nowrap;
 
+  border-radius:
+  10px 0 0 10px;
+
 }
+
 
 
 .url-box input{
@@ -194,13 +213,14 @@ button{
 
   padding:13px 20px;
 
-  font-size:15px;
-
   font-weight:bold;
+
+  cursor:pointer;
 
   transition:.2s;
 
 }
+
 
 
 button:hover{
@@ -210,30 +230,30 @@ button:hover{
 }
 
 
-/* 추가 버튼 */
 
-button:not(.delete){
+.add{
+
+  width:100%;
 
   background:#00c853;
 
   color:white;
 
-  width:100%;
-
 }
+
 
 
 /* 작품 카드 */
 
 .card{
 
-  background:#171720;
+  background:#111118;
 
   padding:18px;
 
-  margin-top:15px;
-
   border-radius:15px;
+
+  margin-top:15px;
 
   border-left:
   5px solid #00c853;
@@ -242,19 +262,32 @@ button:not(.delete){
 
 
 
-.card b{
+.card-title{
 
   font-size:20px;
 
+  font-weight:bold;
+
 }
 
 
 
-.card span{
+.badge{
 
   display:inline-block;
 
+  padding:5px 10px;
+
+  margin-top:8px;
+
+  border-radius:20px;
+
+  background:#333;
+
+  font-size:13px;
+
 }
+
 
 
 /* 삭제 */
@@ -273,22 +306,6 @@ button:not(.delete){
 
 
 
-hr{
-
-  border:none;
-
-  height:1px;
-
-  background:#333;
-
-  margin:30px 0;
-
-}
-
-
-
-/* 모바일 */
-
 @media(max-width:600px){
 
  body{
@@ -298,10 +315,9 @@ hr{
  }
 
 
- h1{
+ header{
 
-  margin:
-  0 -12px 20px;
+  margin:-12px -12px 20px;
 
   font-size:22px;
 
@@ -333,27 +349,143 @@ hr{
  }
 
 }
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+🛠 코딩과 함께라면<br>
+2026 Festival 관리자
+</header>
+
+
+
+<div id="app" style="display:none">
+
+
+<div class="panel">
+
+
+<h2>작품 추가</h2>
+
+
+<label>작품명</label>
+<input id="title">
+
+
+<label>개발자</label>
+<input id="by">
+
+
+<label>설명</label>
+<textarea id="detail"></textarea>
+
+
+<label>사용법</label>
+<textarea id="howto"></textarea>
+
+
+<label>참고사항</label>
+<textarea id="note"></textarea>
+
+
+<label>유형</label>
+
+<select id="type" onchange="changeType()">
+
+<option value="github">
+GitHub
+</option>
+
+<option value="entry">
+Entry
+</option>
+
+</select>
+
+
+
+<label>URL</label>
+
+<div class="url-box">
+
+<span class="url-prefix">
+https://25withcoding.kr/
+</span>
+
+<input id="url"
+placeholder="페이지 주소">
+
+</div>
+
+
+
+<label>썸네일 URL</label>
+
+<input id="thum"
+placeholder="https://부터 입력">
+
+
+
+<div id="embedBox" style="display:none">
+
+<label>
+엔트리 퍼가기 코드
+</label>
+
+<textarea id="embed"></textarea>
+
+</div>
+
+
+
+<button class="add" onclick="addProject()">
++ 작품 추가
+</button>
+
+
+</div>
+
+
+
+<div class="panel">
+
+
+<h2>등록된 작품</h2>
+
+
+<div id="list"></div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
 <script type="module">
 
-
 import { initializeApp }
-
 from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-
 
 
 import {
 
 getFirestore,
-
 collection,
-
 getDocs,
-
 doc,
-
 setDoc,
-
 deleteDoc
 
 }
@@ -362,13 +494,10 @@ from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 
 
+const pw=prompt("관리자 비밀번호");
 
 
-const pw = prompt("관리자 비밀번호");
-
-
-
-if(pw !== "20262326"){
+if(pw!=="20262326"){
 
 document.body.innerHTML="접근 거부";
 
@@ -378,19 +507,13 @@ throw new Error("Denied");
 
 
 
-
-
 document.getElementById("app").style.display="block";
 
 
 
+const firebaseConfig={
 
-
-
-const firebaseConfig = {
-
-
-apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
+apiKey:"AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
 
 authDomain:"festivallikes.firebaseapp.com",
 
@@ -406,40 +529,21 @@ appId:"1:782245120700:web:c61e16313e9ae688e6deb9"
 
 
 
+const app=initializeApp(firebaseConfig);
 
-
-
-const app = initializeApp(firebaseConfig);
-
-
-const db = getFirestore(app);
-
-
-
+const db=getFirestore(app);
 
 
 
 
 window.changeType=function(){
 
-
-const type =
+const type=
 document.getElementById("type").value;
 
 
-
-document.getElementById("embedBox").style.display =
-
-type==="entry"
-
-?
-
-"block"
-
-:
-
-"none";
-
+document.getElementById("embedBox").style.display=
+type==="entry"?"block":"none";
 
 };
 
@@ -447,19 +551,11 @@ type==="entry"
 
 
 
+window.addProject=async function(){
 
 
-
-
-window.addProject = async function(){
-
-
-
-const title =
-
+const title=
 document.getElementById("title").value.trim();
-
-
 
 
 if(!title){
@@ -471,100 +567,45 @@ return;
 }
 
 
-
-
-
-const type =
-
+const type=
 document.getElementById("type").value;
 
 
 
-
 await setDoc(
-
 doc(db,"projects",title),
-
 {
 
+by:document.getElementById("by").value,
 
-by:
-document.getElementById("by").value,
+detail:document.getElementById("detail").value,
 
+howto:document.getElementById("howto").value,
 
-
-detail:
-document.getElementById("detail").value,
-
-
-
-howto:
-document.getElementById("howto").value,
-
-
-
-note:
-document.getElementById("note").value,
-
-
+note:document.getElementById("note").value,
 
 type:type,
 
-
-
 url:
-
-"https://25withcoding.kr/" +
-
-document
-
-.getElementById("url")
-
-.value
-
-.replace(/^\/+/,""),
-
-
-
+"https://25withcoding.kr/"+
+document.getElementById("url").value.replace(/^\/+/,""),
 
 thum:
-
 document.getElementById("thum").value,
 
-
-
-
 embed:
-
-type==="entry"
-
-?
-
-document.getElementById("embed").value
-
-:
-
-"",
-
-
-
+type==="entry"?
+document.getElementById("embed").value:"",
 
 likes:0
 
-
-}
-
-);
-
-
+});
 
 
 
 alert("추가 완료");
 
-
 loadProjects();
-
 
 };
 
@@ -572,37 +613,19 @@ loadProjects();
 
 
 
-
-
-
-window.removeProject = async function(id){
-
+window.removeProject=async function(id){
 
 
 if(!confirm(id+" 삭제?"))
-
 return;
 
 
-
-
-await deleteDoc(
-
-doc(db,"projects",id)
-
-);
-
+await deleteDoc(doc(db,"projects",id));
 
 
 loadProjects();
 
-
 };
-
-
-
-
-
 
 
 
@@ -611,62 +634,48 @@ loadProjects();
 async function loadProjects(){
 
 
-
-const list =
-document.getElementById("list");
-
-
+const list=document.getElementById("list");
 
 list.innerHTML="";
 
 
-
-
-const snap =
-
-await getDocs(
-
-collection(db,"projects")
-
-);
-
-
+const snap=
+await getDocs(collection(db,"projects"));
 
 
 
 snap.forEach(d=>{
 
 
+const data=d.data();
 
-const div =
-document.createElement("div");
 
+const div=document.createElement("div");
 
 
 div.className="card";
 
 
-
 div.innerHTML=`
 
-<b>${d.id}</b><br>
+<button class="delete"
+onclick="removeProject('${d.id}')">
+삭제
+</button>
 
-${d.data().by || ""}
+<div class="card-title">
+${d.id}
+</div>
 
 <br>
 
-유형 : ${d.data().type || ""}
+👤 ${data.by||""}
 
-<br><br>
+<br>
 
-
-<button class="delete"
-
-onclick="removeProject('${d.id}')">
-
-삭제
-
-</button>
+<span class="badge">
+${data.type||""}
+</span>
 
 `;
 
@@ -675,23 +684,17 @@ onclick="removeProject('${d.id}')">
 list.appendChild(div);
 
 
-
 });
-
 
 
 }
 
 
 
-
-
 loadProjects();
 
 
-
 </script>
-
 
 
 </body>
