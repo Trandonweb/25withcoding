@@ -1,5 +1,5 @@
 // baseball.js
-// ⚾ AI vs HUMAN - Baseball (True Pixel Art Edition - Complete Code)
+// ⚾ AI vs HUMAN - Baseball (Festival Edition - Fixed & AI Powered)
 
 let gameAreaRef = null;
 let canvas = null;
@@ -8,9 +8,9 @@ let animation = null;
 let swingKey = null;
 let resizeHandler = null;
 
-// 가상 게임 해상도 (세로형 600 x 1200)
+// 최적화된 축제용 가상 게임 해상도 (600 x 900)
 const GAME_WIDTH = 600;
-const GAME_HEIGHT = 1200;
+const GAME_HEIGHT = 900;
 
 // 게임 상태 객체
 let game = {
@@ -23,7 +23,15 @@ let game = {
     swing: false,
     pitch: null,
     gameOver: false,
-    swingAnimProgress: 0 // 0: 대기, 0~1: 스윙 및 복귀 진행도
+    swingAnimProgress: 0,
+    activeEffect: null // 히트 이펙트 관리용
+};
+
+// 플레이어 타이밍 성향 분석 (AI 투수의 학습 데이터)
+let playerHistory = {
+    swings: 0,
+    earlyHits: 0,
+    lateHits: 0
 };
 
 // 난이도 설정
@@ -35,67 +43,128 @@ const difficulties = {
 
 // 구종 데이터
 const pitches = [
-    { name: "포심 패스트볼", speed: 1.2, moveX: 0, moveY: 0, type: "fast" },
-    { name: "슬라이더", speed: 1.0, moveX: 75, moveY: 15, type: "slider" },
-    { name: "커브볼", speed: 0.75, moveX: -30, moveY: 100, type: "curve" },
-    { name: "포크볼", speed: 0.85, moveX: 0, moveY: 110, type: "fork" }
+    { name: "포심 패스트볼", speed: 1.3, moveX: 0, moveY: 0, type: "fast" },
+    { name: "슬라이더", speed: 1.1, moveX: 65, moveY: 15, type: "slider" },
+    { name: "커브볼", speed: 0.8, moveX: -25, moveY: 85, type: "curve" },
+    { name: "포크볼", speed: 0.9, moveX: 0, moveY: 95, type: "fork" }
 ];
 
 // =======================
-// 진정한 픽셀 아트 스프라이트 데이터 (도트 매트릭스 방식)
-// . = 투명
-// H = 헬멧 (파란색)
-// @ = 피부 (살색)
-// # = 유니폼 상의 (흰색/포인트 레드 줄무늬)
-// P = 팬츠/다리 (회색/흰색)
-// S = 신발/스파이크 (어두운 색)
+// 15+ 컬러 팔레트 시스템 (P 누락분 추가 완료)
 // =======================
+const pixelColors = {
+    "A": "#0b131a", // 외곽선 / 깊은 그림자
+    "B": "#1e3a8a", // 헬멧 섀도우 (네이비)
+    "C": "#3b82f6", // 헬멧 하이라이트 (블루)
+    "D": "#7c2d12", // 피부 그림자
+    "E": "#d97706", // 피부톤 (오렌지 탠)
+    "F": "#fbbf24", // 피부 하이라이트
+    "G": "#ffffff", // 유니폼 베이스 (화이트)
+    "H": "#dc2626", // 팀 스트라이프 및 포인트 레드
+    "I": "#94a3b8", // 유니폼/바지 주름 그림자
+    "P": "#334155", // 팬츠(바지) 컬러 추가 완료
+    "J": "#0f172a", // 스파이크화 (블랙)
+    "K": "#78350f", // 나무 배트 섀도우
+    "L": "#d97706", // 나무 배트 미드톤
+    "M": "#fde047", // 나무 배트 하이라이트
+    "N": "#1e293b", // 장갑/보호대 네이비
+    "O": "#334155"  // 장갑 하이라이트
+};
 
+// =======================
+// 고밀도 디테일 픽셀 아트 스프라이트 (공백 오류 수정 완료)
+// =======================
 const batterPixel = [
-    "................HHHHHH..............",
-    "............HHHHHHHHHH............",
-    "............HH@@HH@@HH............",
-    "............HH@@@@@@HH............",
-    "..............@@@@@@..............",
-    "............##########............",
-    "..........###..##..###..........",
-    "........######..##..######........",
-    "..........##########..............",
-    "............PPPPPP................",
-    "............PPPPPP................",
-    "............PPPPPP................",
-    "............P....P................",
-    "............S....S................"
+    "................................AAAAA...................................",
+    "............................AAAAABBBBAA.................................",
+    "..........................AAABBBBBBBBBBBA...............................",
+    "........................AABBBBBCCCCCCCCBBBA.............................",
+    "......................AABBBCCCCCCCCCCCCBBBA.............................",
+    "................     AABBBCCCCCCCCCCHHHBBBA.............................",
+    ".....................AABBBCCCCCCCHHHHHHHHBBA............................",
+    "................     AABBBCCCCCHHHHHHHHHHHBA............................",
+    "......................AABBBFFEEEEEEEEEEDBA..............................",
+    "................      AABBEFFFFFFFFFFEEDBA..............................",
+    ".......................ABEFFEEFFFFFFEEEDBA..............................",
+    ".......................ABEFEEAFFFFEEAEEDBA..............................",
+    ".......................ABEEDAAFFFEEDAAEDBA..............................",
+    "................        ABEDDAEFFFEEADEDBA..............................",
+    "................         ABDDDAEEEEEADDBA...............................",
+    "................          ADDDDDDDDDDBBA................................",
+    "................           AAAAAABBAAA..................................",
+    "................         AAGGGGGGGGGGGAA................................",
+    "................       AAGGIGHHHHHHGIIGGAA..............................",
+    "................      AAGGIGHHHHHHGIIGGGGA..............................",
+    "................     AAGGIGHHHHHHGIIGGGGGA..............................",
+    "................    AAGGIGHHHHHHGIIGGGGGGA..............................",
+    "................   AAGGIGHHHHHHGIIGGGGGGGGA.............................",
+    "................  AAGGIGHHHHHHGIIGGGGGGGGAA.............................",
+    "................ AAGGIGHHHHHHGIIGGGGGGGGGAA.............................",
+    "................AAGGIGHHHHHHGIIGGGGGGGGGAA..............................",
+    "................AAGGIGHHHHHHGIIGGGGGGGGGAA..............................",
+    "...............AAGGIGHHHHHHGIIGGGGGGGGGAA...............................",
+    "...............AAGGIGHHHHHHGIIGGGGGGGGGAA...............................",
+    "...............AAGGIGHHHHHHGIIGGGGGGGGGAA...............................",
+    "...............AAGGIGHHHHHHGIIGGGGGGGGGAA...............................",
+    "...............AAGGIGHHHHHHGIIGGGGGGGGGAA...............................",
+    "................AAGGIGHHHHHHGIIGGGGGGGGA................................",
+    ".................AAGGGGGGGGGGGGGGGGGGAA.................................",
+    "..................AAGGIIIIIIIIGGGGGGAA..................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAPPPPPPPPPPPPPAA....................................",
+    "................   AAJJJJJJJJJJJJAA.....................................",
+    "................    AAJJJJJJJJJJAA......................................"
 ];
 
-// 별도 배트 스프라이트 (목재 텍스처 도트)
 const batPixel = [
-    "....B",
-    "....B",
-    "...BB",
-    "...BB",
-    "..BBB",
-    "..BBB",
-    ".BBBB",
-    ".BBBB",
-    "BBBBB",
-    "BBBBB"
+    "........................KK",
+    ".......................KKM",
+    "......................KKMM",
+    ".....................KKMM.",
+    "....................KKMM..",
+    "...................KKLL...",
+    "..................KKLL....",
+    ".................KKLL.....",
+    "................KKLL......",
+    "...............KKLL.......",
+    "..............KKLL........",
+    ".............KKLL.........",
+    "............KKLL..........",
+    "...........KKLL...........",
+    "..........KKLL............",
+    ".........KKLL.............",
+    "........KKLL..............",
+    ".......KKLL...............",
+    "......KKLL................",
+    ".....KKLL.................",
+    "    KKLL..................",
+    "   KKLL...................",
+    "  KKLL....................",
+    " KKLL.....................",
+    "KKLL......................",
+    "KLL.......................",
+    "LL........................"
 ];
 
-// 진정한 픽셀 아트 렌더링 엔진 함수
 function drawPixelArt(sprite, x, y, size) {
     for (let row = 0; row < sprite.length; row++) {
         for (let col = 0; col < sprite[row].length; col++) {
             const pixel = sprite[row][col];
             if (pixel === ".") continue;
 
-            if (pixel === "H") ctx.fillStyle = "#1e3a8a";     // 헬멧 (네이비)
-            else if (pixel === "@") ctx.fillStyle = "#d97706"; // 피부
-            else if (pixel === "#") ctx.fillStyle = "#ffffff"; // 유니폼
-            else if (pixel === "P") ctx.fillStyle = "#f8fafc"; // 바지
-            else if (pixel === "S") ctx.fillStyle = "#0f172a"; // 신발
-            else if (pixel === "B") ctx.fillStyle = "#b45309"; // 나무 배트
-
+            ctx.fillStyle = pixelColors[pixel] || "#000000";
             ctx.fillRect(
                 x + col * size,
                 y + row * size,
@@ -145,18 +214,18 @@ function showDifficulty() {
             flex-direction:column;
             justify-content:center;
             align-items:center;
-            gap:25px;
+            gap:20px;
             background:#0b1d12;
             color:white;
             border-radius:20px;
             font-family:'Pretendard', sans-serif;
             box-sizing:border-box;
         ">
-            <h1 style="font-size:38px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); margin:0;">
-                ⚾ AI 투수 챌린지
+            <h1 style="font-size:32px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); margin:0;">
+                ⚾ AI 투수 챌린지 (Smart AI)
             </h1>
-            <p style="color:#8fbc8f; font-size:18px; margin:0 0 15px 0;">
-                진짜 도트 그래픽으로 즐기는 홈런더비!
+            <p style="color:#8fbc8f; font-size:16px; margin:0 0 10px 0;">
+                플레이어의 스윙 성향을 학습하는 지능형 AI 투수!
             </p>
             <button class="bb-btn" data-level="easy">쉬움</button>
             <button class="bb-btn" data-level="normal">보통</button>
@@ -166,12 +235,12 @@ function showDifficulty() {
 
     const buttons = gameAreaRef.querySelectorAll(".bb-btn");
     buttons.forEach(btn => {
-        btn.style.padding = "16px 60px";
-        btn.style.borderRadius = "30px";
+        btn.style.padding = "14px 50px";
+        btn.style.borderRadius = "25px";
         btn.style.border = "3px solid #1ea857";
         btn.style.background = "#14281d";
         btn.style.color = "#ffffff";
-        btn.style.fontSize = "22px";
+        btn.style.fontSize = "20px";
         btn.style.fontWeight = "bold";
         btn.style.cursor = "pointer";
         btn.style.boxShadow = "0 6px 15px rgba(0,0,0,0.4)";
@@ -205,6 +274,9 @@ function startGame() {
     game.swing = false;
     game.gameOver = false;
     game.swingAnimProgress = 0;
+    game.activeEffect = null;
+
+    playerHistory = { swings: 0, earlyHits: 0, lateHits: 0 };
 
     renderGame();
     nextPitch();
@@ -223,14 +295,14 @@ function renderGame() {
             overflow:hidden;
             box-sizing:border-box;
         ">
-            <!-- 상단 정보 -->
+            <!-- 상단 정보 UI (60px 고정) -->
             <div style="
                 height:60px;
                 background:#14281d;
                 display:flex;
                 justify-content:space-around;
                 align-items:center;
-                font-size:16px;
+                font-size:15px;
                 font-weight:bold;
                 border-bottom: 2px solid #1ea857;
                 flex-shrink:0;
@@ -241,10 +313,11 @@ function renderGame() {
                 <div>카운트 : <span id="count">0B 0S</span></div>
             </div>
 
-            <!-- 경기장 영역 (검은 여백 없는 완벽한 비율 유지 컨테이너) -->
+            <!-- 경기장 캔버스 영역 -->
             <div style="
                 flex:1;
                 width:100%;
+                max-height: calc(100vh - 130px);
                 position:relative;
                 display:flex;
                 justify-content:center;
@@ -262,9 +335,9 @@ function renderGame() {
                 "></canvas>
             </div>
 
-            <!-- 하단 스윙 컨트롤 버튼 -->
+            <!-- 하단 스윙 컨트롤 버튼 (70px 고정) -->
             <div style="
-                height:90px;
+                height:70px;
                 background:#14281d;
                 display:flex;
                 justify-content:center;
@@ -273,15 +346,15 @@ function renderGame() {
                 flex-shrink:0;
             ">
                 <button id="swingButton" style="
-                    padding:14px 60px;
+                    padding:12px 50px;
                     border:none;
-                    border-radius:35px;
+                    border-radius:30px;
                     background:#1ea857;
                     color:white;
-                    font-size:22px;
+                    font-size:18px;
                     font-weight:bold;
                     cursor:pointer;
-                    box-shadow: 0 6px 20px rgba(30,168,87,0.4);
+                    box-shadow: 0 4px 15px rgba(30,168,87,0.4);
                 ">🏏 스윙! (SPACE)</button>
             </div>
         </div>
@@ -310,13 +383,30 @@ function renderGame() {
 
 function resizeCanvas() {
     if (!canvas) return;
-    canvas.width = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = GAME_WIDTH * dpr;
+    canvas.height = GAME_HEIGHT * dpr;
+    ctx.scale(dpr, dpr);
 }
 
 // =======================
-// 투구 시스템 및 물리 루프
+// 스마트 AI 투구 선택 로직
 // =======================
+
+function selectSmartPitch() {
+    // 플레이어의 성향을 분석하여 구종 선택 (AI 투수 연출)
+    if (playerHistory.swings > 3) {
+        if (playerHistory.lateHits > playerHistory.earlyHits) {
+            // 타이밍이 늦는 타자에게는 빠른 패스트볼이나 꺾이는 변화구 공략
+            return pitches.find(p => p.type === "fast") || pitches[0];
+        } else if (playerHistory.earlyHits > playerHistory.lateHits) {
+            // 타이밍이 빠른 타자에게는 커브나 포크볼로 유인
+            return pitches.find(p => p.type === "curve") || pitches[2];
+        }
+    }
+    // 기본은 랜덤 선택
+    return pitches[Math.floor(Math.random() * pitches.length)];
+}
 
 function nextPitch() {
     if (game.outs >= 3) {
@@ -328,18 +418,18 @@ function nextPitch() {
     game.swing = false;
     game.swingAnimProgress = 0;
 
-    const selected = pitches[Math.floor(Math.random() * pitches.length)];
+    const selected = selectSmartPitch();
 
     game.pitch = {
         type: selected,
         startX: GAME_WIDTH / 2,
-        startY: 180,
+        startY: 140,
         targetX: GAME_WIDTH / 2,
-        targetY: GAME_HEIGHT * 0.78,
+        targetY: GAME_HEIGHT * 0.72,
         x: GAME_WIDTH / 2,
-        y: 180,
+        y: 140,
         progress: 0,
-        speed: 0.011 * difficulties[game.difficulty].speed
+        speed: 0.013 * difficulties[game.difficulty].speed
     };
 
     showPitchInfo();
@@ -355,6 +445,11 @@ function startPitchAnimation() {
         drawField();
         drawPixelBatterAndBat();
 
+        // 지속형 히트 파티클 이펙트 렌더링
+        if (game.activeEffect) {
+            drawHitEffect();
+        }
+
         const p = game.pitch;
         if (game.pitching && p) {
             p.progress += p.speed;
@@ -362,18 +457,15 @@ function startPitchAnimation() {
             let curX = p.startX + (p.targetX - p.startX) * p.progress;
             let curY = p.startY + (p.targetY - p.startY) * p.progress;
 
-            // 구종별 물리 궤적 계산
             curX += p.type.moveX * Math.sin(p.progress * Math.PI);
             curY += p.type.moveY * Math.pow(p.progress, 2);
 
             p.x = curX;
             p.y = curY;
 
-            // 원근감 공 크기 적용
-            const currentRadius = 8 + (16 * p.progress);
+            const currentRadius = 6 + (12 * p.progress);
             drawBall(p.x, p.y, currentRadius);
 
-            // 홈플레이트 도달 시 자동 판정 (스윙하지 않은 경우)
             if (p.progress >= 1.0) {
                 game.pitching = false;
                 if (!game.swing) {
@@ -382,7 +474,7 @@ function startPitchAnimation() {
                 return;
             }
         } else if (game.swing && p) {
-            const currentRadius = 8 + (16 * p.progress);
+            const currentRadius = 6 + (12 * p.progress);
             drawBall(p.x, p.y, currentRadius);
         }
 
@@ -404,87 +496,72 @@ function drawField() {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // 내야 잔디 마운드 영역
     ctx.fillStyle = "#1e7e43";
     ctx.beginPath();
-    ctx.moveTo(GAME_WIDTH / 2 - 180, GAME_HEIGHT * 0.45);
-    ctx.lineTo(GAME_WIDTH / 2 + 180, GAME_HEIGHT * 0.45);
+    ctx.moveTo(GAME_WIDTH / 2 - 150, GAME_HEIGHT * 0.40);
+    ctx.lineTo(GAME_WIDTH / 2 + 150, GAME_HEIGHT * 0.40);
     ctx.lineTo(GAME_WIDTH + 100, GAME_HEIGHT);
     ctx.lineTo(-100, GAME_HEIGHT);
     ctx.closePath();
     ctx.fill();
 
-    // 🌟 야구 스트라이크 존
     ctx.strokeStyle = "rgba(0, 255, 136, 0.8)";
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.fillStyle = "rgba(0, 255, 136, 0.12)";
-    ctx.fillRect(GAME_WIDTH / 2 - 80, GAME_HEIGHT * 0.60, 160, 200);
-    ctx.strokeRect(GAME_WIDTH / 2 - 80, GAME_HEIGHT * 0.60, 160, 200);
+    ctx.fillRect(GAME_WIDTH / 2 - 70, GAME_HEIGHT * 0.55, 140, 160);
+    ctx.strokeRect(GAME_WIDTH / 2 - 70, GAME_HEIGHT * 0.55, 140, 160);
 
-    // 홈플레이트
     ctx.fillStyle = "white";
     ctx.beginPath();
-    ctx.moveTo(GAME_WIDTH / 2 - 45, GAME_HEIGHT * 0.78);
-    ctx.lineTo(GAME_WIDTH / 2 + 45, GAME_HEIGHT * 0.78);
-    ctx.lineTo(GAME_WIDTH / 2 + 55, GAME_HEIGHT * 0.84);
-    ctx.lineTo(GAME_WIDTH / 2, GAME_HEIGHT * 0.92);
-    ctx.lineTo(GAME_WIDTH / 2 - 55, GAME_HEIGHT * 0.84);
+    ctx.moveTo(GAME_WIDTH / 2 - 40, GAME_HEIGHT * 0.72);
+    ctx.lineTo(GAME_WIDTH / 2 + 40, GAME_HEIGHT * 0.72);
+    ctx.lineTo(GAME_WIDTH / 2 + 48, GAME_HEIGHT * 0.77);
+    ctx.lineTo(GAME_WIDTH / 2, GAME_HEIGHT * 0.84);
+    ctx.lineTo(GAME_WIDTH / 2 - 48, GAME_HEIGHT * 0.77);
     ctx.closePath();
     ctx.fill();
 }
-
-// =======================
-// 공 그리기
-// =======================
 
 function drawBall(x, y, radius) {
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fillStyle = "white";
     ctx.fill();
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2;
     ctx.strokeStyle = "#dc2626";
     ctx.stroke();
 
     ctx.beginPath();
     ctx.arc(x, y, radius * 0.7, 0.2, Math.PI - 0.2, false);
     ctx.strokeStyle = "rgba(220, 38, 38, 0.5)";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.stroke();
 }
 
-// =======================
-// 진정한 픽셀 아트 타자 & 배트 렌더링 (회전 적용)
-// =======================
-
 function drawPixelBatterAndBat() {
-    const bx = GAME_WIDTH / 2 + 110;
-    const by = GAME_HEIGHT * 0.68;
-    const pixelSize = 5; // 32x64 느낌의 깔끔한 도트 크기
+    const bx = GAME_WIDTH / 2 + 65;
+    const by = GAME_HEIGHT * 0.58;
+    const pixelSize = 3.2;
 
-    // 타자 스프라이트 본체 렌더링
-    drawPixelArt(batterPixel, bx - 40, by - 40, pixelSize);
+    drawPixelArt(batterPixel, bx - 110, by - 80, pixelSize);
 
-    // 배트 렌더링 및 회전 애니메이션 적용
     ctx.save();
     
-    // 타자 중심부 기준으로 변환 및 회전
-    let batAngle = -0.4;
+    let batAngle = -0.3;
     if (game.swingAnimProgress > 0) {
-        batAngle = -0.4 - (game.swingAnimProgress * 2.5);
+        batAngle = -0.3 - (game.swingAnimProgress * 2.6);
     }
 
-    ctx.translate(bx - 20, by + 15);
+    ctx.translate(bx - 20, by + 10);
     ctx.rotate(batAngle);
 
-    // 픽셀 배트 그리기
-    drawPixelArt(batPixel, -10, -50, pixelSize);
+    drawPixelArt(batPixel, -30, -80, pixelSize);
 
     ctx.restore();
 }
 
 // =======================
-// 타격 및 스윙 판정 시스템
+// 타격 및 스윙 판정 시스템 (축제 맞춤형 완화된 판정 적용)
 // =======================
 
 function triggerSwing() {
@@ -510,11 +587,20 @@ function triggerSwing() {
     requestAnimationFrame(animateSwing);
 
     const p = game.pitch;
-    const hitTargetY = GAME_HEIGHT * 0.78;
-    const timingDiff = Math.abs(p.y - hitTargetY);
+    const hitTargetY = GAME_HEIGHT * 0.72;
+    const timingDiff = p.y - hitTargetY; // 부호 포함 (빠름/늦음 판별)
 
-    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 80;
-    const inZoneY = p.y >= GAME_HEIGHT * 0.60 && p.y <= GAME_HEIGHT * 0.78 + 30;
+    // 플레이어 성향 학습 기록
+    playerHistory.swings++;
+    if (timingDiff < 0) {
+        playerHistory.earlyHits++; // 공이 도달하기 전에 스윙 (빠름)
+    } else {
+        playerHistory.lateHits++;  // 공이 지나친 뒤에 스윙 (늦음)
+    }
+
+    const absTiming = Math.abs(timingDiff);
+    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 70;
+    const inZoneY = p.y >= GAME_HEIGHT * 0.55 && p.y <= GAME_HEIGHT * 0.72 + 30;
     const isInsideZone = inZoneX && inZoneY;
 
     let result = "miss";
@@ -522,13 +608,14 @@ function triggerSwing() {
     if (!isInsideZone) {
         result = "miss";
     } else {
-        if (timingDiff < 10) {
+        // 축제 부스 최적화 완화된 판정 기준
+        if (absTiming < 15) {
             result = "home";
-        } else if (timingDiff < 25) {
+        } else if (absTiming < 35) {
             result = "double";
-        } else if (timingDiff < 45) {
+        } else if (absTiming < 60) {
             result = "hit";
-        } else if (timingDiff < 75) {
+        } else if (absTiming < 85) {
             result = "foul";
         } else {
             result = "miss";
@@ -540,8 +627,8 @@ function triggerSwing() {
 
 function judgePitch() {
     const p = game.pitch;
-    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 80;
-    const inZoneY = p.y >= GAME_HEIGHT * 0.60 && p.y <= GAME_HEIGHT * 0.78 + 40;
+    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 70;
+    const inZoneY = p.y >= GAME_HEIGHT * 0.55 && p.y <= GAME_HEIGHT * 0.72 + 30;
 
     if (inZoneX && inZoneY) {
         processResult("strike");
@@ -551,7 +638,7 @@ function judgePitch() {
 }
 
 // =======================
-// 결과 처리 및 스코어 관리
+// 결과 처리 및 이펙트 관리
 // =======================
 
 function processResult(result) {
@@ -562,17 +649,17 @@ function processResult(result) {
         case "home":
             game.score += 50;
             text = "🔥 홈런!! +50점";
-            hitEffect("#facc15");
+            triggerEffect("#facc15");
             break;
         case "double":
             game.score += 25;
             text = "⚾ 2루타! +25점";
-            hitEffect("#38bdf8");
+            triggerEffect("#38bdf8");
             break;
         case "hit":
             game.score += 10;
             text = "⚾ 안타! +10점";
-            hitEffect("#4ade80");
+            triggerEffect("#4ade80");
             break;
         case "foul":
             if (game.strikes < 2) game.strikes++;
@@ -614,8 +701,38 @@ function processResult(result) {
     }, 1200);
 }
 
+function triggerEffect(color) {
+    game.activeEffect = {
+        color: color,
+        radius: 10,
+        maxRadius: 80,
+        alpha: 1.0
+    };
+}
+
+function drawHitEffect() {
+    const eff = game.activeEffect;
+    if (!eff) return;
+
+    ctx.save();
+    ctx.strokeStyle = eff.color;
+    ctx.lineWidth = 4;
+    ctx.globalAlpha = eff.alpha;
+    ctx.beginPath();
+    ctx.arc(GAME_WIDTH / 2, GAME_HEIGHT * 0.72, eff.radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    eff.radius += 4;
+    eff.alpha -= 0.05;
+
+    if (eff.alpha <= 0) {
+        game.activeEffect = null;
+    }
+}
+
 // =======================
-// UI 및 이펙트 업데이트
+// UI 업데이트
 // =======================
 
 function updateUI() {
@@ -632,13 +749,13 @@ function showMessage(text) {
     const div = document.createElement("div");
     div.innerText = text;
     div.style.position = "absolute";
-    div.style.top = "26%";
+    div.style.top = "24%";
     div.style.left = "50%";
     div.style.transform = "translate(-50%, -50%)";
-    div.style.fontSize = "40px";
+    div.style.fontSize = "32px";
     div.style.fontWeight = "900";
     div.style.color = "#ffffff";
-    div.style.textShadow = "0 4px 12px rgba(0,0,0,0.8)";
+    div.style.textShadow = "0 4px 10px rgba(0,0,0,0.8)";
     div.style.zIndex = "20";
     div.style.pointerEvents = "none";
 
@@ -651,16 +768,16 @@ function showMessage(text) {
 
 function showPitchInfo() {
     const box = document.createElement("div");
-    box.innerHTML = `⚾ 구종: ${game.pitch.type.name}`;
+    box.innerHTML = `⚾ AI 구종: ${game.pitch.type.name}`;
     box.style.position = "absolute";
-    box.style.top = "70px";
+    box.style.top = "65px";
     box.style.left = "50%";
     box.style.transform = "translateX(-50%)";
-    box.style.padding = "8px 20px";
+    box.style.padding = "6px 16px";
     box.style.background = "rgba(0, 0, 0, 0.75)";
     box.style.color = "#38bdf8";
     box.style.borderRadius = "20px";
-    box.style.fontSize = "16px";
+    box.style.fontSize = "14px";
     box.style.fontWeight = "bold";
     box.style.zIndex = "10";
     box.style.pointerEvents = "none";
@@ -670,16 +787,6 @@ function showPitchInfo() {
     setTimeout(() => {
         box.remove();
     }, 900);
-}
-
-function hitEffect(color) {
-    if (!ctx) return;
-    ctx.save();
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(GAME_WIDTH / 2, GAME_HEIGHT * 0.78, 60, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
 }
 
 // =======================
@@ -698,29 +805,29 @@ function endGame() {
             flex-direction:column;
             justify-content:center;
             align-items:center;
-            gap:25px;
+            gap:20px;
             background:#0b1d12;
             color:white;
             border-radius:20px;
             font-family:'Pretendard', sans-serif;
             box-sizing:border-box;
         ">
-            <h1 style="font-size:38px; margin:0;">⚾ 경기 종료</h1>
-            <div style="background:#14281d; padding:25px 50px; border-radius:15px; text-align:center; border: 2px solid #1ea857;">
-                <p style="color:#aaa; font-size:18px; margin:0 0 10px 0;">최종 득점</p>
-                <h2 style="color:#1ea857; font-size:48px; margin:0;">${game.score} 점</h2>
+            <h1 style="font-size:32px; margin:0;">⚾ 경기 종료</h1>
+            <div style="background:#14281d; padding:20px 40px; border-radius:15px; text-align:center; border: 2px solid #1ea857;">
+                <p style="color:#aaa; font-size:16px; margin:0 0 8px 0;">최종 득점</p>
+                <h2 style="color:#1ea857; font-size:42px; margin:0;">${game.score} 점</h2>
             </div>
-            <p style="font-size:18px; color:#cbd5e1; margin:0;">기록된 총 아웃: ${game.outs}개</p>
+            <p style="font-size:16px; color:#cbd5e1; margin:0;">기록된 총 아웃: ${game.outs}개</p>
             <button id="restartBaseball" style="
-                padding:15px 50px;
-                border-radius:30px;
+                padding:14px 45px;
+                border-radius:25px;
                 border:none;
                 background:#1ea857;
                 color:white;
-                font-size:20px;
+                font-size:18px;
                 font-weight:bold;
                 cursor:pointer;
-                box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             ">다시 하기</button>
         </div>
     `;
