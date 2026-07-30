@@ -313,7 +313,7 @@ width:100%;
 
 height:100%;
 
-min-height:500px;
+min-height:1000px;
 
 display:flex;
 
@@ -381,9 +381,11 @@ font-size:18px;
 
 <div style="
 
-flex:1;
+height:800px;
 
 position:relative;
+
+flex-shrink:0;
 
 ">
 
@@ -394,7 +396,7 @@ style="
 
 width:100%;
 
-height:100%;
+height:800px;
 
 background:#176b3a;
 
@@ -545,14 +547,12 @@ if(!canvas)
 return;
 
 
-
 canvas.width =
-canvas.clientWidth;
+canvas.parentElement.clientWidth;
 
 
 canvas.height =
-canvas.clientHeight;
-
+800;
 
 
 }
