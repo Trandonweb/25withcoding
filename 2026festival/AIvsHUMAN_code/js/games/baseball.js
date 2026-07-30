@@ -422,7 +422,7 @@ function startPitchAnimation() {
         const w = canvasRef.width;
         const h = canvasRef.height;
 
-        // 1. 고정 스트라이크 존 렌더링
+        // 1. 고정 스트라이크 존 렌더링 (가시성 향상)
         drawStrikeZone(w, h);
 
         // 2. 타자 및 배트 시각화 렌더링
@@ -508,11 +508,14 @@ function stopAnimation() {
 // =====================
 function drawStrikeZone(w, h) {
     ctxRef.save();
+    // 스트라이크존 영역 배경 추가로 시인성 확보
+    ctxRef.fillStyle = 'rgba(30, 168, 87, 0.12)';
+    ctxRef.fillRect(w / 2 - 70, h * 0.58, 140, 130);
+
     ctxRef.beginPath();
-    ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.7)';
+    ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.9)';
     ctxRef.lineWidth = 3;
     ctxRef.setLineDash([6, 4]);
-    // 화면 하단 중앙에 고정된 스트라이크 존
     ctxRef.strokeRect(w / 2 - 70, h * 0.58, 140, 130);
     ctxRef.setLineDash([]);
     ctxRef.restore();
@@ -520,23 +523,29 @@ function drawStrikeZone(w, h) {
 
 function drawBatterAndBat(w, h, p) {
     ctxRef.save();
-    // 타자 실루엣 (우측에 위치)
-    ctxRef.fillStyle = 'rgba(40, 40, 40, 0.85)';
-    ctxRef.fillRect(w / 2 + 85, h * 0.45, 65, 220);
+    
+    // 타자 실루엣 수정 및 명확화 (우측 타석)
+    ctxRef.fillStyle = 'rgba(230, 230, 230, 0.9)';
+    // 몸체
+    ctxRef.fillRect(w / 2 + 75, h * 0.42, 60, 240);
+    // 머리
+    ctxRef.beginPath();
+    ctxRef.arc(w / 2 + 105, h * 0.37, 22, 0, Math.PI * 2);
+    ctxRef.fill();
 
     // 배트 드로잉 (스윙 애니메이션 연동)
-    ctxRef.translate(w / 2 + 75, h * 0.65);
+    ctxRef.translate(w / 2 + 65, h * 0.62);
     
-    let swingAngle = -0.5; // 기본 대기 자세
+    let swingAngle = -0.6; // 기본 대기 자세
     if (baseball.swingAnim > 0) {
-        swingAngle = -2.2 + (1 - baseball.swingAnim) * 2.5; // 휘둘러 나가는 각도
+        swingAngle = -2.4 + (1 - baseball.swingAnim) * 2.8; // 휘둘러 나가는 각도
     }
     ctxRef.rotate(swingAngle);
 
     ctxRef.fillStyle = '#c2813a';
-    ctxRef.fillRect(-6, -100, 12, 110); // 배트 몸체
+    ctxRef.fillRect(-6, -110, 12, 120); // 배트 몸체
     ctxRef.fillStyle = '#e0a96d';
-    ctxRef.fillRect(-8, -115, 16, 20);  // 배트 헤드
+    ctxRef.fillRect(-8, -125, 16, 22);  // 배트 헤드
     ctxRef.restore();
 }
 
