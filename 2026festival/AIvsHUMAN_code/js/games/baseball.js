@@ -1,5 +1,5 @@
 // baseball.js
-// ⚾ AI 투수 챌린지 (Baseball) - 1 Inning 3-Out & Advanced Batted Ball Physics + 사구/볼넷 버전
+// ⚾ AI 투수 챌린지 (Baseball) - 하체 복원 및 자동 스윙 버그 수정 버전
 
 let gameAreaRef = null;
 let canvasRef = null;
@@ -12,8 +12,8 @@ let baseball = {
     score: 0,
     outs: 0,
     hits: 0,
-    balls: 0,    // 볼 카운트 (4볼넷)
-    strikes: 0,  // 스트라이크 카운트 (3스트라이크 아웃)
+    balls: 0,
+    strikes: 0,
     gameOver: false,
     selectedPitches: [],
     currentPitch: null,
@@ -43,6 +43,8 @@ const allPitchTypes = [
 ];
 
 let handleKeyDownRef = null;
+let swingBtnRef = null;
+let canvasContainerRef = null;
 
 export function openBaseball(gameArea) {
     gameAreaRef = gameArea;
@@ -85,8 +87,8 @@ function showDifficultyScreen() {
             text-align: center;
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
-            <h2 style="color: #1ea857; margin-bottom: 10px; font-size: 1.8rem;">⚾ AI 투수 챌린지 (사구·볼넷 시스템)</h2>
-            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.95rem;">볼넷(4볼)과 몸에 맞는 공(사구) 시스템이 추가되었습니다!</p>
+            <h2 style="color: #1ea857; margin-bottom: 10px; font-size: 1.8rem;">⚾ AI 투수 챌린지</h2>
+            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.95rem;">타자 하체 복원 및 명시적 스윙 입력 수정 버전</p>
             
             <h3 style="margin-bottom: 12px; font-size: 1.05rem;">난이도 선택</h3>
             
@@ -262,7 +264,6 @@ function renderGameScreen() {
             align-items: center;
             background: radial-gradient(circle at center, #1a3c27 0%, #0d1a12 100%);
             overflow: hidden;
-            cursor: pointer;
             min-height: 350px;
         " id="canvas-container">
             <canvas id="baseballCanvas" style="display: block; width: 100%; height: 100%;"></canvas>
@@ -294,7 +295,7 @@ function renderGameScreen() {
             flex-shrink: 0;
         ">
             <div style="font-size: 0.85rem; color: #aaa;">
-                ABS 존 안의 공을 마우스 클릭 또는 [SPACE]로 스윙! (4볼넷 / 1사구 진루)
+                아래 [스윙!] 버튼 또는 [SPACE] 키를 눌러야만 스윙합니다!
             </div>
             <button id="swing-btn" style="
                 background: #1ea857;
@@ -317,13 +318,15 @@ function renderGameScreen() {
     ctxRef = canvasRef.getContext('2d');
     resizeCanvas();
 
-    const swingBtn = document.getElementById('swing-btn');
-    const canvasContainer = document.getElementById('canvas-container');
+    swingBtnRef = document.getElementById('swing-btn');
+    canvasContainerRef = document.getElementById('canvas-container');
 
-    const triggerSwingAction = (e) => { if (e) e.preventDefault(); executeSwing(); };
+    const triggerSwingAction = (e) => { 
+        if (e) e.preventDefault(); 
+        executeSwing(); 
+    };
 
-    swingBtn.addEventListener('click', triggerSwingAction);
-    canvasContainer.addEventListener('click', triggerSwingAction);
+    swingBtnRef.addEventListener('click', triggerSwingAction);
 
     handleKeyDownRef = (e) => {
         if (e.code === 'Space') {
@@ -343,6 +346,10 @@ function resizeCanvas() {
 }
 
 function removeEventListeners() {
+    if (swingBtnRef) {
+        swingBtnRef.replaceWith(swingBtnRef.cloneNode(true));
+        swingBtnRef = null;
+    }
     if (handleKeyDownRef) {
         window.removeEventListener('keydown', handleKeyDownRef);
         handleKeyDownRef = null;
@@ -385,8 +392,6 @@ function startAIPondering() {
     baseball.gameMode = 'THINKING';
 
     const chosenPitch = selectNextPitch();
-    
-    // 무작위로 사구(HBP) 확률 부여 (존 바깥쪽 극단으로 빠지는 공일 때 낮은 확률로 발생)
     const isHBP = Math.random() < 0.04; 
 
     baseball.currentPitch = {
@@ -453,8 +458,10 @@ function startPitchAnimation() {
 
         p.progress += p.speed;
 
+        // 공이 홈플레이트를 지나 완전히 포수 미트로 들어간 시점 (스윙 안 했을 때)
         if (p.progress > 1.2) {
             if (!p.swingResulted) {
+                p.swingResulted = true;
                 if (p.isHBP) {
                     processHitResult('hbp', true);
                 } else if (p.inStrikeZone) {
@@ -564,32 +571,50 @@ function drawRobustBatterAndBat(w, h) {
     const bx = isLeft ? w / 2 - 95 : w / 2 + 95;
     const by = h * 0.60;
 
+    // 머리
     ctxRef.fillStyle = '#111827';
     ctxRef.beginPath();
     ctxRef.arc(bx, by - 60, 26, Math.PI, Math.PI * 2);
     ctxRef.fill();
     ctxRef.fillRect(bx - 26, by - 60, 42, 14);
 
+    // 상체 (유니폼)
     ctxRef.fillStyle = '#f3f4f6';
     ctxRef.beginPath();
     if (ctxRef.roundRect) {
-        ctxRef.roundRect(bx - 25, by - 40, 54, 90, 10);
+        ctxRef.roundRect(bx - 25, by - 40, 54, 70, 10);
     } else {
-        ctxRef.rect(bx - 25, by - 40, 54, 90);
+        ctxRef.rect(bx - 25, by - 40, 54, 70);
     }
     ctxRef.fill();
 
+    // 유니폼 스트라이프
     ctxRef.strokeStyle = '#dc2626';
     ctxRef.lineWidth = 4;
     ctxRef.beginPath();
-    ctxRef.moveTo(bx - 6, by - 40); ctxRef.lineTo(bx - 6, by + 50);
-    ctxRef.moveTo(bx + 16, by - 40); ctxRef.lineTo(bx + 16, by + 50);
+    ctxRef.moveTo(bx - 6, by - 40); ctxRef.lineTo(bx - 6, by + 30);
+    ctxRef.moveTo(bx + 16, by - 40); ctxRef.lineTo(bx + 16, by + 30);
     ctxRef.stroke();
 
+    // 하체 (바지 및 양말) 복원
+    ctxRef.fillStyle = '#374151'; // 바지 색상
+    ctxRef.fillRect(bx - 22, by + 30, 18, 45);
+    ctxRef.fillRect(bx + 4, by + 30, 18, 45);
+
+    // 야구 양말 및 스파이크 (발)
+    ctxRef.fillStyle = '#ffffff';
+    ctxRef.fillRect(bx - 22, by + 65, 18, 12);
+    ctxRef.fillRect(bx + 4, by + 65, 18, 12);
+    ctxRef.fillStyle = '#111827';
+    ctxRef.fillRect(bx - 24, by + 74, 20, 8);
+    ctxRef.fillRect(bx + 2, by + 74, 20, 8);
+
+    // 팔
     ctxRef.fillStyle = '#d97706';
     const armOffsetX = isLeft ? 22 : -38;
     ctxRef.fillRect(bx + armOffsetX, by - 30, 16, 50);
 
+    // 방망이
     ctxRef.save();
     const batTranslateX = isLeft ? bx + 30 : bx - 30;
     ctxRef.translate(batTranslateX, by + 20);
@@ -745,7 +770,7 @@ function processHitResult(result, isTimeout) {
         baseball.balls++;
         points = 10;
         if (baseball.balls >= 4) {
-            points += 25; // 볼넷 진루 보너스 점수
+            points += 25; 
             text = '🎯 볼넷 진루!! (+35점)';
             color = '#00e5ff';
             baseball.balls = 0;
@@ -757,10 +782,10 @@ function processHitResult(result, isTimeout) {
     } else if (result === 'hbp') {
         baseball.consecutiveHits = 0;
         baseball.balls = 0; baseball.strikes = 0;
-        points = 35; // 사구 진루 보너스 점수
+        points = 35; 
         text = '💥 몸에 맞는 공 (사구 진루!!) (+35점)';
         color = '#ff9800';
-        isHit = true; // 사구도 출루 기록에 반영
+        isHit = true; 
     } else if (result === 'looking_strike') {
         baseball.consecutiveHits = 0;
         baseball.strikes++;
@@ -795,7 +820,7 @@ function processHitResult(result, isTimeout) {
     } else if (points > 0 && result !== 'ball' && result !== 'hbp') {
         baseball.score += points;
     } else if (result === 'ball' && baseball.balls === 0) {
-        baseball.score += points; // 볼넷 완성 시 보너스 포함 점수 반영
+        baseball.score += points; 
     } else if (result === 'hbp') {
         baseball.score += points;
     }
