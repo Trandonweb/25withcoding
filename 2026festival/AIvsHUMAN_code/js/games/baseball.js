@@ -1,5 +1,5 @@
 // baseball.js
-// ⚾ AI vs HUMAN - Baseball (Festival Edition - Ultimate Balance & Scale Optimized)
+// ⚾ AI vs HUMAN - Baseball (Festival Edition - Final Fixed Layout & Casual Balance)
 
 let gameAreaRef = null;
 let canvas = null;
@@ -8,9 +8,9 @@ let animation = null;
 let swingKey = null;
 let resizeHandler = null;
 
-// 가상 게임 해상도 유지 (600 x 900)
-const GAME_WIDTH = 600;
-const GAME_HEIGHT = 900;
+// 1. 해상도 변경 (480 x 720 기준 재설계)
+const GAME_WIDTH = 480;
+const GAME_HEIGHT = 720;
 
 // 게임 상태 객체
 let game = {
@@ -34,19 +34,19 @@ let playerHistory = {
     lateHits: 0
 };
 
-// 난이도 설정 (이지 모드 판정 보정 배수 추가)
+// 난이도 설정
 const difficulties = {
-    easy: { name: "쉬움", speed: 0.65, hitBonus: 1.5 },
-    normal: { name: "보통", speed: 0.95, hitBonus: 1.2 },
-    hard: { name: "어려움", speed: 1.3, hitBonus: 1.0 }
+    easy: { name: "쉬움", speed: 0.6, hitBonus: 1.4 },
+    normal: { name: "보통", speed: 0.85, hitBonus: 1.1 },
+    hard: { name: "어려움", speed: 1.15, hitBonus: 1.0 }
 };
 
-// 구종 데이터 (축제용 적정 속도 및 궤적)
+// 구종 데이터
 const pitches = [
     { name: "포심 패스트볼", speed: 1.1, moveX: 0, moveY: 0, type: "fast" },
-    { name: "슬라이더", speed: 0.95, moveX: 55, moveY: 10, type: "slider" },
-    { name: "커브볼", speed: 0.75, moveX: -20, moveY: 70, type: "curve" },
-    { name: "포크볼", speed: 0.85, moveX: 0, moveY: 80, type: "fork" }
+    { name: "슬라이더", speed: 0.95, moveX: 45, moveY: 10, type: "slider" },
+    { name: "커브볼", speed: 0.75, moveX: -15, moveY: 55, type: "curve" },
+    { name: "포크볼", speed: 0.85, moveX: 0, moveY: 65, type: "fork" }
 ];
 
 // =======================
@@ -221,11 +221,11 @@ function showDifficulty() {
             font-family:'Pretendard', sans-serif;
             box-sizing:border-box;
         ">
-            <h1 style="font-size:32px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); margin:0;">
+            <h1 style="font-size:28px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); margin:0;">
                 ⚾ AI 투수 챌린지 (Festival Edition)
             </h1>
-            <p style="color:#8fbc8f; font-size:16px; margin:0 0 10px 0;">
-                누구나 쉽게 즐기는 초간단 홈런더비!
+            <p style="color:#8fbc8f; font-size:15px; margin:0 0 10px 0;">
+                스페이스바로 시원하게 홈런을 날려보세요!
             </p>
             <button class="bb-btn" data-level="easy">쉬움 (추천)</button>
             <button class="bb-btn" data-level="normal">보통</button>
@@ -235,12 +235,12 @@ function showDifficulty() {
 
     const buttons = gameAreaRef.querySelectorAll(".bb-btn");
     buttons.forEach(btn => {
-        btn.style.padding = "14px 50px";
+        btn.style.padding = "14px 45px";
         btn.style.borderRadius = "25px";
         btn.style.border = "3px solid #1ea857";
         btn.style.background = "#14281d";
         btn.style.color = "#ffffff";
-        btn.style.fontSize = "20px";
+        btn.style.fontSize = "18px";
         btn.style.fontWeight = "bold";
         btn.style.cursor = "pointer";
         btn.style.boxShadow = "0 6px 15px rgba(0,0,0,0.4)";
@@ -295,14 +295,14 @@ function renderGame() {
             overflow:hidden;
             box-sizing:border-box;
         ">
-            <!-- 상단 정보 UI (60px 고정) -->
+            <!-- 상단 정보 UI (55px 고정) -->
             <div style="
-                height:60px;
+                height:55px;
                 background:#14281d;
                 display:flex;
                 justify-content:space-around;
                 align-items:center;
-                font-size:15px;
+                font-size:14px;
                 font-weight:bold;
                 border-bottom: 2px solid #1ea857;
                 flex-shrink:0;
@@ -313,11 +313,11 @@ function renderGame() {
                 <div>카운트 : <span id="count">0B 0S</span></div>
             </div>
 
-            <!-- 경기장 캔버스 영역 -->
+            <!-- 경기장 캔버스 영역 (480x720 최적화) -->
             <div style="
                 flex:1;
                 width:100%;
-                max-height: calc(100vh - 130px);
+                max-height: calc(100vh - 125px);
                 position:relative;
                 display:flex;
                 justify-content:center;
@@ -346,12 +346,12 @@ function renderGame() {
                 flex-shrink:0;
             ">
                 <button id="swingButton" style="
-                    padding:12px 50px;
+                    padding:12px 45px;
                     border:none;
                     border-radius:30px;
                     background:#1ea857;
                     color:white;
-                    font-size:18px;
+                    font-size:17px;
                     font-weight:bold;
                     cursor:pointer;
                     box-shadow: 0 4px 15px rgba(30,168,87,0.4);
@@ -381,16 +381,18 @@ function renderGame() {
     window.addEventListener("keydown", swingKey);
 }
 
+// 2. resizeCanvas() 누적 버그 해결 (setTransform 적용)
 function resizeCanvas() {
     if (!canvas) return;
     const dpr = window.devicePixelRatio || 1;
     canvas.width = GAME_WIDTH * dpr;
     canvas.height = GAME_HEIGHT * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
 }
 
 // =======================
-// 스마트 AI 투구 선택 로직
+// AI 구종 선택 시스템
 // =======================
 
 function selectSmartPitch() {
@@ -416,16 +418,17 @@ function nextPitch() {
 
     const selected = selectSmartPitch();
 
+    // 3. 투구 시작점 및 목표점 좌표 재배치 (투수 → 스트라이크존 → 타자/홈플레이트)
     game.pitch = {
         type: selected,
         startX: GAME_WIDTH / 2,
-        startY: 140,
+        startY: 80,                         // 상단 투수 위치
         targetX: GAME_WIDTH / 2,
-        targetY: GAME_HEIGHT * 0.72,
+        targetY: GAME_HEIGHT * 0.76,        // 타격 판정 지점 (타자 앞)
         x: GAME_WIDTH / 2,
-        y: 140,
+        y: 80,
         progress: 0,
-        speed: 0.012 * difficulties[game.difficulty].speed
+        speed: 0.011 * difficulties[game.difficulty].speed
     };
 
     showPitchInfo();
@@ -458,7 +461,8 @@ function startPitchAnimation() {
             p.x = curX;
             p.y = curY;
 
-            const currentRadius = 6 + (12 * p.progress);
+            // 공 크기 원근감 (작게 시작해서 앞으로 올수록 커짐)
+            const currentRadius = 4 + (10 * p.progress);
             drawBall(p.x, p.y, currentRadius);
 
             if (p.progress >= 1.0) {
@@ -469,7 +473,7 @@ function startPitchAnimation() {
                 return;
             }
         } else if (game.swing && p) {
-            const currentRadius = 6 + (12 * p.progress);
+            const currentRadius = 4 + (10 * p.progress);
             drawBall(p.x, p.y, currentRadius);
         }
 
@@ -480,7 +484,7 @@ function startPitchAnimation() {
 }
 
 // =======================
-// 경기장 및 넓어진 스트라이크 존 렌더링
+// 3. 경기장 및 스트라이크존/홈플레이트 재배치
 // =======================
 
 function drawField() {
@@ -491,29 +495,38 @@ function drawField() {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
+    // 투수 마운드 (상단)
+    ctx.fillStyle = "#a16207";
+    ctx.beginPath();
+    ctx.arc(GAME_WIDTH / 2, 85, 25, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 내야 잔디 라인
     ctx.fillStyle = "#1e7e43";
     ctx.beginPath();
-    ctx.moveTo(GAME_WIDTH / 2 - 150, GAME_HEIGHT * 0.40);
-    ctx.lineTo(GAME_WIDTH / 2 + 150, GAME_HEIGHT * 0.40);
-    ctx.lineTo(GAME_WIDTH + 100, GAME_HEIGHT);
-    ctx.lineTo(-100, GAME_HEIGHT);
+    ctx.moveTo(GAME_WIDTH / 2 - 120, GAME_HEIGHT * 0.35);
+    ctx.lineTo(GAME_WIDTH / 2 + 120, GAME_HEIGHT * 0.35);
+    ctx.lineTo(GAME_WIDTH + 80, GAME_HEIGHT);
+    ctx.lineTo(-80, GAME_HEIGHT);
     ctx.closePath();
     ctx.fill();
 
-    // 🌟 넉넉하게 확장된 스트라이크 존 (가시성 및 판정 일치)
+    // 스트라이크존 (중앙 배치)
+    // x = GAME_WIDTH / 2 - 65, y = GAME_HEIGHT * 0.55, width = 130, height = 130 (좌우 20% 넓게 확장 반영)
     ctx.strokeStyle = "rgba(0, 255, 136, 0.8)";
     ctx.lineWidth = 3;
     ctx.fillStyle = "rgba(0, 255, 136, 0.12)";
-    ctx.fillRect(GAME_WIDTH / 2 - 95, GAME_HEIGHT * 0.52, 190, 190);
-    ctx.strokeRect(GAME_WIDTH / 2 - 95, GAME_HEIGHT * 0.52, 190, 190);
+    ctx.fillRect(GAME_WIDTH / 2 - 78, GAME_HEIGHT * 0.52, 156, 140);
+    ctx.strokeRect(GAME_WIDTH / 2 - 78, GAME_HEIGHT * 0.52, 156, 140);
 
+    // 홈플레이트 (하단 0.83 근처 배치)
     ctx.fillStyle = "white";
     ctx.beginPath();
-    ctx.moveTo(GAME_WIDTH / 2 - 40, GAME_HEIGHT * 0.72);
-    ctx.lineTo(GAME_WIDTH / 2 + 40, GAME_HEIGHT * 0.72);
-    ctx.lineTo(GAME_WIDTH / 2 + 48, GAME_HEIGHT * 0.77);
-    ctx.lineTo(GAME_WIDTH / 2, GAME_HEIGHT * 0.84);
-    ctx.lineTo(GAME_WIDTH / 2 - 48, GAME_HEIGHT * 0.77);
+    ctx.moveTo(GAME_WIDTH / 2 - 35, GAME_HEIGHT * 0.82);
+    ctx.lineTo(GAME_WIDTH / 2 + 35, GAME_HEIGHT * 0.82);
+    ctx.lineTo(GAME_WIDTH / 2 + 42, GAME_HEIGHT * 0.86);
+    ctx.lineTo(GAME_WIDTH / 2, GAME_HEIGHT * 0.91);
+    ctx.lineTo(GAME_WIDTH / 2 - 42, GAME_HEIGHT * 0.86);
     ctx.closePath();
     ctx.fill();
 }
@@ -523,7 +536,7 @@ function drawBall(x, y, radius) {
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fillStyle = "white";
     ctx.fill();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.strokeStyle = "#dc2626";
     ctx.stroke();
 
@@ -535,33 +548,34 @@ function drawBall(x, y, radius) {
 }
 
 // =======================
-// 축제 맞춤형 소형 고밀도 타자 및 배트 렌더링 (pixelSize = 2.2 축소)
+// 4. 타자 수정 (pixelSize 1.5~1.8 축소 및 위치 재배치)
 // =======================
 
 function drawPixelBatterAndBat() {
-    const bx = GAME_WIDTH / 2 + 55;
-    const by = GAME_HEIGHT * 0.59;
-    const pixelSize = 2.2; // 🌟 화면의 15~20% 수준으로 정교하게 축소
+    const bx = GAME_WIDTH / 2 + 45;
+    const by = GAME_HEIGHT * 0.75; // 하단 타자 위치 (GAME_HEIGHT * 0.75 근처)
+    const pixelSize = 1.65;         // 화면의 15~20% 비율에 맞게 축소
 
-    drawPixelArt(batterPixel, bx - 75, by - 55, pixelSize);
+    drawPixelArt(batterPixel, bx - 60, by - 45, pixelSize);
 
     ctx.save();
     
-    let batAngle = -0.3;
+    // 5. 배트가 공이 들어오는 방향(위쪽)을 향하도록 각도 및 회전 중심 수정
+    let batAngle = -1.2;
     if (game.swingAnimProgress > 0) {
-        batAngle = -0.3 - (game.swingAnimProgress * 2.6);
+        batAngle = -1.2 - (game.swingAnimProgress * 2.4);
     }
 
-    ctx.translate(bx - 12, by + 5);
+    ctx.translate(bx - 10, by);
     ctx.rotate(batAngle);
 
-    drawPixelArt(batPixel, -20, -55, pixelSize);
+    drawPixelArt(batPixel, -15, -45, pixelSize);
 
     ctx.restore();
 }
 
 // =======================
-// 타격 및 대폭 완화된 스윙 판정 시스템
+// 6. 판정 완화 및 스윙 시스템
 // =======================
 
 function triggerSwing() {
@@ -587,7 +601,7 @@ function triggerSwing() {
     requestAnimationFrame(animateSwing);
 
     const p = game.pitch;
-    const hitTargetY = GAME_HEIGHT * 0.72;
+    const hitTargetY = GAME_HEIGHT * 0.76;
     const timingDiff = p.y - hitTargetY;
 
     playerHistory.swings++;
@@ -600,9 +614,9 @@ function triggerSwing() {
     const absTiming = Math.abs(timingDiff);
     const hitBonus = difficulties[game.difficulty].hitBonus;
 
-    // 대폭 확장된 스트라이크존 영역 판단
-    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 95;
-    const inZoneY = p.y >= GAME_HEIGHT * 0.52 && p.y <= GAME_HEIGHT * 0.72 + 40;
+    // 스트라이크존 좌우 20% 넓어진 영역 판단
+    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 78;
+    const inZoneY = p.y >= GAME_HEIGHT * 0.52 && p.y <= GAME_HEIGHT * 0.76 + 30;
     const isInsideZone = inZoneX && inZoneY;
 
     let result = "miss";
@@ -610,14 +624,14 @@ function triggerSwing() {
     if (!isInsideZone) {
         result = "miss";
     } else {
-        // 🌟 일반인이 쉽게 안타/홈런을 칠 수 있도록 대폭 완화된 판정 범위 적용
-        if (absTiming <= 20 * hitBonus) {
+        // 🌟 축제 참가자 기준 완화된 판정 범위 적용 (홈런: 35, 2루타: 70, 안타: 110)
+        if (absTiming <= 35 * hitBonus) {
             result = "home";
-        } else if (absTiming <= 45 * hitBonus) {
+        } else if (absTiming <= 70 * hitBonus) {
             result = "double";
-        } else if (absTiming <= 75 * hitBonus) {
+        } else if (absTiming <= 110 * hitBonus) {
             result = "hit";
-        } else if (absTiming <= 100 * hitBonus) {
+        } else if (absTiming <= 145 * hitBonus) {
             result = "foul";
         } else {
             result = "miss";
@@ -629,8 +643,8 @@ function triggerSwing() {
 
 function judgePitch() {
     const p = game.pitch;
-    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 95;
-    const inZoneY = p.y >= GAME_HEIGHT * 0.52 && p.y <= GAME_HEIGHT * 0.72 + 40;
+    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 78;
+    const inZoneY = p.y >= GAME_HEIGHT * 0.52 && p.y <= GAME_HEIGHT * 0.76 + 35;
 
     if (inZoneX && inZoneY) {
         processResult("strike");
@@ -707,7 +721,7 @@ function triggerEffect(color) {
     game.activeEffect = {
         color: color,
         radius: 10,
-        maxRadius: 80,
+        maxRadius: 70,
         alpha: 1.0
     };
 }
@@ -718,14 +732,14 @@ function drawHitEffect() {
 
     ctx.save();
     ctx.strokeStyle = eff.color;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3.5;
     ctx.globalAlpha = eff.alpha;
     ctx.beginPath();
-    ctx.arc(GAME_WIDTH / 2, GAME_HEIGHT * 0.72, eff.radius, 0, Math.PI * 2);
+    ctx.arc(GAME_WIDTH / 2, GAME_HEIGHT * 0.76, eff.radius, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
 
-    eff.radius += 4;
+    eff.radius += 3.5;
     eff.alpha -= 0.05;
 
     if (eff.alpha <= 0) {
@@ -751,10 +765,10 @@ function showMessage(text) {
     const div = document.createElement("div");
     div.innerText = text;
     div.style.position = "absolute";
-    div.style.top = "24%";
+    div.style.top = "22%";
     div.style.left = "50%";
     div.style.transform = "translate(-50%, -50%)";
-    div.style.fontSize = "32px";
+    div.style.fontSize = "28px";
     div.style.fontWeight = "900";
     div.style.color = "#ffffff";
     div.style.textShadow = "0 4px 10px rgba(0,0,0,0.8)";
@@ -772,14 +786,14 @@ function showPitchInfo() {
     const box = document.createElement("div");
     box.innerHTML = `⚾ AI 구종: ${game.pitch.type.name}`;
     box.style.position = "absolute";
-    box.style.top = "65px";
+    box.style.top = "62px";
     box.style.left = "50%";
     box.style.transform = "translateX(-50%)";
-    box.style.padding = "6px 16px";
+    box.style.padding = "5px 14px";
     box.style.background = "rgba(0, 0, 0, 0.75)";
     box.style.color = "#38bdf8";
     box.style.borderRadius = "20px";
-    box.style.fontSize = "14px";
+    box.style.fontSize = "13px";
     box.style.fontWeight = "bold";
     box.style.zIndex = "10";
     box.style.pointerEvents = "none";
@@ -814,19 +828,19 @@ function endGame() {
             font-family:'Pretendard', sans-serif;
             box-sizing:border-box;
         ">
-            <h1 style="font-size:32px; margin:0;">⚾ 경기 종료</h1>
+            <h1 style="font-size:28px; margin:0;">⚾ 경기 종료</h1>
             <div style="background:#14281d; padding:20px 40px; border-radius:15px; text-align:center; border: 2px solid #1ea857;">
-                <p style="color:#aaa; font-size:16px; margin:0 0 8px 0;">최종 득점</p>
-                <h2 style="color:#1ea857; font-size:42px; margin:0;">${game.score} 점</h2>
+                <p style="color:#aaa; font-size:15px; margin:0 0 8px 0;">최종 득점</p>
+                <h2 style="color:#1ea857; font-size:38px; margin:0;">${game.score} 점</h2>
             </div>
-            <p style="font-size:16px; color:#cbd5e1; margin:0;">기록된 총 아웃: ${game.outs}개</p>
+            <p style="font-size:15px; color:#cbd5e1; margin:0;">기록된 총 아웃: ${game.outs}개</p>
             <button id="restartBaseball" style="
-                padding:14px 45px;
+                padding:12px 40px;
                 border-radius:25px;
                 border:none;
                 background:#1ea857;
                 color:white;
-                font-size:18px;
+                font-size:17px;
                 font-weight:bold;
                 cursor:pointer;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.4);
