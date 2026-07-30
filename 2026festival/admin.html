@@ -416,7 +416,7 @@ Entry
 <div class="url-box">
 
 <span class="url-prefix">
-https://25withcoding.kr/
+https://25withcoding.kr/2026festival/
 </span>
 
 <input id="url"
@@ -428,8 +428,16 @@ placeholder="페이지 주소">
 
 <label>썸네일 URL</label>
 
+<div class="url-box">
+
+<span class="url-prefix">
+https://25withcoding.kr/2026festival/
+</span>
+
 <input id="thum"
-placeholder="https://부터 입력">
+placeholder="이미지 주소">
+
+</div>
 
 
 
@@ -587,11 +595,12 @@ note:document.getElementById("note").value,
 type:type,
 
 url:
-"https://25withcoding.kr/"+
+"https://25withcoding.kr/2026festival/"+
 document.getElementById("url").value.replace(/^\/+/,""),
 
 thum:
-document.getElementById("thum").value,
+"https://25withcoding.kr/2026festival/" +
+document.getElementById("thum").value.replace(/^\/+/,""),
 
 embed:
 type==="entry"?
