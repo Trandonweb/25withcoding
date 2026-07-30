@@ -1,5 +1,5 @@
 // baseball.js
-// ⚾ AI 투수 챌린지 (Baseball) - 하체 복원 및 자동 스윙 버그 수정 버전
+// ⚾ AI 투수 챌린지 (Baseball) - 스트라이크 존 규정 반영, 타자 위치 조정, 판정 및 스윙 로직 개선 버전
 
 let gameAreaRef = null;
 let canvasRef = null;
@@ -44,7 +44,6 @@ const allPitchTypes = [
 
 let handleKeyDownRef = null;
 let swingBtnRef = null;
-let canvasContainerRef = null;
 
 export function openBaseball(gameArea) {
     gameAreaRef = gameArea;
@@ -88,7 +87,7 @@ function showDifficultyScreen() {
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
             <h2 style="color: #1ea857; margin-bottom: 10px; font-size: 1.8rem;">⚾ AI 투수 챌린지</h2>
-            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.95rem;">타자 하체 복원 및 명시적 스윙 입력 수정 버전</p>
+            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.95rem;">직사각형 스트라이크 존(무릎~어깨) 및 스윙 판정 대폭 개선 버전</p>
             
             <h3 style="margin-bottom: 12px; font-size: 1.05rem;">난이도 선택</h3>
             
@@ -295,7 +294,7 @@ function renderGameScreen() {
             flex-shrink: 0;
         ">
             <div style="font-size: 0.85rem; color: #aaa;">
-                아래 [스윙!] 버튼 또는 [SPACE] 키를 눌러야만 스윙합니다!
+                공이 홈플레이트(존)에 도달할 때 [스윙!] 버튼 또는 [SPACE] 키를 정확히 누르세요!
             </div>
             <button id="swing-btn" style="
                 background: #1ea857;
@@ -319,7 +318,6 @@ function renderGameScreen() {
     resizeCanvas();
 
     swingBtnRef = document.getElementById('swing-btn');
-    canvasContainerRef = document.getElementById('canvas-container');
 
     const triggerSwingAction = (e) => { 
         if (e) e.preventDefault(); 
@@ -474,7 +472,7 @@ function startPitchAnimation() {
         }
 
         const startX = w / 2;
-        const startY = h * 0.22;
+        const startY = h * 0.18;
         let targetX = w / 2;
         let targetY = h * 0.70;
 
@@ -496,14 +494,17 @@ function startPitchAnimation() {
         p.x = currentX;
         p.y = currentY;
 
-        const zoneLeft = w / 2 - 75;
-        const zoneRight = w / 2 + 75;
-        const zoneTop = h * 0.50;
-        const zoneBottom = h * 0.50 + 140;
+        // 규정 반영: 직사각형 스트라이크 존 (너비 130px, 높이 180px - 무릎부터 어깨 라인)
+        const zoneLeft = w / 2 - 65;
+        const zoneRight = w / 2 + 65;
+        const zoneTop = h * 0.44;
+        const zoneBottom = h * 0.44 + 180;
 
         if (p.progress >= 0.85 && p.progress <= 1.05) {
             if (currentX < zoneLeft || currentX > zoneRight || currentY < zoneTop || currentY > zoneBottom) {
                 p.inStrikeZone = false;
+            } else {
+                p.inStrikeZone = true;
             }
         }
 
@@ -538,6 +539,7 @@ function stopAnimation() {
 function drawFieldAndStrikeZone(w, h) {
     ctxRef.save();
     
+    // 홈플레이트
     ctxRef.beginPath();
     ctxRef.fillStyle = '#f0f0f0';
     ctxRef.moveTo(w / 2 - 30, h * 0.73);
@@ -551,14 +553,20 @@ function drawFieldAndStrikeZone(w, h) {
     ctxRef.lineWidth = 2;
     ctxRef.stroke();
 
+    // 직사각형 스트라이크 존 (무릎부터 어깨 높이 반영, 너비 홈플레이트 기준)
+    const zoneLeft = w / 2 - 65;
+    const zoneTop = h * 0.44;
+    const zoneWidth = 130;
+    const zoneHeight = 180;
+
     ctxRef.fillStyle = 'rgba(30, 168, 87, 0.15)';
-    ctxRef.fillRect(w / 2 - 75, h * 0.50, 150, 140);
+    ctxRef.fillRect(zoneLeft, zoneTop, zoneWidth, zoneHeight);
 
     ctxRef.beginPath();
     ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.9)';
     ctxRef.lineWidth = 3;
     ctxRef.setLineDash([8, 6]);
-    ctxRef.strokeRect(w / 2 - 75, h * 0.50, 150, 140);
+    ctxRef.strokeRect(zoneLeft, zoneTop, zoneWidth, zoneHeight);
     ctxRef.setLineDash([]);
     
     ctxRef.restore();
@@ -568,23 +576,24 @@ function drawRobustBatterAndBat(w, h) {
     ctxRef.save();
 
     const isLeft = baseball.batterStance === 'left';
-    const bx = isLeft ? w / 2 - 95 : w / 2 + 95;
-    const by = h * 0.60;
+    // 타자를 좀 더 뒤(바깥쪽/좌우 대칭 방향)로 배치
+    const bx = isLeft ? w / 2 - 115 : w / 2 + 115;
+    const by = h * 0.58;
 
     // 머리
     ctxRef.fillStyle = '#111827';
     ctxRef.beginPath();
-    ctxRef.arc(bx, by - 60, 26, Math.PI, Math.PI * 2);
+    ctxRef.arc(bx, by - 60, 24, Math.PI, Math.PI * 2);
     ctxRef.fill();
-    ctxRef.fillRect(bx - 26, by - 60, 42, 14);
+    ctxRef.fillRect(bx - 24, by - 60, 38, 14);
 
     // 상체 (유니폼)
     ctxRef.fillStyle = '#f3f4f6';
     ctxRef.beginPath();
     if (ctxRef.roundRect) {
-        ctxRef.roundRect(bx - 25, by - 40, 54, 70, 10);
+        ctxRef.roundRect(bx - 22, by - 40, 48, 70, 10);
     } else {
-        ctxRef.rect(bx - 25, by - 40, 54, 70);
+        ctxRef.rect(bx - 22, by - 40, 48, 70);
     }
     ctxRef.fill();
 
@@ -592,31 +601,31 @@ function drawRobustBatterAndBat(w, h) {
     ctxRef.strokeStyle = '#dc2626';
     ctxRef.lineWidth = 4;
     ctxRef.beginPath();
-    ctxRef.moveTo(bx - 6, by - 40); ctxRef.lineTo(bx - 6, by + 30);
-    ctxRef.moveTo(bx + 16, by - 40); ctxRef.lineTo(bx + 16, by + 30);
+    ctxRef.moveTo(bx - 5, by - 40); ctxRef.lineTo(bx - 5, by + 30);
+    ctxRef.moveTo(bx + 14, by - 40); ctxRef.lineTo(bx + 14, by + 30);
     ctxRef.stroke();
 
-    // 하체 (바지 및 양말) 복원
-    ctxRef.fillStyle = '#374151'; // 바지 색상
-    ctxRef.fillRect(bx - 22, by + 30, 18, 45);
-    ctxRef.fillRect(bx + 4, by + 30, 18, 45);
+    // 하체 (바지 및 양말)
+    ctxRef.fillStyle = '#374151';
+    ctxRef.fillRect(bx - 19, by + 30, 16, 45);
+    ctxRef.fillRect(bx + 3, by + 30, 16, 45);
 
     // 야구 양말 및 스파이크 (발)
     ctxRef.fillStyle = '#ffffff';
-    ctxRef.fillRect(bx - 22, by + 65, 18, 12);
-    ctxRef.fillRect(bx + 4, by + 65, 18, 12);
+    ctxRef.fillRect(bx - 19, by + 65, 16, 12);
+    ctxRef.fillRect(bx + 3, by + 65, 16, 12);
     ctxRef.fillStyle = '#111827';
-    ctxRef.fillRect(bx - 24, by + 74, 20, 8);
-    ctxRef.fillRect(bx + 2, by + 74, 20, 8);
+    ctxRef.fillRect(bx - 21, by + 74, 18, 8);
+    ctxRef.fillRect(bx + 1, by + 74, 18, 8);
 
     // 팔
     ctxRef.fillStyle = '#d97706';
-    const armOffsetX = isLeft ? 22 : -38;
-    ctxRef.fillRect(bx + armOffsetX, by - 30, 16, 50);
+    const armOffsetX = isLeft ? 18 : -34;
+    ctxRef.fillRect(bx + armOffsetX, by - 30, 14, 50);
 
     // 방망이
     ctxRef.save();
-    const batTranslateX = isLeft ? bx + 30 : bx - 30;
+    const batTranslateX = isLeft ? bx + 26 : bx - 26;
     ctxRef.translate(batTranslateX, by + 20);
 
     let swingAngle = isLeft ? 0.4 : -0.4;
@@ -675,30 +684,32 @@ function executeSwing() {
     p.swingResulted = true;
     baseball.swingAnim = 1.0;
 
-    const timing = p.progress;
+    const timing = p.progress; // 홈플레이트 도달 시점은 약 0.92 ~ 1.05 사이
     const pitchObj = p.pitchObj;
 
     let result = 'miss';
 
-    if (!p.inStrikeZone) {
-        result = 'bad_swing'; 
+    // 타이밍 정밀 판정 (홈플레이트 근처인 0.88 ~ 1.04 사이여야 유효한 타격 기회 부여)
+    if (timing < 0.85 || timing > 1.08) {
+        result = 'miss'; // 너무 이르거나 늦은 타이밍
+    } else if (!p.inStrikeZone) {
+        result = 'bad_swing'; // 스트라이크 존 바깥쪽 공에 대한 헛스윙
     } else {
         let qualityScore = 0;
-        const timingDiff = Math.abs(timing - 0.96);
-        if (timingDiff <= 0.03) qualityScore += 3;
-        else if (timingDiff <= 0.07) qualityScore += 2;
-        else if (timingDiff <= 0.12) qualityScore += 1;
-        else qualityScore -= 1;
+        const timingDiff = Math.abs(timing - 0.97); // 완벽한 정타 타이밍
+        if (timingDiff <= 0.025) qualityScore += 3.5;
+        else if (timingDiff <= 0.05) qualityScore += 2.5;
+        else if (timingDiff <= 0.08) qualityScore += 1.5;
+        else qualityScore += 0.5;
 
         if (pitchObj.spin === 'backspin') qualityScore += 1;
         else if (pitchObj.spin === 'topspin' || pitchObj.spin === 'gyro') qualityScore -= 0.5;
 
-        if (qualityScore >= 3.5) result = 'homerun';
-        else if (qualityScore >= 2.5) result = 'triple';
-        else if (qualityScore >= 1.5) result = 'double';
-        else if (qualityScore >= 0.5) result = 'hit';
-        else if (timing >= 0.82 && timing <= 1.10) result = Math.random() < 0.5 ? 'foul' : 'miss';
-        else result = 'miss';
+        if (qualityScore >= 4.0) result = 'homerun';
+        else if (qualityScore >= 3.0) result = 'triple';
+        else if (qualityScore >= 2.0) result = 'double';
+        else if (qualityScore >= 1.0) result = 'hit';
+        else result = 'foul';
     }
 
     if (['homerun', 'triple', 'double', 'hit'].includes(result)) {
@@ -921,7 +932,7 @@ function endGame() {
             <button id="restart-btn" style="
                 background: #1ea857;
                 color: white;
-                border: none;
+                border: None;
                 padding: 12px;
                 width: 100%;
                 border-radius: 8px;
