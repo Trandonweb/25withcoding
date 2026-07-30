@@ -1,5 +1,5 @@
 // baseball.js
-// ⚾ AI vs HUMAN - Baseball (Festival Edition - Fixed & AI Powered)
+// ⚾ AI vs HUMAN - Baseball (Festival Edition - Ultimate Balance & Scale Optimized)
 
 let gameAreaRef = null;
 let canvas = null;
@@ -8,7 +8,7 @@ let animation = null;
 let swingKey = null;
 let resizeHandler = null;
 
-// 최적화된 축제용 가상 게임 해상도 (600 x 900)
+// 가상 게임 해상도 유지 (600 x 900)
 const GAME_WIDTH = 600;
 const GAME_HEIGHT = 900;
 
@@ -24,55 +24,55 @@ let game = {
     pitch: null,
     gameOver: false,
     swingAnimProgress: 0,
-    activeEffect: null // 히트 이펙트 관리용
+    activeEffect: null
 };
 
-// 플레이어 타이밍 성향 분석 (AI 투수의 학습 데이터)
+// 플레이어 타이밍 성향 분석 (AI 투수 연출용)
 let playerHistory = {
     swings: 0,
     earlyHits: 0,
     lateHits: 0
 };
 
-// 난이도 설정
+// 난이도 설정 (이지 모드 판정 보정 배수 추가)
 const difficulties = {
-    easy: { name: "쉬움", speed: 0.7 },
-    normal: { name: "보통", speed: 1.0 },
-    hard: { name: "어려움", speed: 1.4 }
+    easy: { name: "쉬움", speed: 0.65, hitBonus: 1.5 },
+    normal: { name: "보통", speed: 0.95, hitBonus: 1.2 },
+    hard: { name: "어려움", speed: 1.3, hitBonus: 1.0 }
 };
 
-// 구종 데이터
+// 구종 데이터 (축제용 적정 속도 및 궤적)
 const pitches = [
-    { name: "포심 패스트볼", speed: 1.3, moveX: 0, moveY: 0, type: "fast" },
-    { name: "슬라이더", speed: 1.1, moveX: 65, moveY: 15, type: "slider" },
-    { name: "커브볼", speed: 0.8, moveX: -25, moveY: 85, type: "curve" },
-    { name: "포크볼", speed: 0.9, moveX: 0, moveY: 95, type: "fork" }
+    { name: "포심 패스트볼", speed: 1.1, moveX: 0, moveY: 0, type: "fast" },
+    { name: "슬라이더", speed: 0.95, moveX: 55, moveY: 10, type: "slider" },
+    { name: "커브볼", speed: 0.75, moveX: -20, moveY: 70, type: "curve" },
+    { name: "포크볼", speed: 0.85, moveX: 0, moveY: 80, type: "fork" }
 ];
 
 // =======================
-// 15+ 컬러 팔레트 시스템 (P 누락분 추가 완료)
+// 컬러 팔레트 시스템
 // =======================
 const pixelColors = {
-    "A": "#0b131a", // 외곽선 / 깊은 그림자
-    "B": "#1e3a8a", // 헬멧 섀도우 (네이비)
-    "C": "#3b82f6", // 헬멧 하이라이트 (블루)
+    "A": "#0b131a", // 외곽선 / 그림자
+    "B": "#1e3a8a", // 헬멧 섀도우
+    "C": "#3b82f6", // 헬멧 하이라이트
     "D": "#7c2d12", // 피부 그림자
-    "E": "#d97706", // 피부톤 (오렌지 탠)
+    "E": "#d97706", // 피부톤
     "F": "#fbbf24", // 피부 하이라이트
-    "G": "#ffffff", // 유니폼 베이스 (화이트)
-    "H": "#dc2626", // 팀 스트라이프 및 포인트 레드
-    "I": "#94a3b8", // 유니폼/바지 주름 그림자
-    "P": "#334155", // 팬츠(바지) 컬러 추가 완료
-    "J": "#0f172a", // 스파이크화 (블랙)
-    "K": "#78350f", // 나무 배트 섀도우
-    "L": "#d97706", // 나무 배트 미드톤
-    "M": "#fde047", // 나무 배트 하이라이트
-    "N": "#1e293b", // 장갑/보호대 네이비
-    "O": "#334155"  // 장갑 하이라이트
+    "G": "#ffffff", // 유니폼 베이스
+    "H": "#dc2626", // 포인트 레드
+    "I": "#94a3b8", // 주름 그림자
+    "P": "#334155", // 바지 컬러
+    "J": "#0f172a", // 스파이크화
+    "K": "#78350f", // 배트 섀도우
+    "L": "#d97706", // 배트 미드톤
+    "M": "#fde047", // 배트 하이라이트
+    "N": "#1e293b", // 장갑
+    "O": "#334155"
 };
 
 // =======================
-// 고밀도 디테일 픽셀 아트 스프라이트 (공백 오류 수정 완료)
+// 고밀도 도트 스프라이트
 // =======================
 const batterPixel = [
     "................................AAAAA...................................",
@@ -222,12 +222,12 @@ function showDifficulty() {
             box-sizing:border-box;
         ">
             <h1 style="font-size:32px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); margin:0;">
-                ⚾ AI 투수 챌린지 (Smart AI)
+                ⚾ AI 투수 챌린지 (Festival Edition)
             </h1>
             <p style="color:#8fbc8f; font-size:16px; margin:0 0 10px 0;">
-                플레이어의 스윙 성향을 학습하는 지능형 AI 투수!
+                누구나 쉽게 즐기는 초간단 홈런더비!
             </p>
-            <button class="bb-btn" data-level="easy">쉬움</button>
+            <button class="bb-btn" data-level="easy">쉬움 (추천)</button>
             <button class="bb-btn" data-level="normal">보통</button>
             <button class="bb-btn" data-level="hard">어려움</button>
         </div>
@@ -394,17 +394,13 @@ function resizeCanvas() {
 // =======================
 
 function selectSmartPitch() {
-    // 플레이어의 성향을 분석하여 구종 선택 (AI 투수 연출)
     if (playerHistory.swings > 3) {
         if (playerHistory.lateHits > playerHistory.earlyHits) {
-            // 타이밍이 늦는 타자에게는 빠른 패스트볼이나 꺾이는 변화구 공략
             return pitches.find(p => p.type === "fast") || pitches[0];
         } else if (playerHistory.earlyHits > playerHistory.lateHits) {
-            // 타이밍이 빠른 타자에게는 커브나 포크볼로 유인
             return pitches.find(p => p.type === "curve") || pitches[2];
         }
     }
-    // 기본은 랜덤 선택
     return pitches[Math.floor(Math.random() * pitches.length)];
 }
 
@@ -429,7 +425,7 @@ function nextPitch() {
         x: GAME_WIDTH / 2,
         y: 140,
         progress: 0,
-        speed: 0.013 * difficulties[game.difficulty].speed
+        speed: 0.012 * difficulties[game.difficulty].speed
     };
 
     showPitchInfo();
@@ -445,7 +441,6 @@ function startPitchAnimation() {
         drawField();
         drawPixelBatterAndBat();
 
-        // 지속형 히트 파티클 이펙트 렌더링
         if (game.activeEffect) {
             drawHitEffect();
         }
@@ -485,7 +480,7 @@ function startPitchAnimation() {
 }
 
 // =======================
-// 경기장 및 스트라이크 존 렌더링
+// 경기장 및 넓어진 스트라이크 존 렌더링
 // =======================
 
 function drawField() {
@@ -505,11 +500,12 @@ function drawField() {
     ctx.closePath();
     ctx.fill();
 
+    // 🌟 넉넉하게 확장된 스트라이크 존 (가시성 및 판정 일치)
     ctx.strokeStyle = "rgba(0, 255, 136, 0.8)";
     ctx.lineWidth = 3;
     ctx.fillStyle = "rgba(0, 255, 136, 0.12)";
-    ctx.fillRect(GAME_WIDTH / 2 - 70, GAME_HEIGHT * 0.55, 140, 160);
-    ctx.strokeRect(GAME_WIDTH / 2 - 70, GAME_HEIGHT * 0.55, 140, 160);
+    ctx.fillRect(GAME_WIDTH / 2 - 95, GAME_HEIGHT * 0.52, 190, 190);
+    ctx.strokeRect(GAME_WIDTH / 2 - 95, GAME_HEIGHT * 0.52, 190, 190);
 
     ctx.fillStyle = "white";
     ctx.beginPath();
@@ -538,12 +534,16 @@ function drawBall(x, y, radius) {
     ctx.stroke();
 }
 
-function drawPixelBatterAndBat() {
-    const bx = GAME_WIDTH / 2 + 65;
-    const by = GAME_HEIGHT * 0.58;
-    const pixelSize = 3.2;
+// =======================
+// 축제 맞춤형 소형 고밀도 타자 및 배트 렌더링 (pixelSize = 2.2 축소)
+// =======================
 
-    drawPixelArt(batterPixel, bx - 110, by - 80, pixelSize);
+function drawPixelBatterAndBat() {
+    const bx = GAME_WIDTH / 2 + 55;
+    const by = GAME_HEIGHT * 0.59;
+    const pixelSize = 2.2; // 🌟 화면의 15~20% 수준으로 정교하게 축소
+
+    drawPixelArt(batterPixel, bx - 75, by - 55, pixelSize);
 
     ctx.save();
     
@@ -552,16 +552,16 @@ function drawPixelBatterAndBat() {
         batAngle = -0.3 - (game.swingAnimProgress * 2.6);
     }
 
-    ctx.translate(bx - 20, by + 10);
+    ctx.translate(bx - 12, by + 5);
     ctx.rotate(batAngle);
 
-    drawPixelArt(batPixel, -30, -80, pixelSize);
+    drawPixelArt(batPixel, -20, -55, pixelSize);
 
     ctx.restore();
 }
 
 // =======================
-// 타격 및 스윙 판정 시스템 (축제 맞춤형 완화된 판정 적용)
+// 타격 및 대폭 완화된 스윙 판정 시스템
 // =======================
 
 function triggerSwing() {
@@ -588,19 +588,21 @@ function triggerSwing() {
 
     const p = game.pitch;
     const hitTargetY = GAME_HEIGHT * 0.72;
-    const timingDiff = p.y - hitTargetY; // 부호 포함 (빠름/늦음 판별)
+    const timingDiff = p.y - hitTargetY;
 
-    // 플레이어 성향 학습 기록
     playerHistory.swings++;
     if (timingDiff < 0) {
-        playerHistory.earlyHits++; // 공이 도달하기 전에 스윙 (빠름)
+        playerHistory.earlyHits++;
     } else {
-        playerHistory.lateHits++;  // 공이 지나친 뒤에 스윙 (늦음)
+        playerHistory.lateHits++;
     }
 
     const absTiming = Math.abs(timingDiff);
-    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 70;
-    const inZoneY = p.y >= GAME_HEIGHT * 0.55 && p.y <= GAME_HEIGHT * 0.72 + 30;
+    const hitBonus = difficulties[game.difficulty].hitBonus;
+
+    // 대폭 확장된 스트라이크존 영역 판단
+    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 95;
+    const inZoneY = p.y >= GAME_HEIGHT * 0.52 && p.y <= GAME_HEIGHT * 0.72 + 40;
     const isInsideZone = inZoneX && inZoneY;
 
     let result = "miss";
@@ -608,14 +610,14 @@ function triggerSwing() {
     if (!isInsideZone) {
         result = "miss";
     } else {
-        // 축제 부스 최적화 완화된 판정 기준
-        if (absTiming < 15) {
+        // 🌟 일반인이 쉽게 안타/홈런을 칠 수 있도록 대폭 완화된 판정 범위 적용
+        if (absTiming <= 20 * hitBonus) {
             result = "home";
-        } else if (absTiming < 35) {
+        } else if (absTiming <= 45 * hitBonus) {
             result = "double";
-        } else if (absTiming < 60) {
+        } else if (absTiming <= 75 * hitBonus) {
             result = "hit";
-        } else if (absTiming < 85) {
+        } else if (absTiming <= 100 * hitBonus) {
             result = "foul";
         } else {
             result = "miss";
@@ -627,8 +629,8 @@ function triggerSwing() {
 
 function judgePitch() {
     const p = game.pitch;
-    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 70;
-    const inZoneY = p.y >= GAME_HEIGHT * 0.55 && p.y <= GAME_HEIGHT * 0.72 + 30;
+    const inZoneX = Math.abs(p.x - GAME_WIDTH / 2) <= 95;
+    const inZoneY = p.y >= GAME_HEIGHT * 0.52 && p.y <= GAME_HEIGHT * 0.72 + 40;
 
     if (inZoneX && inZoneY) {
         processResult("strike");
