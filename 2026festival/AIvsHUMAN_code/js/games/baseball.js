@@ -1,5 +1,5 @@
 // baseball.js
-// ⚾ AI 투수 챌린지 (Baseball) - 1 Inning 3-Out Rule Version
+// ⚾ AI 투수 챌린지 (Baseball) - 1 Inning 3-Out & Advanced Batted Ball Physics + 사구/볼넷 버전
 
 let gameAreaRef = null;
 let canvasRef = null;
@@ -10,8 +10,10 @@ let baseball = {
     difficulty: null,
     batterStance: 'right', // 'left' 또는 'right'
     score: 0,
-    outs: 0,               // 아웃 카운트 (3아웃 시 이닝 종료)
-    hits: 0,               // 안타 수
+    outs: 0,
+    hits: 0,
+    balls: 0,    // 볼 카운트 (4볼넷)
+    strikes: 0,  // 스트라이크 카운트 (3스트라이크 아웃)
     gameOver: false,
     selectedPitches: [],
     currentPitch: null,
@@ -32,12 +34,12 @@ const baseballLevels = {
 };
 
 const allPitchTypes = [
-    { id: 'four-seam', name: '포심 패스트볼', speed: 11.0, hBreak: 0, vBreak: 0, type: 'fast', desc: '직선으로 꽂히는 최고 구속의 직구' },
-    { id: 'two-seam', name: '투심 패스트볼', speed: 10.0, hBreak: 1.2, vBreak: 1.5, type: 'fast', desc: '홈판 앞에서 살짝 가라앉는 공' },
-    { id: 'cutter', name: '커터', speed: 10.5, hBreak: -3.5, vBreak: 0.8, type: 'fast', desc: '마지막 순간 날카롭게 바깥쪽으로 꺾이는 공' },
-    { id: 'curve', name: '커브', speed: 5.0, hBreak: 1.5, vBreak: 8.5, type: 'breaking', desc: '느린 속도로 커다란 포물선을 그리며 떨어지는 공' },
-    { id: 'fork', name: '포크볼', speed: 6.5, hBreak: 0, vBreak: 10.0, type: 'breaking', desc: '직선으로 오다가 홈판 직전에 뚝 떨어지는 공' },
-    { id: 'slider', name: '슬라이더', speed: 7.5, hBreak: 6.5, type: 'breaking', desc: '옆으로 크게 꺾여 나가는 변화구' }
+    { id: 'four-seam', name: '포심 패스트볼', speed: 11.0, hBreak: 0, vBreak: 0, type: 'fast', spin: 'backspin', desc: '직선으로 꽂히는 최고 구속의 백스핀 직구' },
+    { id: 'two-seam', name: '투심 패스트볼', speed: 10.0, hBreak: 1.2, vBreak: 1.5, type: 'fast', spin: 'sidespin', desc: '홈판 앞에서 살짝 가라앉는 싱커성 공' },
+    { id: 'cutter', name: '커터', speed: 10.5, hBreak: -3.5, vBreak: 0.8, type: 'fast', spin: 'gyro', desc: '마지막 순간 날카롭게 바깥쪽으로 꺾이는 커터' },
+    { id: 'curve', name: '커브', speed: 5.0, hBreak: 1.5, vBreak: 8.5, type: 'breaking', spin: 'topspin', desc: '탑스핀이 걸려 커다란 포물선을 그리며 떨어지는 공' },
+    { id: 'fork', name: '포크볼', speed: 6.5, hBreak: 0, vBreak: 10.0, type: 'breaking', spin: 'splitter', desc: '회전이 적어 홈판 직전에 뚝 떨어지는 공' },
+    { id: 'slider', name: '슬라이더', speed: 7.5, hBreak: 6.5, type: 'breaking', spin: 'sweep', desc: '횡회전이 강하게 걸려 옆으로 크게 휘어나가는 공' }
 ];
 
 let handleKeyDownRef = null;
@@ -83,8 +85,8 @@ function showDifficultyScreen() {
             text-align: center;
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
-            <h2 style="color: #1ea857; margin-bottom: 10px; font-size: 1.8rem;">⚾ AI 투수 챌린지 (1이닝 3아웃)</h2>
-            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.95rem;">ABS 판정 적용! 3아웃이 될 때까지 이닝을 소화하세요!</p>
+            <h2 style="color: #1ea857; margin-bottom: 10px; font-size: 1.8rem;">⚾ AI 투수 챌린지 (사구·볼넷 시스템)</h2>
+            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.95rem;">볼넷(4볼)과 몸에 맞는 공(사구) 시스템이 추가되었습니다!</p>
             
             <h3 style="margin-bottom: 12px; font-size: 1.05rem;">난이도 선택</h3>
             
@@ -177,6 +179,8 @@ function startGame() {
     baseball.score = 0;
     baseball.outs = 0;
     baseball.hits = 0;
+    baseball.balls = 0;
+    baseball.strikes = 0;
     baseball.consecutiveHits = 0;
     baseball.gameOver = false;
     baseball.playerHistory = { total: 0, hits: 0, pitchStats: {} };
@@ -223,8 +227,10 @@ function renderGameScreen() {
                 <strong style="color: #1ea857; font-size: 0.95rem;">${lv.name} (${baseball.batterStance === 'left' ? '좌타' : '우타'})</strong>
             </div>
             <div>
+                <span style="font-size: 0.85rem; color: #888;">카운트:</span> 
+                <strong id="count-display" style="color: #00e5ff; font-size: 0.95rem;">B${baseball.balls} S${baseball.strikes}</strong> | 
                 <span style="font-size: 0.85rem; color: #888;">아웃:</span> 
-                <strong id="out-counter" style="color: #ff5252; font-size: 0.95rem;">${baseball.outs}</strong><span style="font-size: 0.85rem; color: #888;">/3 아웃</span>
+                <strong id="out-counter" style="color: #ff5252; font-size: 0.95rem;">${baseball.outs}</strong>/3
             </div>
             <div>
                 <span style="font-size: 0.85rem; color: #888;">점수:</span> 
@@ -288,7 +294,7 @@ function renderGameScreen() {
             flex-shrink: 0;
         ">
             <div style="font-size: 0.85rem; color: #aaa;">
-                ABS 존 안의 공을 마우스 클릭 또는 [SPACE]로 스윙!
+                ABS 존 안의 공을 마우스 클릭 또는 [SPACE]로 스윙! (4볼넷 / 1사구 진루)
             </div>
             <button id="swing-btn" style="
                 background: #1ea857;
@@ -379,6 +385,10 @@ function startAIPondering() {
     baseball.gameMode = 'THINKING';
 
     const chosenPitch = selectNextPitch();
+    
+    // 무작위로 사구(HBP) 확률 부여 (존 바깥쪽 극단으로 빠지는 공일 때 낮은 확률로 발생)
+    const isHBP = Math.random() < 0.04; 
+
     baseball.currentPitch = {
         pitchObj: chosenPitch,
         progress: 0,
@@ -386,7 +396,8 @@ function startAIPondering() {
         swingResulted: false,
         hitResult: null,
         hitProgress: 0,
-        inStrikeZone: true
+        inStrikeZone: true,
+        isHBP: isHBP
     };
 
     showStatusOverlay("🤖 AI 투수가 구종을 고민 중...", "#1ea857");
@@ -444,7 +455,9 @@ function startPitchAnimation() {
 
         if (p.progress > 1.2) {
             if (!p.swingResulted) {
-                if (p.inStrikeZone) {
+                if (p.isHBP) {
+                    processHitResult('hbp', true);
+                } else if (p.inStrikeZone) {
                     processHitResult('looking_strike', true);
                 } else {
                     processHitResult('ball', true);
@@ -455,8 +468,13 @@ function startPitchAnimation() {
 
         const startX = w / 2;
         const startY = h * 0.22;
-        const targetX = w / 2;
-        const targetY = h * 0.70;
+        let targetX = w / 2;
+        let targetY = h * 0.70;
+
+        if (p.isHBP) {
+            targetX += (Math.random() > 0.5 ? 1 : -1) * 110;
+            targetY += 50;
+        }
 
         const hOffset = p.pitchObj.hBreak * Math.sin(p.progress * Math.PI) * 45;
         let vDropFactor = Math.pow(p.progress, 2);
@@ -495,15 +513,6 @@ function startPitchAnimation() {
         ctxRef.fill();
         ctxRef.lineWidth = 2.5;
         ctxRef.strokeStyle = '#d32f2f';
-        ctxRef.stroke();
-
-        ctxRef.strokeStyle = '#d32f2f';
-        ctxRef.lineWidth = 1.5;
-        ctxRef.beginPath();
-        ctxRef.arc(currentX - radius * 0.3, currentY, radius * 0.6, -Math.PI/2, Math.PI/2);
-        ctxRef.stroke();
-        ctxRef.beginPath();
-        ctxRef.arc(currentX + radius * 0.3, currentY, radius * 0.6, Math.PI/2, -Math.PI/2);
         ctxRef.stroke();
 
         animationFrameId = requestAnimationFrame(render);
@@ -560,13 +569,6 @@ function drawRobustBatterAndBat(w, h) {
     ctxRef.arc(bx, by - 60, 26, Math.PI, Math.PI * 2);
     ctxRef.fill();
     ctxRef.fillRect(bx - 26, by - 60, 42, 14);
-    
-    ctxRef.fillStyle = '#374151';
-    if (isLeft) {
-        ctxRef.fillRect(bx - 20, by - 52, 32, 5);
-    } else {
-        ctxRef.fillRect(bx - 12, by - 52, 32, 5);
-    }
 
     ctxRef.fillStyle = '#f3f4f6';
     ctxRef.beginPath();
@@ -587,9 +589,6 @@ function drawRobustBatterAndBat(w, h) {
     ctxRef.fillStyle = '#d97706';
     const armOffsetX = isLeft ? 22 : -38;
     ctxRef.fillRect(bx + armOffsetX, by - 30, 16, 50);
-    ctxRef.fillStyle = '#ffffff';
-    const gloveOffsetX = isLeft ? 22 : -42;
-    ctxRef.fillRect(bx + gloveOffsetX, by + 12, 20, 18);
 
     ctxRef.save();
     const batTranslateX = isLeft ? bx + 30 : bx - 30;
@@ -616,12 +615,6 @@ function drawRobustBatterAndBat(w, h) {
         ctxRef.rect(-6, -140, 12, 150);
     }
     ctxRef.fill();
-
-    ctxRef.fillStyle = '#ffffff';
-    for (let i = 25; i < 60; i += 7) {
-        ctxRef.fillRect(-6.5, i, 13, 3);
-    }
-
     ctxRef.restore();
     ctxRef.restore();
 }
@@ -629,7 +622,12 @@ function drawRobustBatterAndBat(w, h) {
 function drawBattedBall(w, h, p) {
     const startX = w / 2;
     const startY = h * 0.70;
-    const endX = w / 2 + (p.hitResult === 'homerun' ? 0 : (Math.random() - 0.5) * 340);
+    let spread = 0;
+    if (p.hitResult === 'triple') spread = 180;
+    else if (p.hitResult === 'double') spread = 110;
+    else if (p.hitResult === 'hit') spread = 60;
+
+    const endX = w / 2 + (p.hitResult === 'homerun' ? 0 : (Math.random() - 0.5) * spread);
     const endY = h * 0.05;
 
     const curX = startX + (endX - startX) * p.hitProgress;
@@ -658,22 +656,27 @@ function executeSwing() {
     let result = 'miss';
 
     if (!p.inStrikeZone) {
-        result = 'bad_swing'; // 유인구 헛스윙 (아웃 판정 대상)
+        result = 'bad_swing'; 
     } else {
-        if (timing >= 0.88 && timing <= 1.05) {
-            result = pitchObj.type === 'fast' 
-                ? (Math.random() < 0.62 ? 'homerun' : 'hit') 
-                : (Math.random() < 0.48 ? 'homerun' : 'hit');
-        } else if (timing >= 0.80 && timing < 0.88) {
-            result = Math.random() < 0.58 ? 'foul' : 'hit';
-        } else if (timing > 1.05 && timing <= 1.12) {
-            result = Math.random() < 0.65 ? 'foul' : 'miss';
-        } else {
-            result = 'miss';
-        }
+        let qualityScore = 0;
+        const timingDiff = Math.abs(timing - 0.96);
+        if (timingDiff <= 0.03) qualityScore += 3;
+        else if (timingDiff <= 0.07) qualityScore += 2;
+        else if (timingDiff <= 0.12) qualityScore += 1;
+        else qualityScore -= 1;
+
+        if (pitchObj.spin === 'backspin') qualityScore += 1;
+        else if (pitchObj.spin === 'topspin' || pitchObj.spin === 'gyro') qualityScore -= 0.5;
+
+        if (qualityScore >= 3.5) result = 'homerun';
+        else if (qualityScore >= 2.5) result = 'triple';
+        else if (qualityScore >= 1.5) result = 'double';
+        else if (qualityScore >= 0.5) result = 'hit';
+        else if (timing >= 0.82 && timing <= 1.10) result = Math.random() < 0.5 ? 'foul' : 'miss';
+        else result = 'miss';
     }
 
-    if (result === 'hit' || result === 'homerun') {
+    if (['homerun', 'triple', 'double', 'hit'].includes(result)) {
         p.hitResult = result;
         p.hitProgress = 0;
     }
@@ -697,54 +700,104 @@ function processHitResult(result, isTimeout) {
     let points = 0;
     let text = '';
     let color = '#fff';
-    let isOut = false;
+    let isHit = false;
 
     if (result === 'homerun') {
         baseball.consecutiveHits++;
+        baseball.balls = 0; baseball.strikes = 0;
         let bonus = (baseball.consecutiveHits >= 2) ? (baseball.consecutiveHits - 1) * 20 : 0;
-        points = 50 + bonus;
-        text = `🔥 ABS 홈런!! (+50${bonus > 0 ? ` +콤보${bonus}` : ''})`;
+        points = 60 + bonus;
+        text = `🔥 대형 홈런!! (+60${bonus > 0 ? ` +콤보${bonus}` : ''})`;
         color = '#ff5252';
-        baseball.score += points;
-        baseball.hits++;
-        baseball.playerHistory.hits++;
-        baseball.playerHistory.pitchStats[pitchId].success++;
+        isHit = true;
+    } else if (result === 'triple') {
+        baseball.consecutiveHits++;
+        baseball.balls = 0; baseball.strikes = 0;
+        let bonus = (baseball.consecutiveHits >= 2) ? (baseball.consecutiveHits - 1) * 15 : 0;
+        points = 40 + bonus;
+        text = `⚾ 3루타 폭발! (+40${bonus > 0 ? ` +콤보${bonus}` : ''})`;
+        color = '#ff9800';
+        isHit = true;
+    } else if (result === 'double') {
+        baseball.consecutiveHits++;
+        baseball.balls = 0; baseball.strikes = 0;
+        let bonus = (baseball.consecutiveHits >= 2) ? (baseball.consecutiveHits - 1) * 10 : 0;
+        points = 30 + bonus;
+        text = `⚾ 2루타 굿샷! (+30${bonus > 0 ? ` +콤보${bonus}` : ''})`;
+        color = '#ffeb3b';
+        isHit = true;
     } else if (result === 'hit') {
         baseball.consecutiveHits++;
-        let bonus = (baseball.consecutiveHits >= 2) ? (baseball.consecutiveHits - 1) * 10 : 0;
-        points = 20 + bonus;
-        text = `⚾ ABS 안타! (+20${bonus > 0 ? ` +콤보${bonus}` : ''})`;
+        baseball.balls = 0; baseball.strikes = 0;
+        let bonus = (baseball.consecutiveHits >= 2) ? (baseball.consecutiveHits - 1) * 5 : 0;
+        points = 15 + bonus;
+        text = `⚾ 깔끔한 안타! (+15${bonus > 0 ? ` +콤보${bonus}` : ''})`;
         color = '#4caf50';
+        isHit = true;
+    } else if (result === 'foul') {
+        baseball.consecutiveHits = 0;
+        if (baseball.strikes < 2) baseball.strikes++;
+        points = 5;
+        text = `⚠️ 파울! (현재 S${baseball.strikes}) (+5점)`;
+        color = '#ffeb3b';
+    } else if (result === 'ball') {
+        baseball.consecutiveHits = 0;
+        baseball.balls++;
+        points = 10;
+        if (baseball.balls >= 4) {
+            points += 25; // 볼넷 진루 보너스 점수
+            text = '🎯 볼넷 진루!! (+35점)';
+            color = '#00e5ff';
+            baseball.balls = 0;
+            baseball.strikes = 0;
+        } else {
+            text = `🛡️ 볼! (B${baseball.balls} S${baseball.strikes}) (+10점)`;
+            color = '#00e5ff';
+        }
+    } else if (result === 'hbp') {
+        baseball.consecutiveHits = 0;
+        baseball.balls = 0; baseball.strikes = 0;
+        points = 35; // 사구 진루 보너스 점수
+        text = '💥 몸에 맞는 공 (사구 진루!!) (+35점)';
+        color = '#ff9800';
+        isHit = true; // 사구도 출루 기록에 반영
+    } else if (result === 'looking_strike') {
+        baseball.consecutiveHits = 0;
+        baseball.strikes++;
+        if (baseball.strikes >= 3) {
+            baseball.outs++;
+            text = '❌ 루킹 삼진 아웃!';
+            color = '#ff5252';
+            baseball.balls = 0; baseball.strikes = 0;
+        } else {
+            text = `❌ 루킹 스트라이크! (S${baseball.strikes})`;
+            color = '#ff5252';
+        }
+    } else {
+        baseball.consecutiveHits = 0;
+        baseball.strikes++;
+        if (baseball.strikes >= 3) {
+            baseball.outs++;
+            text = baseball.currentPitch.inStrikeZone ? '❌ 헛스윙 삼진 아웃!' : '❌ 유인구 헛스윙 삼진 아웃!';
+            color = '#ff5252';
+            baseball.balls = 0; baseball.strikes = 0;
+        } else {
+            text = `❌ 헛스윙! (S${baseball.strikes})`;
+            color = '#ff5252';
+        }
+    }
+
+    if (isHit) {
         baseball.score += points;
         baseball.hits++;
         baseball.playerHistory.hits++;
         baseball.playerHistory.pitchStats[pitchId].success++;
-    } else if (result === 'foul') {
-        baseball.consecutiveHits = 0;
-        points = 5;
-        text = '⚠️ 파울 (+5점)';
-        color = '#ffeb3b';
+    } else if (points > 0 && result !== 'ball' && result !== 'hbp') {
         baseball.score += points;
-    } else if (result === 'ball') {
-        baseball.consecutiveHits = 0;
-        points = 10;
-        text = '🛡️ ABS 판정: 볼! (잘 참았습니다 +10점)';
-        color = '#00e5ff';
+    } else if (result === 'ball' && baseball.balls === 0) {
+        baseball.score += points; // 볼넷 완성 시 보너스 포함 점수 반영
+    } else if (result === 'hbp') {
         baseball.score += points;
-    } else if (result === 'looking_strike') {
-        // 루킹 삼진 아웃
-        baseball.consecutiveHits = 0;
-        isOut = true;
-        baseball.outs++;
-        text = '❌ 루킹 삼진 아웃!';
-        color = '#ff5252';
-    } else {
-        // 헛스윙 또는 유인구 헛스윙 아웃
-        baseball.consecutiveHits = 0;
-        isOut = true;
-        baseball.outs++;
-        text = baseball.currentPitch.inStrikeZone ? '❌ 헛스윙 삼진 아웃!' : '❌ 유인구 헛스윙 아웃!';
-        color = '#ff5252';
     }
 
     showStatusOverlay(text, color);
@@ -757,7 +810,7 @@ function processHitResult(result, isTimeout) {
         }
         if (baseball.gameOver) return;
 
-        showStatusOverlay(`이번 구종: [${pitchObj.name}]\n${pitchObj.desc}`, "#00e5ff");
+        showStatusOverlay(`이번 구종: [${pitchObj.name}]\n회전: ${pitchObj.desc}`, "#00e5ff");
         
         setTimeout(() => {
             if (!baseball.gameOver && baseball.outs < 3) startAIPondering();
@@ -782,10 +835,12 @@ function hideStatusOverlay() {
 function updateUIStats() {
     const scoreEl = document.getElementById('score-display');
     const outEl = document.getElementById('out-counter');
+    const countEl = document.getElementById('count-display');
     const comboEl = document.getElementById('combo-display');
 
     if (scoreEl) scoreEl.innerText = baseball.score;
     if (outEl) outEl.innerText = baseball.outs;
+    if (countEl) countEl.innerText = `B${baseball.balls} S${baseball.strikes}`;
     if (comboEl) {
         comboEl.innerText = baseball.consecutiveHits >= 2 ? `🔥 ${baseball.consecutiveHits}콤보!` : '';
     }
@@ -834,7 +889,7 @@ function endGame() {
                 <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 4px;">1이닝 최종 득점</div>
                 <div style="font-size: 2.5rem; font-weight: 900; color: #1ea857;">${baseball.score} 점</div>
                 <div style="font-size: 0.85rem; color: #888; margin-top: 6px;">
-                    기록: 안타 ${baseball.hits}개 / 아웃 ${baseball.outs}개
+                    기록: 안타/출루 ${baseball.hits}개 / 아웃 ${baseball.outs}개
                 </div>
             </div>
 
