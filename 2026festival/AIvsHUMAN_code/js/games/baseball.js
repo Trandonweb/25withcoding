@@ -1,5 +1,5 @@
 // baseball.js
-// ⚾ AI 투수 챌린지 (Baseball) - ES Module (Layout Fixed Version)
+// ⚾ AI 투수 챌린지 (Baseball) - ES Module (Batting & Strikezone Enhanced Version)
 
 let gameAreaRef = null;
 let canvasRef = null;
@@ -14,7 +14,7 @@ let baseball = {
     maxPitches: 10,
     gameOver: false,
     selectedPitches: [], // 오늘 선택된 3개의 구종
-    currentPitch: null,  // 현재 날아오는 공 객체
+    currentPitch:  null,  // 현재 날아오는 공 객체
     gameMode: 'DIFFICULTY', 
     consecutiveHits: 0,  
     playerHistory: {
@@ -24,24 +24,25 @@ let baseball = {
     },
     lastResultText: '',
     lastResultColor: '#ffffff',
-    lastPitchInfo: null 
+    lastPitchInfo: null,
+    swingAnim: 0 // 배트 스윙 애니메이션 프레임 관리
 };
 
-// 난이도 설정
+// 난이도 설정 (전체적으로 구속 하향 조정)
 const baseballLevels = {
-    easy: { name: '쉬움', speedMul: 0.7, aiAdapt: 0.2 },
-    normal: { name: '보통', speedMul: 0.95, aiAdapt: 0.5 },
-    hard: { name: '어려움', speedMul: 1.2, aiAdapt: 0.8 }
+    easy: { name: '쉬움', speedMul: 0.5, aiAdapt: 0.2 },
+    normal: { name: '보통', speedMul: 0.7, aiAdapt: 0.5 },
+    hard: { name: '어려움', speedMul: 0.95, aiAdapt: 0.8 }
 };
 
-// 6개의 구종 정의 및 특성 설정
+// 6개의 구종 정의 및 특성 설정 (속도감 완화)
 const allPitchTypes = [
-    { id: 'four-seam', name: '포심 패스트볼', speed: 15.5, hBreak: 0, vBreak: 0, type: 'fast', desc: '직선으로 꽂히는 최고 구속의 직구' },
-    { id: 'two-seam', name: '투심 패스트볼', speed: 14.0, hBreak: 1.2, vBreak: 1.5, type: 'fast', desc: '홈판 앞에서 살짝 가라앉는 공' },
-    { id: 'cutter', name: '커터', speed: 14.5, hBreak: -3.5, vBreak: 0.8, type: 'fast', desc: '마지막 순간 날카롭게 바깥쪽으로 꺾이는 공' },
-    { id: 'curve', name: '커브', speed: 6.5, hBreak: 1.5, vBreak: 8.5, type: 'breaking', desc: '느린 속도로 커다란 포물선을 그리며 떨어지는 공' },
-    { id: 'fork', name: '포크볼', speed: 8.5, hBreak: 0, vBreak: 10.0, type: 'breaking', desc: '직선으로 오다가 홈판 직전에 뚝 떨어지는 공' },
-    { id: 'slider', name: '슬라이더', speed: 10.0, hBreak: 6.5, type: 'breaking', desc: '옆으로 크게 꺾여 나가는 변화구' }
+    { id: 'four-seam', name: '포심 패스트볼', speed: 11.0, hBreak: 0, vBreak: 0, type: 'fast', desc: '직선으로 꽂히는 최고 구속의 직구' },
+    { id: 'two-seam', name: '투심 패스트볼', speed: 10.0, hBreak: 1.2, vBreak: 1.5, type: 'fast', desc: '홈판 앞에서 살짝 가라앉는 공' },
+    { id: 'cutter', name: '커터', speed: 10.5, hBreak: -3.5, vBreak: 0.8, type: 'fast', desc: '마지막 순간 날카롭게 바깥쪽으로 꺾이는 공' },
+    { id: 'curve', name: '커브', speed: 5.0, hBreak: 1.5, vBreak: 8.5, type: 'breaking', desc: '느린 속도로 커다란 포물선을 그리며 떨어지는 공' },
+    { id: 'fork', name: '포크볼', speed: 6.5, hBreak: 0, vBreak: 10.0, type: 'breaking', desc: '직선으로 오다가 홈판 직전에 뚝 떨어지는 공' },
+    { id: 'slider', name: '슬라이더', speed: 7.5, hBreak: 6.5, type: 'breaking', desc: '옆으로 크게 꺾여 나가는 변화구' }
 ];
 
 let handleKeyDownRef = null;
@@ -94,7 +95,7 @@ function showDifficultyScreen() {
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
             <h2 style="color: #1ea857; margin-bottom: 12px; font-size: 2.1rem;">⚾ AI 투수 챌린지</h2>
-            <p style="color: #b0b0b0; margin-bottom: 25px; font-size: 1rem;">카메라 줌인 시점과 역대급 구종 차이를 극복하라!</p>
+            <p style="color: #b0b0b0; margin-bottom: 25px; font-size: 1rem;">스트라이크존을 향해 날아오는 공을 정확히 타격하세요!</p>
             
             <h3 style="margin-bottom: 15px; font-size: 1.1rem;">난이도 선택</h3>
             
@@ -183,7 +184,7 @@ function renderGameScreen() {
         box-sizing: border-box;
         overflow: hidden;
     ">
-        <!-- 상단 스코어바 (고정 높이) -->
+        <!-- 상단 스코어바 -->
         <div style="
             display: flex;
             justify-content: space-between;
@@ -208,7 +209,7 @@ function renderGameScreen() {
             </div>
         </div>
 
-        <!-- 오늘의 구종 안내 (고정 높이) -->
+        <!-- 오늘의 구종 안내 -->
         <div style="
             background: #181818;
             padding: 10px 15px;
@@ -224,7 +225,7 @@ function renderGameScreen() {
             ${baseball.selectedPitches.map(p => `<span style="color: #a0e8af;">✅ ${p.name}</span>`).join('')}
         </div>
 
-        <!-- 야구장 Canvas 영역 (남은 공간을 유연하게 차지, 3배 높이에 맞춰 넉넉한 공간 제공) -->
+        <!-- 야구장 Canvas 영역 -->
         <div style="
             flex: 1;
             position: relative;
@@ -255,7 +256,7 @@ function renderGameScreen() {
             "></div>
         </div>
 
-        <!-- 하단 안내 및 스윙 버튼 영역 (고정 높이) -->
+        <!-- 하단 안내 및 스윙 버튼 영역 -->
         <div style="
             background: #181818;
             padding: 18px 20px;
@@ -328,7 +329,7 @@ function removeEventListeners() {
 }
 
 // =====================
-// AI 지능형 페이크 및 약점 공략 분석 로직
+// AI 약점 공략 분석 로직
 // =====================
 function selectNextPitch() {
     const lv = baseballLevels[baseball.difficulty];
@@ -353,10 +354,8 @@ function selectNextPitch() {
                 return otherPitches[Math.floor(Math.random() * otherPitches.length)];
             }
         }
-
         return weakestPitch;
     }
-
     return pitches[Math.floor(Math.random() * pitches.length)];
 }
 
@@ -378,7 +377,9 @@ function startAIPondering() {
         pitchObj: chosenPitch,
         progress: 0,
         active: false,
-        swingResulted: false
+        swingResulted: false,
+        hitResult: null,
+        hitProgress: 0
     };
 
     showStatusOverlay("🤖 AI 투수가 구종을 고민 중...", "#1ea857");
@@ -402,7 +403,7 @@ function runCountdown(count) {
 }
 
 // =====================
-// 다단계 카메라 줌인 & 시점 전환 엔진
+// 투구 애니메이션 및 렌더링 엔진
 // =====================
 function startPitchAnimation() {
     baseball.gameMode = 'PITCHING';
@@ -411,12 +412,38 @@ function startPitchAnimation() {
 
     p.active = true;
     p.progress = 0; 
-    p.speed = (p.pitchObj.speed * 0.0055) * lv.speedMul;
+    p.speed = (p.pitchObj.speed * 0.0035) * lv.speedMul; // 구속 완화
 
     const render = () => {
         if (!ctxRef || !canvasRef || !p.active) return;
 
         ctxRef.clearRect(0, 0, canvasRef.width, canvasRef.height);
+
+        const w = canvasRef.width;
+        const h = canvasRef.height;
+
+        // 1. 고정 스트라이크 존 렌더링
+        drawStrikeZone(w, h);
+
+        // 2. 타자 및 배트 시각화 렌더링
+        drawBatterAndBat(w, h, p);
+
+        // 스윙 애니메이션 프레임 감소 처리
+        if (baseball.swingAnim > 0) {
+            baseball.swingAnim -= 0.15;
+            if (baseball.swingAnim < 0) baseball.swingAnim = 0;
+        }
+
+        // 3. 타구(날아가는 공) 처리 혹은 투구 진행 처리
+        if (p.hitResult) {
+            p.hitProgress += 0.04;
+            drawBattedBall(w, h, p);
+            if (p.hitProgress > 1.2) {
+                return;
+            }
+            animationFrameId = requestAnimationFrame(render);
+            return;
+        }
 
         p.progress += p.speed;
 
@@ -427,23 +454,18 @@ function startPitchAnimation() {
             return;
         }
 
-        drawCameraPerspective(p.progress);
-
-        const w = canvasRef.width;
-        const h = canvasRef.height;
-
+        // 공의 궤적 계산
         const startX = w / 2;
         const startY = h * 0.22;
         const targetX = w / 2;
-        const targetY = h * 0.75;
+        const targetY = h * 0.70;
 
-        const hOffset = p.pitchObj.hBreak * Math.sin(p.progress * Math.PI) * 55;
-        
+        const hOffset = p.pitchObj.hBreak * Math.sin(p.progress * Math.PI) * 45;
         let vDropFactor = Math.pow(p.progress, 2);
         if (p.pitchObj.id === 'fork' || p.pitchObj.id === 'curve') {
-            vDropFactor = p.progress > 0.55 ? Math.pow(p.progress, 4.5) * 1.8 : Math.pow(p.progress, 2);
+            vDropFactor = p.progress > 0.55 ? Math.pow(p.progress, 4.5) * 1.5 : Math.pow(p.progress, 2);
         }
-        const vOffset = p.pitchObj.vBreak * vDropFactor * 65;
+        const vOffset = p.pitchObj.vBreak * vDropFactor * 55;
 
         const currentX = startX + (targetX - startX) * p.progress + hOffset;
         const currentY = startY + (targetY - startY) * p.progress + vOffset;
@@ -451,13 +473,15 @@ function startPitchAnimation() {
         p.x = currentX;
         p.y = currentY;
 
-        const radius = 5 + (Math.pow(p.progress, 1.5) * 35);
+        const radius = 6 + (Math.pow(p.progress, 1.5) * 28);
 
+        // 그림자
         ctxRef.beginPath();
         ctxRef.fillStyle = 'rgba(0, 0, 0, 0.45)';
         ctxRef.ellipse(currentX, currentY + radius + 4, radius * 0.7, radius * 0.25, 0, 0, Math.PI * 2);
         ctxRef.fill();
 
+        // 야구공 본체
         ctxRef.beginPath();
         ctxRef.arc(currentX, currentY, radius, 0, Math.PI * 2);
         ctxRef.fillStyle = '#f4f4f4';
@@ -480,38 +504,59 @@ function stopAnimation() {
 }
 
 // =====================
-// 카메라 단계별 시점 연출 렌더러
+// 스트라이크 존 및 타자/배트 드로잉 함수
 // =====================
-function drawCameraPerspective(progress) {
-    if (!ctxRef || !canvasRef) return;
-    const w = canvasRef.width;
-    const h = canvasRef.height;
-
+function drawStrikeZone(w, h) {
     ctxRef.save();
-
-    if (progress > 0.85) {
-        ctxRef.beginPath();
-        ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.8)';
-        ctxRef.lineWidth = 4;
-        ctxRef.strokeRect(w / 2 - 90, h * 0.52, 180, 150);
-    } else if (progress > 0.6) {
-        ctxRef.beginPath();
-        ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.5)';
-        ctxRef.lineWidth = 2;
-        ctxRef.strokeRect(w / 2 - 70, h * 0.57, 140, 110);
-    } else if (progress > 0.3) {
-        ctxRef.beginPath();
-        ctxRef.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctxRef.lineWidth = 1.5;
-        ctxRef.strokeRect(w / 2 - 45, h * 0.61, 90, 80);
-    } else {
-        ctxRef.beginPath();
-        ctxRef.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctxRef.lineWidth = 1;
-        ctxRef.strokeRect(w / 2 - 25, h * 0.65, 50, 50);
-    }
-
+    ctxRef.beginPath();
+    ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.7)';
+    ctxRef.lineWidth = 3;
+    ctxRef.setLineDash([6, 4]);
+    // 화면 하단 중앙에 고정된 스트라이크 존
+    ctxRef.strokeRect(w / 2 - 70, h * 0.58, 140, 130);
+    ctxRef.setLineDash([]);
     ctxRef.restore();
+}
+
+function drawBatterAndBat(w, h, p) {
+    ctxRef.save();
+    // 타자 실루엣 (우측에 위치)
+    ctxRef.fillStyle = 'rgba(40, 40, 40, 0.85)';
+    ctxRef.fillRect(w / 2 + 85, h * 0.45, 65, 220);
+
+    // 배트 드로잉 (스윙 애니메이션 연동)
+    ctxRef.translate(w / 2 + 75, h * 0.65);
+    
+    let swingAngle = -0.5; // 기본 대기 자세
+    if (baseball.swingAnim > 0) {
+        swingAngle = -2.2 + (1 - baseball.swingAnim) * 2.5; // 휘둘러 나가는 각도
+    }
+    ctxRef.rotate(swingAngle);
+
+    ctxRef.fillStyle = '#c2813a';
+    ctxRef.fillRect(-6, -100, 12, 110); // 배트 몸체
+    ctxRef.fillStyle = '#e0a96d';
+    ctxRef.fillRect(-8, -115, 16, 20);  // 배트 헤드
+    ctxRef.restore();
+}
+
+function drawBattedBall(w, h, p) {
+    const startX = w / 2;
+    const startY = h * 0.70;
+    const endX = w / 2 + (p.hitResult === 'homerun' ? 0 : (Math.random() - 0.5) * 300);
+    const endY = h * 0.1; // 위쪽(관중석 방향)으로 뻗어나감
+
+    const curX = startX + (endX - startX) * p.hitProgress;
+    const curY = startY + (endY - startY) * p.hitProgress;
+    const radius = Math.max(2, 18 * (1 - p.hitProgress * 0.5));
+
+    ctxRef.beginPath();
+    ctxRef.arc(curX, curY, radius, 0, Math.PI * 2);
+    ctxRef.fillStyle = '#ffffff';
+    ctxRef.fill();
+    ctxRef.lineWidth = 2;
+    ctxRef.strokeStyle = '#d32f2f';
+    ctxRef.stroke();
 }
 
 // =====================
@@ -522,22 +567,28 @@ function executeSwing() {
 
     let p = baseball.currentPitch;
     p.swingResulted = true;
+    baseball.swingAnim = 1.0; // 스윙 액션 시작
 
     const timing = p.progress;
     const pitchObj = p.pitchObj;
 
     let result = 'miss';
 
-    if (timing >= 0.92 && timing <= 1.02) {
+    if (timing >= 0.88 && timing <= 1.05) {
         result = pitchObj.type === 'fast' 
             ? (Math.random() < 0.6 ? 'homerun' : 'hit') 
             : (Math.random() < 0.45 ? 'homerun' : 'hit');
-    } else if (timing >= 0.85 && timing < 0.92) {
+    } else if (timing >= 0.80 && timing < 0.88) {
         result = Math.random() < 0.55 ? 'foul' : 'hit';
-    } else if (timing > 1.02 && timing <= 1.08) {
+    } else if (timing > 1.05 && timing <= 1.12) {
         result = Math.random() < 0.65 ? 'foul' : 'miss';
     } else {
         result = 'miss';
+    }
+
+    if (result === 'hit' || result === 'homerun') {
+        p.hitResult = result;
+        p.hitProgress = 0;
     }
 
     processHitResult(result, false);
@@ -548,8 +599,11 @@ function executeSwing() {
 // =====================
 function processHitResult(result, isTimeout) {
     if (!baseball.currentPitch) return;
-    baseball.currentPitch.active = false;
-    stopAnimation();
+    
+    if (!baseball.currentPitch.hitResult) {
+        baseball.currentPitch.active = false;
+        stopAnimation();
+    }
 
     const pitchObj = baseball.currentPitch.pitchObj;
     const pitchId = pitchObj.id;
