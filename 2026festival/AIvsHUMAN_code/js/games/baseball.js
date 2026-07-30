@@ -1,41 +1,35 @@
 // baseball.js
-// ⚾ AI 투수 챌린지 (Baseball) - ES Module (Batting & Strikezone Enhanced Version)
+// ⚾ AI 투수 챌린지 (Baseball) - High-Resolution Pixel/Dot Batter & Bat Enhanced Version
 
 let gameAreaRef = null;
 let canvasRef = null;
 let ctxRef = null;
 let animationFrameId = null;
 
-// 게임 상태 관리 객체
 let baseball = {
     difficulty: null,
     score: 0,
     pitchCount: 0,
     maxPitches: 10,
     gameOver: false,
-    selectedPitches: [], // 오늘 선택된 3개의 구종
-    currentPitch:  null,  // 현재 날아오는 공 객체
-    gameMode: 'DIFFICULTY', 
-    consecutiveHits: 0,  
+    selectedPitches: [],
+    currentPitch: null,
+    gameMode: 'DIFFICULTY',
+    consecutiveHits: 0,
     playerHistory: {
         total: 0,
         hits: 0,
-        pitchStats: {} 
+        pitchStats: {}
     },
-    lastResultText: '',
-    lastResultColor: '#ffffff',
-    lastPitchInfo: null,
-    swingAnim: 0 // 배트 스윙 애니메이션 프레임 관리
+    swingAnim: 0
 };
 
-// 난이도 설정 (전체적으로 구속 하향 조정)
 const baseballLevels = {
     easy: { name: '쉬움', speedMul: 0.5, aiAdapt: 0.2 },
     normal: { name: '보통', speedMul: 0.7, aiAdapt: 0.5 },
     hard: { name: '어려움', speedMul: 0.95, aiAdapt: 0.8 }
 };
 
-// 6개의 구종 정의 및 특성 설정 (속도감 완화)
 const allPitchTypes = [
     { id: 'four-seam', name: '포심 패스트볼', speed: 11.0, hBreak: 0, vBreak: 0, type: 'fast', desc: '직선으로 꽂히는 최고 구속의 직구' },
     { id: 'two-seam', name: '투심 패스트볼', speed: 10.0, hBreak: 1.2, vBreak: 1.5, type: 'fast', desc: '홈판 앞에서 살짝 가라앉는 공' },
@@ -47,9 +41,6 @@ const allPitchTypes = [
 
 let handleKeyDownRef = null;
 
-// =====================
-// ENTRY
-// =====================
 export function openBaseball(gameArea) {
     gameAreaRef = gameArea;
     showDifficultyScreen();
@@ -60,9 +51,6 @@ export function destroy() {
     removeEventListeners();
 }
 
-// =====================
-// UI: 난이도 선택 화면
-// =====================
 function showDifficultyScreen() {
     baseball.gameMode = 'DIFFICULTY';
     stopAnimation();
@@ -95,7 +83,7 @@ function showDifficultyScreen() {
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
             <h2 style="color: #1ea857; margin-bottom: 10px; font-size: 1.8rem;">⚾ AI 투수 챌린지</h2>
-            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.95rem;">스트라이크존을 향해 날아오는 공을 정확히 타격하세요!</p>
+            <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 0.95rem;">정교해진 타자와 함께 타이밍을 맞춰 타격하세요!</p>
             
             <h3 style="margin-bottom: 12px; font-size: 1.05rem;">난이도 선택</h3>
             
@@ -103,17 +91,14 @@ function showDifficultyScreen() {
                 <button class="game-btn" data-level="easy" style="
                     background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 12px;
                     border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
-                    transition: all 0.2s;
                 ">쉬움 (Easy)</button>
                 <button class="game-btn" data-level="normal" style="
                     background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 12px;
                     border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
-                    transition: all 0.2s;
                 ">보통 (Normal)</button>
                 <button class="game-btn" data-level="hard" style="
                     background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 12px;
                     border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
-                    transition: all 0.2s;
                 ">어려움 (Hard)</button>
             </div>
         </div>
@@ -122,35 +107,19 @@ function showDifficultyScreen() {
 
     const buttons = gameAreaRef.querySelectorAll('.game-btn');
     buttons.forEach(btn => {
-        btn.addEventListener('mouseover', () => {
-            btn.style.background = '#1ea857';
-            btn.style.borderColor = '#1ea857';
-        });
-        btn.addEventListener('mouseout', () => {
-            btn.style.background = '#2d2d2d';
-            btn.style.borderColor = '#444';
-        });
-        btn.addEventListener('click', () => {
-            const level = btn.getAttribute('data-level');
-            startGame(level);
-        });
+        btn.addEventListener('mouseover', () => { btn.style.background = '#1ea857'; btn.style.borderColor = '#1ea857'; });
+        btn.addEventListener('mouseout', () => { btn.style.background = '#2d2d2d'; btn.style.borderColor = '#444'; });
+        btn.addEventListener('click', () => startGame(btn.getAttribute('data-level')));
     });
 }
 
-// =====================
-// GAME START
-// =====================
 function startGame(level) {
     baseball.difficulty = level;
     baseball.score = 0;
     baseball.pitchCount = 0;
     baseball.consecutiveHits = 0;
     baseball.gameOver = false;
-    baseball.playerHistory = {
-        total: 0,
-        hits: 0,
-        pitchStats: {}
-    };
+    baseball.playerHistory = { total: 0, hits: 0, pitchStats: {} };
 
     const shuffled = [...allPitchTypes].sort(() => 0.5 - Math.random());
     baseball.selectedPitches = shuffled.slice(0, 3);
@@ -162,9 +131,6 @@ function startGame(level) {
     startAIPondering();
 }
 
-// =====================
-// GAME SCREEN UI & CANVAS
-// =====================
 function renderGameScreen() {
     stopAnimation();
     removeEventListeners();
@@ -183,7 +149,6 @@ function renderGameScreen() {
         box-sizing: border-box;
         overflow: hidden;
     ">
-        <!-- 상단 스코어바 -->
         <div style="
             display: flex;
             justify-content: space-between;
@@ -208,7 +173,6 @@ function renderGameScreen() {
             </div>
         </div>
 
-        <!-- 오늘의 구종 안내 -->
         <div style="
             background: #181818;
             padding: 8px 12px;
@@ -217,14 +181,13 @@ function renderGameScreen() {
             gap: 12px;
             font-size: 0.85rem;
             border-bottom: 1px solid #2a2a2a;
-            flex-wrap: wrap;
             flex-shrink: 0;
+            flex-wrap: wrap;
         ">
             <span style="color: #888;">오늘의 구종:</span>
             ${baseball.selectedPitches.map(p => `<span style="color: #a0e8af;">✅ ${p.name}</span>`).join('')}
         </div>
 
-        <!-- 야구장 Canvas 영역 -->
         <div style="
             flex: 1;
             position: relative;
@@ -238,7 +201,6 @@ function renderGameScreen() {
         " id="canvas-container">
             <canvas id="baseballCanvas" style="display: block; width: 100%; height: 100%;"></canvas>
             
-            <!-- 상태 메시지/결과 오버레이 -->
             <div id="status-overlay" style="
                 position: absolute;
                 top: 10%;
@@ -255,7 +217,6 @@ function renderGameScreen() {
             "></div>
         </div>
 
-        <!-- 하단 안내 및 스윙 버튼 영역 -->
         <div style="
             background: #181818;
             padding: 12px 15px;
@@ -279,7 +240,6 @@ function renderGameScreen() {
                 font-weight: bold;
                 cursor: pointer;
                 box-shadow: 0 4px 15px rgba(30,168,87,0.4);
-                transition: transform 0.1s;
                 width: 100%;
                 max-width: 250px;
             ">🏏 스윙!</button>
@@ -294,10 +254,7 @@ function renderGameScreen() {
     const swingBtn = document.getElementById('swing-btn');
     const canvasContainer = document.getElementById('canvas-container');
 
-    const triggerSwingAction = (e) => {
-        if (e) e.preventDefault();
-        executeSwing();
-    };
+    const triggerSwingAction = (e) => { if (e) e.preventDefault(); executeSwing(); };
 
     swingBtn.addEventListener('click', triggerSwingAction);
     canvasContainer.addEventListener('click', triggerSwingAction);
@@ -327,9 +284,6 @@ function removeEventListeners() {
     window.removeEventListener('resize', resizeCanvas);
 }
 
-// =====================
-// AI 약점 공략 분석 로직
-// =====================
 function selectNextPitch() {
     const lv = baseballLevels[baseball.difficulty];
     const pitches = baseball.selectedPitches;
@@ -349,18 +303,13 @@ function selectNextPitch() {
 
         if (Math.random() < 0.3) {
             const otherPitches = pitches.filter(p => p.id !== weakestPitch.id);
-            if (otherPitches.length > 0) {
-                return otherPitches[Math.floor(Math.random() * otherPitches.length)];
-            }
+            if (otherPitches.length > 0) return otherPitches[Math.floor(Math.random() * otherPitches.length)];
         }
         return weakestPitch;
     }
     return pitches[Math.floor(Math.random() * pitches.length)];
 }
 
-// =====================
-// 게임 흐름 제어
-// =====================
 function startAIPondering() {
     if (baseball.pitchCount >= baseball.maxPitches) {
         endGame();
@@ -383,9 +332,7 @@ function startAIPondering() {
 
     showStatusOverlay("🤖 AI 투수가 구종을 고민 중...", "#1ea857");
 
-    setTimeout(() => {
-        runCountdown(3);
-    }, 1000);
+    setTimeout(() => { runCountdown(3); }, 1000);
 }
 
 function runCountdown(count) {
@@ -401,9 +348,6 @@ function runCountdown(count) {
     }
 }
 
-// =====================
-// 투구 애니메이션 및 렌더링 엔진
-// =====================
 function startPitchAnimation() {
     baseball.gameMode = 'PITCHING';
     const p = baseball.currentPitch;
@@ -421,14 +365,14 @@ function startPitchAnimation() {
         const w = canvasRef.width;
         const h = canvasRef.height;
 
-        // 1. 고정 스트라이크 존 렌더링
-        drawStrikeZone(w, h);
+        // 1. 구장 배경 및 홈플레이트 / 스트라이크 존 렌더링
+        drawFieldAndStrikeZone(w, h);
 
-        // 2. 타자 및 배트 시각화 렌더링
-        drawBatterAndBat(w, h, p);
+        // 2. 고해상도 점 단위 타자 및 다단계 회전 배트 렌더링
+        drawHighResBatterAndBat(w, h);
 
         if (baseball.swingAnim > 0) {
-            baseball.swingAnim -= 0.15;
+            baseball.swingAnim -= 0.12;
             if (baseball.swingAnim < 0) baseball.swingAnim = 0;
         }
 
@@ -436,9 +380,7 @@ function startPitchAnimation() {
         if (p.hitResult) {
             p.hitProgress += 0.04;
             drawBattedBall(w, h, p);
-            if (p.hitProgress > 1.2) {
-                return;
-            }
+            if (p.hitProgress > 1.2) return;
             animationFrameId = requestAnimationFrame(render);
             return;
         }
@@ -446,9 +388,7 @@ function startPitchAnimation() {
         p.progress += p.speed;
 
         if (p.progress > 1.2) {
-            if (!p.swingResulted) {
-                processHitResult('miss', true);
-            }
+            if (!p.swingResulted) processHitResult('miss', true);
             return;
         }
 
@@ -470,20 +410,29 @@ function startPitchAnimation() {
         p.x = currentX;
         p.y = currentY;
 
-        const radius = 6 + (Math.pow(p.progress, 1.5) * 28);
+        const radius = 6 + (Math.pow(p.progress, 1.5) * 26);
 
+        // 공 그림자
         ctxRef.beginPath();
-        ctxRef.fillStyle = 'rgba(0, 0, 0, 0.45)';
-        ctxRef.ellipse(currentX, currentY + radius + 4, radius * 0.7, radius * 0.25, 0, 0, Math.PI * 2);
+        ctxRef.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctxRef.ellipse(currentX, currentY + radius + 3, radius * 0.7, radius * 0.25, 0, 0, Math.PI * 2);
         ctxRef.fill();
 
+        // 공 본체 (실밥 디테일 포함)
         ctxRef.beginPath();
         ctxRef.arc(currentX, currentY, radius, 0, Math.PI * 2);
-        ctxRef.fillStyle = '#f4f4f4';
+        ctxRef.fillStyle = '#f8f9fa';
         ctxRef.fill();
         ctxRef.lineWidth = 2;
-        ctxRef.strokeStyle = '#d32f2f';
+        ctxRef.strokeStyle = '#e63946';
         ctxRef.stroke();
+
+        // 공 실밥 점(Dot) 표현
+        if (radius > 10) {
+            ctxRef.fillStyle = '#e63946';
+            ctxRef.fillRect(currentX - radius * 0.4, currentY - 2, 2, 4);
+            ctxRef.fillRect(currentX + radius * 0.4 - 2, currentY - 2, 2, 4);
+        }
 
         animationFrameId = requestAnimationFrame(render);
     };
@@ -498,60 +447,122 @@ function stopAnimation() {
     }
 }
 
-function drawStrikeZone(w, h) {
+function drawFieldAndStrikeZone(w, h) {
     ctxRef.save();
+    
+    // 홈플레이트 시각화 (하단 오각형)
+    ctxRef.beginPath();
+    ctxRef.fillStyle = '#e5e5e5';
+    ctxRef.moveTo(w / 2 - 25, h * 0.75);
+    ctxRef.lineTo(w / 2 + 25, h * 0.75);
+    ctxRef.lineTo(w / 2 + 35, h * 0.79);
+    ctxRef.lineTo(w / 2, h * 0.83);
+    ctxRef.lineTo(w / 2 - 35, h * 0.79);
+    ctxRef.closePath();
+    ctxRef.fill();
+    ctxRef.strokeStyle = '#b0b0b0';
+    ctxRef.lineWidth = 2;
+    ctxRef.stroke();
+
+    // 스트라이크 존 렉탱글
     ctxRef.fillStyle = 'rgba(30, 168, 87, 0.12)';
-    ctxRef.fillRect(w / 2 - 70, h * 0.58, 140, 130);
+    ctxRef.fillRect(w / 2 - 75, h * 0.52, 150, 140);
 
     ctxRef.beginPath();
-    ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.9)';
+    ctxRef.strokeStyle = 'rgba(30, 168, 87, 0.85)';
     ctxRef.lineWidth = 3;
-    ctxRef.setLineDash([6, 4]);
-    ctxRef.strokeRect(w / 2 - 70, h * 0.58, 140, 130);
+    ctxRef.setLineDash([8, 6]);
+    ctxRef.strokeRect(w / 2 - 75, h * 0.52, 150, 140);
     ctxRef.setLineDash([]);
+    
     ctxRef.restore();
 }
 
-function drawBatterAndBat(w, h, p) {
+// 🌟 고해상도 및 정교한 타자/배트 드로잉 (점 단위 구성)
+function drawHighResBatterAndBat(w, h) {
     ctxRef.save();
-    
-    ctxRef.fillStyle = 'rgba(230, 230, 230, 0.9)';
-    ctxRef.fillRect(w / 2 + 75, h * 0.42, 60, 240);
-    ctxRef.beginPath();
-    ctxRef.arc(w / 2 + 105, h * 0.37, 22, 0, Math.PI * 2);
-    ctxRef.fill();
 
-    ctxRef.translate(w / 2 + 65, h * 0.62);
-    
-    let swingAngle = -0.6;
+    const bx = w / 2 + 85;
+    const by = h * 0.50;
+
+    // 1. 타자 헬멧 (곡선 및 광택 점 처리)
+    ctxRef.fillStyle = '#1b263b';
+    ctxRef.beginPath();
+    ctxRef.arc(bx, by - 55, 24, Math.PI, Math.PI * 2);
+    ctxRef.fill();
+    ctxRef.fillRect(bx - 24, by - 55, 36, 12);
+    // 헬멧 챙
+    ctxRef.fillStyle = '#415a77';
+    ctxRef.fillRect(bx - 10, by - 48, 28, 4);
+
+    // 2. 타자 상체 (유니폼 및 보호대 세부 묘사)
+    ctxRef.fillStyle = '#f8f9fa';
+    ctxRef.beginPath();
+    ctxRef.roundRect(bx - 22, by - 35, 48, 80, 8);
+    ctx.fill();
+
+    // 유니폼 팀 스트라이프 선 (Dot/Line 렌더링)
+    ctxRef.strokeStyle = '#e63946';
+    ctxRef.lineWidth = 3;
+    ctxRef.beginPath();
+    ctxRef.moveTo(bx - 5, by - 35); ctxRef.lineTo(bx - 5, by + 45);
+    ctxRef.moveTo(bx + 15, by - 35); ctxRef.lineTo(bx + 15, by + 45);
+    ctxRef.stroke();
+
+    // 타자 팔 및 장갑 낀 손
+    ctxRef.fillStyle = '#e0a96d';
+    ctxRef.fillRect(bx - 32, by - 25, 14, 45); // 앞팔
+    ctxRef.fillStyle = '#ffffff'; // 배팅 장갑
+    ctxRef.fillRect(bx - 35, by + 10, 16, 16);
+
+    // 3. 배트 회전 및 고해상도 입체 렌더링
+    ctxRef.save();
+    ctxRef.translate(bx - 25, by + 18);
+
+    let swingAngle = -0.5; // 대기 상태 앵글
     if (baseball.swingAnim > 0) {
-        swingAngle = -2.4 + (1 - baseball.swingAnim) * 2.8;
+        // 스윙 시 휘두르는 궤적 계산 (-2.6 라디안까지 급격한 회전)
+        swingAngle = -2.6 + (1 - baseball.swingAnim) * 3.0;
     }
     ctxRef.rotate(swingAngle);
 
-    ctxRef.fillStyle = '#c2813a';
-    ctxRef.fillRect(-6, -110, 12, 120);
-    ctxRef.fillStyle = '#e0a96d';
-    ctxRef.fillRect(-8, -125, 16, 22);
+    // 나무 배트 본체 그라데이션 및 디테일
+    const batGrad = ctxRef.createLinearGradient(-6, -130, 6, 10);
+    batGrad.addColorStop(0, '#d4a373');
+    batGrad.addColorStop(0.5, '#bc6c25');
+    batGrad.addColorStop(1, '#7f4f24');
+
+    ctxRef.fillStyle = batGrad;
+    ctxRef.beginPath();
+    ctxRef.roundRect(-5, -130, 10, 140, 4);
+    ctxRef.fill();
+
+    // 배트 손잡이 힙 테이프 (그립 텍스처 점선 표현)
+    ctxRef.fillStyle = '#ffffff';
+    for (let i = 20; i < 50; i += 6) {
+        ctxRef.fillRect(-5.5, i, 11, 2);
+    }
+
+    ctxRef.restore();
     ctxRef.restore();
 }
 
 function drawBattedBall(w, h, p) {
     const startX = w / 2;
     const startY = h * 0.70;
-    const endX = w / 2 + (p.hitResult === 'homerun' ? 0 : (Math.random() - 0.5) * 300);
-    const endY = h * 0.1;
+    const endX = w / 2 + (p.hitResult === 'homerun' ? 0 : (Math.random() - 0.5) * 320);
+    const endY = h * 0.08;
 
     const curX = startX + (endX - startX) * p.hitProgress;
     const curY = startY + (endY - startY) * p.hitProgress;
-    const radius = Math.max(2, 18 * (1 - p.hitProgress * 0.5));
+    const radius = Math.max(3, 16 * (1 - p.hitProgress * 0.4));
 
     ctxRef.beginPath();
     ctxRef.arc(curX, curY, radius, 0, Math.PI * 2);
     ctxRef.fillStyle = '#ffffff';
     ctxRef.fill();
     ctxRef.lineWidth = 2;
-    ctxRef.strokeStyle = '#d32f2f';
+    ctxRef.strokeStyle = '#e63946';
     ctxRef.stroke();
 }
 
@@ -569,10 +580,10 @@ function executeSwing() {
 
     if (timing >= 0.88 && timing <= 1.05) {
         result = pitchObj.type === 'fast' 
-            ? (Math.random() < 0.6 ? 'homerun' : 'hit') 
-            : (Math.random() < 0.45 ? 'homerun' : 'hit');
+            ? (Math.random() < 0.62 ? 'homerun' : 'hit') 
+            : (Math.random() < 0.48 ? 'homerun' : 'hit');
     } else if (timing >= 0.80 && timing < 0.88) {
-        result = Math.random() < 0.55 ? 'foul' : 'hit';
+        result = Math.random() < 0.58 ? 'foul' : 'hit';
     } else if (timing > 1.05 && timing <= 1.12) {
         result = Math.random() < 0.65 ? 'foul' : 'miss';
     } else {
@@ -643,9 +654,7 @@ function processHitResult(result, isTimeout) {
         showStatusOverlay(`이번 구종: [${pitchObj.name}]\n${pitchObj.desc}`, "#00e5ff");
         
         setTimeout(() => {
-            if (!baseball.gameOver) {
-                startAIPondering();
-            }
+            if (!baseball.gameOver) startAIPondering();
         }, 1800);
     }, 1000);
 }
@@ -712,7 +721,7 @@ function endGame() {
             box-shadow: 0 8px 24px rgba(30, 168, 87, 0.2);
         ">
             <h2 style="color: #ff5252; margin-bottom: 6px; font-size: 1.8rem;">GAME OVER</h2>
-            <p style="color: #888; margin-bottom: 18px; font-size: 0.95rem;">축제 최고의 타자에 도전하세요!</p>
+            <p style="color: #888; margin-bottom: 18px; font-size: 0.95rem;">최고의 타격 실력을 증명했습니다!</p>
             
             <div style="
                 background: #252525;
@@ -737,14 +746,12 @@ function endGame() {
                 font-size: 1rem;
                 font-weight: bold;
                 cursor: pointer;
-                transition: background 0.2s;
             ">다시 하기</button>
         </div>
     </div>
     `;
 
-    const restartBtn = document.getElementById('restart-btn');
-    restartBtn.addEventListener('click', () => {
+    document.getElementById('restart-btn').addEventListener('click', () => {
         showDifficultyScreen();
     });
 }
