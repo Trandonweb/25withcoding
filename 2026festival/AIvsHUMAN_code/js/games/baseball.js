@@ -1,116 +1,155 @@
 // baseball.js
-// ⚾ AI 투수 챌린지 v2
-// Part 1 - 기본 구조 / 메뉴 / 캔버스
+// ⚾ AI vs HUMAN - Baseball
+
 
 let gameAreaRef = null;
 
 let canvas = null;
 let ctx = null;
 
-let animationId = null;
+let animation = null;
 
-let keyHandler = null;
-let resizeHandler = null;
-
-
-const difficultyData = {
-    easy:{
-        name:"쉬움",
-        speed:0.65,
-        ai:0.2
-    },
-
-    normal:{
-        name:"보통",
-        speed:0.85,
-        ai:0.5
-    },
-
-    hard:{
-        name:"어려움",
-        speed:1.05,
-        ai:0.8
-    }
-};
+let swingKey = null;
 
 
+
+// 게임 데이터
 
 let game = {
 
-    difficulty:null,
+    difficulty: "",
 
-    stance:"right",
+    score: 0,
 
-    score:0,
+    outs: 0,
 
-    outs:0,
+    balls: 0,
 
-    balls:0,
-
-    strikes:0,
-
-    hits:0,
+    strikes: 0,
 
 
-    mode:"menu",
+    pitching:false,
+
+    swing:false,
+
 
     pitch:null,
 
 
-    swing:false,
-
-    swingTime:0,
-
-
-    combo:0,
-
-
-    history:{
-        fast:0,
-        breaking:0
-    }
+    gameOver:false
 
 };
 
 
 
-/* =========================
-   외부 실행
-========================= */
 
+// 난이도
+
+const difficulties = {
+
+
+    easy:{
+        name:"쉬움",
+        speed:0.7
+    },
+
+
+    normal:{
+        name:"보통",
+        speed:1
+    },
+
+
+    hard:{
+        name:"어려움",
+        speed:1.3
+    }
+
+
+};
+
+
+
+
+// 투구 종류
+
+const pitches=[
+
+    {
+        name:"포심",
+        speed:1,
+        move:0
+    },
+
+
+    {
+        name:"슬라이더",
+        speed:0.9,
+        move:40
+    },
+
+
+    {
+        name:"커브",
+        speed:0.7,
+        move:-50
+    },
+
+
+    {
+        name:"포크",
+        speed:0.8,
+        move:20
+    }
+
+];
+
+
+
+
+
+// =======================
+// 외부 실행
+// =======================
 
 export function openBaseball(gameArea){
 
+
     gameAreaRef = gameArea;
+
 
     showDifficulty();
 
+
 }
 
 
+
+
+
+// =======================
+// 종료
+// =======================
 
 export function destroy(){
 
-    stopAnimation();
 
-    if(keyHandler){
+    if(animation){
+
+        cancelAnimationFrame(animation);
+
+    }
+
+
+    if(swingKey){
+
         window.removeEventListener(
             "keydown",
-            keyHandler
+            swingKey
         );
 
-        keyHandler=null;
     }
 
-
-    if(resizeHandler){
-        window.removeEventListener(
-            "resize",
-            resizeHandler
-        );
-
-        resizeHandler=null;
-    }
 
 }
 
@@ -118,369 +157,295 @@ export function destroy(){
 
 
 
-
-
-/* =========================
-   난이도 선택
-========================= */
-
+// =======================
+// 난이도 선택 화면
+// =======================
 
 function showDifficulty(){
 
-    game.mode="menu";
+
+gameAreaRef.innerHTML = `
 
 
-    gameAreaRef.innerHTML=`
+<div style="
 
-<div class="baseball-page">
+height:100%;
 
-<div class="baseball-card">
+display:flex;
+
+flex-direction:column;
+
+justify-content:center;
+
+align-items:center;
+
+gap:20px;
+
+">
+
 
 <h1>
 ⚾ AI 투수 챌린지
 </h1>
 
 
-<p>
-AI 투수와 1이닝 승부!
-</p>
 
+<button class="bb-btn" data-level="easy">
 
-
-<button data-level="easy">
 쉬움
+
 </button>
 
 
-<button data-level="normal">
+
+<button class="bb-btn" data-level="normal">
+
 보통
+
 </button>
 
 
-<button data-level="hard">
+
+<button class="bb-btn" data-level="hard">
+
 어려움
+
 </button>
 
 
-</div>
 
 </div>
 
 
-<style>
+`;
 
-.baseball-page{
+
+
+
+
+const buttons =
+gameAreaRef.querySelectorAll(".bb-btn");
+
+
+
+buttons.forEach(btn=>{
+
+
+    btn.style.padding="15px 50px";
+
+    btn.style.borderRadius="20px";
+
+    btn.style.border="2px solid #1ea857";
+
+    btn.style.background="#fff";
+
+    btn.style.fontSize="20px";
+
+
+    btn.onclick=()=>{
+
+
+        game.difficulty =
+            btn.dataset.level;
+
+
+        startGame();
+
+
+    };
+
+
+});
+
+
+
+}
+
+
+
+
+
+// =======================
+// 게임 시작
+// =======================
+
+function startGame(){
+
+
+    game.score=0;
+
+    game.outs=0;
+
+    game.balls=0;
+
+    game.strikes=0;
+
+
+    game.pitching=false;
+
+    game.swing=false;
+
+    game.gameOver=false;
+
+
+
+    renderGame();
+
+
+
+    nextPitch();
+
+
+}
+// =======================
+// 게임 화면
+// =======================
+
+function renderGame(){
+
+
+gameAreaRef.innerHTML = `
+
+
+<div style="
 
 width:100%;
+
 height:100%;
 
 min-height:500px;
 
 display:flex;
 
-align-items:center;
-justify-content:center;
+flex-direction:column;
 
-background:#101010;
+background:#111;
 
 color:white;
-
-font-family:Pretendard,sans-serif;
-
-}
-
-
-.baseball-card{
-
-width:350px;
-
-padding:30px;
-
-background:#1e1e1e;
 
 border-radius:20px;
 
-border:2px solid #1ea857;
+overflow:hidden;
 
-text-align:center;
-
-}
+">
 
 
-.baseball-card h1{
 
-color:#1ea857;
+<!-- 상단 정보 -->
 
-}
+<div style="
 
+height:60px;
 
-.baseball-card button{
+background:#222;
 
-width:100%;
+display:flex;
 
-padding:13px;
+justify-content:space-around;
 
-margin-top:10px;
-
-border-radius:10px;
-
-border:0;
-
-background:#2b2b2b;
-
-color:white;
+align-items:center;
 
 font-size:18px;
 
-cursor:pointer;
-
-}
-
-
-.baseball-card button:hover{
-
-background:#1ea857;
-
-}
-
-
-</style>
-
-`;
-
-
-
-const buttons =
-gameAreaRef.querySelectorAll("button");
-
-
-buttons.forEach(btn=>{
-
-btn.onclick=()=>{
-
-game.difficulty =
-btn.dataset.level;
-
-
-showStance();
-
-};
-
-
-});
-
-
-}
-
-
-
-
-
-
-
-
-
-/* =========================
-   타석 선택
-========================= */
-
-
-function showStance(){
-
-
-gameAreaRef.innerHTML=`
-
-<div class="baseball-page">
-
-<div class="baseball-card">
-
-
-<h1>
-🏏 타자 선택
-</h1>
-
-
-<p>
-타석 방향을 선택하세요
-</p>
-
-
-
-<button data-stance="left">
-좌타자
-</button>
-
-
-<button data-stance="right">
-우타자
-</button>
-
-
-</div>
-
-</div>
-
-`;
-
-
-
-gameAreaRef
-.querySelectorAll("button")
-.forEach(btn=>{
-
-
-btn.onclick=()=>{
-
-
-game.stance =
-btn.dataset.stance;
-
-
-startGame();
-
-
-};
-
-
-});
-
-
-}
-
-
-
-
-
-
-
-
-
-/* =========================
-   게임 시작
-========================= */
-
-
-function startGame(){
-
-
-game.score=0;
-game.outs=0;
-
-game.balls=0;
-game.strikes=0;
-
-game.hits=0;
-
-game.combo=0;
-
-game.mode="play";
-
-
-renderGame();
-
-
-}
-
-
-
-
-/* =========================
-   게임 화면
-========================= */
-
-
-function renderGame(){
-
-
-gameAreaRef.innerHTML=`
-
-
-<div id="baseballRoot"
-style="
-width:100%;
-height:100%;
-background:#101010;
-color:white;
-display:flex;
-flex-direction:column;
 ">
 
 
-<div style="
-padding:10px;
-background:#1e1e1e;
-display:flex;
-justify-content:space-between;
-">
+<div>
+⚾ ${difficulties[game.difficulty].name}
+</div>
 
 
-<span>
-⚾
-${difficultyData[game.difficulty].name}
-</span>
-
-
-<span id="count">
-B${game.balls}
-S${game.strikes}
-</span>
-
-
+<div>
+점수 :
 <span id="score">
-${game.score}점
+0
 </span>
+</div>
+
+
+<div>
+아웃 :
+<span id="outs">
+0
+</span>
+</div>
 
 
 </div>
 
 
 
+
+
+<!-- 경기장 -->
+
 <div style="
+
 flex:1;
+
 position:relative;
-background:#14532d;
+
 ">
 
 
 <canvas id="baseballCanvas"
+
 style="
+
 width:100%;
+
 height:100%;
+
+background:#176b3a;
+
 ">
+
 </canvas>
 
 
-<div id="result"
-style="
-position:absolute;
-top:20px;
-width:100%;
-text-align:center;
-font-size:28px;
-font-weight:bold;
+</div>
+
+
+
+
+
+
+<!-- 버튼 -->
+
+<div style="
+
+height:90px;
+
+background:#222;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
 ">
-</div>
-
-
-</div>
-
 
 
 <button id="swingButton"
 
 style="
-margin:15px;
-padding:15px;
 
-border-radius:20px;
+padding:15px 60px;
+
+border:none;
+
+border-radius:30px;
 
 background:#1ea857;
 
 color:white;
 
-border:0;
+font-size:22px;
 
-font-size:20px;
+font-weight:bold;
+
+cursor:pointer;
 
 ">
 
@@ -489,16 +454,23 @@ font-size:20px;
 </button>
 
 
+</div>
+
+
 
 </div>
+
+
 
 `;
 
 
 
+
+
 canvas =
 document.getElementById(
-"baseballCanvas"
+    "baseballCanvas"
 );
 
 
@@ -511,54 +483,50 @@ resizeCanvas();
 
 
 
-resizeHandler =
-resizeCanvas;
-
-
 window.addEventListener(
 "resize",
-resizeHandler
+resizeCanvas
 );
 
 
 
+
+
+// 버튼
+
 document
 .getElementById("swingButton")
-.onclick=()=>{
+.onclick = swing;
 
-swing();
+
+
+
+
+
+// 스페이스 입력
+
+swingKey = (e)=>{
+
+
+    if(e.code==="Space"){
+
+        e.preventDefault();
+
+        swing();
+
+    }
+
 
 };
 
-
-
-keyHandler=(e)=>{
-
-
-if(e.code==="Space"){
-
-e.preventDefault();
-
-swing();
-
-}
-
-
-};
 
 
 window.addEventListener(
 "keydown",
-keyHandler
+swingKey
 );
 
 
-
-draw();
-
-
-// 2부에서 여기 연결됨
-startPitch();
 
 }
 
@@ -566,20 +534,16 @@ startPitch();
 
 
 
-
-
-
-
-/* =========================
-   Canvas
-========================= */
-
+// =======================
+// 캔버스 크기
+// =======================
 
 function resizeCanvas(){
 
 
 if(!canvas)
 return;
+
 
 
 canvas.width =
@@ -590,16 +554,99 @@ canvas.height =
 canvas.clientHeight;
 
 
+
 }
 
 
 
 
-function draw(){
 
 
-if(!ctx)
-return;
+// =======================
+// 다음 투구 준비
+// =======================
+
+function nextPitch(){
+
+
+
+if(game.outs>=3){
+
+    endGame();
+
+    return;
+
+}
+
+
+
+
+game.pitching=true;
+
+game.swing=false;
+
+
+
+
+const selected =
+pitches[
+Math.floor(
+Math.random()*pitches.length
+)
+];
+
+
+
+
+game.pitch={
+
+
+    type:selected,
+
+
+    x:canvas.width/2,
+
+
+    y:80,
+
+
+    progress:0,
+
+
+    speed:
+    0.008 *
+    difficulties[
+        game.difficulty
+    ].speed
+
+
+
+};
+
+
+
+startPitch();
+
+
+
+}
+
+
+
+
+
+
+
+// =======================
+// 투구 애니메이션
+// =======================
+
+function startPitch(){
+
+
+
+function loop(){
+
 
 
 ctx.clearRect(
@@ -614,8 +661,62 @@ canvas.height
 drawField();
 
 
-animationId =
-requestAnimationFrame(draw);
+
+const p=game.pitch;
+
+
+
+p.progress += p.speed;
+
+
+
+p.y =
+80 +
+(canvas.height*0.7)
+*
+p.progress;
+
+
+
+p.x =
+canvas.width/2;
+
+
+
+// 변화구
+
+p.x +=
+p.type.move *
+Math.sin(
+p.progress*Math.PI
+);
+
+
+
+
+
+drawBall(
+p.x,
+p.y
+);
+
+
+
+
+if(p.progress>=1){
+
+
+    game.pitching=false;
+
+
+    if(!game.swing){
+
+        judgePitch();
+
+    }
+
+
+    return;
 
 
 }
@@ -624,78 +725,42 @@ requestAnimationFrame(draw);
 
 
 
+animation =
+requestAnimationFrame(loop);
+
+
+
+}
+
+
+
+loop();
+
+
+
+}
+
+
+
+
+
+// =======================
+// 경기장 그리기
+// =======================
 
 function drawField(){
 
 
-let w=canvas.width;
-let h=canvas.height;
+const w=canvas.width;
+
+const h=canvas.height;
 
 
 
-// 배경
-
-ctx.fillStyle="#14532d";
-
-ctx.fillRect(
-0,
-0,
-w,
-h
-);
+// 스트라이크 존
 
 
-
-// 마운드
-
-ctx.fillStyle="#c2a878";
-
-ctx.beginPath();
-
-ctx.arc(
-w/2,
-h*0.25,
-45,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-
-
-// 홈플레이트
-
-ctx.fillStyle="white";
-
-
-ctx.beginPath();
-
-ctx.moveTo(
-w/2-35,
-h*0.8
-);
-
-ctx.lineTo(
-w/2+35,
-h*0.8
-);
-
-ctx.lineTo(
-w/2,
-h*0.9
-);
-
-ctx.closePath();
-
-ctx.fill();
-
-
-
-// 스트라이크존
-
-ctx.strokeStyle=
-"rgba(30,168,87,0.8)";
+ctx.strokeStyle="#00ff88";
 
 ctx.lineWidth=3;
 
@@ -704,31 +769,65 @@ ctx.strokeRect(
 
 w/2-70,
 
-h*0.45,
+h*0.55,
 
 140,
 
-170
+180
 
 );
 
 
 
+
+
+// 홈플레이트
+
+
+ctx.fillStyle="white";
+
+
+ctx.beginPath();
+
+
+ctx.moveTo(
+w/2-35,
+h*0.82
+);
+
+
+ctx.lineTo(
+w/2+35,
+h*0.82
+);
+
+
+ctx.lineTo(
+w/2,
+h*0.9
+);
+
+
+ctx.closePath();
+
+
+ctx.fill();
+
+
+
+
+
 // 타자
 
-ctx.fillStyle="#111827";
 
-let x =
-game.stance==="left"
-?w/2-130
-:w/2+130;
+ctx.fillStyle="#222";
 
 
 ctx.beginPath();
 
 ctx.arc(
-x,
-h*0.62,
+w/2+120,
+h*0.65,
 25,
 0,
 Math.PI*2
@@ -737,13 +836,17 @@ Math.PI*2
 ctx.fill();
 
 
-ctx.fillStyle="#ddd";
 
 ctx.fillRect(
-x-20,
-h*0.65,
+
+w/2+100,
+
+h*0.68,
+
 40,
+
 80
+
 );
 
 
@@ -753,361 +856,26 @@ h*0.65,
 
 
 
-function swing(){
 
-if(game.mode!=="play")
-return;
+// =======================
+// 공 그리기
+// =======================
 
-
-// 2부에서 구현
-
-}
-
-
-
-
-
-
-function startPitch(){
-
-// 2부에서 구현
-
-
-}
-
-
-
-function stopAnimation(){
-
-if(animationId){
-
-cancelAnimationFrame(
-animationId
-);
-
-animationId=null;
-
-}
-
-
-}
-/* =========================
-   2부 - 투구 시스템
-========================= */
-
-
-const pitches = [
-
-{
-    name:"포심 패스트볼",
-    type:"fast",
-    speed:1.25,
-    breakX:0,
-    breakY:0
-},
-
-
-{
-    name:"투심 패스트볼",
-    type:"fast",
-    speed:1.1,
-    breakX:25,
-    breakY:20
-},
-
-
-{
-    name:"커브",
-    type:"breaking",
-    speed:0.65,
-    breakX:-30,
-    breakY:80
-},
-
-
-{
-    name:"슬라이더",
-    type:"breaking",
-    speed:0.85,
-    breakX:70,
-    breakY:20
-},
-
-
-{
-    name:"포크볼",
-    type:"breaking",
-    speed:0.7,
-    breakX:0,
-    breakY:100
-}
-
-];
-
-
-
-
-/*
- AI 투수 시작
-*/
-
-function startPitch(){
-
-
-game.mode="pitching";
-
-
-
-let pitch =
-choosePitch();
-
-
-
-game.pitch={
-
-
-data:pitch,
-
-
-progress:0,
-
-
-x:canvas.width/2,
-
-
-y:canvas.height*0.25,
-
-
-startX:canvas.width/2,
-
-
-startY:canvas.height*0.25,
-
-
-targetX:
-canvas.width/2,
-
-
-targetY:
-canvas.height*0.8,
-
-
-
-hit:false,
-
-
-startTime:
-performance.now()
-
-
-};
-
-
-
-showMessage(
-"⚾ "+pitch.name
-);
-
-
-
-}
-
-
-
-
-/*
- AI 구종 선택
-*/
-
-
-function choosePitch(){
-
-
-let lv =
-difficultyData[
-game.difficulty
-];
-
-
-
-let r =
-Math.random();
-
-
-
-let index;
-
-
-
-if(
-game.history.fast >
-game.history.breaking
-&&
-r < lv.ai
-){
-
-// 변화구 비율 증가
-
-index =
-2+
-Math.floor(
-Math.random()*3
-);
-
-
-}
-
-else{
-
-
-index =
-Math.floor(
-Math.random()*pitches.length
-);
-
-
-}
-
-
-
-let p=pitches[index];
-
-
-if(p.type==="fast")
-game.history.fast++;
-
-else
-game.history.breaking++;
-
-
-return p;
-
-
-}
-
-
-
-
-
-
-
-/*
- 공 이동
-*/
-
-
-function updatePitch(){
-
-
-let p=game.pitch;
-
-
-if(!p)
-return;
-
-
-
-if(p.hit)
-return;
-
-
-
-p.progress +=
-0.012 *
-p.data.speed *
-difficultyData[
-game.difficulty
-].speed;
-
-
-
-let t=p.progress;
-
-
-
-// 기본 직선
-
-p.x =
-p.startX+
-(
-p.targetX-p.startX
-)
-*t;
-
-
-
-p.y =
-p.startY+
-(
-p.targetY-p.startY
-)
-*t;
-
-
-
-// 변화구
-
-p.x +=
-Math.sin(t*Math.PI)
-*
-p.data.breakX;
-
-
-
-p.y +=
-Math.pow(t,2)
-*
-p.data.breakY;
-
-
-
-
-
-drawBall();
-
-
-
-if(
-p.progress>=1
-){
-
-
-judgePitch();
-
-
-}
-
-
-}
-
-
-
-
-/*
- 공 그리기
-*/
-
-
-function drawBall(){
-
-
-let p=game.pitch;
-
-
-if(!p)
-return;
+function drawBall(x,y){
 
 
 
 ctx.beginPath();
 
+
 ctx.arc(
-p.x,
-p.y,
-10,
+x,
+y,
+12,
 0,
 Math.PI*2
 );
+
 
 
 ctx.fillStyle="white";
@@ -1116,226 +884,141 @@ ctx.fill();
 
 
 
-ctx.strokeStyle="#ef4444";
+ctx.strokeStyle="#d33";
 
 ctx.stroke();
 
 
-}
-
-
-
-
-
-
-
-
-
-/*
- 투구 판정
-*/
-
-
-function judgePitch(){
-
-
-if(
-game.mode!=="pitching"
-)
-return;
-
-
-
-let p=game.pitch;
-
-
-
-game.mode="result";
-
-
-
-let inZone =
-checkStrikeZone(
-p.x,
-p.y
-);
-
-
-
-if(inZone){
-
-
-strike();
-
-
-showMessage(
-"⚾ 스트라이크!"
-);
-
 
 }
-
-else{
-
-
-ball();
-
-
-showMessage(
-"🟦 볼!"
-);
-
-
-}
-
-
-
-nextPitch();
-
-
-}
-
-
-
-
-
-
-/*
- 스트라이크 존
-*/
-
-
-function checkStrikeZone(
-x,
-y
-){
-
-
-let left =
-canvas.width/2-70;
-
-
-let right =
-canvas.width/2+70;
-
-
-let top =
-canvas.height*0.45;
-
-
-let bottom =
-top+170;
-
-
-
-return (
-
-x>left &&
-x<right &&
-y>top &&
-y<bottom
-
-);
-
-
-}
-
-
-
-
-
-
-
-
-/*
- 스윙
-*/
-
+// =======================
+// 스윙
+// =======================
 
 function swing(){
 
 
-
-if(
-game.mode!=="pitching"
-||
-!game.pitch
-)
-return;
+    if(!game.pitching)
+        return;
 
 
-
-let p=game.pitch;
+    if(game.swing)
+        return;
 
 
 
-let timing =
-p.progress;
+    game.swing=true;
 
 
 
-let diff =
+    const p=game.pitch;
+
+
+
+    // 홈플레이트 기준 위치
+    const hitPoint =
+        canvas.height * 0.78;
+
+
+
+    const timing =
+        Math.abs(
+            p.y-hitPoint
+        );
+
+
+
+
+    let result;
+
+
+
+    // 타격 가능 범위
+
+    if(timing < 35){
+
+
+        // 완벽 타이밍
+
+        if(timing < 10){
+
+            result="home";
+
+        }
+
+        else if(timing < 20){
+
+            result="double";
+
+        }
+
+        else{
+
+            result="hit";
+
+        }
+
+
+    }
+
+    else{
+
+
+        result="miss";
+
+
+    }
+
+
+
+
+
+    processResult(result);
+
+
+
+}
+
+
+
+
+
+
+
+
+// =======================
+// 공 지나감 판정
+// =======================
+
+function judgePitch(){
+
+
+
+const p=game.pitch;
+
+
+
+const zone =
 Math.abs(
-timing-0.86
-);
-
-
-
-game.pitch.hit=true;
-
-
-
-game.mode="result";
-
-
-
-if(
-!checkStrikeZone(
-p.x,
-p.y
+p.x-canvas.width/2
 )
-){
-
-
-miss();
+<
+70;
 
 
 
-showMessage(
-"❌ 유인구 헛스윙"
-);
+if(zone){
 
 
-return;
+    processResult("strike");
 
 
 }
-
-
-
-
-if(diff<0.04){
-
-
-homeRun();
-
-
-}
-
-
-else if(diff<0.1){
-
-
-hit();
-
-
-}
-
 
 else{
 
 
-foul();
+    processResult("ball");
 
 
 }
@@ -1351,41 +1034,177 @@ foul();
 
 
 
-/*
- 다음 공
-*/
+// =======================
+// 결과 처리
+// =======================
+
+function processResult(result){
 
 
-function nextPitch(){
+
+game.pitching=false;
+
+
+
+
+let text="";
+
+
+
+
+
+switch(result){
+
+
+
+case "home":
+
+
+game.score+=50;
+
+text="🔥 홈런!! +50";
+
+break;
+
+
+
+
+
+case "double":
+
+
+game.score+=20;
+
+text="⚾ 2루타!! +20";
+
+break;
+
+
+
+
+
+case "hit":
+
+
+game.score+=10;
+
+text="⚾ 안타!! +10";
+
+break;
+
+
+
+
+
+case "miss":
+
+
+game.strikes++;
+
+text="❌ 헛스윙";
+
+break;
+
+
+
+
+
+case "strike":
+
+
+game.strikes++;
+
+text="❌ 스트라이크";
+
+break;
+
+
+
+
+
+case "ball":
+
+
+game.balls++;
+
+text="🟦 볼";
+
+break;
+
+
+}
+
+
+
+
+
+
+// 볼넷
+
+if(game.balls>=4){
+
+
+game.score+=5;
+
+
+text="🎯 볼넷 +5";
+
+
+game.balls=0;
+
+game.strikes=0;
+
+
+}
+
+
+
+
+
+
+// 삼진
+
+if(game.strikes>=3){
+
+
+game.outs++;
+
+
+text="❌ 삼진 아웃";
+
+
+game.strikes=0;
+
+game.balls=0;
+
+
+}
+
+
+
+
+
+
+showMessage(text);
+
+
+updateUI();
+
+
+
 
 
 setTimeout(()=>{
 
 
-if(game.outs>=3){
-
-endGame();
-
-return;
-
-}
-
-
-
-game.balls=0;
-game.strikes=0;
-
-
-game.mode="pitching";
-
-
-startPitch();
+    nextPitch();
 
 
 },1200);
 
 
 
+
 }
 
 
@@ -1393,382 +1212,156 @@ startPitch();
 
 
 
+
+
+// =======================
+// UI 업데이트
+// =======================
+
+function updateUI(){
+
+
+const score =
+document.getElementById(
+"score"
+);
+
+
+const outs =
+document.getElementById(
+"outs"
+);
+
+
+
+if(score)
+score.innerText=
+game.score;
+
+
+
+if(outs)
+outs.innerText=
+game.outs;
+
+
+
+}
+
+
+
+
+
+
+
+
+// =======================
+// 결과 표시
+// =======================
 
 function showMessage(text){
 
 
-let el=
-document.getElementById(
-"result"
-);
 
+const div =
+document.createElement("div");
 
-if(el)
-el.innerHTML=text;
 
 
-}
+div.innerText=text;
 
 
 
-/* =========================
-   3부 - 결과 / 점수 / 종료
-========================= */
+div.style.position="absolute";
 
+div.style.top="30%";
 
+div.style.left="50%";
 
-function addScore(value){
+div.style.transform=
+"translate(-50%,-50%)";
 
-    game.score += value;
 
-    updateUI();
 
-}
+div.style.fontSize="40px";
 
+div.style.fontWeight="900";
 
+div.style.color="white";
 
-function updateUI(){
+div.style.zIndex="10";
 
-    const count =
-    document.getElementById("count");
 
-    const score =
-    document.getElementById("score");
 
+gameAreaRef.appendChild(div);
 
-    if(count){
 
-        count.innerText =
-        `B${game.balls} S${game.strikes}`;
 
-    }
 
 
-    if(score){
+setTimeout(()=>{
 
-        score.innerText =
-        `${game.score}점`;
 
-    }
+div.remove();
 
-}
 
-
-
-
-
-
-/*
- 안타 결과
-*/
-
-
-function hit(){
-
-
-    game.hits++;
-
-    game.combo++;
-
-
-    let score = 10;
-
-
-    if(game.combo>=3){
-
-        score += game.combo*5;
-
-    }
-
-
-    addScore(score);
-
-
-
-    showMessage(
-        `⚾ 안타! +${score}점`
-    );
-
-
-    resetCount();
-
-    nextPitch();
-
-}
-
-
-
-
-
-
-/*
- 홈런
-*/
-
-
-function homeRun(){
-
-
-    game.combo++;
-
-
-    let score =
-    50 + game.combo*10;
-
-
-
-    addScore(score);
-
-
-
-    showMessage(
-        `🔥 홈런!! +${score}점`
-    );
-
-
-
-    resetCount();
-
-
-    nextPitch();
-
-
-}
-
-
-
-
-
-
-
-/*
- 파울
-*/
-
-
-function foul(){
-
-
-    game.combo=0;
-
-
-
-    if(game.strikes<2){
-
-        game.strikes++;
-
-    }
-
-
-
-    showMessage(
-        `⚠️ 파울 S${game.strikes}`
-    );
-
-
-
-    if(game.strikes>=3){
-
-        out();
-
-    }
-    else{
-
-        nextPitch();
-
-    }
-
-
-}
-
-
-
-
-
-
-
-
-/*
- 헛스윙
-*/
-
-
-function miss(){
-
-
-    game.combo=0;
-
-
-    game.strikes++;
-
-
-    if(game.strikes>=3){
-
-        out();
-
-    }
-
-    else{
-
-
-        showMessage(
-            `❌ 헛스윙 S${game.strikes}`
-        );
-
-
-        nextPitch();
-
-
-    }
-
-
-}
-
-
-
-
-
-
-
-
-/*
- 볼
-*/
-
-
-function ball(){
-
-
-    game.combo=0;
-
-
-    game.balls++;
-
-
-
-    if(game.balls>=4){
-
-
-        addScore(20);
-
-
-        showMessage(
-            "🎯 볼넷 출루 +20점"
-        );
-
-
-        resetCount();
-
-
-    }
+},1000);
 
 
 
 }
-
-
-
-
-
-
-
-
-/*
- 아웃
-*/
-
-
-function out(){
-
-
-    game.outs++;
-
-
-    game.combo=0;
-
-
-    resetCount();
-
-
-
-    showMessage(
-        `❌ 삼진 아웃 (${game.outs}/3)`
-    );
-
-
-
-    updateUI();
-
-
-
-    if(game.outs>=3){
-
-
-        setTimeout(
-            endGame,
-            1200
-        );
-
-
-    }
-    else{
-
-
-        nextPitch();
-
-
-    }
-
-
-
-}
-
-
-
-
-
-
-
-
-function resetCount(){
-
-    game.balls=0;
-
-    game.strikes=0;
-
-    updateUI();
-
-}
-
-
-
-
-
-
-
-
-/*
- 종료 화면
-*/
-
+// =======================
+// 경기 종료
+// =======================
 
 function endGame(){
 
 
-    stopAnimation();
+    game.gameOver=true;
+
+
+    if(animation){
+
+        cancelAnimationFrame(animation);
+
+    }
+
+
+    if(swingKey){
+
+        window.removeEventListener(
+            "keydown",
+            swingKey
+        );
+
+    }
 
 
 
-    game.mode="end";
+    gameAreaRef.innerHTML = `
 
 
+<div style="
 
-    gameAreaRef.innerHTML=`
+height:100%;
 
-<div class="baseball-page">
+display:flex;
 
+flex-direction:column;
 
-<div class="baseball-card">
+justify-content:center;
+
+align-items:center;
+
+gap:20px;
+
+background:#111;
+
+color:white;
+
+border-radius:20px;
+
+">
 
 
 <h1>
@@ -1782,53 +1375,209 @@ color:#1ea857;
 font-size:40px;
 ">
 
-${game.score}점
+${game.score} 점
 
 </h2>
 
 
 
+
 <p>
 
-안타 ${game.hits}개<br>
-
-최종 아웃 ${game.outs}개
+삼진 :
+${game.outs}개
 
 </p>
 
 
 
 
-<button id="restart">
+<button id="restartBaseball"
+
+style="
+
+padding:15px 50px;
+
+border-radius:25px;
+
+border:none;
+
+background:#1ea857;
+
+color:white;
+
+font-size:20px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+">
 
 다시 하기
 
 </button>
 
 
-</div>
-
 
 </div>
-
 
 
 `;
 
 
 
+
 document
-.getElementById("restart")
+.getElementById(
+"restartBaseball"
+)
 .onclick=()=>{
 
 
-showDifficulty();
+    showDifficulty();
 
 
 };
+
 
 
 }
 
 
 
+
+
+
+
+
+// =======================
+// 투구 정보 표시
+// =======================
+
+function showPitchInfo(){
+
+
+
+const box =
+document.createElement("div");
+
+
+
+box.innerHTML = `
+
+⚾ ${game.pitch.type.name}
+
+`;
+
+
+
+box.style.position="absolute";
+
+box.style.top="20px";
+
+box.style.left="50%";
+
+box.style.transform=
+"translateX(-50%)";
+
+
+box.style.padding="10px 20px";
+
+box.style.background=
+"rgba(0,0,0,0.5)";
+
+
+box.style.borderRadius="20px";
+
+box.style.fontSize="20px";
+
+
+
+gameAreaRef.appendChild(box);
+
+
+
+
+setTimeout(()=>{
+
+box.remove();
+
+},1000);
+
+
+
+}
+
+
+
+
+
+
+
+
+// =======================
+// 타격 효과
+// =======================
+
+function hitEffect(){
+
+
+
+if(!ctx)
+return;
+
+
+
+ctx.save();
+
+
+
+ctx.fillStyle=
+"rgba(255,255,0,0.7)";
+
+
+
+ctx.beginPath();
+
+
+ctx.arc(
+
+canvas.width/2,
+
+canvas.height*0.78,
+
+40,
+
+0,
+
+Math.PI*2
+
+);
+
+
+ctx.fill();
+
+
+
+ctx.restore();
+
+
+
+}
+
+
+
+
+
+// =======================
+// 기존 함수 보강
+// =======================
+
+
+// 기존 processResult 마지막 부분에
+// nextPitch 전에 추가하면 됨.
+//
+// hitEffect();
+//
+// showPitchInfo();
