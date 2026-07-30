@@ -1,117 +1,174 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Entry Test - 2026 Festival</title>
+<title>2026 Festival</title>
 
 <style>
-body {
-  margin: 0;
-  background: #0f0f14;
-  color: white;
-  font-family: sans-serif;
-}
 
-/* 상단바 */
-header {
-  padding: 14px;
-  text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-  background: linear-gradient(90deg, #00c853, #64dd17);
-  box-shadow: 0 4px 20px rgba(0,0,0,.3);
-}
-
-/* 전체 */
-.container {
-  max-width: 900px;
-  margin: auto;
-  padding: 20px;
-}
-
-/* 뒤로가기 */
-.back {
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  font-size: 13px;
-  color: rgba(255,255,255,0.7);
-  text-decoration: none;
-  z-index: 10;
-}
-
-.back:hover {
-  color: white;
+body{
+  margin:0;
+  background:#0f0f14;
+  color:white;
+  font-family:sans-serif;
 }
 
 
-/* 엔트리 iframe */
-.entry-box {
-  width: 100%;
-  aspect-ratio: 640 / 420;
-  background: black;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 0 20px rgba(0,0,0,.5);
-}
+/* 상단 */
+header{
 
-.entry-box iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
+  padding:14px;
 
+  text-align:center;
 
-/* 작품 정보 */
-.info {
-  margin-top: 20px;
-  padding: 18px;
-  background: #1c1c25;
-  border-radius: 12px;
+  font-size:20px;
+
+  font-weight:bold;
+
+  background:
+  linear-gradient(90deg,#00c853,#64dd17);
+
+  box-shadow:
+  0 4px 20px rgba(0,0,0,.3);
+
 }
 
 
-.info h2 {
-  margin-top: 0;
+
+/* 뒤로 */
+.back{
+
+  position:fixed;
+
+  top:15px;
+  left:15px;
+
+  color:white;
+
+  text-decoration:none;
+
+  font-size:13px;
+
+  z-index:10;
+
 }
+
+
+
+
+.container{
+
+  max-width:900px;
+
+  margin:auto;
+
+  padding:20px;
+
+}
+
+
+
+/* 실행창 */
+
+.entry-box{
+
+  width:100%;
+
+  aspect-ratio:640 / 420;
+
+  background:black;
+
+  border-radius:12px;
+
+  overflow:hidden;
+
+  box-shadow:
+  0 0 20px rgba(0,0,0,.5);
+
+}
+
+
+
+.entry-box iframe{
+
+  width:100%;
+
+  height:100%;
+
+  border:0;
+
+}
+
+
+
+
+/* 정보 */
+
+.info{
+
+  margin-top:20px;
+
+  padding:18px;
+
+  background:#1c1c25;
+
+  border-radius:12px;
+
+}
+
+
+
+.info h2{
+
+  margin-top:0;
+
+}
+
 
 
 /* 버튼 */
-.btn {
-  margin-top: 15px;
-  padding: 10px 15px;
 
-  border: none;
-  border-radius: 8px;
+.btn{
 
-  background: #00c853;
-  color: white;
+  margin-top:15px;
 
-  cursor: pointer;
-  font-weight: bold;
-}
+  padding:10px 15px;
 
-.btn:hover {
-  opacity: .9;
-}
+  border:0;
 
+  border-radius:8px;
 
-/* 모바일 */
-@media(max-width:600px){
+  background:#00c853;
 
-  .container {
-    padding: 12px;
-  }
+  color:white;
 
-  header {
-    font-size: 18px;
-  }
+  cursor:pointer;
+
+  font-weight:bold;
 
 }
+
+
+
+.github-box{
+
+  padding:30px;
+
+  background:#111;
+
+  border-radius:12px;
+
+  text-align:center;
+
+}
+
+
 
 </style>
+
 </head>
 
 
@@ -123,8 +180,9 @@ header {
 </a>
 
 
-<header>
-Entry 작품 테스트
+
+<header id="header">
+Festival 작품
 </header>
 
 
@@ -132,58 +190,229 @@ Entry 작품 테스트
 <div class="container">
 
 
-  <div class="entry-box">
 
-    <iframe
-      src="https://playentry.org/iframe/675427f28490cf05ec80922d"
-      allowfullscreen>
-    </iframe>
-
-  </div>
+<div id="game"></div>
 
 
 
-  <div class="info">
-
-    <h2>
-      작품 이름: 테스트 게임
-    </h2>
-
-    <p>
-      제작자: 조예준
-    </p>
-
-    <p>
-      설명: 엔트리 임베드 테스트용 작품입니다.
-    </p>
+<div class="info">
 
 
-    <hr>
+<h2 id="title">
+불러오는 중...
+</h2>
 
 
-    <p><b>사용 방법</b></p>
-
-    <p>
-      스페이스바로 점프 / 방향키로 이동
-    </p>
+<p id="by"></p>
 
 
-    <p><b>참고 사항</b></p>
-
-    <p>
-      PC 환경에서 최적화됨
-    </p>
+<p id="detail"></p>
 
 
-    <button class="btn">
-      ❤️ 응원하기
-    </button>
+<hr>
 
 
-  </div>
+<p>
+<b>사용 방법</b>
+</p>
+
+<p id="howto"></p>
+
+
+
+<p>
+<b>참고 사항</b>
+</p>
+
+<p id="note"></p>
+
+
+
+<button class="btn">
+❤️ 응원하기
+</button>
+
 
 
 </div>
+
+
+</div>
+
+
+
+
+
+<script type="module">
+
+
+import { initializeApp }
+
+from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+
+
+import {
+
+getFirestore,
+
+doc,
+
+getDoc
+
+}
+
+from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+
+
+
+
+const firebaseConfig={
+
+
+apiKey:"AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
+
+authDomain:"festivallikes.firebaseapp.com",
+
+projectId:"festivallikes",
+
+storageBucket:"festivallikes.firebasestorage.app",
+
+messagingSenderId:"782245120700",
+
+appId:"1:782245120700:web:c61e16313e9ae688e6deb9"
+
+};
+
+
+
+const app=initializeApp(firebaseConfig);
+
+const db=getFirestore(app);
+
+
+
+
+
+const id=
+new URLSearchParams(location.search).get("id");
+
+
+
+if(!id){
+
+alert("작품 정보가 없습니다");
+
+throw new Error();
+
+}
+
+
+
+
+
+const snap=
+await getDoc(doc(db,"projects",id));
+
+
+
+if(!snap.exists()){
+
+document.getElementById("title").innerHTML=
+"작품을 찾을 수 없습니다";
+
+throw new Error();
+
+}
+
+
+
+
+const data=snap.data();
+
+
+
+
+
+document.title=
+data.title+" - 2026 Festival";
+
+
+
+document.getElementById("header").innerHTML=
+data.title;
+
+
+
+document.getElementById("title").innerHTML=
+"작품 이름: "+id;
+
+
+
+document.getElementById("by").innerHTML=
+"제작자: "+(data.by||"");
+
+
+
+document.getElementById("detail").innerHTML=
+data.detail||"";
+
+
+
+document.getElementById("howto").innerHTML=
+data.howto||"";
+
+
+
+document.getElementById("note").innerHTML=
+data.note||"";
+
+
+
+
+
+const game=document.getElementById("game");
+
+
+
+if(data.type==="entry"){
+
+
+game.innerHTML=`
+
+<div class="entry-box">
+
+${data.embed}
+
+</div>
+
+`;
+
+
+}
+
+else{
+
+
+game.innerHTML=`
+
+<div class="github-box">
+
+<a href="${data.url}" target="_blank">
+
+🚀 프로젝트 실행하기
+
+</a>
+
+</div>
+
+`;
+
+}
+
+
+
+</script>
 
 
 </body>
