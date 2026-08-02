@@ -1,1 +1,1091 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METAL BUILD</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #game-container {
+            width: 1200px;
+            height: 800px;
+            background: #1a1a2e;
+            position: relative;
+            border: 4px solid #00f0ff;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+            overflow: hidden;
+        }
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .active {
+            display: flex;
+        }
+        
+        /* 버튼 스타일 */
+        .btn {
+            background: linear-gradient(45deg, #00f0ff, #0077ff);
+            border: none;
+            color: white;
+            padding: 14px 35px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+            transition: 0.2s;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 18px rgba(0, 240, 255, 0.8);
+        }
 
+        /* 1. 시작 화면 */
+        #screen-title {
+            background: radial-gradient(circle, #1f4068, #162447, #1a1a2e);
+        }
+        .title-text {
+            font-size: 80px;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: #00f0ff;
+            text-shadow: 0 0 20px #00f0ff, 0 0 40px #0077ff;
+            margin-bottom: 50px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        /* 2. 홈 화면 */
+        #screen-home {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80') center/cover;
+        }
+        .home-ui-tl { position: absolute; top: 30px; left: 30px; display: flex; gap: 15px; align-items: center; }
+        .home-ui-tr { position: absolute; top: 30px; right: 30px; font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 12px 25px; border-radius: 8px; border: 1px solid #00f0ff; }
+        .home-ui-bl { position: absolute; bottom: 30px; left: 30px; }
+        .home-ui-br { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+        
+        .mech-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px 30px;
+            border-radius: 15px;
+            border: 2px dashed #00f0ff;
+        }
+
+        /* 뷰 전환 탭 버튼 스타일 */
+        .view-toggle-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .view-tab-btn {
+            background: #252540;
+            border: 1px solid #00f0ff;
+            color: #aaa;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .view-tab-btn.active-view {
+            background: #00f0ff;
+            color: #000;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+        }
+
+        /* 메카 시각화 그래픽 영역 (고급 디테일) */
+        .mech-visual-box {
+            position: relative;
+            width: 300px;
+            height: 310px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 등 부품 영역 */
+        .back-gear-left, .back-gear-right {
+            position: absolute;
+            top: 70px;
+            width: 55px;
+            height: 110px;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .back-gear-left { left: 5px; transform: rotate(-10deg); }
+        .back-gear-right { right: 5px; transform: rotate(10deg); }
+
+        .mech-core-structure {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 머리 파츠 세부 모양 */
+        .v-head {
+            width: 65px;
+            height: 45px;
+            background: #222;
+            border: 2px solid #00f0ff;
+            border-radius: 10px 10px 4px 4px;
+            margin-bottom: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .v-head-visor {
+            width: 35px;
+            height: 10px;
+            background: #00f0ff;
+            border-radius: 2px;
+            box-shadow: 0 0 8px #00f0ff;
+        }
+
+        .v-torso-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 팔 파츠 세부 모양 */
+        .v-arm {
+            width: 48px;
+            height: 115px;
+            background: #252535;
+            border: 2px solid #00f0ff;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 2px;
+            position: relative;
+        }
+
+        /* 몸통 파츠 세부 모양 */
+        .v-torso {
+            width: 100px;
+            height: 115px;
+            background: #22223b;
+            border: 2px solid #00f0ff;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0,240,255,0.3);
+        }
+        .v-core-light {
+            width: 24px;
+            height: 24px;
+            background: #00f0ff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00f0ff;
+            animation: core-glow 1.5s infinite alternate;
+        }
+        @keyframes core-glow {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            100% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 15px #fff; }
+        }
+
+        .v-legs-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        /* 다리 파츠 세부 모양 */
+        .v-leg {
+            width: 44px;
+            height: 85px;
+            background: #252535;
+            border: 2px solid #00f0ff;
+            border-radius: 6px 6px 10px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            position: relative;
+        }
+
+        /* 3. 커스터마이징 화면 */
+        #screen-custom {
+            background: rgba(20, 20, 35, 0.95);
+        }
+        .custom-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            gap: 30px;
+        }
+        .custom-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .custom-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 25px;
+            overflow-y: auto;
+        }
+        .slot-btn {
+            background: #252540;
+            border: 1px solid #00f0ff;
+            color: #fff;
+            padding: 12px 20px;
+            text-align: left;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+        }
+        .slot-btn:hover, .slot-btn.selected {
+            background: #00f0ff;
+            color: #000;
+            font-weight: bold;
+        }
+        .part-card {
+            background: #2a2a45;
+            border: 1px solid #555;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .part-card.equipped { border-color: #00ff66; background: #1a3a2a; }
+
+        /* 4. 뽑기 화면 */
+        #screen-gacha {
+            background: rgba(15, 15, 30, 0.95);
+        }
+        .gacha-box {
+            background: #222244;
+            border: 2px solid #ff00ff;
+            padding: 50px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 0 35px rgba(255, 0, 255, 0.4);
+            width: 500px;
+        }
+        .gacha-box h2 { font-size: 32px; margin-top: 0; }
+        .gacha-box p { font-size: 16px; color: #ccc; }
+
+        /* 5. 전투 화면 */
+        #screen-battle {
+            background: linear-gradient(135deg, #2b1055, #7597de);
+            justify-content: space-between;
+            padding: 50px;
+        }
+        .battle-arena {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: 350px;
+            padding: 0 80px;
+        }
+        .fighter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 320px;
+        }
+        .hp-bar-container {
+            width: 100%;
+            background: #444;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #fff;
+            margin-bottom: 12px;
+        }
+        .hp-bar {
+            width: 100%;
+            height: 100%;
+            background: #00ff66;
+            transition: width 0.3s;
+        }
+        .fighter-avatar {
+            font-size: 110px;
+            animation: float 2s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .battle-log {
+            width: 100%;
+            height: 150px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #00f0ff;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 15px;
+        }
+
+        /* 결과 모달 오버레이 */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+
+    <!-- 1. 시작 화면 -->
+    <div id="screen-title" class="screen active">
+        <div class="title-text">METAL BUILD</div>
+        <button class="btn" onclick="startGame()">게임 시작</button>
+    </div>
+
+    <!-- 2. 홈 화면 -->
+    <div id="screen-home" class="screen">
+        <div class="home-ui-tl">
+            <button class="btn" style="padding:10px 20px; font-size:16px;" onclick="openGacha()">뽑기 시스템</button>
+            <div style="display:flex; gap:12px; align-items:center; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 8px; border: 1px solid #00f0ff;">
+                <div id="coin-display" style="font-weight:bold; color:#ffaa00; font-size: 18px;">코인: 100G</div>
+                <div id="ticket-display" style="font-weight:bold; color:#00ff66; font-size: 18px;">소탕권: 0개</div>
+            </div>
+        </div>
+        <div class="home-ui-tr" id="stage-display">STAGE 1 / 100</div>
+        
+        <div class="mech-display">
+            <!-- 전면부 / 후면부 전환 탭 버튼 -->
+            <div class="view-toggle-container">
+                <button id="tab-front" class="view-tab-btn active-view" onclick="switchMechView('front')">전면부 보기</button>
+                <button id="tab-back" class="view-tab-btn" onclick="switchMechView('back')">후면부 보기</button>
+            </div>
+
+            <!-- 메카 시각화 그래픽 영역 -->
+            <div class="mech-visual-box" id="mech-visual-box">
+                <div id="visual-back1" class="back-gear-left" style="display:none;"></div>
+                <div id="visual-back2" class="back-gear-right" style="display:none;"></div>
+
+                <div class="mech-core-structure" id="mech-core-panel">
+                    <div class="v-head" id="visual-head">
+                        <div class="v-head-visor" id="visual-head-visor"></div>
+                    </div>
+                    <div class="v-torso-row">
+                        <div class="v-arm" id="visual-arm-l">왼팔</div>
+                        <div class="v-torso" id="visual-torso">
+                            <div class="v-core-light" id="visual-core-light"></div>
+                        </div>
+                        <div class="v-arm" id="visual-arm-r">오른팔</div>
+                    </div>
+                    <div class="v-legs-row">
+                        <div class="v-leg" id="visual-leg-l">왼다리</div>
+                        <div class="v-leg" id="visual-leg-r">우다리</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 메카 종합 스탯 표시 -->
+            <div style="margin-top: 8px; font-size: 15px; color: #00f0ff; font-weight: bold; display: flex; gap: 15px;" id="home-total-stats">
+                <span>공격력: 35</span><span>방어력: 25</span><span>회피력: 10</span>
+            </div>
+        </div>
+
+        <div class="home-ui-bl">
+            <button class="btn" onclick="openCustom()">커스터마이징</button>
+        </div>
+        <div class="home-ui-br">
+            <button class="btn" style="background: linear-gradient(45deg, #00aa55, #00ff88); padding: 12px 35px; font-size: 18px;" onclick="openSweepModal()">스테이지 소탕</button>
+            <button class="btn" style="background: linear-gradient(45deg, #ff3333, #ff9900);" onclick="startBattle()">전투 개시</button>
+        </div>
+    </div>
+
+    <!-- 3. 커스터마이징 화면 -->
+    <div id="screen-custom" class="screen">
+        <div style="position: absolute; top: 25px; left: 40px; font-size: 26px; font-weight: bold; color: #00f0ff;">메카 커스터마이징</div>
+        <div class="custom-layout" style="margin-top: 60px; height: calc(100% - 80px);">
+            <div class="custom-left" id="slot-list-container"></div>
+            <div class="custom-right">
+                <div id="part-selection-title" style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #ffaa00;">부위를 선택하세요</div>
+                <div id="inventory-list"></div>
+            </div>
+        </div>
+        <div style="position: absolute; bottom: 25px; right: 40px;">
+            <button class="btn" onclick="closeCustom()">저장 및 홈으로</button>
+        </div>
+    </div>
+
+    <!-- 4. 뽑기 화면 -->
+    <div id="screen-gacha" class="screen">
+        <div class="gacha-box">
+            <h2>메카 파츠 뽑기</h2>
+            <p>랜덤한 부위의 장비를 획득합니다! (비용: 50 코인)</p>
+            <div id="gacha-result" style="margin: 25px 0; font-size: 20px; color: #00f0ff; height: 35px;"></div>
+            <button class="btn" onclick="doGacha()">뽑기 실행 (50G)</button>
+            <br><br>
+            <button class="btn" style="background: #444;" onclick="closeGacha()">돌아가기</button>
+        </div>
+    </div>
+
+    <!-- 5. 전투 화면 -->
+    <div id="screen-battle" class="screen">
+        <div style="font-size: 28px; font-weight: bold;" id="battle-stage-title">STAGE 1</div>
+        <div class="battle-arena">
+            <div class="fighter">
+                <div style="margin-bottom: 8px; font-weight: bold; font-size: 16px; text-align:center;" id="player-name">PLAYER MECH</div>
+                <div class="hp-bar-container"><div class="hp-bar" id="player-hp-bar"></div></div>
+                <div class="fighter-avatar">🤖</div>
+                <div id="player-hp-text" style="font-size: 15px; margin-top:8px;">100 / 100</div>
+            </div>
+            <div style="font-size: 40px; font-weight: bold; color: #ff3333;">VS</div>
+            <div class="fighter">
+                <div style="margin-bottom: 8px; font-weight: bold; font-size: 16px; text-align:center;" id="enemy-name">ENEMY MECH</div>
+                <div class="hp-bar-container"><div class="hp-bar" id="enemy-hp-bar" style="background: #ff3333;"></div></div>
+                <div class="fighter-avatar">👾</div>
+                <div id="enemy-hp-text" style="font-size: 15px; margin-top:8px;">100 / 100</div>
+            </div>
+        </div>
+        <div class="battle-log" id="battle-log">전투가 시작되었습니다...</div>
+    </div>
+
+    <!-- 전투 결과 팝업 모달 -->
+    <div id="battle-result-modal" class="modal-overlay">
+        <div style="background: #22223b; padding: 50px; border-radius: 12px; border: 2px solid #00f0ff; text-align: center; width: 450px;">
+            <h2 id="modal-result-title" style="font-size: 32px; margin-bottom: 20px;">승리!</h2>
+            <p id="modal-result-desc" style="margin-bottom: 30px; color: #ccc; font-size: 18px;">파츠를 획득했습니다.</p>
+            <button class="btn" onclick="returnToHomeFromBattle()">홈으로 돌아가기</button>
+        </div>
+    </div>
+
+    <!-- 소탕 모달 -->
+    <div id="sweep-modal" class="modal-overlay">
+        <div style="background: #22223b; padding: 40px; border-radius: 12px; border: 2px solid #00ff88; text-align: center; width: 500px;">
+            <h2 style="font-size: 28px; margin-bottom: 15px; color: #00ff88;">스테이지 소탕</h2>
+            <p id="sweep-desc" style="margin-bottom: 20px; color: #ccc; font-size: 16px;">소탕권을 사용하여 클리어한 스테이지의 보상을 즉시 획득합니다.</p>
+            <div style="margin-bottom: 20px;">
+                <label style="font-size: 16px; margin-right: 10px;">소탕할 스테이지 선택:</label>
+                <select id="sweep-stage-select" style="padding: 8px; font-size: 16px; background: #111; color: #fff; border: 1px solid #00ff88; border-radius: 4px;"></select>
+            </div>
+            <div id="sweep-result-text" style="margin-bottom: 25px; font-size: 15px; color: #ffaa00; min-height: 25px;"></div>
+            <div style="display: flex; justify-content: center; gap: 15px;">
+                <button class="btn" style="background: linear-gradient(45deg, #00aa55, #00ff88);" onclick="executeSweep()">소탕 실행 (소탕권 1개 소모)</button>
+                <button class="btn" style="background: #444;" onclick="closeSweepModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 파츠별 이름 특성에 맞춘 공격력(atk), 방어력(def), 회피력(eva) 밸런스 패치 데이터
+    const partsData = {
+        head: [
+            { id: 'h_basic', name: '기본 헤드', slot: 'head', grade: '일반', atk: 2, def: 3, eva: 2, color: '#222', border: '#00f0ff', visorColor: '#00f0ff' },
+            { id: 'h_rare', name: '하이센서 헤드', slot: 'head', grade: '레어', atk: 5, def: 5, eva: 10, color: '#104e8b', border: '#0077ff', visorColor: '#00ffff', shape: 'antenna' },
+            { id: 'h_epic', name: '사이버 헤드', slot: 'head', grade: '에픽', atk: 10, def: 8, eva: 18, color: '#4b0082', border: '#ff00ff', visorColor: '#ff00ff', shape: 'dual-horn' }
+        ],
+        torso: [
+            { id: 't_basic', name: '기본 몸통', slot: 'torso', grade: '일반', atk: 3, def: 8, eva: 1, color: '#22223b', border: '#00f0ff', lightColor: '#00f0ff' },
+            { id: 't_rare', name: '강화 아머', slot: 'torso', grade: '레어', atk: 6, def: 18, eva: 2, color: '#18385c', border: '#0077ff', lightColor: '#0077ff', shape: 'armor' },
+            { id: 't_epic', name: '티타늄 코어', slot: 'torso', grade: '에픽', atk: 12, def: 32, eva: 4, color: '#3d1442', border: '#ff00ff', lightColor: '#ff00ff', shape: 'reactor' }
+        ],
+        arm_l: [
+            { id: 'al_shield', name: '왼쪽 팔 쉴드 (기본)', slot: 'arm_l', grade: '일반', atk: 3, def: 10, eva: 1, color: '#252535', border: '#00f0ff', shape: 'shield' },
+            { id: 'al_rare', name: '플라즈마 블레이드', slot: 'arm_l', grade: '레어', atk: 15, def: 4, eva: 5, color: '#005580', border: '#0077ff', shape: 'blade' },
+            { id: 'al_epic', name: '네이팜 개틀링', slot: 'arm_l', grade: '에픽', atk: 28, def: 6, eva: 3, color: '#661133', border: '#ff00ff', shape: 'gatling' }
+        ],
+        arm_r: [
+            { id: 'ar_launcher', name: '오른쪽 팔 런처 (기본)', slot: 'ar_r', grade: '일반', atk: 8, def: 4, eva: 2, color: '#252535', border: '#00f0ff', shape: 'cannon' },
+            { id: 'ar_rare', name: '레일건', slot: 'ar_r', grade: '레어', atk: 20, def: 4, eva: 3, color: '#005580', border: '#0077ff', shape: 'railgun' },
+            { id: 'ar_epic', name: '하이퍼 캐논', slot: 'ar_r', grade: '에픽', atk: 35, def: 5, eva: 2, color: '#661133', border: '#ff00ff', shape: 'hyper' }
+        ],
+        back1: [
+            { id: 'b1_none', name: '없음', slot: 'back1', grade: '일반', atk: 0, def: 0, eva: 0, visible: false },
+            { id: 'b1_rare', name: '추러스 부스터', slot: 'back1', grade: '레어', atk: 6, def: 4, eva: 15, color: '#0077ff', visible: true, shape: 'booster' },
+            { id: 'b1_epic', name: '윙 바인더', slot: 'back1', grade: '에픽', atk: 12, def: 6, eva: 26, color: '#ff00ff', visible: true, shape: 'wing' }
+        ],
+        back2: [
+            { id: 'b2_none', name: '없음', slot: 'back2', grade: '일반', atk: 0, def: 0, eva: 0, visible: false },
+            { id: 'b2_rare', name: '미사일 포드', slot: 'back2', grade: '레어', atk: 22, def: 5, eva: -2, color: '#ff5500', visible: true, shape: 'missile' },
+            { id: 'b2_epic', name: '에너지팩', slot: 'back2', grade: '에픽', atk: 30, def: 12, eva: 2, color: '#00ff66', visible: true, shape: 'energy' }
+        ],
+        leg_l: [
+            { id: 'll_basic', name: '기본 왼쪽 다리', slot: 'leg_l', grade: '일반', atk: 2, def: 5, eva: 3, color: '#252535', border: '#00f0ff', shape: 'normal' },
+            { id: 'll_rare', name: '기동형 레그', slot: 'leg_l', grade: '레어', atk: 4, def: 6, eva: 12, color: '#18385c', border: '#0077ff', shape: 'agile' },
+            { id: 'll_epic', name: '호버 다리', slot: 'leg_l', grade: '에픽', atk: 6, def: 10, eva: 22, color: '#3d1442', border: '#ff00ff', shape: 'hover' }
+        ],
+        leg_r: [
+            { id: 'lr_basic', name: '기본 오른쪽 다리', slot: 'leg_r', grade: '일반', atk: 2, def: 5, eva: 3, color: '#252535', border: '#00f0ff', shape: 'normal' },
+            { id: 'lr_rare', name: '기동형 레그', slot: 'leg_r', grade: '레어', atk: 4, def: 6, eva: 12, color: '#18385c', border: '#0077ff', shape: 'agile' },
+            { id: 'lr_epic', name: '호버 다리', slot: 'leg_r', grade: '에픽', atk: 6, def: 10, eva: 22, color: '#3d1442', border: '#ff00ff', shape: 'hover' }
+        ]
+    };
+
+    let player = {
+        stage: 1,
+        coins: 100,
+        tickets: 0,
+        inventory: ['h_basic', 't_basic', 'al_shield', 'ar_launcher', 'b1_none', 'b2_none', 'll_basic', 'lr_basic'],
+        equipped: {
+            head: 'h_basic',
+            torso: 't_basic',
+            arm_l: 'al_shield',
+            arm_r: 'ar_launcher',
+            back1: 'b1_none',
+            back2: 'b2_none',
+            leg_l: 'll_basic',
+            leg_r: 'lr_basic'
+        }
+    };
+
+    const slotNames = {
+        head: '머리',
+        torso: '몸통',
+        arm_l: '왼팔',
+        arm_r: '오른팔',
+        back1: '등1',
+        back2: '등2',
+        leg_l: '왼쪽 다리',
+        leg_r: '오른쪽 다리'
+    };
+
+    let currentSelectedSlot = 'head';
+    let currentMechView = 'front';
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function startGame() {
+        switchScreen('screen-home');
+        updateHomeUI();
+    }
+
+    function switchMechView(viewType) {
+        currentMechView = viewType;
+        document.getElementById('tab-front').classList.toggle('active-view', viewType === 'front');
+        document.getElementById('tab-back').classList.toggle('active-view', viewType === 'back');
+        updateHomeUI();
+    }
+
+    function getPartName(partId) {
+        for (let slot in partsData) {
+            let found = partsData[slot].find(p => p.id === partId);
+            if (found) return found.name;
+        }
+        return '없음';
+    }
+
+    function getPartObject(partId) {
+        for (let slot in partsData) {
+            let found = partsData[slot].find(p => p.id === partId);
+            if (found) return found;
+        }
+        return null;
+    }
+
+    // 메카 종합 스탯 계산 함수 (공격력, 방어력, 회피력)
+    function calculateTotalStats(equippedObj) {
+        let stats = { atk: 0, def: 0, eva: 0 };
+        for (let slot in equippedObj) {
+            let p = getPartObject(equippedObj[slot]);
+            if (p) {
+                stats.atk += p.atk || 0;
+                stats.def += p.def || 0;
+                stats.eva += p.eva || 0;
+            }
+        }
+        return stats;
+    }
+
+    function updateHomeUI() {
+        document.getElementById('stage-display').innerText = `STAGE ${player.stage} / 100`;
+        document.getElementById('coin-display').innerText = `코인: ${player.coins}G`;
+        document.getElementById('ticket-display').innerText = `소탕권: ${player.tickets}개`;
+
+        let headObj = getPartObject(player.equipped.head);
+        let torsoObj = getPartObject(player.equipped.torso);
+        let armLObj = getPartObject(player.equipped.arm_l);
+        let armRObj = getPartObject(player.equipped.arm_r);
+        let legLObj = getPartObject(player.equipped.leg_l);
+        let legRObj = getPartObject(player.equipped.leg_r);
+        let back1Obj = getPartObject(player.equipped.back1);
+        let back2Obj = getPartObject(player.equipped.back2);
+
+        let mechVisualBox = document.getElementById('mech-visual-box');
+        if (currentMechView === 'back') {
+            mechVisualBox.style.transform = 'scaleX(-1)';
+            mechVisualBox.style.filter = 'brightness(0.85)';
+        } else {
+            mechVisualBox.style.transform = 'scaleX(1)';
+            mechVisualBox.style.filter = 'brightness(1)';
+        }
+
+        // 머리 렌더링
+        let vHead = document.getElementById('visual-head');
+        let vHeadVisor = document.getElementById('visual-head-visor');
+        vHead.style.background = headObj.color;
+        vHead.style.borderColor = headObj.border;
+        if (currentMechView === 'back') {
+            vHeadVisor.style.background = '#444';
+            vHeadVisor.style.boxShadow = 'none';
+        } else {
+            vHeadVisor.style.background = headObj.visorColor;
+            if (headObj.shape === 'antenna') {
+                vHeadVisor.style.boxShadow = '0 0 12px #00ffff, 0 -6px 0 #00ffff';
+            } else if (headObj.shape === 'dual-horn') {
+                vHeadVisor.style.boxShadow = '0 0 15px #ff00ff, -8px -6px 0 #ff00ff, 8px -6px 0 #ff00ff';
+            } else {
+                vHeadVisor.style.boxShadow = '0 0 8px #00f0ff';
+            }
+        }
+
+        // 몸통 렌더링
+        let vTorso = document.getElementById('visual-torso');
+        let vCoreLight = document.getElementById('visual-core-light');
+        vTorso.style.background = torsoObj.color;
+        vTorso.style.borderColor = torsoObj.border;
+        if (currentMechView === 'back') {
+            vCoreLight.style.display = 'none';
+        } else {
+            vCoreLight.style.display = 'block';
+            vCoreLight.style.background = torsoObj.lightColor;
+            vCoreLight.style.boxShadow = `0 0 12px ${torsoObj.lightColor}`;
+        }
+
+        // 왼팔 렌더링
+        let vArmL = document.getElementById('visual-arm-l');
+        vArmL.style.background = armLObj.color;
+        vArmL.style.borderColor = armLObj.border;
+        if (currentMechView === 'back') {
+            vArmL.innerHTML = '<span style="font-size:9px; color:#aaa;">백팩연결</span>';
+        } else {
+            if (armLObj.shape === 'shield') {
+                vArmL.innerHTML = '<div style="width:100%; height:45%; background:rgba(0,240,255,0.3); border:1px solid #00f0ff; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px;">🛡️쉴드</div>';
+            } else if (armLObj.shape === 'blade') {
+                vArmL.innerHTML = '<div style="width:14px; height:60%; background:#00ffff; border-radius:50px; box-shadow:0 0 10px #00ffff; margin-top:-10px;"></div><span style="font-size:9px; color:#fff;">블레이드</span>';
+            } else if (armLObj.shape === 'gatling') {
+                vArmL.innerHTML = '<div style="display:flex; gap:2px; margin-top:5px;"><div style="width:4px; height:30px; background:#aaa;"></div><div style="width:4px; height:30px; background:#aaa;"></div><div style="width:4px; height:30px; background:#aaa;"></div></div><span style="font-size:9px; color:#ff00ff;">개틀링</span>';
+            } else {
+                vArmL.innerHTML = `<span style="font-size:10px;">${armLObj.name.split(' ')[0]}</span>`;
+            }
+        }
+
+        // 오른팔 렌더링
+        let vArmR = document.getElementById('visual-arm-r');
+        vArmR.style.background = armRObj.color;
+        vArmR.style.borderColor = armRObj.border;
+        if (currentMechView === 'back') {
+            vArmR.innerHTML = '<span style="font-size:9px; color:#aaa;">백팩연결</span>';
+        } else {
+            if (armRObj.shape === 'cannon') {
+                vArmR.innerHTML = '<div style="width:16px; height:35px; background:#444; border:1px solid #00f0ff; border-radius:3px; margin-bottom:5px;"></div><span style="font-size:9px;">런처</span>';
+            } else if (armRObj.shape === 'railgun') {
+                vArmR.innerHTML = '<div style="width:10px; height:50px; background:#00ffff; box-shadow:0 0 8px #00ffff; border-radius:2px;"></div><span style="font-size:9px;">레일건</span>';
+            } else if (armRObj.shape === 'hyper') {
+                vArmR.innerHTML = '<div style="width:20px; height:60px; background:#ff00ff; box-shadow:0 0 12px #ff00ff; border-radius:4px; margin-bottom:4px;"></div><span style="font-size:9px;">캐논</span>';
+            } else {
+                vArmR.innerHTML = `<span style="font-size:10px;">${armRObj.name.split(' ')[0]}</span>`;
+            }
+        }
+
+        // 다리 렌더링
+        let vLegL = document.getElementById('visual-leg-l');
+        let vLegR = document.getElementById('visual-leg-r');
+        [vLegL, vLegR].forEach(leg => {
+            leg.style.background = legLObj.color;
+            leg.style.borderColor = legLObj.border;
+            if (legLObj.shape === 'hover') {
+                leg.innerHTML = '<div style="width:36px; height:10px; background:#ff00ff; border-radius:50%; box-shadow:0 0 8px #ff00ff; margin-bottom:5px;"></div><span style="font-size:9px;">호버</span>';
+            } else if (legLObj.shape === 'agile') {
+                leg.innerHTML = '<div style="width:20px; height:30px; background:#0077ff; border-radius:50px; margin-bottom:5px;"></div><span style="font-size:9px;">기동</span>';
+            } else {
+                leg.innerHTML = `<span style="font-size:9px;">다리</span>`;
+            }
+        });
+
+        // 등 파츠 렌더링
+        let vBack1 = document.getElementById('visual-back1');
+        if (back1Obj && back1Obj.visible) {
+            vBack1.style.display = 'flex';
+            vBack1.style.background = back1Obj.color;
+            vBack1.style.zIndex = currentMechView === 'back' ? '5' : '1';
+            if (back1Obj.shape === 'booster') {
+                vBack1.style.borderRadius = '5px 25px 25px 5px';
+                vBack1.innerHTML = '<div style="width:12px; height:25px; background:#ffaa00; border-radius:50%; box-shadow:0 0 10px #ffaa00; margin-top:60px;"></div>';
+            } else if (back1Obj.shape === 'wing') {
+                vBack1.style.borderRadius = '50px 5px 5px 50px';
+                vBack1.style.width = '65px';
+                vBack1.innerHTML = '<span style="font-size:10px; font-weight:bold; color:#fff; transform:rotate(10deg);">WING</span>';
+            }
+        } else {
+            vBack1.style.display = 'none';
+        }
+
+        let vBack2 = document.getElementById('visual-back2');
+        if (back2Obj && back2Obj.visible) {
+            vBack2.style.display = 'flex';
+            vBack2.style.background = back2Obj.color;
+            vBack2.style.zIndex = currentMechView === 'back' ? '5' : '1';
+            if (back2Obj.shape === 'missile') {
+                vBack2.style.borderRadius = '8px';
+                vBack2.innerHTML = `
+                    <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:3px; padding:4px;">
+                        <div style="width:12px; height:12px; background:#111; border-radius:50%; border:1px solid #ffaa00;"></div>
+                        <div style="width:12px; height:12px; background:#111; border-radius:50%; border:1px solid #ffaa00;"></div>
+                        <div style="width:12px; height:12px; background:#111; border-radius:50%; border:1px solid #ffaa00;"></div>
+                        <div style="width:12px; height:12px; background:#111; border-radius:50%; border:1px solid #ffaa00;"></div>
+                    </div>
+                `;
+            } else if (back2Obj.shape === 'energy') {
+                vBack2.style.borderRadius = '15px';
+                vBack2.innerHTML = '<div style="width:18px; height:50px; background:#00ff66; border-radius:8px; box-shadow:0 0 12px #00ff66;"></div>';
+            }
+        } else {
+            vBack2.style.display = 'none';
+        }
+
+        // 종합 스탯 UI 업데이트
+        let totalStats = calculateTotalStats(player.equipped);
+        document.getElementById('home-total-stats').innerHTML = `
+            <span style="color:#ff5555;">공격력: ${totalStats.atk}</span>
+            <span style="color:#55ff55;">방어력: ${totalStats.def}</span>
+            <span style="color:#55ffff;">회피력: ${totalStats.eva}</span>
+        `;
+    }
+
+    function openCustom() {
+        switchScreen('screen-custom');
+        renderCustomSlots();
+        selectSlot('head');
+    }
+
+    function closeCustom() {
+        switchScreen('screen-home');
+        updateHomeUI();
+    }
+
+    function renderCustomSlots() {
+        let container = document.getElementById('slot-list-container');
+        container.innerHTML = '';
+        for (let slotKey in slotNames) {
+            let btn = document.createElement('button');
+            btn.className = `slot-btn ${currentSelectedSlot === slotKey ? 'selected' : ''}`;
+            btn.innerHTML = `<span>${slotNames[slotKey]}</span> <span style="font-size:13px; color:#00f0ff;">[장착: ${getPartName(player.equipped[slotKey])}]</span>`;
+            btn.onclick = () => selectSlot(slotKey);
+            container.appendChild(btn);
+        }
+    }
+
+    function selectSlot(slotKey) {
+        currentSelectedSlot = slotKey;
+        renderCustomSlots();
+        
+        document.getElementById('part-selection-title').innerText = `${slotNames[slotKey]} 부위 파츠 선택`;
+        let invContainer = document.getElementById('inventory-list');
+        invContainer.innerHTML = '';
+
+        let availableParts = partsData[slotKey].filter(p => player.inventory.includes(p.id));
+
+        availableParts.forEach(part => {
+            let isEquipped = player.equipped[slotKey] === part.id;
+            let card = document.createElement('div');
+            card.className = `part-card ${isEquipped ? 'equipped' : ''}`;
+            card.innerHTML = `
+                <div>
+                    <strong style="font-size:15px;">${part.name}</strong> <span style="font-size:12px; color:#ffaa00;">(${part.grade})</span><br>
+                    <span style="font-size:13px; color:#ff5555;">ATK +${part.atk}</span> | 
+                    <span style="font-size:13px; color:#55ff55;">DEF +${part.def}</span> | 
+                    <span style="font-size:13px; color:#55ffff;">EVA +${part.eva}</span>
+                </div>
+                <div>
+                    ${isEquipped ? '<span style="color:#00ff66; font-weight:bold; font-size:15px;">장착중</span>' : `<button class="btn" style="padding:6px 18px; font-size:14px;" onclick="equipPart('${slotKey}', '${part.id}')">장착</button>`}
+                </div>
+            `;
+            invContainer.appendChild(card);
+        });
+    }
+
+    function equipPart(slotKey, partId) {
+        player.equipped[slotKey] = partId;
+        selectSlot(slotKey);
+        updateHomeUI();
+    }
+
+    function openGacha() {
+        switchScreen('screen-gacha');
+        document.getElementById('gacha-result').innerText = '';
+    }
+
+    function closeGacha() {
+        switchScreen('screen-home');
+        updateHomeUI();
+    }
+
+    function doGacha() {
+        if (player.coins < 50) {
+            document.getElementById('gacha-result').innerText = '코인이 부족합니다! (필요: 50G)';
+            return;
+        }
+        player.coins -= 50;
+        
+        let allSlots = Object.keys(partsData);
+        let randomSlot = allSlots[Math.floor(Math.random() * allSlots.length)];
+        let slotParts = partsData[randomSlot];
+        let randomPart = slotParts[Math.floor(Math.random() * slotParts.length)];
+
+        if (!player.inventory.includes(randomPart.id)) {
+            player.inventory.push(randomPart.id);
+        }
+
+        document.getElementById('gacha-result').innerHTML = `🎉 획득 성공: <span style="color:#ff00ff;">${randomPart.name}</span> (${slotNames[randomSlot]})`;
+        document.getElementById('coin-display').innerText = `코인: ${player.coins}G`;
+    }
+
+    let battleInterval = null;
+
+    // 상세 스탯(공격력, 방어력, 회피력)이 반영된 메카 전투 시스템
+    function startBattle() {
+        switchScreen('screen-battle');
+        document.getElementById('battle-stage-title').innerText = `STAGE ${player.stage} / 100`;
+        document.getElementById('battle-result-modal').style.display = 'none';
+
+        let stats = calculateTotalStats(player.equipped);
+        let pAtk = Math.max(10, stats.atk);
+        let pDef = stats.def;
+        let pEva = stats.eva;
+
+        // 적 스탯 설정 (스테이지에 비례)
+        let eAtk = 15 + (player.stage * 4);
+        let eDef = 10 + (player.stage * 2);
+        let eEva = 5 + Math.floor(player.stage * 0.5);
+
+        let playerMaxHp = 100 + (pDef * 4);
+        let enemyMaxHp = 100 + (eDef * 4);
+
+        let playerHp = playerMaxHp;
+        let enemyHp = enemyMaxHp;
+
+        document.getElementById('player-name').innerText = `PLAYER [ATK:${pAtk} DEF:${pDef} EVA:${pEva}]`;
+        document.getElementById('enemy-name').innerText = `STAGE ${player.stage} 적 [ATK:${eAtk} DEF:${eDef}]`;
+
+        let logBox = document.getElementById('battle-log');
+        logBox.innerHTML = `[전투 개시] 메카 시스템 가동! 적과 교전 중...\n`;
+
+        if (battleInterval) clearInterval(battleInterval);
+
+        battleInterval = setInterval(() => {
+            // 플레이어 공격 (적의 방어력에 의해 데미지 경감, 회피 확률 적용)
+            let enemyHitRoll = Math.random() * 100;
+            if (enemyHitRoll < eEva) {
+                logBox.innerHTML += `적기가 민첩하게 공격을 <span style="color:#55ffff;">회피</span>했습니다!<br>`;
+            } else {
+                let rawPDamage = pAtk * (1.2 + Math.random() * 0.4);
+                let pDamage = Math.max(5, Math.floor(rawPDamage - (eDef * 0.4)));
+                enemyHp -= pDamage;
+                if (enemyHp < 0) enemyHp = 0;
+                logBox.innerHTML += `플레이어의 공격! 적에게 <span style="color:#00ff66;">${pDamage}</span> 데미지.<br>`;
+            }
+
+            if (enemyHp <= 0) {
+                clearInterval(battleInterval);
+                endBattle(true);
+                return;
+            }
+
+            // 적 공격 (플레이어의 방어력과 회피력 적용)
+            let playerHitRoll = Math.random() * 100;
+            if (playerHitRoll < pEva) {
+                logBox.innerHTML += `플레이어 메카가 날렵하게 적의 공격을 <span style="color:#55ffff;">회피</span>했습니다!<br>`;
+            } else {
+                let rawEDamage = eAtk * (1.2 + Math.random() * 0.4);
+                let eDamage = Math.max(5, Math.floor(rawEDamage - (pDef * 0.5)));
+                playerHp -= eDamage;
+                if (playerHp < 0) playerHp = 0;
+                logBox.innerHTML += `적의 반격! 플레이어가 <span style="color:#ff3333;">${eDamage}</span> 데미지를 입음.<br>`;
+            }
+
+            if (playerHp <= 0) {
+                clearInterval(battleInterval);
+                endBattle(false);
+                return;
+            }
+
+            document.getElementById('player-hp-bar').style.width = `${(playerHp / playerMaxHp) * 100}%`;
+            document.getElementById('player-hp-text').innerText = `${playerHp} / ${playerMaxHp}`;
+            document.getElementById('enemy-hp-bar').style.width = `${(enemyHp / enemyMaxHp) * 100}%`;
+            document.getElementById('enemy-hp-text').innerText = `${enemyHp} / ${enemyMaxHp}`;
+
+            logBox.scrollTop = logBox.scrollHeight;
+        }, 1000);
+    }
+
+    function endBattle(isWin) {
+        let modal = document.getElementById('battle-result-modal');
+        let title = document.getElementById('modal-result-title');
+        let desc = document.getElementById('modal-result-desc');
+
+        modal.style.display = 'flex';
+
+        if (isWin) {
+            title.innerText = "승리!";
+            title.style.color = "#00ff66";
+            
+            let rewardCoins = 30 + (player.stage * 5);
+            player.coins += rewardCoins;
+
+            let droppedTickets = 0;
+            let dropRoll = Math.random();
+            if (player.stage >= 66 && player.stage <= 100) {
+                if (dropRoll < 0.3) droppedTickets = 3;
+            } else if (player.stage >= 35 && player.stage <= 65) {
+                if (dropRoll < 0.25) droppedTickets = 2;
+            } else {
+                if (dropRoll < 0.2) droppedTickets = 1;
+            }
+            player.tickets += droppedTickets;
+
+            let allSlots = Object.keys(partsData);
+            let dropSlot = allSlots[Math.floor(Math.random() * allSlots.length)];
+            let possibleParts = partsData[dropSlot];
+            
+            let dropIndex = 0;
+            if (player.stage > 30) dropIndex = Math.random() < 0.5 ? 2 : 1;
+            else if (player.stage > 10) dropIndex = Math.random() < 0.6 ? 1 : 0;
+            
+            let droppedPart = possibleParts[dropIndex] || possibleParts[0];
+
+            if (!player.inventory.includes(droppedPart.id)) {
+                player.inventory.push(droppedPart.id);
+            }
+
+            let ticketText = droppedTickets > 0 ? `<br>소탕권: <span style="color:#00ff66;">+${droppedTickets}개</span>` : '';
+            desc.innerHTML = `스테이지 ${player.stage} 클리어!<br>보상 코인: <span style="color:#ffaa00;">+${rewardCoins}G</span>${ticketText}<br>획득 파츠: <span style="color:#00f0ff;">${droppedPart.name}</span>`;
+
+            if (player.stage < 100) {
+                player.stage++;
+            }
+        } else {
+            title.innerText = "패배...";
+            title.style.color = "#ff3333";
+            desc.innerHTML = `적의 화력이 너무 강했습니다.<br>방어력과 회피력이 높은 파츠를 조합해보세요!`;
+        }
+    }
+
+    function returnToHomeFromBattle() {
+        document.getElementById('battle-result-modal').style.display = 'none';
+        switchScreen('screen-home');
+        updateHomeUI();
+    }
+
+    function openSweepModal() {
+        let select = document.getElementById('sweep-stage-select');
+        select.innerHTML = '';
+
+        let maxSweepable = player.stage - 1;
+        if (maxSweepable < 1) {
+            document.getElementById('sweep-result-text').innerText = '아직 클리어한 스테이지가 없습니다!';
+            select.innerHTML = '<option value="">소탕 가능 스테이지 없음</option>';
+        } else {
+            document.getElementById('sweep-result-text').innerText = '';
+            for (let i = 1; i <= maxSweepable; i++) {
+                let opt = document.createElement('option');
+                opt.value = i;
+                opt.innerText = `STAGE ${i} 소탕`;
+                select.appendChild(opt);
+            }
+        }
+        document.getElementById('sweep-modal').style.display = 'flex';
+    }
+
+    function closeSweepModal() {
+        document.getElementById('sweep-modal').style.display = 'none';
+        updateHomeUI();
+    }
+
+    function executeSweep() {
+        let maxSweepable = player.stage - 1;
+        if (maxSweepable < 1) {
+            document.getElementById('sweep-result-text').innerText = '클리어한 스테이지가 없어 소탕할 수 없습니다.';
+            return;
+        }
+
+        if (player.tickets < 1) {
+            document.getElementById('sweep-result-text').innerText = '소탕권이 부족합니다!';
+            return;
+        }
+
+        let select = document.getElementById('sweep-stage-select');
+        let targetStage = parseInt(select.value);
+
+        player.tickets -= 1;
+        let rewardCoins = 30 + (targetStage * 5);
+        player.coins += rewardCoins;
+
+        document.getElementById('sweep-result-text').innerHTML = `✨ STAGE ${targetStage} 소탕 완료! 코인 <span style="color:#ffaa00;">+${rewardCoins}G</span> 획득`;
+        updateHomeUI();
+    }
+</script>
+
+</body>
+</html>
