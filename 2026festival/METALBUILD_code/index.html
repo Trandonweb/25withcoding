@@ -1,1 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METAL BUILD</title>
+    <link rel="stylesheet" href="style.css">
+</head>
 
+<body>
+
+<div id="game-container">
+
+    <!-- 1. 시작 화면 -->
+    <div id="screen-title" class="screen active">
+        <div class="title-text">METAL BUILD</div>
+        <button class="btn" onclick="startGame()">게임 시작</button>
+    </div>
+
+    <!-- 2. 홈 화면 -->
+    <div id="screen-home" class="screen">
+
+        <div class="home-ui-tl">
+            <button
+                class="btn"
+                style="padding:10px 20px; font-size:16px;"
+                onclick="openGacha()">
+                뽑기 시스템
+            </button>
+
+            <div
+                style="display:flex; gap:12px; align-items:center; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 8px; border: 1px solid #00f0ff;">
+
+                <div
+                    id="coin-display"
+                    style="font-weight:bold; color:#ffaa00; font-size: 18px;">
+                    코인: 100G
+                </div>
+
+                <div
+                    id="ticket-display"
+                    style="font-weight:bold; color:#00ff66; font-size: 18px;">
+                    소탕권: 0개
+                </div>
+
+            </div>
+        </div>
+
+        <div class="home-ui-tr" id="stage-display">
+            STAGE 1 / 100
+        </div>
+
+        <!-- 메카 표시 -->
+        <div class="mech-display">
+
+            <!-- 전면 / 후면 전환 -->
+            <div class="view-toggle-container">
+
+                <button
+                    id="tab-front"
+                    class="view-tab-btn active-view"
+                    onclick="switchMechView('front')">
+                    전면부 보기
+                </button>
+
+                <button
+                    id="tab-back"
+                    class="view-tab-btn"
+                    onclick="switchMechView('back')">
+                    후면부 보기
+                </button>
+
+            </div>
+
+            <!-- 메카 그래픽 -->
+            <div
+                class="mech-visual-box"
+                id="mech-visual-box">
+
+                <div
+                    id="visual-back1"
+                    class="back-gear-left"
+                    style="display:none;">
+                </div>
+
+                <div
+                    id="visual-back2"
+                    class="back-gear-right"
+                    style="display:none;">
+                </div>
+
+                <div
+                    class="mech-core-structure"
+                    id="mech-core-panel">
+
+                    <!-- 머리 -->
+                    <div
+                        class="v-head"
+                        id="visual-head">
+
+                        <div
+                            class="v-head-visor"
+                            id="visual-head-visor">
+                        </div>
+
+                    </div>
+
+                    <!-- 몸통 + 팔 -->
+                    <div class="v-torso-row">
+
+                        <div
+                            class="v-arm"
+                            id="visual-arm-l">
+                            왼팔
+                        </div>
+
+                        <div
+                            class="v-torso"
+                            id="visual-torso">
+
+                            <div
+                                class="v-core-light"
+                                id="visual-core-light">
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="v-arm"
+                            id="visual-arm-r">
+                            오른팔
+                        </div>
+
+                    </div>
+
+                    <!-- 다리 -->
+                    <div class="v-legs-row">
+
+                        <div
+                            class="v-leg"
+                            id="visual-leg-l">
+                            왼다리
+                        </div>
+
+                        <div
+                            class="v-leg"
+                            id="visual-leg-r">
+                            우다리
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- 종합 스탯 -->
+            <div
+                style="margin-top: 8px; font-size: 15px; color: #00f0ff; font-weight: bold; display: flex; gap: 15px;"
+                id="home-total-stats">
+
+                <span>공격력: 35</span>
+                <span>방어력: 25</span>
+                <span>회피력: 10</span>
+
+            </div>
+
+        </div>
+
+        <!-- 커스터마이징 -->
+        <div class="home-ui-bl">
+
+            <button
+                class="btn"
+                onclick="openCustom()">
+                커스터마이징
+            </button>
+
+        </div>
+
+        <!-- 전투 / 소탕 -->
+        <div class="home-ui-br">
+
+            <button
+                class="btn"
+                style="background: linear-gradient(45deg, #00aa55, #00ff88); padding: 12px 35px; font-size: 18px;"
+                onclick="openSweepModal()">
+                스테이지 소탕
+            </button>
+
+            <button
+                class="btn"
+                style="background: linear-gradient(45deg, #ff3333, #ff9900);"
+                onclick="startBattle()">
+                전투 개시
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- 3. 커스터마이징 화면 -->
+    <div id="screen-custom" class="screen">
+
+        <div
+            style="position: absolute; top: 25px; left: 40px; font-size: 26px; font-weight: bold; color: #00f0ff;">
+            메카 커스터마이징
+        </div>
+
+        <div
+            class="custom-layout"
+            style="margin-top: 60px; height: calc(100% - 80px);">
+
+            <!-- 부위 선택 -->
+            <div
+                class="custom-left"
+                id="slot-list-container">
+            </div>
+
+            <!-- 파츠 목록 -->
+            <div class="custom-right">
+
+                <div
+                    id="part-selection-title"
+                    style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #ffaa00;">
+                    부위를 선택하세요
+                </div>
+
+                <div id="inventory-list"></div>
+
+            </div>
+
+        </div>
+
+        <!-- 저장 -->
+        <div
+            style="position: absolute; bottom: 25px; right: 40px;">
+
+            <button
+                class="btn"
+                onclick="closeCustom()">
+                저장 및 홈으로
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- 4. 뽑기 화면 -->
+    <div id="screen-gacha" class="screen">
+
+        <div class="gacha-box">
+
+            <h2>메카 파츠 뽑기</h2>
+
+            <p>
+                랜덤한 부위의 장비를 획득합니다!
+                (비용: 50 코인)
+            </p>
+
+            <div
+                id="gacha-result"
+                style="margin: 25px 0; font-size: 20px; color: #00f0ff; height: 35px;">
+            </div>
+
+            <button
+                class="btn"
+                onclick="doGacha()">
+                뽑기 실행 (50G)
+            </button>
+
+            <br><br>
+
+            <button
+                class="btn"
+                style="background: #444;"
+                onclick="closeGacha()">
+                돌아가기
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- 5. 전투 화면 -->
+    <div id="screen-battle" class="screen">
+
+        <div
+            style="font-size: 28px; font-weight: bold;"
+            id="battle-stage-title">
+            STAGE 1
+        </div>
+
+        <div class="battle-arena">
+
+            <!-- 플레이어 -->
+            <div class="fighter">
+
+                <div
+                    style="margin-bottom: 8px; font-weight: bold; font-size: 16px; text-align:center;"
+                    id="player-name">
+                    PLAYER MECH
+                </div>
+
+                <div class="hp-bar-container">
+                    <div
+                        class="hp-bar"
+                        id="player-hp-bar">
+                    </div>
+                </div>
+
+                <div class="fighter-avatar">
+                    🤖
+                </div>
+
+                <div
+                    id="player-hp-text"
+                    style="font-size: 15px; margin-top:8px;">
+                    100 / 100
+                </div>
+
+            </div>
+
+
+            <!-- VS -->
+            <div
+                style="font-size: 40px; font-weight: bold; color: #ff3333;">
+                VS
+            </div>
+
+
+            <!-- 적 -->
+            <div class="fighter">
+
+                <div
+                    style="margin-bottom: 8px; font-weight: bold; font-size: 16px; text-align:center;"
+                    id="enemy-name">
+                    ENEMY MECH
+                </div>
+
+                <div class="hp-bar-container">
+
+                    <div
+                        class="hp-bar"
+                        id="enemy-hp-bar"
+                        style="background: #ff3333;">
+                    </div>
+
+                </div>
+
+                <div class="fighter-avatar">
+                    👾
+                </div>
+
+                <div
+                    id="enemy-hp-text"
+                    style="font-size: 15px; margin-top:8px;">
+                    100 / 100
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- 전투 로그 -->
+        <div
+            class="battle-log"
+            id="battle-log">
+            전투가 시작되었습니다...
+        </div>
+
+    </div>
+
+
+    <!-- 전투 결과 팝업 -->
+    <div
+        id="battle-result-modal"
+        class="modal-overlay">
+
+        <div
+            style="background: #22223b; padding: 50px; border-radius: 12px; border: 2px solid #00f0ff; text-align: center; width: 450px;">
+
+            <h2
+                id="modal-result-title"
+                style="font-size: 32px; margin-bottom: 20px;">
+                승리!
+            </h2>
+
+            <p
+                id="modal-result-desc"
+                style="margin-bottom: 30px; color: #ccc; font-size: 18px;">
+                파츠를 획득했습니다.
+            </p>
+
+            <button
+                class="btn"
+                onclick="returnToHomeFromBattle()">
+                홈으로 돌아가기
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- 소탕 모달 -->
+    <div
+        id="sweep-modal"
+        class="modal-overlay">
+
+        <div
+            style="background: #22223b; padding: 40px; border-radius: 12px; border: 2px solid #00ff88; text-align: center; width: 500px;">
+
+            <h2
+                style="font-size: 28px; margin-bottom: 15px; color: #00ff88;">
+                스테이지 소탕
+            </h2>
+
+            <p
+                id="sweep-desc"
+                style="margin-bottom: 20px; color: #ccc; font-size: 16px;">
+                소탕권을 사용하여 클리어한 스테이지의 보상을 즉시 획득합니다.
+            </p>
+
+            <div style="margin-bottom: 20px;">
+
+                <label
+                    style="font-size: 16px; margin-right: 10px;">
+                    소탕할 스테이지 선택:
+                </label>
+
+                <select
+                    id="sweep-stage-select"
+                    style="padding: 8px; font-size: 16px; background: #111; color: #fff; border: 1px solid #00ff88; border-radius: 4px;">
+                </select>
+
+            </div>
+
+            <div
+                id="sweep-result-text"
+                style="margin-bottom: 25px; font-size: 15px; color: #ffaa00; min-height: 25px;">
+            </div>
+
+            <div
+                style="display: flex; justify-content: center; gap: 15px;">
+
+                <button
+                    class="btn"
+                    style="background: linear-gradient(45deg, #00aa55, #00ff88);"
+                    onclick="executeSweep()">
+                    소탕 실행 (소탕권 1개 소모)
+                </button>
+
+                <button
+                    class="btn"
+                    style="background: #444;"
+                    onclick="closeSweepModal()">
+                    닫기
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!--
+    JavaScript 파일은 순서가 중요합니다.
+    data.js → main.js → mech.js → custom.js → gacha.js → battle.js → sweep.js
+-->
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script src="js/mech.js"></script>
+<script src="js/custom.js"></script>
+<script src="js/gacha.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/sweep.js"></script>
+
+</body>
+</html>
