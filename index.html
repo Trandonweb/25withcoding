@@ -26,7 +26,7 @@
       --border-color: var(--primary-color, #27ae60);
       --header-text: var(--primary-color, #27ae60);
       /* 수정된 부분: 고정 초록색 대신 테마 컬러를 활용한 연한 배경색 생성 */
-      --card-hover-bg: color-mix(in srgb, var(--primary-color) 8%, white); 
+      --card-hover-bg: color-mix(in srgb, var(--primary-color) 8%, white);
       --btn-bg: #e0e0e0;
       --btn-text: #333333;
       --btn-hover: #d0d0d0;
@@ -148,6 +148,39 @@
     .card:hover {
       transform: scale(1.03);
       background: var(--card-hover-bg);
+    }
+
+    .coby-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-color);
+    }
+
+    .coby-card:hover {
+      color: var(--text-color);
+    }
+
+    .coby-title {
+      color: var(--primary-color);
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    .coby-beta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--primary-color);
+      color: #ffffff;
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0.5px;
     }
 
     .footer {
@@ -367,6 +400,11 @@
     <div class="card" onclick="go('/NOTE/')">
       설명용 노트
     </div>
+
+    <a class="card coby-card" href="/AI">
+      <span class="coby-title">🤖 COBY AI</span>
+      <span class="coby-beta">BETA</span>
+    </a>
 
   </div>
 
