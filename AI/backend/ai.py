@@ -15,13 +15,17 @@ SYSTEM_PROMPT = """
 """.strip()
 
 
-API_URL = "https://api.friendli.ai/serverless/v1/chat/completions"
-MODEL = "LGAI-EXAONE/K-EXAONE-236B-A23B"
+# Hugging Face Inference Providers의 OpenAI-compatible router API
+API_URL = "https://router.huggingface.co/v1/chat/completions"
+# 환경변수로 모델을 바꿀 수 있으며, 기본값은 비교적 가벼운 instruct 모델이다.
+MODEL = os.getenv("HF_MODEL", "Qwen/Qwen2.5-7B-Instruct")
 
 
 def ask_ai(message: str):
-    """FriendliAI의 OpenAI-compatible K-EXAONE API로 Coby의 답변을 생성한다."""
+    """Hugging Face Inference Providers의 OpenAI-compatible API로 Coby의 답변을 생성한다."""
 
+    # 기존 Render 환경변수 이름(EXAONE_API_KEY)을 그대로 사용한다.
+    # 값만 Hugging Face의 새 토큰으로 교체하면 된다.
     api_key = os.getenv("EXAONE_API_KEY", "").strip()
 
     if not api_key:
@@ -41,18 +45,10 @@ def ask_ai(message: str):
         ],
         "temperature": 0.4,
         "max_tokens": 2048,
-        # Coby는 일반적인 질문에서는 빠르게 답하도록 thinking을 끈다.
-        # 복잡한 추론 모드는 이후 별도 조건으로 켤 수 있다.
-        "chat_template_kwargs": {
-            "enable_thinking": False
-        },
-        # reasoning 내용은 응답 content에서 분리하지 않고 최종 답변만 받는다.
-        "parse_reasoning": True,
-        "include_reasoning": False,
     }
 
     try:
-        print(f"Coby: requesting FriendliAI model={MODEL}, message_length={len(message)}")
+        print(f"Coby: requesting Hugging Face model={MODEL}, message_length={len(message)}")
 
         response = requests.post(
             API_URL,
@@ -61,7 +57,7 @@ def ask_ai(message: str):
             timeout=120,
         )
 
-        print(f"Coby: FriendliAI status={response.status_code}")
+        print(f"Coby: Hugging Face status={response.status_code}")
         response.raise_for_status()
 
         data = response.json()
@@ -75,7 +71,6 @@ def ask_ai(message: str):
         message_data = choices[0].get("message") or {}
         answer = message_data.get("content")
 
-        # 일부 응답 형식에서 content가 비어 있을 경우를 대비한다.
         if isinstance(answer, list):
             answer = "".join(
                 item.get("text", "") if isinstance(item, dict) else str(item)
@@ -89,16 +84,16 @@ def ask_ai(message: str):
         return answer.strip()
 
     except requests.HTTPError as error:
-        print(f"Coby: EXAONE API HTTP error: {error}")
-        print(f"Coby: EXAONE API response: {response.text[:2000]}")
+        print(f"Coby: Hugging Face API HTTP error: {error}")
+        print(f"Coby: Hugging Face API response: {response.text[:2000]}")
         return "Coby의 AI 모델 요청이 거부되었어요. Render 로그를 확인해주세요."
 
     except requests.RequestException as error:
-        print(f"Coby: EXAONE API request failed: {error}")
+        print(f"Coby: Hugging Face API request failed: {error}")
         return "Coby의 AI 모델 서버에 연결하지 못했어요. 잠시 후 다시 시도해주세요."
 
     except (KeyError, IndexError, TypeError, ValueError) as error:
-        print(f"Coby: EXAONE API response parsing failed: {error}")
+        print(f"Coby: Hugging Face API response parsing failed: {error}")
         return "AI 모델에서 예상하지 못한 응답이 왔어요. Render 로그를 확인해주세요."
 
     except Exception as error:
