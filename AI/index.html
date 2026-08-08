@@ -6,441 +6,387 @@
 <title>Coby AI</title>
 
 <style>
+*{box-sizing:border-box}
+
 :root{
-    --bg-color:#ffffff;
-    --card-bg:#ffffff;
-    --text-color:#222222;
-    --header-text:#222222;
-    --card-sub-bg:#f5f5f5;
-    --border-color:#dddddd;
-    --border-sub-color:#e5e5e5;
-    --input-bg:#ffffff;
-    --input-focus-bg:#ffffff;
-    --primary-color:#27ae60;
-    --btn-bg:var(--primary-color);
-    --btn-text:#ffffff;
-    --badge-bg:#eeeeee;
-    --badge-text:#555555;
-}
-
-body.dark-mode{
-    --bg-color:#121212;
-    --card-bg:#1e1e1e;
-    --text-color:#ffffff;
-    --header-text:#ffffff;
-    --card-sub-bg:#2a2a2a;
-    --border-color:#333333;
-    --border-sub-color:#333333;
-    --input-bg:#2a2a2a;
-    --input-focus-bg:#1e1e1e;
-    --btn-bg:var(--primary-color);
-    --btn-text:#ffffff;
-    --badge-bg:#333333;
-    --badge-text:#e0e0e0;
-}
-
-*{
-    box-sizing:border-box;
+  --primary:#27ae60;
+  --bg:#fff;
+  --card:#f5f5f5;
+  --text:#222;
+  --sub:#777;
+  --border:#ddd;
 }
 
 body{
-    margin:0;
-    font-family:"Pretendard","Noto Sans KR","Malgun Gothic",Arial,sans-serif;
-    background:var(--bg-color);
-    color:var(--text-color);
-    height:100vh;
-    overflow:hidden;
-    transition:background .2s,color .2s;
+  margin:0;
+  font-family:"Pretendard","Noto Sans KR","Malgun Gothic",Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  height:100vh;
+  overflow:hidden;
 }
 
-/* ===== Header ===== */
-
 .header{
-    height:64px;
-    display:flex;
-    align-items:center;
-    padding:0 20px;
-    position:relative;
-    background:linear-gradient(
-        to bottom,
-        color-mix(in srgb,var(--card-bg) 92%,var(--primary-color)),
-        var(--bg-color)
-    );
-    border-bottom:1px solid var(--border-color);
+  height:64px;
+  display:flex;
+  align-items:center;
+  padding:0 20px;
+  position:relative;
+  background:linear-gradient(to bottom,#eee,#fff);
+  border-bottom:1px solid #eee;
 }
 
 .menu-btn{
-    width:42px;
-    height:42px;
-    border-radius:12px;
-    border:none;
-    background:var(--card-bg);
-    color:var(--text-color);
-    font-size:24px;
-    cursor:pointer;
-    margin:0;
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  border:none;
+  background:#fff;
+  font-size:24px;
+  cursor:pointer;
 }
 
 .logo{
-    margin-left:15px;
-    font-size:22px;
-    font-weight:700;
-    color:var(--primary-color);
+  margin-left:15px;
+  font-size:22px;
+  font-weight:700;
+  color:var(--primary);
 }
 
-/* ===== Sidebar ===== */
+.user-status{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  color:var(--sub);
+}
+
+.status-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#aaa;
+}
+
+.status-dot.connected{
+  background:#27ae60;
+}
 
 .sidebar{
-    position:fixed;
-    left:-280px;
-    top:0;
-    width:280px;
-    height:100vh;
-    background:var(--card-bg);
-    color:var(--text-color);
-    box-shadow:3px 0 20px rgba(0,0,0,.15);
-    transition:.3s;
-    z-index:10;
-    display:flex;
-    flex-direction:column;
-    border-right:1px solid var(--border-color);
+  position:fixed;
+  left:-300px;
+  top:0;
+  width:300px;
+  height:100vh;
+  background:#fff;
+  box-shadow:3px 0 20px rgba(0,0,0,.12);
+  transition:.3s;
+  z-index:10;
+  display:flex;
+  flex-direction:column;
 }
 
 .sidebar.open{
-    left:0;
+  left:0;
 }
 
 .side-top{
-    padding:20px;
+  padding:20px;
 }
 
 .side-btn{
-    width:100%;
-    padding:14px;
-    margin:0 0 10px 0;
-    border:none;
-    border-radius:12px;
-    background:var(--card-sub-bg);
-    color:var(--text-color);
-    text-align:left;
-    font-size:15px;
-    cursor:pointer;
+  width:100%;
+  padding:14px;
+  margin-bottom:10px;
+  border:none;
+  border-radius:12px;
+  background:#f5f5f5;
+  text-align:left;
+  font-size:15px;
+  cursor:pointer;
 }
 
 .side-btn:hover{
-    background:color-mix(
-        in srgb,
-        var(--primary-color) 10%,
-        var(--card-sub-bg)
-    );
+  background:#eaeaea;
 }
 
 .side-title{
-    margin-top:20px;
-    font-size:13px;
-    color:var(--badge-text);
+  margin-top:20px;
+  margin-bottom:5px;
+  font-size:13px;
+  color:#777;
 }
 
 .chat-list{
-    flex:1;
-    overflow:auto;
-    padding:10px 20px;
+  flex:1;
+  overflow:auto;
+  padding:10px 20px;
 }
 
 .chat-item{
-    padding:11px;
-    border-radius:10px;
-    cursor:pointer;
-    margin-bottom:4px;
-    overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+  margin-bottom:4px;
 }
 
 .chat-item:hover{
-    background:var(--card-sub-bg);
+  background:#f1f1f1;
 }
 
 .chat-item.active{
-    background:color-mix(
-        in srgb,
-        var(--primary-color) 12%,
-        var(--card-sub-bg)
-    );
-    color:var(--primary-color);
-    font-weight:bold;
+  background:#e8f5e9;
+  color:#188b48;
 }
 
-.chat-project{
-    display:block;
-    font-size:11px;
-    margin-top:3px;
-    color:var(--badge-text);
-    font-weight:normal;
+.chat-title{
+  font-size:14px;
+  font-weight:600;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.chat-date{
+  font-size:11px;
+  color:#999;
+  margin-top:4px;
+}
+
+.project-section{
+  padding:10px 20px;
+  border-top:1px solid #eee;
+}
+
+.project-title{
+  font-size:13px;
+  color:#777;
+  margin-bottom:8px;
+}
+
+.project-item{
+  padding:9px 10px;
+  border-radius:9px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.project-item:hover{
+  background:#f1f1f1;
 }
 
 .profile{
-    margin:15px;
-    padding:12px;
-    border-radius:30px;
-    background:var(--card-sub-bg);
-    display:flex;
-    align-items:center;
-    cursor:pointer;
+  margin:15px;
+  padding:12px;
+  border-radius:30px;
+  background:#f3f3f3;
+  display:flex;
+  align-items:center;
+  cursor:pointer;
 }
 
 .profile-circle{
-    width:35px;
-    height:35px;
-    flex-shrink:0;
-    border-radius:50%;
-    background:var(--primary-color);
-    color:#fff;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    margin-right:10px;
-    font-weight:bold;
+  width:35px;
+  height:35px;
+  border-radius:50%;
+  background:var(--primary);
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin-right:10px;
+  font-weight:bold;
 }
 
-/* ===== Main ===== */
+.profile-info{
+  display:flex;
+  flex-direction:column;
+}
+
+.profile-name{
+  font-weight:bold;
+  font-size:14px;
+}
+
+.profile-id{
+  font-size:11px;
+  color:#888;
+}
 
 .main{
-    height:calc(100vh - 64px);
-    display:flex;
-    flex-direction:column;
+  height:calc(100vh - 64px);
+  display:flex;
+  flex-direction:column;
 }
 
 .messages{
-    flex:1;
-    overflow:auto;
-    padding:30px max(20px,8vw);
+  flex:1;
+  overflow:auto;
+  padding:30px max(20px,8vw);
 }
 
 .welcome{
-    margin-top:100px;
-    text-align:center;
+  margin-top:100px;
+  text-align:center;
 }
 
 .welcome h2{
-    color:var(--header-text);
-    font-size:28px;
+  font-size:28px;
 }
 
 .welcome p{
-    color:var(--badge-text);
-    font-size:16px;
+  color:#666;
+  font-size:16px;
 }
 
 .message{
-    max-width:800px;
-    margin:20px auto;
-    padding:15px;
-    border-radius:15px;
-    white-space:pre-wrap;
-    word-break:break-word;
-    line-height:1.55;
+  max-width:800px;
+  margin:20px auto;
+  padding:15px;
+  border-radius:15px;
+  white-space:pre-wrap;
+  word-break:break-word;
+  line-height:1.6;
 }
 
-.message.ai{
-    background:var(--card-sub-bg);
-    color:var(--text-color);
-    border:1px solid var(--border-sub-color);
-    margin-right:auto;
+.ai{
+  background:#f5f5f5;
 }
 
-.message.user{
-    background:var(--primary-color);
-    color:#fff;
-    margin-left:auto;
-    border:none;
+.user{
+  background:var(--primary);
+  color:#fff;
+  margin-left:auto;
 }
-
-.message.thinking{
-    opacity:.7;
-}
-
-/* ===== Input ===== */
 
 .input-area{
-    padding:20px;
-    display:flex;
-    justify-content:center;
+  padding:20px;
+  display:flex;
+  justify-content:center;
 }
 
 .input-box{
-    width:min(800px,90%);
-    display:flex;
-    align-items:center;
-    background:var(--input-bg);
-    border:1px solid var(--border-color);
-    border-radius:25px;
-    padding:8px;
-    transition:.2s;
-}
-
-.input-box:focus-within{
-    border-color:var(--primary-color);
-    background:var(--input-focus-bg);
+  width:min(800px,90%);
+  display:flex;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:25px;
+  padding:8px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
 }
 
 input{
-    flex:1;
-    min-width:0;
-    border:none;
-    outline:none;
-    padding:12px;
-    background:transparent;
-    color:var(--text-color);
-    font-size:15px;
-}
-
-input::placeholder{
-    color:var(--badge-text);
+  flex:1;
+  border:none;
+  outline:none;
+  padding:12px;
+  font-size:15px;
 }
 
 .send{
-    width:45px;
-    height:45px;
-    flex-shrink:0;
-    border-radius:50%;
-    border:none;
-    background:var(--btn-bg);
-    color:var(--btn-text);
-    cursor:pointer;
-    font-size:18px;
-    margin:0;
-}
-
-.send:hover{
-    filter:brightness(.92);
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  border:none;
+  background:var(--primary);
+  color:#fff;
+  cursor:pointer;
+  font-size:18px;
 }
 
 .send:disabled{
-    opacity:.6;
-    cursor:not-allowed;
+  opacity:.6;
+  cursor:not-allowed;
 }
 
-/* ===== Overlay ===== */
-
 .overlay{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.2);
-    z-index:5;
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.2);
+  z-index:5;
 }
 
 .overlay.show{
-    display:block;
+  display:block;
 }
 
-/* ===== Project modal ===== */
-
-.modal{
-    display:none;
-    position:fixed;
-    inset:0;
-    z-index:30;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-    background:rgba(0,0,0,.35);
+.empty-chat{
+  color:#999;
+  text-align:center;
+  padding:30px 10px;
+  font-size:13px;
 }
 
-.modal.show{
-    display:flex;
+.project-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  z-index:30;
+  align-items:center;
+  justify-content:center;
 }
 
-.modal-card{
-    width:min(430px,100%);
-    background:var(--card-bg);
-    color:var(--text-color);
-    border:1px solid var(--border-color);
-    border-radius:24px;
-    padding:25px;
-    box-shadow:0 15px 45px rgba(0,0,0,.2);
+.project-modal.show{
+  display:flex;
 }
 
-.modal-card h3{
-    margin:0 0 15px;
+.modal-box{
+  width:min(420px,90%);
+  background:white;
+  border-radius:20px;
+  padding:25px;
+  box-shadow:0 10px 40px rgba(0,0,0,.2);
 }
 
-.modal-card input{
-    width:100%;
-    margin:0 0 12px 0;
-    padding:13px 15px;
-    border:1px solid var(--border-color);
-    border-radius:16px;
-    background:var(--input-bg);
+.modal-box h3{
+  margin-top:0;
 }
 
-.modal-actions{
-    display:flex;
-    justify-content:flex-end;
-    gap:8px;
+.modal-box input{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:12px;
+  margin:10px 0;
 }
 
-.modal-actions button{
-    margin:0;
+.modal-buttons{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:15px;
+}
+
+.modal-buttons button{
+  padding:10px 16px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
 }
 
 .cancel-btn{
-    background:var(--card-sub-bg)!important;
-    color:var(--text-color)!important;
+  background:#eee;
 }
 
-/* ===== Project selector ===== */
-
-.project-bar{
-    display:none;
-    align-items:center;
-    gap:8px;
-    padding:8px 20px 0;
-    color:var(--badge-text);
-    font-size:13px;
-}
-
-.project-bar.show{
-    display:flex;
-}
-
-.project-badge{
-    padding:6px 11px;
-    border-radius:10px;
-    background:var(--badge-bg);
-    color:var(--badge-text);
-}
-
-.status{
-    font-size:12px;
-    color:var(--badge-text);
+.create-btn{
+  background:var(--primary);
+  color:white;
 }
 
 @media(max-width:600px){
-    .messages{
-        padding:20px 12px;
-    }
+  .messages{
+    padding:20px 12px;
+  }
 
-    .message{
-        max-width:92%;
-    }
+  .message{
+    max-width:95%;
+  }
 
-    .welcome{
-        margin-top:60px;
-    }
-
-    .welcome h2{
-        font-size:23px;
-    }
-
-    .input-area{
-        padding:12px;
-    }
-
-    .input-box{
-        width:100%;
-    }
+  .user-status{
+    display:none;
+  }
 }
 </style>
 </head>
@@ -448,44 +394,70 @@ input::placeholder{
 <body>
 
 <div class="header">
-    <button class="menu-btn" onclick="openMenu()">☰</button>
-    <div class="logo">🤖 Coby AI</div>
+  <button class="menu-btn" onclick="openMenu()">☰</button>
+  <div class="logo">🤖 Coby AI</div>
+
+  <div class="user-status">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">사용자 확인 중...</span>
+  </div>
 </div>
 
 <div class="sidebar" id="sidebar">
 
-    <div class="side-top">
+  <div class="side-top">
 
-        <button class="side-btn" id="newChatButton">
-            ＋ 새 채팅
-        </button>
+    <button class="side-btn" onclick="newChat()">
+      ＋ 새 채팅
+    </button>
 
-        <button class="side-btn" id="projectButton">
-            📁 프로젝트
-        </button>
+    <button class="side-btn" onclick="openProjectModal()">
+      📁 새 프로젝트
+    </button>
 
-        <div class="side-title">
-            최근 대화
-        </div>
-
+    <div class="side-title">
+      최근 대화
     </div>
 
-    <div class="chat-list" id="chatList">
-        <div class="chat-item">
-            대화를 불러오는 중...
-        </div>
+  </div>
+
+  <div class="chat-list" id="chatList">
+    <div class="empty-chat">
+      대화를 불러오는 중...
+    </div>
+  </div>
+
+  <div class="project-section">
+
+    <div class="project-title">
+      프로젝트
     </div>
 
-    <div class="profile">
-        <div class="profile-circle" id="profileCircle">
-            T
-        </div>
-
-        <div>
-            <div id="profileName">Trandon</div>
-            <small id="profileStudentNumber">20623</small>
-        </div>
+    <div id="projectList">
+      <div class="empty-chat">
+        프로젝트가 없습니다.
+      </div>
     </div>
+
+  </div>
+
+  <div class="profile">
+
+    <div class="profile-circle" id="profileCircle">
+      ?
+    </div>
+
+    <div class="profile-info">
+      <div class="profile-name" id="profileName">
+        사용자 확인 중...
+      </div>
+
+      <div class="profile-id" id="profileId">
+        -
+      </div>
+    </div>
+
+  </div>
 
 </div>
 
@@ -493,1569 +465,1611 @@ input::placeholder{
 
 <div class="main">
 
-    <div class="project-bar" id="projectBar">
-        프로젝트:
-        <span class="project-badge" id="currentProjectName">
-            없음
-        </span>
-        <span class="status" id="saveStatus"></span>
-    </div>
+  <div class="messages" id="messages">
 
-    <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
 
-        <div class="welcome" id="welcome">
-            <h2>어서오세요, Trandon님!</h2>
+      <h2>어서오세요!</h2>
 
-            <p>
-                무한한 상상의 나래를 펼쳐요 🚀
-                <br>
-                Coby가 당신의 코딩 여정을 함께합니다.
-            </p>
-        </div>
+      <p>
+        무한한 상상의 나래를 펼쳐요 🚀<br>
+        Coby가 당신의 코딩 여정을 함께합니다.
+      </p>
 
     </div>
 
-    <div class="input-area">
+  </div>
 
-        <div class="input-box">
+  <div class="input-area">
 
-            <input
-                id="userInput"
-                placeholder="Coby에게 무엇이든 물어보세요"
-                autocomplete="off"
-            >
+    <div class="input-box">
 
-            <button
-                class="send"
-                id="sendButton"
-                onclick="sendMessage()"
-            >
-                ↑
-            </button>
+      <input
+        id="userInput"
+        placeholder="Coby에게 무엇이든 물어보세요"
+        autocomplete="off"
+      >
 
-        </div>
+      <button
+        class="send"
+        id="sendButton"
+        onclick="sendMessage()"
+      >
+        ↑
+      </button>
 
     </div>
+
+  </div>
 
 </div>
 
-<div class="modal" id="projectModal">
+<div class="project-modal" id="projectModal">
 
-    <div class="modal-card">
+  <div class="modal-box">
 
-        <h3>📁 새 프로젝트</h3>
+    <h3>새 프로젝트</h3>
 
-        <input
-            id="projectNameInput"
-            type="text"
-            maxlength="80"
-            placeholder="프로젝트 이름"
-        >
+    <input
+      id="projectNameInput"
+      placeholder="프로젝트 이름"
+      maxlength="50"
+    >
 
-        <input
-            id="projectDescriptionInput"
-            type="text"
-            maxlength="200"
-            placeholder="프로젝트 설명 (선택)"
-        >
+    <input
+      id="projectDescriptionInput"
+      placeholder="프로젝트 설명 (선택)"
+      maxlength="200"
+    >
 
-        <div class="modal-actions">
+    <div class="modal-buttons">
 
-            <button
-                class="cancel-btn"
-                onclick="closeProjectModal()"
-            >
-                취소
-            </button>
+      <button
+        class="cancel-btn"
+        onclick="closeProjectModal()"
+      >
+        취소
+      </button>
 
-            <button
-                onclick="createProject()"
-            >
-                만들기
-            </button>
-
-        </div>
+      <button
+        class="create-btn"
+        onclick="createProject()"
+      >
+        만들기
+      </button>
 
     </div>
+
+  </div>
 
 </div>
 <script type="module">
 
-import { initializeApp }
-    from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 
 import {
-    getAuth,
-    signInAnonymously,
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-
-import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    addDoc,
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    getDocs,
-    onSnapshot,
-    serverTimestamp
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  orderBy,
+  limit,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-
-/* =========================================================
-   Firebase
-   ========================================================= */
-
-const firebaseConfig = {
-
-    apiKey:
-        "AIzaSyAiO65YzYeRfuf6fCzosuW7OAVV47o47Js",
-
-    authDomain:
-        "coby-ai-328dd.firebaseapp.com",
-
-    databaseURL:
-        "https://coby-ai-328dd-default-rtdb.asia-southeast1.firebasedatabase.app",
-
-    projectId:
-        "coby-ai-328dd",
-
-    storageBucket:
-        "coby-ai-328dd.firebasestorage.app",
-
-    messagingSenderId:
-        "865530259286",
-
-    appId:
-        "1:865530259286:web:6feaa5781dc538700b18f7"
-};
-
-
-const app = initializeApp(firebaseConfig);
-
-const auth = getAuth(app);
-
-const db = getFirestore(app);
-
-
-/* =========================================================
-   Coby 사용자 정보
-   ========================================================= */
-
-const STUDENT_NUMBER = "20623";
-const DEFAULT_NAME = "Trandon";
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
 
 /*
- * 중요:
- *
- * Firebase Auth UID와 학교 학번은 서로 다른 값이다.
- *
- * Firebase Auth:
- *     실제 접근 권한 확인
- *
- * 학번:
- *     Firestore에서 사람 문서의 ID
- *
- * 최종 구조:
- *
- * people/20623
- *
- */
+========================================================
+기존 서비스 Firebase
+========================================================
+
+여기는 로그인 / 사용자 정보를 담당하는 Firebase.
+
+현재 네 사이트의 사용자 정보가 들어 있는 Firebase임.
+========================================================
+*/
+
+const mainFirebaseConfig = {
+
+  apiKey: "AIzaSyBgArbW8dArb8dO7OSYsTVEQtRHT049U20",
+
+  authDomain:
+    "points2026-f5e50.firebaseapp.com",
+
+  projectId:
+    "points2026-f5e50",
+
+  storageBucket:
+    "points2026-f5e50.firebasestorage.app",
+
+  messagingSenderId:
+    "248724251417",
+
+  appId:
+    "1:248724251417:web:02d85cdc4addac98069b88"
+
+};
+
+
+/*
+========================================================
+Coby Firebase
+========================================================
+
+여기는 Coby의 대화 / 프로젝트 / 메시지를 저장하는
+전용 Firebase.
+
+절대로 기존 사용자 DB와 섞지 않음.
+========================================================
+*/
+
+const cobyFirebaseConfig = {
+
+  apiKey:
+    "AIzaSyAiO65YzYeRfuf6fCzosuW7OAVV47o47Js",
+
+  authDomain:
+    "coby-ai-328dd.firebaseapp.com",
+
+  databaseURL:
+    "https://coby-ai-328dd-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+  projectId:
+    "coby-ai-328dd",
+
+  storageBucket:
+    "coby-ai-328dd.firebasestorage.app",
+
+  messagingSenderId:
+    "865530259286",
+
+  appId:
+    "1:865530259286:web:6feaa5781dc538700b18f7"
+
+};
+
+
+/*
+========================================================
+Firebase 초기화
+========================================================
+*/
+
+const mainApp =
+  initializeApp(
+    mainFirebaseConfig,
+    "mainApp"
+  );
+
+const cobyApp =
+  initializeApp(
+    cobyFirebaseConfig,
+    "cobyApp"
+  );
+
+
+/*
+기존 서비스 인증
+
+주의:
+Coby Firestore의 데이터는 별도 프로젝트에 저장하지만
+사용자 확인은 기존 Firebase를 사용함.
+*/
+
+const mainAuth =
+  getAuth(mainApp);
+
+
+/*
+Coby Firestore
+*/
+
+const db =
+  getFirestore(cobyApp);
+
+
+/*
+========================================================
+전역 상태
+========================================================
+*/
 
 let currentUser = null;
-let currentPersonRef = null;
 
+let currentPersonId = null;
 
-/* =========================================================
-   현재 대화
-   ========================================================= */
+let currentPerson = null;
 
 let currentConversationId = null;
-let currentConversationTitle = null;
 
 let currentProjectId = null;
-let currentProjectName = null;
 
-let unsubscribeMessages = null;
-let unsubscribeConversations = null;
+let currentProject = null;
 
 
-/* =========================================================
-   DOM
-   ========================================================= */
+/*
+========================================================
+UI 헬퍼
+========================================================
+*/
 
-const messagesElement =
-    document.getElementById("messages");
+function setStatus(text, connected = false){
 
-const welcomeElement =
-    document.getElementById("welcome");
+  document.getElementById(
+    "statusText"
+  ).textContent = text;
 
-const inputElement =
-    document.getElementById("userInput");
+  const dot =
+    document.getElementById("statusDot");
 
-const sendButton =
-    document.getElementById("sendButton");
+  dot.classList.toggle(
+    "connected",
+    connected
+  );
 
-const chatListElement =
-    document.getElementById("chatList");
-
-const projectModal =
-    document.getElementById("projectModal");
-
-const projectNameInput =
-    document.getElementById("projectNameInput");
-
-const projectDescriptionInput =
-    document.getElementById("projectDescriptionInput");
-
-const projectBar =
-    document.getElementById("projectBar");
-
-const currentProjectNameElement =
-    document.getElementById("currentProjectName");
-
-const saveStatusElement =
-    document.getElementById("saveStatus");
+}
 
 
-/* =========================================================
-   Sidebar
-   ========================================================= */
+function updateProfile(){
 
-window.openMenu = function(){
+  const name =
+    currentPerson?.name ||
+    currentUser?.displayName ||
+    "사용자";
 
-    document
-        .getElementById("sidebar")
-        .classList
-        .add("open");
+  const schoolNumber =
+    currentPerson?.schoolNumber ||
+    currentPersonId ||
+    "-";
 
-    document
-        .getElementById("overlay")
-        .classList
-        .add("show");
-};
+  document.getElementById(
+    "profileName"
+  ).textContent = name;
 
+  document.getElementById(
+    "profileId"
+  ).textContent =
+    `학번 ${schoolNumber}`;
 
-window.closeMenu = function(){
+  document.getElementById(
+    "profileCircle"
+  ).textContent =
+    name.charAt(0).toUpperCase();
 
-    document
-        .getElementById("sidebar")
-        .classList
-        .remove("open");
-
-    document
-        .getElementById("overlay")
-        .classList
-        .remove("show");
-};
+}
 
 
-/* =========================================================
-   메시지 화면
-   ========================================================= */
+/*
+========================================================
+사용자 정보 확인
+========================================================
+
+기존 Firebase 로그인 사용자를 기준으로
+Coby 사용자 ID를 결정함.
+
+우선순위:
+
+1. Firestore users/{uid}
+2. Firestore users/{학번}
+3. Auth UID
+
+현재 네 기존 DB 구조에 맞춰 나중에 정확한
+필드명을 하나로 고정할 수 있음.
+========================================================
+*/
+
+async function resolveCurrentPerson(user){
+
+  if(!user){
+    throw new Error(
+      "로그인된 사용자가 없습니다."
+    );
+  }
+
+  /*
+  기존 users/{uid}
+  */
+
+  const uidRef =
+    doc(
+      getFirestore(mainApp),
+      "users",
+      user.uid
+    );
+
+  const uidSnap =
+    await getDoc(uidRef);
+
+  if(uidSnap.exists()){
+
+    const data =
+      uidSnap.data();
+
+    const schoolNumber =
+      data.schoolNumber ||
+      data.studentId ||
+      data.studentNumber ||
+      data.studentNo ||
+      data.id ||
+      null;
+
+    if(schoolNumber){
+
+      return {
+        id: String(schoolNumber),
+        data
+      };
+
+    }
+
+  }
+
+
+  /*
+  혹시 Auth UID 자체가 학번인 경우
+  */
+
+  if(/^\d{4,10}$/.test(user.uid)){
+
+    return {
+      id: user.uid,
+      data: {
+        name:
+          user.displayName ||
+          "사용자",
+
+        schoolNumber:
+          user.uid
+      }
+    };
+
+  }
+
+
+  /*
+  마지막 fallback
+
+  기존 서비스의 실제 사용자 문서 구조를
+  확인하기 전까지는 UID를 사용.
+  */
+
+  return {
+
+    id: user.uid,
+
+    data: {
+
+      name:
+        user.displayName ||
+        "사용자",
+
+      schoolNumber:
+        user.uid
+
+    }
+
+  };
+
+}
+
+
+/*
+========================================================
+Coby 사람 문서 생성
+========================================================
+*/
+
+async function ensureCobyPerson(){
+
+  if(!currentPersonId){
+    return;
+  }
+
+  const personRef =
+    doc(
+      db,
+      "people",
+      currentPersonId
+    );
+
+  const snap =
+    await getDoc(personRef);
+
+  if(!snap.exists()){
+
+    await setDoc(
+      personRef,
+      {
+
+        name:
+          currentPerson?.name ||
+          currentUser?.displayName ||
+          "사용자",
+
+        schoolNumber:
+          currentPersonId,
+
+        createdAt:
+          serverTimestamp(),
+
+        updatedAt:
+          serverTimestamp()
+
+      }
+    );
+
+  }else{
+
+    currentPerson =
+      snap.data();
+
+  }
+
+  updateProfile();
+
+}
+/*
+========================================================
+메시지 UI
+========================================================
+*/
+
+function addMessage(
+  text,
+  type,
+  messageId = null
+){
+
+  const messages =
+    document.getElementById(
+      "messages"
+    );
+
+  const message =
+    document.createElement("div");
+
+  message.className =
+    `message ${type}`;
+
+  message.textContent =
+    text;
+
+  if(messageId){
+
+    message.dataset.messageId =
+      messageId;
+
+  }
+
+  messages.appendChild(
+    message
+  );
+
+  messages.scrollTop =
+    messages.scrollHeight;
+
+  return message;
+
+}
+
+
+/*
+========================================================
+채팅 화면 초기화
+========================================================
+*/
 
 function clearMessages(){
 
-    messagesElement.innerHTML = "";
+  const messages =
+    document.getElementById(
+      "messages"
+    );
+
+  messages.innerHTML = "";
 
 }
 
 
-function addMessage(text,type,options={}){
+/*
+========================================================
+새 채팅
+========================================================
+*/
 
-    const message =
-        document.createElement("div");
+async function newChat(){
 
-    message.className =
-        `message ${type}`;
+  currentConversationId =
+    null;
 
-    if(options.id){
-        message.dataset.messageId =
-            options.id;
-    }
+  currentProjectId =
+    null;
 
-    message.textContent =
-        text;
+  currentProject =
+    null;
 
-    messagesElement.appendChild(message);
+  clearMessages();
 
-    messagesElement.scrollTop =
-        messagesElement.scrollHeight;
+  const welcome =
+    document.createElement("div");
 
-    return message;
-}
+  welcome.className =
+    "welcome";
 
+  welcome.id =
+    "welcome";
 
-/* =========================================================
-   Firebase Auth
-   ========================================================= */
+  welcome.innerHTML = `
+    <h2>Coby와 새로운 대화를 시작해요!</h2>
+    <p>
+      무엇을 만들고 싶은지 이야기해주세요 🚀
+    </p>
+  `;
 
-async function initializeAuth(){
+  document
+    .getElementById("messages")
+    .appendChild(welcome);
 
-    try{
+  closeMenu();
 
-        /*
-         * 현재는 익명 인증을 사용한다.
-         *
-         * 나중에 25withcoding 기존 로그인 시스템과
-         * Firebase Authentication을 연결할 경우
-         * 이 부분만 교체하면 된다.
-         */
-
-        await signInAnonymously(auth);
-
-    }catch(error){
-
-        console.error(
-            "Firebase Auth error:",
-            error
-        );
-
-        alert(
-            "Firebase 인증에 실패했습니다.\n" +
-            "Firebase Authentication에서 익명 인증이 " +
-            "활성화되어 있는지 확인해주세요."
-        );
-
-    }
+  document
+    .getElementById("userInput")
+    .focus();
 
 }
 
 
-/* =========================================================
-   사용자 문서
-   ========================================================= */
+/*
+========================================================
+대화 제목 생성
+========================================================
+*/
 
-async function initializePerson(){
+function createConversationTitle(text){
 
-    if(!currentUser){
-        throw new Error(
-            "Firebase 사용자가 없습니다."
-        );
-    }
+  let title =
+    text.trim();
 
-    currentPersonRef =
-        doc(
-            db,
-            "people",
-            STUDENT_NUMBER
-        );
+  if(title.length > 30){
 
+    title =
+      title.substring(0,30) +
+      "...";
 
-    const snapshot =
-        await getDoc(currentPersonRef);
+  }
 
-
-    if(!snapshot.exists()){
-
-        /*
-         * 최초 접속
-         */
-
-        await setDoc(
-            currentPersonRef,
-            {
-                studentNumber:
-                    STUDENT_NUMBER,
-
-                name:
-                    DEFAULT_NAME,
-
-                ownerUid:
-                    currentUser.uid,
-
-                createdAt:
-                    serverTimestamp(),
-
-                updatedAt:
-                    serverTimestamp()
-            }
-        );
-
-    }else{
-
-        /*
-         * 기존 사용자라면
-         * 이름이나 기본 정보는 유지한다.
-         *
-         * ownerUid가 현재 Auth UID와 다른 경우에는
-         * 임의로 덮어쓰지 않는다.
-         */
-
-        const data =
-            snapshot.data();
-
-        if(data.ownerUid !== currentUser.uid){
-
-            console.error(
-                "이 학번은 다른 Firebase 사용자에게 연결되어 있습니다."
-            );
-
-            throw new Error(
-                "이 학번은 현재 계정과 연결되어 있지 않습니다."
-            );
-        }
-
-    }
+  return title || "새 대화";
 
 }
 
 
-/* =========================================================
-   대화 제목 만들기
-   ========================================================= */
-
-function makeConversationTitle(text){
-
-    const clean =
-        text
-            .replace(/\s+/g," ")
-            .trim();
-
-    if(!clean){
-        return "새 대화";
-    }
-
-    return clean.length > 35
-        ? clean.slice(0,35) + "..."
-        : clean;
-}
-
-
-/* =========================================================
-   새 대화 생성
-   ========================================================= */
+/*
+========================================================
+새 대화 Firestore 생성
+========================================================
+*/
 
 async function createConversation(firstMessage){
 
-    if(!currentPersonRef){
-        throw new Error(
-            "사용자 정보가 준비되지 않았습니다."
-        );
-    }
+  if(!currentPersonId){
+    throw new Error(
+      "사용자 정보가 없습니다."
+    );
+  }
 
+  const conversationsRef =
+    collection(
+      db,
+      "people",
+      currentPersonId,
+      "conversations"
+    );
 
-    const title =
-        makeConversationTitle(firstMessage);
+  const conversationRef =
+    await addDoc(
+      conversationsRef,
+      {
 
+        title:
+          createConversationTitle(
+            firstMessage
+          ),
 
-    const conversationRef =
-        await addDoc(
-            collection(
-                currentPersonRef,
-                "conversations"
-            ),
-            {
+        projectId:
+          currentProjectId || null,
 
-                title:
+        createdAt:
+          serverTimestamp(),
 
-                    title,
+        updatedAt:
+          serverTimestamp()
 
-                projectId:
+      }
+    );
 
-                    currentProjectId || null,
+  currentConversationId =
+    conversationRef.id;
 
-                projectName:
-
-                    currentProjectName || null,
-
-                createdAt:
-
-                    serverTimestamp(),
-
-                updatedAt:
-
-                    serverTimestamp()
-            }
-        );
-
-
-    currentConversationId =
-        conversationRef.id;
-
-    currentConversationTitle =
-        title;
-
-
-    await loadRecentConversations();
-
-
-    return conversationRef;
+  return currentConversationId;
 
 }
 
 
-/* =========================================================
-   최근 대화
-   ========================================================= */
+/*
+========================================================
+메시지 저장
+========================================================
+*/
+
+async function saveMessage(
+  role,
+  content
+){
+
+  if(
+    !currentPersonId ||
+    !currentConversationId
+  ){
+
+    return;
+
+  }
+
+  const messagesRef =
+    collection(
+      db,
+      "people",
+      currentPersonId,
+      "conversations",
+      currentConversationId,
+      "messages"
+    );
+
+  await addDoc(
+    messagesRef,
+    {
+
+      role,
+
+      content,
+
+      createdAt:
+        serverTimestamp()
+
+    }
+  );
+
+
+  /*
+  대화 updatedAt 갱신
+  */
+
+  await updateDoc(
+    doc(
+      db,
+      "people",
+      currentPersonId,
+      "conversations",
+      currentConversationId
+    ),
+    {
+
+      updatedAt:
+        serverTimestamp()
+
+    }
+  );
+
+}
+
+
+/*
+========================================================
+최근 대화 불러오기
+========================================================
+*/
 
 async function loadRecentConversations(){
 
-    if(!currentPersonRef){
-        return;
-    }
-
-
-    chatListElement.innerHTML =
-        `<div class="chat-item">
-            대화를 불러오는 중...
-        </div>`;
-
-
-    try{
-
-        const conversationsRef =
-            collection(
-                currentPersonRef,
-                "conversations"
-            );
-
-
-        const conversationsQuery =
-            query(
-                conversationsRef,
-                orderBy(
-                    "updatedAt",
-                    "desc"
-                ),
-                limit(30)
-            );
-
-
-        const snapshot =
-            await getDocs(
-                conversationsQuery
-            );
-
-
-        chatListElement.innerHTML = "";
-
-
-        if(snapshot.empty){
-
-            chatListElement.innerHTML =
-                `<div class="chat-item">
-                    아직 대화가 없습니다.
-                </div>`;
-
-            return;
-
-        }
-
-
-        snapshot.forEach(
-            conversationSnapshot => {
-
-                const data =
-                    conversationSnapshot.data();
-
-
-                const item =
-                    document.createElement("div");
-
-
-                item.className =
-                    "chat-item";
-
-
-                item.dataset.id =
-                    conversationSnapshot.id;
-
-
-                if(
-                    conversationSnapshot.id ===
-                    currentConversationId
-                ){
-
-                    item.classList.add(
-                        "active"
-                    );
-
-                }
-
-
-                const title =
-                    data.title ||
-                    "제목 없는 대화";
-
-
-                item.innerHTML =
-                    `<span>
-                        ${escapeHtml(title)}
-                    </span>
-                    ${
-                        data.projectName
-                        ?
-                        `<span class="chat-project">
-                            📁 ${escapeHtml(data.projectName)}
-                        </span>`
-                        :
-                        ""
-                    }`;
-
-
-                item.addEventListener(
-                    "click",
-                    () => {
-
-                        loadConversation(
-                            conversationSnapshot.id
-                        );
-
-                    }
-                );
-
-
-                chatListElement.appendChild(
-                    item
-                );
-
-            }
-        );
-
-
-    }catch(error){
-
-        console.error(
-            "최근 대화 불러오기 실패:",
-            error
-        );
-
-
-        chatListElement.innerHTML =
-            `<div class="chat-item">
-                대화를 불러오지 못했습니다.
-            </div>`;
-
-    }
-
-}
-
-
-function escapeHtml(value){
-
-    return String(value)
-
-        .replaceAll("&","&amp;")
-
-        .replaceAll("<","&lt;")
-
-        .replaceAll(">","&gt;")
-
-        .replaceAll('"',"&quot;")
-
-        .replaceAll("'","&#039;");
-}
-/* =========================================================
-   대화 불러오기
-   ========================================================= */
-
-async function loadConversation(conversationId){
-
-    if(!currentPersonRef){
-        return;
-    }
-
-
-    try{
-
-        const conversationRef =
-            doc(
-                currentPersonRef,
-                "conversations",
-                conversationId
-            );
-
-
-        const conversationSnapshot =
-            await getDoc(
-                conversationRef
-            );
-
-
-        if(!conversationSnapshot.exists()){
-
-            alert(
-                "대화를 찾을 수 없습니다."
-            );
-
-            return;
-
-        }
-
-
-        const conversation =
-            conversationSnapshot.data();
-
-
-        currentConversationId =
-            conversationId;
-
-        currentConversationTitle =
-            conversation.title ||
-            "새 대화";
-
-
-        currentProjectId =
-            conversation.projectId ||
-            null;
-
-        currentProjectName =
-            conversation.projectName ||
-            null;
-
-
-        updateProjectUI();
-
-
-        clearMessages();
-
-
-        const messagesRef =
-            collection(
-                conversationRef,
-                "messages"
-            );
-
-
-        const messagesQuery =
-            query(
-                messagesRef,
-                orderBy(
-                    "createdAt",
-                    "asc"
-                )
-            );
-
-
-        const snapshot =
-            await getDocs(
-                messagesQuery
-            );
-
-
-        if(snapshot.empty){
-
-            showWelcome();
-
-        }else{
-
-            snapshot.forEach(
-                messageSnapshot => {
-
-                    const data =
-                        messageSnapshot.data();
-
-
-                    addMessage(
-                        data.content || "",
-                        data.role === "user"
-                            ? "user"
-                            : "ai",
-                        {
-                            id:
-                                messageSnapshot.id
-                        }
-                    );
-
-                }
-            );
-
-        }
-
-
-        document
-            .querySelectorAll(".chat-item")
-            .forEach(item => {
-
-                item.classList.toggle(
-                    "active",
-                    item.dataset.id ===
-                    conversationId
-                );
-
-            });
-
-
-        closeMenu();
-
-
-    }catch(error){
-
-        console.error(
-            "대화 불러오기 실패:",
-            error
-        );
-
-
-        alert(
-            "대화를 불러오지 못했습니다."
-        );
-
-    }
-
-}
-
-
-function showWelcome(){
-
-    clearMessages();
-
-    const welcome =
-        document.createElement("div");
-
-    welcome.className =
-        "welcome";
-
-    welcome.id =
-        "welcome";
-
-    welcome.innerHTML =
-        `
-        <h2>어서오세요, Trandon님!</h2>
-        <p>
-            무한한 상상의 나래를 펼쳐요 🚀
-            <br>
-            Coby가 당신의 코딩 여정을 함께합니다.
-        </p>
-        `;
-
-    messagesElement.appendChild(
-        welcome
+  const list =
+    document.getElementById(
+      "chatList"
     );
 
+  list.innerHTML = "";
+
+  if(!currentPersonId){
+
+    list.innerHTML =
+      `<div class="empty-chat">
+        로그인이 필요합니다.
+      </div>`;
+
+    return;
+
+  }
+
+  const ref =
+    collection(
+      db,
+      "people",
+      currentPersonId,
+      "conversations"
+    );
+
+  const q =
+    query(
+      ref,
+      orderBy(
+        "updatedAt",
+        "desc"
+      ),
+      limit(30)
+    );
+
+  const snapshot =
+    await getDocs(q);
+
+  if(snapshot.empty){
+
+    list.innerHTML =
+      `<div class="empty-chat">
+        아직 대화가 없습니다.
+      </div>`;
+
+    return;
+
+  }
+
+
+  snapshot.forEach(
+    conversationSnap => {
+
+      const data =
+        conversationSnap.data();
+
+      const item =
+        document.createElement(
+          "div"
+        );
+
+      item.className =
+        "chat-item";
+
+      item.dataset.id =
+        conversationSnap.id;
+
+      const title =
+        data.title ||
+        "제목 없는 대화";
+
+      item.innerHTML = `
+        <div class="chat-title">
+          ${escapeHtml(title)}
+        </div>
+        <div class="chat-date">
+          ${formatDate(data.updatedAt)}
+        </div>
+      `;
+
+      item.onclick =
+        () => loadConversation(
+          conversationSnap.id
+        );
+
+      list.appendChild(item);
+
+    }
+  );
+
 }
 
 
-/* =========================================================
-   메시지 저장
-   ========================================================= */
+/*
+========================================================
+대화 불러오기
+========================================================
+*/
 
-async function saveMessage(
-    conversationId,
-    role,
-    content
+async function loadConversation(
+  conversationId
 ){
 
-    if(!currentPersonRef){
-        throw new Error(
-            "사용자 정보가 없습니다."
-        );
+  if(!currentPersonId){
+    return;
+  }
+
+  currentConversationId =
+    conversationId;
+
+  const conversationRef =
+    doc(
+      db,
+      "people",
+      currentPersonId,
+      "conversations",
+      conversationId
+    );
+
+  const conversationSnap =
+    await getDoc(
+      conversationRef
+    );
+
+  if(!conversationSnap.exists()){
+    return;
+  }
+
+  const conversation =
+    conversationSnap.data();
+
+  currentProjectId =
+    conversation.projectId ||
+    null;
+
+  clearMessages();
+
+  const messagesRef =
+    collection(
+      db,
+      "people",
+      currentPersonId,
+      "conversations",
+      conversationId,
+      "messages"
+    );
+
+  const messagesQuery =
+    query(
+      messagesRef,
+      orderBy(
+        "createdAt",
+        "asc"
+      )
+    );
+
+  const snapshot =
+    await getDocs(
+      messagesQuery
+    );
+
+  snapshot.forEach(
+    messageSnap => {
+
+      const data =
+        messageSnap.data();
+
+      addMessage(
+        data.content || "",
+        data.role === "user"
+          ? "user"
+          : "ai",
+        messageSnap.id
+      );
+
     }
+  );
+
+  closeMenu();
+
+  document
+    .getElementById(
+      "userInput"
+    )
+    .focus();
+
+}
 
 
-    const conversationRef =
-        doc(
-            currentPersonRef,
-            "conversations",
-            conversationId
+/*
+========================================================
+프로젝트 목록
+========================================================
+*/
+
+async function loadProjects(){
+
+  const list =
+    document.getElementById(
+      "projectList"
+    );
+
+  list.innerHTML = "";
+
+  if(!currentPersonId){
+    return;
+  }
+
+  const projectsRef =
+    collection(
+      db,
+      "people",
+      currentPersonId,
+      "projects"
+    );
+
+  const snapshot =
+    await getDocs(
+      projectsRef
+    );
+
+  if(snapshot.empty){
+
+    list.innerHTML =
+      `<div class="empty-chat">
+        프로젝트가 없습니다.
+      </div>`;
+
+    return;
+
+  }
+
+  snapshot.forEach(
+    projectSnap => {
+
+      const data =
+        projectSnap.data();
+
+      const item =
+        document.createElement(
+          "div"
         );
 
+      item.className =
+        "project-item";
 
-    const messagesRef =
-        collection(
-            conversationRef,
-            "messages"
+      item.textContent =
+        `📁 ${data.name || "프로젝트"}`;
+
+      item.onclick =
+        () => selectProject(
+          projectSnap.id,
+          data
         );
 
+      list.appendChild(item);
 
+    }
+  );
+
+}
+
+
+/*
+========================================================
+프로젝트 선택
+========================================================
+*/
+
+async function selectProject(
+  projectId,
+  project
+){
+
+  currentProjectId =
+    projectId;
+
+  currentProject =
+    project;
+
+  closeMenu();
+
+  alert(
+    `프로젝트 "${project.name}"을(를) 선택했습니다.`
+  );
+
+}
+
+
+/*
+========================================================
+프로젝트 생성
+========================================================
+*/
+
+async function createProject(){
+
+  const nameInput =
+    document.getElementById(
+      "projectNameInput"
+    );
+
+  const descriptionInput =
+    document.getElementById(
+      "projectDescriptionInput"
+    );
+
+  const name =
+    nameInput.value.trim();
+
+  const description =
+    descriptionInput.value.trim();
+
+  if(!name){
+
+    alert(
+      "프로젝트 이름을 입력해주세요."
+    );
+
+    return;
+
+  }
+
+  if(!currentPersonId){
+
+    alert(
+      "사용자 정보를 확인하지 못했습니다."
+    );
+
+    return;
+
+  }
+
+  const projectsRef =
+    collection(
+      db,
+      "people",
+      currentPersonId,
+      "projects"
+    );
+
+  const projectRef =
     await addDoc(
-        messagesRef,
-        {
+      projectsRef,
+      {
 
-            role:
+        name,
 
-                role,
+        description,
 
-            content:
+        createdAt:
+          serverTimestamp(),
 
-                content,
+        updatedAt:
+          serverTimestamp()
 
-            createdAt:
-
-                serverTimestamp()
-
-        }
+      }
     );
 
+  currentProjectId =
+    projectRef.id;
 
-    await setDoc(
-        conversationRef,
-        {
+  currentProject = {
 
-            updatedAt:
-                serverTimestamp()
+    name,
 
-        },
-        {
-            merge:true
-        }
-    );
+    description
+
+  };
+
+  closeProjectModal();
+
+  await loadProjects();
 
 }
 
 
-/* =========================================================
-   AI에게 보낼 대화 기록
-   ========================================================= */
+/*
+========================================================
+HTML 안전 처리
+========================================================
+*/
 
-async function getConversationHistory(){
+function escapeHtml(text){
 
-    if(
-        !currentPersonRef ||
-        !currentConversationId
-    ){
+  return String(text)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 
-        return [];
+}
+
+
+/*
+========================================================
+날짜 표시
+========================================================
+*/
+
+function formatDate(timestamp){
+
+  if(!timestamp){
+    return "방금";
+  }
+
+  try{
+
+    const date =
+      timestamp.toDate();
+
+    return date.toLocaleDateString(
+      "ko-KR",
+      {
+        month:"numeric",
+        day:"numeric"
+      }
+    );
+
+  }catch{
+
+    return "방금";
+
+  }
+
+}
+/*
+========================================================
+프로젝트 모달
+========================================================
+*/
+
+window.openProjectModal =
+  function(){
+
+    document
+      .getElementById(
+        "projectModal"
+      )
+      .classList.add("show");
+
+    document
+      .getElementById(
+        "projectNameInput"
+      )
+      .focus();
+
+  };
+
+
+window.closeProjectModal =
+  function(){
+
+    document
+      .getElementById(
+        "projectModal"
+      )
+      .classList.remove("show");
+
+    document
+      .getElementById(
+        "projectNameInput"
+      )
+      .value = "";
+
+    document
+      .getElementById(
+        "projectDescriptionInput"
+      )
+      .value = "";
+
+  };
+
+
+/*
+========================================================
+사이드바
+========================================================
+*/
+
+window.openMenu =
+  function(){
+
+    document
+      .getElementById("sidebar")
+      .classList.add("open");
+
+    document
+      .getElementById("overlay")
+      .classList.add("show");
+
+  };
+
+
+window.closeMenu =
+  function(){
+
+    document
+      .getElementById("sidebar")
+      .classList.remove("open");
+
+    document
+      .getElementById("overlay")
+      .classList.remove("show");
+
+  };
+
+
+window.newChat =
+  newChat;
+
+window.createProject =
+  createProject;
+
+
+/*
+========================================================
+Coby API
+========================================================
+*/
+
+async function sendMessage(){
+
+  const input =
+    document.getElementById(
+      "userInput"
+    );
+
+  const button =
+    document.getElementById(
+      "sendButton"
+    );
+
+  const text =
+    input.value.trim();
+
+  if(
+    !text ||
+    button.disabled
+  ){
+
+    return;
+
+  }
+
+
+  /*
+  첫 메시지라면 새 대화 생성
+  */
+
+  if(!currentConversationId){
+
+    try{
+
+      await createConversation(
+        text
+      );
+
+    }catch(error){
+
+      console.error(
+        "Conversation creation error:",
+        error
+      );
+
+      alert(
+        "대화를 저장할 수 없습니다."
+      );
+
+      return;
 
     }
 
-
-    const conversationRef =
-        doc(
-            currentPersonRef,
-            "conversations",
-            currentConversationId
-        );
+  }
 
 
-    const messagesRef =
-        collection(
-            conversationRef,
-            "messages"
-        );
+  /*
+  화면에 사용자 메시지 표시
+  */
+
+  const welcome =
+    document.getElementById(
+      "welcome"
+    );
+
+  if(welcome){
+    welcome.remove();
+  }
+
+  addMessage(
+    text,
+    "user"
+  );
 
 
-    const messagesQuery =
-        query(
-            messagesRef,
-            orderBy(
-                "createdAt",
-                "asc"
-            ),
-                limit(30)
-        );
+  /*
+  Firebase에 사용자 메시지 저장
+  */
+
+  try{
+
+    await saveMessage(
+      "user",
+      text
+    );
+
+  }catch(error){
+
+    console.error(
+      "User message save error:",
+      error
+    );
+
+  }
 
 
-    const snapshot =
-        await getDocs(
-            messagesQuery
-        );
+  input.value = "";
+
+  button.disabled = true;
 
 
-    const history = [];
-
-
-    snapshot.forEach(
-        messageSnapshot => {
-
-            const data =
-                messageSnapshot.data();
-
-
-            history.push({
-
-                role:
-                    data.role,
-
-                content:
-                    data.content
-
-            });
-
-        }
+  const thinking =
+    addMessage(
+      "Coby가 생각하고 있어요...",
+      "ai"
     );
 
 
-    return history;
+  /*
+  프로젝트 컨텍스트 전달
 
-}
+  현재는 프로젝트 ID와 메시지만 전달.
+  이후 프로젝트의 과거 대화를 가져와서
+  Render API에 context로 전달할 수 있음.
+  */
+
+  const requestBody = {
+
+    message:text,
+
+    personId:
+      currentPersonId,
+
+    conversationId:
+      currentConversationId,
+
+    projectId:
+      currentProjectId || null
+
+  };
 
 
-/* =========================================================
-   Render API
-   ========================================================= */
-
-async function requestCoby(
-    text,
-    history
-){
+  try{
 
     const response =
-        await fetch(
-            "https://two5withcoding.onrender.com/chat",
-            {
-                method:"POST",
+      await fetch(
+        "https://two5withcoding.onrender.com/chat",
+        {
 
-                headers:{
-                    "Content-Type":
-                        "application/json"
-                },
+          method:"POST",
 
-                body:
-                    JSON.stringify({
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
 
-                        message:
-                            text,
+          body:
+            JSON.stringify(
+              requestBody
+            )
 
-                        history:
-                            history,
-
-                        projectId:
-                            currentProjectId,
-
-                        projectName:
-                            currentProjectName
-
-                    })
-            }
-        );
+        }
+      );
 
 
     if(!response.ok){
 
-        throw new Error(
-            `HTTP ${response.status}`
-        );
+      throw new Error(
+        `HTTP ${response.status}`
+      );
 
     }
 
 
     const data =
-        await response.json();
+      await response.json();
+
+    const answer =
+      data.answer ||
+      "응답이 없습니다.";
 
 
-    return data.answer ||
-        "응답이 없습니다.";
-
-}
+    thinking.textContent =
+      answer;
 
 
-/* =========================================================
-   메시지 전송
-   ========================================================= */
+    /*
+    AI 응답 저장
+    */
 
-async function sendMessage(){
-
-    const text =
-        inputElement.value.trim();
-
-
-    if(
-        !text ||
-        sendButton.disabled ||
-        !currentUser
-    ){
-
-        return;
-
-    }
-
-
-    const welcome =
-        document.getElementById(
-            "welcome"
-        );
-
-
-    if(welcome){
-        welcome.remove();
-    }
-
-
-    addMessage(
-        text,
-        "user"
+    await saveMessage(
+      "assistant",
+      answer
     );
 
 
-    inputElement.value = "";
+    /*
+    최근 대화 목록 갱신
+    */
 
-    sendButton.disabled = true;
+    await loadRecentConversations();
 
 
-    saveStatusElement.textContent =
-        "저장 중...";
+  }catch(error){
 
-
-    try{
-
-        /*
-         * 아직 대화가 없다면
-         * 첫 메시지를 이용해 자동으로 생성한다.
-         */
-
-        if(!currentConversationId){
-
-            await createConversation(
-                text
-            );
-
-        }
-
-
-        /*
-         * 사용자 메시지 저장
-         */
-
-        await saveMessage(
-            currentConversationId,
-            "user",
-            text
-        );
-
-
-        /*
-         * 최근 대화 목록 갱신
-         */
-
-        await loadRecentConversations();
-
-
-        /*
-         * AI에게 전달할 기존 대화 기록
-         */
-
-        const history =
-            await getConversationHistory();
-
-
-        const thinking =
-            addMessage(
-                "Coby가 생각하고 있어요...",
-                "ai"
-            );
-
-
-        thinking.classList.add(
-            "thinking"
-        );
-
-
-        /*
-         * Render /chat 호출
-         */
-
-        const answer =
-            await requestCoby(
-                text,
-                history
-            );
-
-
-        thinking.classList.remove(
-            "thinking"
-        );
-
-
-        thinking.textContent =
-            answer;
-
-
-        /*
-         * AI 응답 Firebase 저장
-         */
-
-        await saveMessage(
-            currentConversationId,
-            "assistant",
-            answer
-        );
-
-
-        saveStatusElement.textContent =
-            "저장됨";
-
-
-        /*
-         * 대화 목록에서 최신 대화를
-         * 위쪽으로 다시 정렬
-         */
-
-        await loadRecentConversations();
-
-
-    }catch(error){
-
-        console.error(
-            "Coby error:",
-            error
-        );
-
-
-        const errorMessage =
-            "Coby 서버 또는 Firebase에 문제가 발생했습니다.";
-
-
-        addMessage(
-            errorMessage,
-            "ai"
-        );
-
-
-        saveStatusElement.textContent =
-            "오류";
-
-
-    }finally{
-
-        sendButton.disabled = false;
-
-        inputElement.focus();
-
-    }
-
-}
-
-
-/* =========================================================
-   새 채팅
-   ========================================================= */
-
-async function startNewChat(){
-
-    currentConversationId =
-        null;
-
-    currentConversationTitle =
-        null;
-
-
-    clearMessages();
-
-
-    showWelcome();
-
-
-    currentProjectId =
-        null;
-
-    currentProjectName =
-        null;
-
-
-    updateProjectUI();
-
-
-    document
-        .querySelectorAll(".chat-item")
-        .forEach(item => {
-
-            item.classList.remove(
-                "active"
-            );
-
-        });
-
-
-    closeMenu();
-
-
-    inputElement.focus();
-
-}
-
-
-/* =========================================================
-   프로젝트 UI
-   ========================================================= */
-
-function updateProjectUI(){
-
-    if(currentProjectId){
-
-        projectBar.classList.add(
-            "show"
-        );
-
-
-        currentProjectNameElement.textContent =
-            currentProjectName ||
-            "이름 없는 프로젝트";
-
-    }else{
-
-        projectBar.classList.remove(
-            "show"
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   프로젝트 모달
-   ========================================================= */
-
-window.openProjectModal =
-    function(){
-
-        projectNameInput.value =
-            "";
-
-        projectDescriptionInput.value =
-            "";
-
-        projectModal.classList.add(
-            "show"
-        );
-
-        projectNameInput.focus();
-
-    };
-
-
-window.closeProjectModal =
-    function(){
-
-        projectModal.classList.remove(
-            "show"
-        );
-
-    };
-
-
-async function createProject(){
-
-    const name =
-        projectNameInput.value.trim();
-
-
-    const description =
-        projectDescriptionInput.value.trim();
-
-
-    if(!name){
-
-        alert(
-            "프로젝트 이름을 입력해주세요."
-        );
-
-        return;
-
-    }
-
-
-    if(!currentPersonRef){
-
-        alert(
-            "Firebase 사용자 정보가 아직 준비되지 않았습니다."
-        );
-
-        return;
-
-    }
-
-
-    try{
-
-        const projectRef =
-            await addDoc(
-                collection(
-                    currentPersonRef,
-                    "projects"
-                ),
-                {
-
-                    name:
-
-                        name,
-
-                    description:
-
-                        description,
-
-                    createdAt:
-
-                        serverTimestamp(),
-
-                    updatedAt:
-
-                        serverTimestamp()
-
-                }
-            );
-
-
-        currentProjectId =
-            projectRef.id;
-
-        currentProjectName =
-            name;
-
-
-        currentConversationId =
-            null;
-
-        currentConversationTitle =
-            null;
-
-
-        updateProjectUI();
-
-
-        clearMessages();
-
-        showWelcome();
-
-
-        closeProjectModal();
-
-        closeMenu();
-
-
-        inputElement.focus();
-
-
-    }catch(error){
-
-        console.error(
-            "프로젝트 생성 실패:",
-            error
-        );
-
-
-        alert(
-            "프로젝트를 만들지 못했습니다."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   프로젝트 버튼
-   ========================================================= */
-
-document
-    .getElementById("projectButton")
-    .addEventListener(
-        "click",
-        () => {
-
-            window.openProjectModal();
-
-        }
+    console.error(
+      "Coby API error:",
+      error
     );
 
+    thinking.textContent =
+      "Coby 서버에 연결하지 못했어요. Render 서버의 /chat API를 확인해주세요.";
 
-/* =========================================================
-   새 채팅 버튼
-   ========================================================= */
-
-document
-    .getElementById("newChatButton")
-    .addEventListener(
-        "click",
-        startNewChat
-    );
+  }
 
 
-/* =========================================================
-   Enter
-   ========================================================= */
+  button.disabled = false;
 
-inputElement.addEventListener(
-    "keydown",
-    event => {
+  input.focus();
 
-        if(
-            event.key === "Enter" &&
-            !event.shiftKey
-        ){
-
-            event.preventDefault();
-
-            sendMessage();
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   초기화
-   ========================================================= */
-
-onAuthStateChanged(
-    auth,
-    async user => {
-
-        if(!user){
-            return;
-        }
-
-
-        currentUser =
-            user;
-
-
-        try{
-
-            await initializePerson();
-
-            await loadRecentConversations();
-
-
-            document.getElementById(
-                "profileName"
-            ).textContent =
-                DEFAULT_NAME;
-
-
-            document.getElementById(
-                "profileStudentNumber"
-            ).textContent =
-                STUDENT_NUMBER;
-
-
-            document.getElementById(
-                "profileCircle"
-            ).textContent =
-                DEFAULT_NAME
-                    .charAt(0)
-                    .toUpperCase();
-
-
-            inputElement.focus();
-
-
-        }catch(error){
-
-            console.error(
-                "Coby 초기화 실패:",
-                error
-            );
-
-
-            chatListElement.innerHTML =
-                `
-                <div class="chat-item">
-                    Firebase 연결에 실패했습니다.
-                </div>
-                `;
-
-        }
-
-    }
-);
+}
 
 
 /*
- * 익명 인증 시작
- */
+========================================================
+키보드 Enter
+========================================================
+*/
 
-initializeAuth();
+document
+  .getElementById(
+    "userInput"
+  )
+  .addEventListener(
+    "keydown",
+    event => {
+
+      if(
+        event.key === "Enter" &&
+        !event.shiftKey
+      ){
+
+        event.preventDefault();
+
+        sendMessage();
+
+      }
+
+    }
+  );
+
+
+/*
+========================================================
+기존 Firebase 로그인 감시
+========================================================
+
+핵심 부분.
+
+Coby 자체 로그인은 만들지 않고,
+기존 points2026 Firebase의 로그인 상태를 사용함.
+========================================================
+*/
+
+onAuthStateChanged(
+  mainAuth,
+  async user => {
+
+    try{
+
+      if(!user){
+
+        currentUser = null;
+
+        currentPersonId = null;
+
+        setStatus(
+          "로그인이 필요합니다.",
+          false
+        );
+
+        document
+          .getElementById(
+            "profileName"
+          )
+          .textContent =
+            "로그인 필요";
+
+        document
+          .getElementById(
+            "profileId"
+          )
+          .textContent =
+            "-";
+
+        document
+          .getElementById(
+            "chatList"
+          )
+          .innerHTML =
+            `<div class="empty-chat">
+              기존 사이트에 로그인해주세요.
+            </div>`;
+
+        return;
+
+      }
+
+
+      currentUser =
+        user;
+
+
+      /*
+      기존 Firebase 사용자 정보 확인
+      */
+
+      const resolved =
+        await resolveCurrentPerson(
+          user
+        );
+
+
+      currentPersonId =
+        resolved.id;
+
+      currentPerson =
+        resolved.data;
+
+
+      /*
+      Coby DB의 people/{학번} 생성
+      */
+
+      await ensureCobyPerson();
+
+
+      setStatus(
+        `${currentPersonId} 로그인됨`,
+        true
+      );
+
+
+      /*
+      데이터 로딩
+      */
+
+      await loadRecentConversations();
+
+      await loadProjects();
+
+
+      updateProfile();
+
+
+    }catch(error){
+
+      console.error(
+        "Coby initialization error:",
+        error
+      );
+
+      setStatus(
+        "사용자 정보를 불러오지 못했습니다.",
+        false
+      );
+
+      console.error(error);
+
+    }
+
+  }
+);
 
 </script>
+
 </body>
 </html>
