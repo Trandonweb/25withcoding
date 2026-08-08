@@ -13,31 +13,17 @@ SYSTEM_PROMPT = """
 """.strip()
 
 
+API_URL = "https://api.friendli.ai/serverless/v1/chat/completions"
+MODEL = "LGAI-EXAONE/K-EXAONE-236B-A23B"
+
+
 def ask_ai(message: str):
-    """Coby의 실제 AI 모델 호출 함수.
+    """FriendliAI의 OpenAI-compatible K-EXAONE API로 Coby의 답변을 생성한다."""
 
-    Render 환경변수에 다음 값을 설정하면 OpenAI 호환 API를 사용한다.
-    EXAONE_API_URL  : API의 /v1/chat/completions 주소
-    EXAONE_API_KEY  : API 키
-    EXAONE_MODEL    : 사용할 EXAONE 모델명
-
-    아직 환경변수가 없으면 기존 테스트 응답을 사용해
-    배포된 Coby가 갑자기 깨지지 않도록 한다.
-    """
-
-    api_url = os.getenv("EXAONE_API_URL", "").strip()
     api_key = os.getenv("EXAONE_API_KEY", "").strip()
-    model = os.getenv("EXAONE_MODEL", "EXAONE-4.0-32B").strip()
 
-    # 실제 모델 API가 아직 설정되지 않은 경우의 안전한 테스트 모드
-    if not api_url or not api_key:
-        if "파이썬" in message or "python" in message.lower():
-            return "현재 Coby의 실제 AI 모델 연결을 준비 중입니다. 파이썬 질문은 정상적으로 받았습니다."
-
-        if "안녕" in message:
-            return "안녕하세요! 저는 Coby AI입니다. 이제 실제 AI 모델 연결을 준비하고 있어요."
-
-        return f"질문을 받았습니다: {message}\n현재는 AI 모델 API 설정 전 테스트 모드입니다."
+    if not api_key:
+        return "Coby의 AI API 키가 서버에 설정되지 않았어요. Render 환경변수를 확인해주세요."
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -45,18 +31,21 @@ def ask_ai(message: str):
     }
 
     payload = {
-        "model": model,
+        "model": MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": message},
         ],
         "temperature": 0.4,
         "max_tokens": 2048,
+        "chat_template_kwargs": {
+            "enable_thinking": True
+        },
     }
 
     try:
         response = requests.post(
-            api_url,
+            API_URL,
             headers=headers,
             json=payload,
             timeout=90,
@@ -65,7 +54,19 @@ def ask_ai(message: str):
         data = response.json()
 
         answer = data["choices"][0]["message"]["content"]
+
+        if not answer:
+            return "AI가 빈 응답을 반환했어요. 다시 시도해주세요."
+
         return answer.strip()
+
+    except requests.HTTPError as error:
+        print(f"EXAONE API HTTP error: {error}")
+        try:
+            print(f"EXAONE API response: {response.text[:2000]}")
+        except Exception:
+            pass
+        return "Coby의 AI 모델 요청이 거부되었어요. API 키나 모델 설정을 확인해주세요."
 
     except requests.RequestException as error:
         print(f"EXAONE API request failed: {error}")
@@ -73,4 +74,4 @@ def ask_ai(message: str):
 
     except (KeyError, IndexError, TypeError, ValueError) as error:
         print(f"EXAONE API response parsing failed: {error}")
-        return "AI 모델에서 예상하지 못한 응답이 왔어요. 서버 설정을 확인해주세요."
+        return "AI 모델에서 예상하지 못한 응답이 왔어요. Render 로그를 확인해주세요."
