@@ -3,606 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Coby AI</title>
-    
 <style>
-
-*{
-    box-sizing:border-box;
-}
-
-body{
-    margin:0;
-    font-family:
-    "Pretendard",
-    "Noto Sans KR",
-    Arial,
-    sans-serif;
-
-    background:#ffffff;
-    color:#222;
-    height:100vh;
-    overflow:hidden;
-}
-
-
-/* ===== 상단 ===== */
-
-.header{
-
-    height:64px;
-
-    display:flex;
-    align-items:center;
-
-    padding:0 20px;
-
-    position:relative;
-
-    background:
-    linear-gradient(
-        to bottom,
-        #eeeeee,
-        #ffffff
-    );
-
-}
-
-
-.menu-btn{
-
-    width:42px;
-    height:42px;
-
-    border-radius:12px;
-
-    border:none;
-
-    background:white;
-
-    font-size:24px;
-
-    cursor:pointer;
-
-}
-
-
-.logo{
-
-    margin-left:15px;
-
-    font-size:22px;
-    font-weight:700;
-
-    color:#27ae60;
-
-}
-
-
-
-/* ===== 사이드바 ===== */
-
-.sidebar{
-
-    position:fixed;
-
-    left:-280px;
-    top:0;
-
-    width:280px;
-    height:100vh;
-
-    background:white;
-
-    box-shadow:
-    3px 0 20px rgba(0,0,0,0.12);
-
-    transition:.3s;
-
-    z-index:10;
-
-    display:flex;
-
-    flex-direction:column;
-
-}
-
-
-
-.sidebar.open{
-
-    left:0;
-
-}
-
-
-
-.side-top{
-
-    padding:20px;
-
-}
-
-
-
-.side-btn{
-
-    width:100%;
-
-    padding:14px;
-
-    margin-bottom:10px;
-
-    border:none;
-
-    border-radius:12px;
-
-    background:#f5f5f5;
-
-    text-align:left;
-
-    font-size:15px;
-
-    cursor:pointer;
-
-}
-
-
-
-.side-title{
-
-    margin-top:20px;
-
-    font-size:13px;
-
-    color:#777;
-
-}
-
-
-.chat-list{
-
-    flex:1;
-
-    overflow:auto;
-
-    padding:10px 20px;
-
-}
-
-
-
-.chat-item{
-
-    padding:10px;
-
-    border-radius:10px;
-
-    cursor:pointer;
-
-}
-
-
-
-.chat-item:hover{
-
-    background:#f1f1f1;
-
-}
-
-
-
-.profile{
-
-    margin:15px;
-
-    padding:12px;
-
-    border-radius:30px;
-
-    background:#f3f3f3;
-
-    display:flex;
-
-    align-items:center;
-
-    cursor:pointer;
-
-}
-
-
-.profile-circle{
-
-    width:35px;
-    height:35px;
-
-    border-radius:50%;
-
-    background:#27ae60;
-
-    color:white;
-
-    display:flex;
-
-    justify-content:center;
-    align-items:center;
-
-    margin-right:10px;
-
-}
-
-
-
-
-/* ===== 채팅 영역 ===== */
-
-
-.main{
-
-    height:calc(100vh - 64px);
-
-    display:flex;
-
-    flex-direction:column;
-
-}
-
-
-
-.messages{
-
-    flex:1;
-
-    overflow:auto;
-
-    padding:
-
-    30px
-    max(20px,8vw);
-
-}
-
-
-
-.welcome{
-
-    margin-top:100px;
-
-    text-align:center;
-
-}
-
-
-
-.welcome h2{
-
-    font-size:28px;
-
-}
-
-
-
-.welcome p{
-
-    color:#666;
-
-    font-size:16px;
-
-}
-
-
-
-
-.message{
-
-    max-width:800px;
-
-    margin:20px auto;
-
-    padding:15px;
-
-    border-radius:15px;
-
-}
-
-
-
-.ai{
-
-    background:#f5f5f5;
-
-}
-
-
-
-.user{
-
-    background:#27ae60;
-
-    color:white;
-
-    margin-left:auto;
-
-}
-
-
-
-
-/* ===== 입력창 ===== */
-
-
-.input-area{
-
-    padding:20px;
-
-    display:flex;
-
-    justify-content:center;
-
-}
-
-
-
-.input-box{
-
-    width:min(800px,90%);
-
-    display:flex;
-
-    background:white;
-
-    border:
-
-    1px solid #ddd;
-
-    border-radius:25px;
-
-    padding:8px;
-
-}
-
-
-
-input{
-
-    flex:1;
-
-    border:none;
-
-    outline:none;
-
-    padding:12px;
-
-    font-size:15px;
-
-}
-
-
-
-.send{
-
-    width:45px;
-
-    height:45px;
-
-    border-radius:50%;
-
-    border:none;
-
-    background:#27ae60;
-
-    color:white;
-
-    cursor:pointer;
-
-}
-
-
-.overlay{
-
-    display:none;
-
-    position:fixed;
-
-    inset:0;
-
-    background:rgba(0,0,0,.2);
-
-    z-index:5;
-
-}
-
-
-.overlay.show{
-
-    display:block;
-
-}
-
-
+*{box-sizing:border-box}
+body{margin:0;font-family:"Pretendard","Noto Sans KR",Arial,sans-serif;background:#fff;color:#222;height:100vh;overflow:hidden}
+.header{height:64px;display:flex;align-items:center;padding:0 20px;position:relative;background:linear-gradient(to bottom,#eee,#fff)}
+.menu-btn{width:42px;height:42px;border-radius:12px;border:none;background:#fff;font-size:24px;cursor:pointer}
+.logo{margin-left:15px;font-size:22px;font-weight:700;color:#27ae60}
+.sidebar{position:fixed;left:-280px;top:0;width:280px;height:100vh;background:#fff;box-shadow:3px 0 20px rgba(0,0,0,.12);transition:.3s;z-index:10;display:flex;flex-direction:column}
+.sidebar.open{left:0}
+.side-top{padding:20px}
+.side-btn{width:100%;padding:14px;margin-bottom:10px;border:none;border-radius:12px;background:#f5f5f5;text-align:left;font-size:15px;cursor:pointer}
+.side-title{margin-top:20px;font-size:13px;color:#777}
+.chat-list{flex:1;overflow:auto;padding:10px 20px}
+.chat-item{padding:10px;border-radius:10px;cursor:pointer}
+.chat-item:hover{background:#f1f1f1}
+.profile{margin:15px;padding:12px;border-radius:30px;background:#f3f3f3;display:flex;align-items:center;cursor:pointer}
+.profile-circle{width:35px;height:35px;border-radius:50%;background:#27ae60;color:#fff;display:flex;justify-content:center;align-items:center;margin-right:10px}
+.main{height:calc(100vh - 64px);display:flex;flex-direction:column}
+.messages{flex:1;overflow:auto;padding:30px max(20px,8vw)}
+.welcome{margin-top:100px;text-align:center}
+.welcome h2{font-size:28px}
+.welcome p{color:#666;font-size:16px}
+.message{max-width:800px;margin:20px auto;padding:15px;border-radius:15px;white-space:pre-wrap;word-break:break-word}
+.ai{background:#f5f5f5}
+.user{background:#27ae60;color:#fff;margin-left:auto}
+.input-area{padding:20px;display:flex;justify-content:center}
+.input-box{width:min(800px,90%);display:flex;background:#fff;border:1px solid #ddd;border-radius:25px;padding:8px}
+input{flex:1;border:none;outline:none;padding:12px;font-size:15px}
+.send{width:45px;height:45px;border-radius:50%;border:none;background:#27ae60;color:#fff;cursor:pointer;font-size:18px}
+.send:disabled{opacity:.6;cursor:not-allowed}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:5}
+.overlay.show{display:block}
 </style>
-
 </head>
-
-
 <body>
-
-
 <div class="header">
-
-
-<button class="menu-btn" onclick="openMenu()">
-☰
-</button>
-
-
-<div class="logo">
-🤖 Coby AI
+<button class="menu-btn" onclick="openMenu()">☰</button>
+<div class="logo">🤖 Coby AI</div>
 </div>
-
-
-</div>
-
-
-
 <div class="sidebar" id="sidebar">
-
-
 <div class="side-top">
-
-
-<button class="side-btn">
-＋ 새 채팅
-</button>
-
-
-<button class="side-btn">
-📁 프로젝트
-</button>
-
-
-<div class="side-title">
-최근 대화
+<button class="side-btn">＋ 새 채팅</button>
+<button class="side-btn">📁 프로젝트</button>
+<div class="side-title">최근 대화</div>
 </div>
-
-
-</div>
-
-
 <div class="chat-list">
-
-
-<div class="chat-item">
-Python 공부
+<div class="chat-item">Python 공부</div>
+<div class="chat-item">AI vs HUMAN 수정</div>
+<div class="chat-item">Firebase 오류 해결</div>
 </div>
-
-
-<div class="chat-item">
-AI vs HUMAN 수정
+<div class="profile"><div class="profile-circle">T</div>설정</div>
 </div>
-
-
-<div class="chat-item">
-Firebase 오류 해결
-</div>
-
-
-</div>
-
-
-<div class="profile">
-
-<div class="profile-circle">
-T
-</div>
-
-설정
-
-</div>
-
-
-
-</div>
-
-
-
-<div class="overlay" id="overlay"
-onclick="closeMenu()"></div>
-
-
-
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
 <div class="main">
-
-
-<div class="messages">
-
-
-<div class="welcome">
-
-
-<h2>
-어서오세요, Trandon님!
-</h2>
-
-
-<p>
-무한한 상상의 나래를 펼쳐요 🚀
-<br>
-Coby가 당신의 코딩 여정을 함께합니다.
-</p>
-
-
+<div class="messages" id="messages">
+<div class="welcome" id="welcome">
+<h2>어서오세요, Trandon님!</h2>
+<p>무한한 상상의 나래를 펼쳐요 🚀<br>Coby가 당신의 코딩 여정을 함께합니다.</p>
 </div>
-
-
 </div>
-
-
-
-
 <div class="input-area">
-
-
 <div class="input-box">
-
-
-<input placeholder="Coby에게 무엇이든 물어보세요">
-
-
-<button class="send">
-↑
-</button>
-
-
+<input id="userInput" placeholder="Coby에게 무엇이든 물어보세요" autocomplete="off">
+<button class="send" id="sendButton" onclick="sendMessage()">↑</button>
 </div>
-
-
 </div>
-
-
 </div>
-
-
-
 <script>
-
-
-function openMenu(){
-
-document
-.getElementById("sidebar")
-.classList
-.add("open");
-
-
-document
-.getElementById("overlay")
-.classList
-.add("show");
-
+function openMenu(){document.getElementById("sidebar").classList.add("open");document.getElementById("overlay").classList.add("show")}
+function closeMenu(){document.getElementById("sidebar").classList.remove("open");document.getElementById("overlay").classList.remove("show")}
+function addMessage(text,type){const messages=document.getElementById("messages");const message=document.createElement("div");message.className=`message ${type}`;message.textContent=text;messages.appendChild(message);messages.scrollTop=messages.scrollHeight;return message}
+async function sendMessage(){
+const input=document.getElementById("userInput");
+const button=document.getElementById("sendButton");
+const text=input.value.trim();
+if(!text||button.disabled)return;
+const welcome=document.getElementById("welcome");
+if(welcome)welcome.remove();
+addMessage(text,"user");
+input.value="";
+button.disabled=true;
+const thinking=addMessage("Coby가 생각하고 있어요...","ai");
+try{
+const response=await fetch("https://two5withcoding.onrender.com/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text})});
+if(!response.ok)throw new Error(`HTTP ${response.status}`);
+const data=await response.json();
+thinking.textContent=data.answer||"응답이 없습니다.";
+}catch(error){
+console.error("Coby API error:",error);
+thinking.textContent="Coby 서버에 연결하지 못했어요. Render 서버의 /chat API가 준비되어 있는지 확인해주세요.";
 }
-
-
-
-function closeMenu(){
-
-document
-.getElementById("sidebar")
-.classList
-.remove("open");
-
-
-document
-.getElementById("overlay")
-.classList
-.remove("show");
-
+button.disabled=false;
+input.focus();
 }
-
-
+document.getElementById("userInput").addEventListener("keydown",event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();sendMessage()}});
 </script>
-
-
 </body>
 </html>
