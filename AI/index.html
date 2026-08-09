@@ -29,15 +29,18 @@
         <div id="projectList"><div class="empty-chat">프로젝트가 없습니다.</div></div>
     </div>
     <div class="profile-area">
-        <button class="profile" type="button" onclick="goHome()" aria-label="홈으로 이동">
+        <button class="profile" type="button" onclick="toggleProfileMenu(event)" aria-label="프로필 메뉴 열기" aria-expanded="false">
             <div class="profile-circle" id="profileCircle">?</div>
             <div class="profile-info">
                 <div class="profile-name" id="profileName">사용자 확인 중...</div>
                 <div class="profile-id" id="profileId">-</div>
             </div>
-            <span class="profile-home-icon">⌂</span>
+            <span class="profile-chevron">⌃</span>
         </button>
-        <button class="logout-btn" type="button" onclick="logout()">↪ 로그아웃</button>
+        <div class="profile-menu" id="profileMenu" hidden>
+            <button type="button" class="profile-menu-item" onclick="goHome()"><span>⌂</span><span>홈으로</span></button>
+            <button type="button" class="profile-menu-item profile-menu-logout" onclick="logout()"><span>↪</span><span>로그아웃</span></button>
+        </div>
     </div>
 </aside>
 
