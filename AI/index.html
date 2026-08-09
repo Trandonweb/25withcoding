@@ -19,6 +19,8 @@
     <div class="side-top">
         <button class="side-btn" onclick="newChat()">＋ 새 채팅</button>
         <button class="side-btn" onclick="openProjectModal()">📁 새 프로젝트</button>
+        <button class="side-btn" onclick="openTrash()">🗑 휴지통</button>
+        <button class="side-btn admin-only" id="adminLogsButton" onclick="openAdminLogs()" hidden>⚙️ 설정 · 대화 로그</button>
         <div class="side-title">최근 대화</div>
     </div>
     <div class="chat-list" id="chatList"><div class="empty-chat">대화를 불러오는 중...</div></div>
@@ -61,6 +63,22 @@
             <button class="cancel-btn" onclick="closeProjectModal()">취소</button>
             <button class="create-btn" onclick="createProject()">만들기</button>
         </div>
+    </div>
+</div>
+
+<div class="system-modal" id="trashModal" aria-hidden="true">
+    <div class="system-box">
+        <div class="system-head"><h3>🗑 휴지통</h3><button class="modal-close" onclick="closeTrash()">×</button></div>
+        <p class="system-desc">삭제한 대화는 휴지통에 보관됩니다. 일반 사용자는 여기에서 복구할 수 있습니다.</p>
+        <div id="trashList" class="system-list"><div class="empty-chat">휴지통을 불러오는 중...</div></div>
+    </div>
+</div>
+
+<div class="system-modal" id="adminLogsModal" aria-hidden="true">
+    <div class="system-box system-box-large">
+        <div class="system-head"><div><h3>⚙️ 대화 로그</h3><p class="system-desc">회장/부회장 전용 관리 화면입니다.</p></div><button class="modal-close" onclick="closeAdminLogs()">×</button></div>
+        <div class="admin-toolbar"><button class="side-btn" onclick="loadAdminLogs()">새로고침</button></div>
+        <div id="adminLogsList" class="system-list"><div class="empty-chat">로그를 불러오는 중...</div></div>
     </div>
 </div>
 
