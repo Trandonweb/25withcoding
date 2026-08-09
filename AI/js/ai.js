@@ -1,5 +1,5 @@
 import { state, $ } from "./state.js";
-import { db, API_URL, doc, getDoc, getDocs, addDoc, collection, query, orderBy, limit, serverTimestamp, updateDoc } from "./firebase.js";
+import { db, API_URL, doc, getDoc, getDocs, addDoc, query, orderBy, limit, startAfter, serverTimestamp, updateDoc } from "./firebase.js";
 import { messagesRef, createConversation, loadChats } from "./conversations.js";
 import { getProjectContext } from "./projects.js";
 import { addMessage } from "./ui.js";
@@ -25,38 +25,23 @@ const extractMessage = item => {
     return { role: data.role, content: data.content };
 };
 
-/**
- * 기본 AI 컨텍스트는 가장 최근 40개만 가져온다.
- * Firestore는 최신순으로 가져온 뒤 다시 시간순으로 뒤집는다.
- */
 export async function getConversationHistory() {
     if (!state.currentConversationId) return [];
     const snapshot = await getDocs(query(messagesRef(), orderBy("createdAt", "desc"), limit(40)));
     return snapshot.docs.reverse().map(extractMessage);
 }
 
-/**
- * 필요할 때만 더 오래된 메시지를 추가 조회한다.
- * beforeTimestamp는 현재 AI 컨텍스트에서 가장 오래된 메시지의 createdAt이다.
- */
 export async function getOlderConversationHistory(beforeTimestamp, count = 40) {
     if (!state.currentConversationId || !beforeTimestamp) return [];
+
     const snapshot = await getDocs(query(
         messagesRef(),
         orderBy("createdAt", "desc"),
-        limit(40 + count)
+        startAfter(beforeTimestamp),
+        limit(count)
     ));
 
-    const older = snapshot.docs
-        .filter(item => {
-            const createdAt = item.data().createdAt;
-            return createdAt?.toMillis && createdAt.toMillis() < beforeTimestamp.toMillis();
-        })
-        .slice(0, count)
-        .reverse()
-        .map(extractMessage);
-
-    return older;
+    return snapshot.docs.reverse().map(extractMessage);
 }
 
 function extractAssistantText(data) {
@@ -87,11 +72,7 @@ export async function sendMessage() {
     input.style.height = "auto";
 
     try {
-        await addDoc(messagesRef(), {
-            role: "user",
-            content: text,
-            createdAt: serverTimestamp()
-        });
+        await addDoc(messagesRef(), { role: "user", content: text, createdAt: serverTimestamp() });
 
         const conversationReference = doc(db, "people", state.currentUserId, "conversations", state.currentConversationId);
         const conversationSnapshot = await getDoc(conversationReference);
@@ -133,11 +114,7 @@ export async function sendMessage() {
         const result = await response.json();
         const answer = String(extractAssistantText(result));
         addMessage("assistant", answer);
-        await addDoc(messagesRef(), {
-            role: "assistant",
-            content: answer,
-            createdAt: serverTimestamp()
-        });
+        await addDoc(messagesRef(), { role: "assistant", content: answer, createdAt: serverTimestamp() });
         await updateDoc(conversationReference, { updatedAt: serverTimestamp() });
         await loadChats();
     } catch (error) {
