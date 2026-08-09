@@ -2,82 +2,2869 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#27ae60">
 <title>Coby AI</title>
+
 <style>
-*{box-sizing:border-box}
-:root{--primary:#27ae60;--bg:#fff;--card:#f5f5f5;--text:#222;--sub:#777;--border:#ddd}
-body{margin:0;font-family:"Pretendard","Noto Sans KR","Malgun Gothic",Arial,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
-.header{height:64px;display:flex;align-items:center;padding:0 20px;background:linear-gradient(to bottom,#eee,#fff);border-bottom:1px solid #eee}
-.menu-btn{width:42px;height:42px;border:0;border-radius:12px;background:#fff;font-size:24px;cursor:pointer}.logo{margin-left:15px;font-size:22px;font-weight:700;color:var(--primary)}
-.user-status{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub)}.status-dot{width:9px;height:9px;border-radius:50%;background:#aaa}.status-dot.connected{background:#27ae60}
-.sidebar{position:fixed;left:-300px;top:0;width:300px;height:100vh;background:#fff;box-shadow:3px 0 20px rgba(0,0,0,.12);transition:.3s;z-index:10;display:flex;flex-direction:column}.sidebar.open{left:0}
-.side-top{padding:20px}.side-btn{width:100%;padding:14px;margin-bottom:10px;border:0;border-radius:12px;background:#f5f5f5;text-align:left;font-size:15px;cursor:pointer}.side-btn:hover{background:#eaeaea}.side-title{margin-top:20px;margin-bottom:5px;font-size:13px;color:#777}
-.chat-list{flex:1;overflow:auto;padding:10px 20px}.chat-item{padding:12px;border-radius:10px;cursor:pointer;margin-bottom:4px}.chat-item:hover{background:#f1f1f1}.chat-item.active{background:#e8f5e9;color:#188b48}.chat-title{font-size:14px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.chat-date{font-size:11px;color:#999;margin-top:4px}
-.project-section{padding:10px 20px;border-top:1px solid #eee;max-height:230px;overflow:auto}.project-title{font-size:13px;color:#777;margin-bottom:8px}.project-item{padding:9px 10px;border-radius:9px;cursor:pointer;font-size:14px}.project-item:hover{background:#f1f1f1}.project-item.active{background:#e8f5e9;color:#188b48;font-weight:600}
-.profile{margin:15px;padding:12px;border-radius:30px;background:#f3f3f3;display:flex;align-items:center}.profile-circle{width:35px;height:35px;border-radius:50%;background:var(--primary);color:#fff;display:flex;justify-content:center;align-items:center;margin-right:10px;font-weight:bold}.profile-info{display:flex;flex-direction:column}.profile-name{font-weight:bold;font-size:14px}.profile-id{font-size:11px;color:#888}
-.main{height:calc(100vh - 64px);display:flex;flex-direction:column}.messages{flex:1;overflow:auto;padding:30px max(20px,8vw)}.welcome{margin-top:100px;text-align:center}.welcome h2{font-size:28px}.welcome p{color:#666;font-size:16px}.message{max-width:800px;margin:20px auto;padding:15px;border-radius:15px;white-space:pre-wrap;word-break:break-word;line-height:1.6}.ai{background:#f5f5f5}.user{background:var(--primary);color:#fff;margin-left:auto}.message-label{font-size:11px;opacity:.65;margin-bottom:5px;font-weight:700}
-.input-area{padding:20px;display:flex;justify-content:center}.input-box{width:min(800px,90%);display:flex;background:#fff;border:1px solid #ddd;border-radius:25px;padding:8px;box-shadow:0 2px 10px rgba(0,0,0,.04)}input{flex:1;border:none;outline:none;padding:12px;font-size:15px}.send{width:45px;height:45px;border-radius:50%;border:0;background:var(--primary);color:#fff;cursor:pointer;font-size:18px}.send:disabled{opacity:.6;cursor:not-allowed}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:5}.overlay.show{display:block}.empty-chat{color:#999;text-align:center;padding:20px 10px;font-size:13px}
-.project-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30;align-items:center;justify-content:center}.project-modal.show{display:flex}.modal-box{width:min(420px,90%);background:#fff;border-radius:20px;padding:25px;box-shadow:0 10px 40px rgba(0,0,0,.2)}.modal-box h3{margin-top:0}.modal-box input{width:100%;border:1px solid var(--border);border-radius:12px;margin:10px 0}.modal-buttons{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.modal-buttons button{padding:10px 16px;border:0;border-radius:10px;cursor:pointer}.cancel-btn{background:#eee}.create-btn{background:var(--primary);color:#fff}
-@media(max-width:600px){.messages{padding:20px 12px}.message{max-width:95%}.user-status{display:none}.sidebar{width:290px}}
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #27ae60;
+    --primary-dark: #188b48;
+
+    --bg: #ffffff;
+    --surface: #f7f7f7;
+    --surface-hover: #eeeeee;
+
+    --text: #222222;
+    --sub: #777777;
+    --border: #e4e4e4;
+
+    --header-height: 64px;
+    --input-height: 90px;
+
+    --sidebar-width: 320px;
+}
+
+/* =========================
+   기본
+========================= */
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        "Malgun Gothic",
+        Arial,
+        sans-serif;
+
+    background: var(--bg);
+    color: var(--text);
+
+    overflow: hidden;
+}
+
+button,
+input {
+    font-family: inherit;
+}
+
+button {
+    touch-action: manipulation;
+}
+
+/* =========================
+   헤더
+========================= */
+
+.header {
+    position: relative;
+    z-index: 30;
+
+    width: 100%;
+    height: var(--header-height);
+
+    display: flex;
+    align-items: center;
+
+    padding:
+        0
+        max(14px, 2vw);
+
+    background: rgba(255, 255, 255, 0.95);
+
+    border-bottom: 1px solid var(--border);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.menu-btn {
+    width: 42px;
+    height: 42px;
+
+    border: 0;
+    border-radius: 12px;
+
+    background: var(--surface);
+
+    font-size: 23px;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.15s;
+}
+
+.menu-btn:hover {
+    background: var(--surface-hover);
+}
+
+.menu-btn:active {
+    transform: scale(0.94);
+}
+
+.logo {
+    margin-left: 14px;
+
+    font-size: 21px;
+    font-weight: 800;
+
+    color: var(--primary);
+
+    white-space: nowrap;
+}
+
+.user-status {
+    margin-left: auto;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    font-size: 13px;
+    color: var(--sub);
+
+    max-width: 40%;
+}
+
+.status-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+
+    flex: none;
+
+    border-radius: 50%;
+
+    background: #aaa;
+}
+
+.status-dot.connected {
+    background: var(--primary);
+}
+
+/* =========================
+   사이드바
+========================= */
+
+.sidebar {
+    position: fixed;
+
+    top: 0;
+    left: calc(var(--sidebar-width) * -1);
+
+    width: var(--sidebar-width);
+    max-width: 88vw;
+
+    height: 100dvh;
+
+    background: #fff;
+
+    box-shadow:
+        5px 0 25px rgba(0, 0, 0, 0.12);
+
+    z-index: 100;
+
+    display: flex;
+    flex-direction: column;
+
+    transition: left 0.25s ease;
+
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sidebar.open {
+    left: 0;
+}
+
+.side-top {
+    padding: 18px;
+}
+
+.side-btn {
+    width: 100%;
+
+    min-height: 48px;
+
+    padding: 12px 14px;
+
+    margin-bottom: 9px;
+
+    border: 0;
+    border-radius: 13px;
+
+    background: var(--surface);
+
+    text-align: left;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition: 0.15s;
+}
+
+.side-btn:hover {
+    background: var(--surface-hover);
+}
+
+.side-btn:active {
+    transform: scale(0.98);
+}
+
+.side-title {
+    margin:
+        18px
+        2px
+        7px;
+
+    font-size: 12px;
+
+    color: var(--sub);
+
+    font-weight: 700;
+}
+
+/* =========================
+   대화 목록
+========================= */
+
+.chat-list {
+    flex: 1;
+
+    min-height: 100px;
+
+    overflow-y: auto;
+
+    padding:
+        6px
+        14px
+        12px;
+
+    -webkit-overflow-scrolling: touch;
+}
+
+.chat-item {
+    padding: 12px;
+
+    border-radius: 11px;
+
+    cursor: pointer;
+
+    margin-bottom: 3px;
+
+    transition: 0.15s;
+}
+
+.chat-item:hover {
+    background: var(--surface);
+}
+
+.chat-item.active {
+    background: #e8f5e9;
+    color: var(--primary-dark);
+}
+
+.chat-title {
+    font-size: 14px;
+
+    font-weight: 600;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+.chat-date {
+    font-size: 11px;
+
+    color: #999;
+
+    margin-top: 4px;
+}
+
+/* =========================
+   프로젝트
+========================= */
+
+.project-section {
+    padding:
+        12px
+        18px;
+
+    border-top: 1px solid var(--border);
+
+    max-height: 220px;
+
+    overflow-y: auto;
+}
+
+.project-title {
+    font-size: 12px;
+
+    color: var(--sub);
+
+    font-weight: 700;
+
+    margin-bottom: 7px;
+}
+
+.project-item {
+    padding: 10px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    transition: 0.15s;
+}
+
+.project-item:hover {
+    background: var(--surface);
+}
+
+.project-item.active {
+    background: #e8f5e9;
+
+    color: var(--primary-dark);
+
+    font-weight: 600;
+}
+
+/* =========================
+   프로필
+========================= */
+
+.profile {
+    margin:
+        12px
+        14px
+        14px;
+
+    padding:
+        11px
+        13px;
+
+    border-radius: 28px;
+
+    background: var(--surface);
+
+    display: flex;
+    align-items: center;
+}
+
+.profile-circle {
+    width: 36px;
+    height: 36px;
+
+    flex: none;
+
+    border-radius: 50%;
+
+    background: var(--primary);
+
+    color: #fff;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 10px;
+
+    font-weight: bold;
+}
+
+.profile-info {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-name {
+    font-weight: bold;
+
+    font-size: 14px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+.profile-id {
+    font-size: 11px;
+
+    color: #888;
+
+    margin-top: 2px;
+}
+
+/* =========================
+   오버레이
+========================= */
+
+.overlay {
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.25);
+
+    z-index: 90;
+}
+
+.overlay.show {
+    display: block;
+}
+
+/* =========================
+   메인
+========================= */
+
+.main {
+    position: relative;
+
+    height: calc(100dvh - var(--header-height));
+
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+}
+
+/* =========================
+   메시지
+========================= */
+
+.messages {
+    flex: 1;
+
+    min-height: 0;
+
+    overflow-y: auto;
+
+    padding:
+        32px
+        20px
+        calc(var(--input-height) + 25px);
+
+    scroll-behavior: smooth;
+
+    -webkit-overflow-scrolling: touch;
+}
+
+.welcome {
+    width: min(720px, 100%);
+
+    margin:
+        clamp(45px, 12vh, 120px)
+        auto
+        0;
+
+    text-align: center;
+
+    padding:
+        0
+        12px;
+}
+
+.welcome h2 {
+    margin:
+        0
+        0
+        12px;
+
+    font-size:
+        clamp(24px, 4vw, 30px);
+}
+
+.welcome p {
+    margin: 0;
+
+    color: #666;
+
+    font-size:
+        clamp(14px, 2vw, 16px);
+
+    line-height: 1.7;
+}
+
+/* =========================
+   메시지 버블
+========================= */
+
+.message {
+    width: fit-content;
+
+    max-width: min(900px, 88%);
+
+    margin:
+        20px
+        auto;
+
+    padding:
+        14px
+        17px;
+
+    border-radius: 17px;
+
+    white-space: pre-wrap;
+
+    word-break: break-word;
+
+    overflow-wrap: anywhere;
+
+    line-height: 1.65;
+
+    font-size: 15px;
+
+    animation: messageIn 0.18s ease;
+}
+
+@keyframes messageIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message.ai {
+    background: var(--surface);
+}
+
+.message.user {
+    background: var(--primary);
+
+    color: #fff;
+
+    margin-right:
+        max(0px, calc((100% - 900px) / 2));
+
+    margin-left: auto;
+}
+
+.message-label {
+    font-size: 10px;
+
+    opacity: 0.65;
+
+    margin-bottom: 4px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.3px;
+}
+
+/* =========================
+   입력창
+========================= */
+
+.input-area {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    min-height: var(--input-height);
+
+    padding:
+        12px
+        max(14px, 2vw)
+        calc(12px + env(safe-area-inset-bottom));
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    background:
+        linear-gradient(
+            to top,
+            rgba(255, 255, 255, 1) 60%,
+            rgba(255, 255, 255, 0.88)
+        );
+
+    z-index: 20;
+}
+
+.input-box {
+    width: min(900px, 100%);
+
+    display: flex;
+
+    align-items: center;
+
+    background: #fff;
+
+    border:
+        1px solid
+        #dcdcdc;
+
+    border-radius: 25px;
+
+    padding:
+        6px
+        7px
+        6px
+        14px;
+
+    box-shadow:
+        0 3px 16px rgba(0, 0, 0, 0.07);
+
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
+}
+
+.input-box:focus-within {
+    border-color: var(--primary);
+
+    box-shadow:
+        0 3px 18px rgba(39, 174, 96, 0.14);
+}
+
+#userInput {
+    min-width: 0;
+
+    flex: 1;
+
+    border: none;
+
+    outline: none;
+
+    padding:
+        11px
+        8px;
+
+    font-size: 15px;
+
+    background: transparent;
+
+    color: var(--text);
+}
+
+#userInput::placeholder {
+    color: #999;
+}
+
+.send {
+    width: 45px;
+    height: 45px;
+
+    flex: none;
+
+    border-radius: 50%;
+
+    border: 0;
+
+    background: var(--primary);
+
+    color: #fff;
+
+    cursor: pointer;
+
+    font-size: 18px;
+
+    display: grid;
+
+    place-items: center;
+
+    transition:
+        background 0.15s,
+        transform 0.15s;
+}
+
+.send:hover {
+    background: var(--primary-dark);
+}
+
+.send:active {
+    transform: scale(0.92);
+}
+
+.send:disabled {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+}
+
+/* =========================
+   빈 상태
+========================= */
+
+.empty-chat {
+    color: #999;
+
+    text-align: center;
+
+    padding:
+        20px
+        10px;
+
+    font-size: 13px;
+}
+
+/* =========================
+   프로젝트 모달
+========================= */
+
+.project-modal {
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.4);
+
+    z-index: 200;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+}
+
+.project-modal.show {
+    display: flex;
+}
+
+.modal-box {
+    width: min(430px, 100%);
+
+    background: #fff;
+
+    border-radius: 20px;
+
+    padding: 24px;
+
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.2);
+
+    animation: modalIn 0.18s ease;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.97) translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-box h3 {
+    margin:
+        0
+        0
+        14px;
+
+    font-size: 20px;
+}
+
+.modal-box input {
+    display: block;
+
+    width: 100%;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 12px;
+
+    margin:
+        9px
+        0;
+
+    padding: 13px;
+
+    outline: none;
+
+    font-size: 14px;
+}
+
+.modal-box input:focus {
+    border-color: var(--primary);
+}
+
+.modal-buttons {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    margin-top: 16px;
+}
+
+.modal-buttons button {
+    min-height: 44px;
+
+    padding:
+        10px
+        16px;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+}
+
+.cancel-btn {
+    background: #eee;
+}
+
+.create-btn {
+    background: var(--primary);
+
+    color: #fff;
+}
+
+/* =========================================================
+   태블릿
+========================================================= */
+
+@media (max-width: 1024px) {
+
+    .messages {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+
+    .message.user {
+        margin-right: 0;
+    }
+
+    .input-box {
+        width: min(820px, 100%);
+    }
+}
+
+/* =========================================================
+   모바일
+========================================================= */
+
+@media (max-width: 767px) {
+
+    :root {
+        --header-height: 56px;
+        --input-height: 78px;
+    }
+
+    .header {
+        padding:
+            0
+            10px;
+    }
+
+    .menu-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .logo {
+        margin-left: 10px;
+
+        font-size: 18px;
+    }
+
+    .user-status {
+        display: none;
+    }
+
+    .messages {
+        padding:
+            20px
+            10px
+            calc(var(--input-height) + 15px);
+    }
+
+    .welcome {
+        margin-top:
+            clamp(35px, 10vh, 80px);
+    }
+
+    .message {
+        max-width: 94%;
+
+        padding:
+            12px
+            14px;
+
+        margin-top: 14px;
+        margin-bottom: 14px;
+
+        font-size: 14px;
+
+        border-radius: 15px;
+    }
+
+    .input-area {
+        padding:
+            8px
+            9px
+            calc(8px + env(safe-area-inset-bottom));
+    }
+
+    .input-box {
+        border-radius: 23px;
+
+        padding-left: 10px;
+    }
+
+    #userInput {
+        font-size: 15px;
+    }
+
+    .send {
+        width: 42px;
+        height: 42px;
+    }
+
+    .sidebar {
+        width: min(310px, 88vw);
+    }
+}
+
+/* =========================================================
+   작은 모바일
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .logo {
+        font-size: 17px;
+    }
+
+    .messages {
+        padding-left: 7px;
+        padding-right: 7px;
+    }
+
+    .message {
+        max-width: 96%;
+    }
+
+    .welcome h2 {
+        font-size: 23px;
+    }
+
+    .welcome p {
+        font-size: 14px;
+    }
+
+    .modal-box {
+        padding: 20px;
+
+        border-radius: 17px;
+    }
+}
+
+/* =========================================================
+   가로형 모바일
+========================================================= */
+
+@media (
+    max-height: 520px
+) and (
+    orientation: landscape
+) {
+
+    :root {
+        --header-height: 52px;
+        --input-height: 68px;
+    }
+
+    .welcome {
+        margin-top: 15px;
+    }
+
+    .messages {
+        padding-top: 12px;
+    }
+
+    .input-area {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+}
+
+/* =========================================================
+   모션 최소화
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
 </style>
 </head>
+
 <body>
-<div class="header"><button class="menu-btn" onclick="openMenu()">☰</button><div class="logo">🤖 Coby AI</div><div class="user-status"><span class="status-dot" id="statusDot"></span><span id="statusText">사용자 확인 중...</span></div></div>
-<div class="sidebar" id="sidebar">
-<div class="side-top"><button class="side-btn" onclick="newChat()">＋ 새 채팅</button><button class="side-btn" onclick="openProjectModal()">📁 새 프로젝트</button><div class="side-title">최근 대화</div></div>
-<div class="chat-list" id="chatList"><div class="empty-chat">대화를 불러오는 중...</div></div>
-<div class="project-section"><div class="project-title">프로젝트</div><div id="projectList"><div class="empty-chat">프로젝트가 없습니다.</div></div></div>
-<div class="profile"><div class="profile-circle" id="profileCircle">?</div><div class="profile-info"><div class="profile-name" id="profileName">사용자 확인 중...</div><div class="profile-id" id="profileId">-</div></div></div>
+
+<!-- ======================================================
+     HEADER
+====================================================== -->
+
+<header class="header">
+
+    <button
+        class="menu-btn"
+        onclick="openMenu()"
+        aria-label="메뉴 열기"
+    >
+        ☰
+    </button>
+
+    <div class="logo">
+        🤖 Coby AI
+    </div>
+
+    <div class="user-status">
+
+        <span
+            class="status-dot"
+            id="statusDot"
+        ></span>
+
+        <span
+            class="status-text"
+            id="statusText"
+        >
+            사용자 확인 중...
+        </span>
+
+    </div>
+
+</header>
+
+
+<!-- ======================================================
+     SIDEBAR
+====================================================== -->
+
+<aside
+    class="sidebar"
+    id="sidebar"
+>
+
+    <div class="side-top">
+
+        <button
+            class="side-btn"
+            onclick="newChat()"
+        >
+            ＋ 새 채팅
+        </button>
+
+        <button
+            class="side-btn"
+            onclick="openProjectModal()"
+        >
+            📁 새 프로젝트
+        </button>
+
+        <div class="side-title">
+            최근 대화
+        </div>
+
+    </div>
+
+
+    <div
+        class="chat-list"
+        id="chatList"
+    >
+        <div class="empty-chat">
+            대화를 불러오는 중...
+        </div>
+    </div>
+
+
+    <div class="project-section">
+
+        <div class="project-title">
+            프로젝트
+        </div>
+
+        <div id="projectList">
+
+            <div class="empty-chat">
+                프로젝트가 없습니다.
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="profile">
+
+        <div
+            class="profile-circle"
+            id="profileCircle"
+        >
+            ?
+        </div>
+
+        <div class="profile-info">
+
+            <div
+                class="profile-name"
+                id="profileName"
+            >
+                사용자 확인 중...
+            </div>
+
+            <div
+                class="profile-id"
+                id="profileId"
+            >
+                -
+            </div>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- ======================================================
+     OVERLAY
+====================================================== -->
+
+<div
+    class="overlay"
+    id="overlay"
+    onclick="closeMenu()"
+></div>
+
+
+<!-- ======================================================
+     MAIN
+====================================================== -->
+
+<main class="main">
+
+    <div
+        class="messages"
+        id="messages"
+    >
+
+        <div
+            class="welcome"
+            id="welcome"
+        >
+
+            <h2>
+                어서오세요!
+            </h2>
+
+            <p>
+                무한한 상상의 나래를 펼쳐요 🚀<br>
+                Coby가 당신의 코딩 여정을 함께합니다.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==================================================
+         INPUT
+    ================================================== -->
+
+    <div class="input-area">
+
+        <div class="input-box">
+
+            <input
+                id="userInput"
+                placeholder="Coby에게 무엇이든 물어보세요"
+                autocomplete="off"
+                spellcheck="false"
+            >
+
+            <button
+                class="send"
+                id="sendButton"
+                onclick="sendMessage()"
+                aria-label="메시지 전송"
+            >
+                ↑
+            </button>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<!-- ======================================================
+     PROJECT MODAL
+====================================================== -->
+
+<div
+    class="project-modal"
+    id="projectModal"
+>
+
+    <div class="modal-box">
+
+        <h3>
+            새 프로젝트
+        </h3>
+
+        <input
+            id="projectNameInput"
+            placeholder="프로젝트 이름"
+            maxlength="50"
+        >
+
+        <input
+            id="projectDescriptionInput"
+            placeholder="프로젝트 설명 (선택)"
+            maxlength="200"
+        >
+
+        <div class="modal-buttons">
+
+            <button
+                class="cancel-btn"
+                onclick="closeProjectModal()"
+            >
+                취소
+            </button>
+
+            <button
+                class="create-btn"
+                onclick="createProject()"
+            >
+                만들기
+            </button>
+
+        </div>
+
+    </div>
+
 </div>
-<div class="overlay" id="overlay" onclick="closeMenu()"></div>
-<div class="main"><div class="messages" id="messages"><div class="welcome" id="welcome"><h2>어서오세요!</h2><p>무한한 상상의 나래를 펼쳐요 🚀<br>Coby가 당신의 코딩 여정을 함께합니다.</p></div></div><div class="input-area"><div class="input-box"><input id="userInput" placeholder="Coby에게 무엇이든 물어보세요" autocomplete="off"><button class="send" id="sendButton" onclick="sendMessage()">↑</button></div></div></div>
-<div class="project-modal" id="projectModal"><div class="modal-box"><h3>새 프로젝트</h3><input id="projectNameInput" placeholder="프로젝트 이름" maxlength="50"><input id="projectDescriptionInput" placeholder="프로젝트 설명 (선택)" maxlength="200"><div class="modal-buttons"><button class="cancel-btn" onclick="closeProjectModal()">취소</button><button class="create-btn" onclick="createProject()">만들기</button></div></div></div>
+
+
+<!-- ======================================================
+     FIREBASE + APP
+====================================================== -->
+
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-import{getFirestore,doc,getDoc,setDoc,collection,addDoc,getDocs,query,orderBy,limit,serverTimestamp,updateDoc}from"https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-const mainFirebaseConfig={apiKey:"AIzaSyBgArbW8dArbW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
-const cobyFirebaseConfig={apiKey:"AIzaSyAiO65YzYeRfuf6fCzosuW7OAVV47o47Js",authDomain:"coby-ai-328dd.firebaseapp.com",projectId:"coby-ai-328dd",storageBucket:"coby-ai-328dd.firebasestorage.app",messagingSenderId:"865530259286",appId:"1:865530259286:web:6feaa5781dc538700b18f7"};
-const mainApp=initializeApp(mainFirebaseConfig,"mainApp");
-const cobyApp=initializeApp(cobyFirebaseConfig,"cobyApp");
-const mainDb=getFirestore(mainApp);const db=getFirestore(cobyApp);
+import {
+    initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 
-let currentUserId=null,currentPerson=null,currentConversationId=null,currentProjectId=null,currentProject=null,isSending=false;
-const API_URL="https://two5withcoding.onrender.com/chat";
-const $=id=>document.getElementById(id);
-const people=()=>collection(db,"people",currentUserId,"conversations");
-const projects=()=>collection(db,"people",currentUserId,"projects");
-const messagesRef=()=>collection(db,"people",currentUserId,"conversations",currentConversationId,"messages");
-function setStatus(t,ok=false){$("statusText").textContent=t;$("statusDot").classList.toggle("connected",ok)}
-function updateProfile(){const name=currentPerson?.name||currentUserId||"사용자";$("profileName").textContent=name;$("profileId").textContent=currentUserId?`학번 ${currentUserId}`:"-";$("profileCircle").textContent=name.charAt(0)}
-function escapeHtml(s){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-function formatDate(ts){if(!ts)return"";const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString("ko-KR",{month:"numeric",day:"numeric"})}
-function openMenu(){$("sidebar").classList.add("open");$("overlay").classList.add("show")}function closeMenu(){$("sidebar").classList.remove("open");$("overlay").classList.remove("show")}
-window.openMenu=openMenu;window.closeMenu=closeMenu;
-function clearMessages(){$("messages").innerHTML=""}
-function addMessage(role,content){const el=document.createElement("div");el.className=`message ${role==='user'?"user":"ai"}`;el.innerHTML=`<div class="message-label">${role==='user'?"YOU":"COBY"}</div>${escapeHtml(content)}`;$("messages").appendChild(el);$("messages").scrollTop=$("messages").scrollHeight}
-function showWelcome(){clearMessages();const d=document.createElement("div");d.className="welcome";d.id="welcome";d.innerHTML="<h2>어서오세요!</h2><p>무한한 상상의 나래를 펼쳐요 🚀<br>Coby가 당신의 코딩 여정을 함께합니다.</p>";$("messages").appendChild(d)}
-async function loadUser(){currentUserId=localStorage.getItem("userId");if(!currentUserId){setStatus("로그인이 필요합니다");updateProfile();return false}try{const snap=await getDoc(doc(mainDb,"users",currentUserId));currentPerson=snap.exists()?{schoolNumber:currentUserId,...snap.data()}:{schoolNumber:currentUserId};await setDoc(doc(db,"people",currentUserId),{schoolNumber:currentUserId,name:currentPerson.name||"사용자",updatedAt:serverTimestamp()},{merge:true});updateProfile();setStatus(`${currentPerson.name||"사용자"}님`,true);await Promise.all([loadChats(),loadProjects()]);return true}catch(e){console.error(e);setStatus("Firebase 연결 실패");updateProfile();alert("Coby Firebase 연결에 실패했습니다. Firestore 보안 규칙도 확인해주세요.");return false}}
-async function loadChats(){if(!currentUserId)return;const snap=await getDocs(query(people(),orderBy("updatedAt","desc"),limit(30)));$("chatList").innerHTML="";if(snap.empty){$("chatList").innerHTML='<div class="empty-chat">아직 대화가 없습니다.</div>';return}snap.forEach(s=>{const d=s.data(),el=document.createElement("div");el.className="chat-item"+(s.id===currentConversationId?" active":"");el.onclick=()=>openConversation(s.id);el.innerHTML=`<div class="chat-title">${escapeHtml(d.title||"새 대화")}</div><div class="chat-date">${formatDate(d.updatedAt)}</div>`;$("chatList").appendChild(el)})}
-async function loadProjects(){if(!currentUserId)return;const snap=await getDocs(query(projects(),orderBy("updatedAt","desc"),limit(30)));$("projectList").innerHTML="";if(snap.empty){$("projectList").innerHTML='<div class="empty-chat">프로젝트가 없습니다.</div>';return}snap.forEach(s=>{const d=s.data(),el=document.createElement("div");el.className="project-item"+(s.id===currentProjectId?" active":"");el.onclick=()=>selectProject(s.id,d);el.textContent="📁 "+(d.name||"이름 없음");$("projectList").appendChild(el)})}
-async function createConversation(projectId=null){const ref=await addDoc(people(),{title:"새 대화",projectId:projectId||null,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});currentConversationId=ref.id;currentProjectId=projectId||null;showWelcome();await loadChats();return ref.id}
-async function newChat(){if(!currentUserId){alert("먼저 로그인해주세요.");return}await createConversation(currentProjectId);closeMenu();$("userInput").focus()}
-window.newChat=newChat;
-async function openConversation(id){if(!currentUserId)return;currentConversationId=id;const snap=await getDoc(doc(db,"people",currentUserId,"conversations",id));if(!snap.exists())return;const d=snap.data();currentProjectId=d.projectId||null;currentProject=currentProjectId?((await getDoc(doc(db,"people",currentUserId,"projects",currentProjectId))).data()||null):null;const ms=await getDocs(query(messagesRef(),orderBy("createdAt","asc")));clearMessages();if(ms.empty)showWelcome();else ms.forEach(s=>{const m=s.data();addMessage(m.role,m.content)});await loadChats();await loadProjects();closeMenu()}
-async function selectProject(id,data){currentProjectId=id;currentProject=data;await createConversation(id);await loadProjects();closeMenu()}
-window.selectProject=selectProject;
-function openProjectModal(){$("projectModal").classList.add("show");$("projectNameInput").focus()}function closeProjectModal(){$("projectModal").classList.remove("show");$("projectNameInput").value="";$("projectDescriptionInput").value=""}window.openProjectModal=openProjectModal;window.closeProjectModal=closeProjectModal;
-async function createProject(){if(!currentUserId){alert("먼저 로그인해주세요.");return}const name=$("projectNameInput").value.trim(),description=$("projectDescriptionInput").value.trim();if(!name){alert("프로젝트 이름을 입력하세요.");return}try{const ref=await addDoc(projects(),{name,description,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});closeProjectModal();await loadProjects();await createConversation(ref.id);closeMenu()}catch(e){console.error(e);alert("프로젝트 생성에 실패했습니다.")}}
-window.createProject=createProject;
-async function getProjectContext(){if(!currentProjectId||!currentUserId)return[];try{const qs=await getDocs(query(people(),orderBy("updatedAt","desc"),limit(10)));const context=[];for(const s of qs.docs){const d=s.data();if(d.projectId!==currentProjectId||s.id===currentConversationId)continue;const ms=await getDocs(query(collection(db,"people",currentUserId,"conversations",s.id,"messages"),orderBy("createdAt","desc"),limit(6)));ms.docs.reverse().forEach(m=>{const x=m.data();context.push({role:x.role,content:x.content})})}return context.slice(-30)}catch(e){console.warn("프로젝트 컨텍스트 로드 실패",e);return[]}}
-async function sendMessage(){if(isSending)return;const text=$("userInput").value.trim();if(!text)return;if(!currentUserId){alert("로그인이 필요합니다.");return}if(!currentConversationId)await createConversation(currentProjectId);isSending=true;$("sendButton").disabled=true;$("userInput").value="";addMessage("user",text);try{await addDoc(messagesRef(),{role:"user",content:text,createdAt:serverTimestamp()});const convoRef=doc(db,"people",currentUserId,"conversations",currentConversationId);const convo=await getDoc(convoRef);if(convo.exists()&&(convo.data().title==="새 대화"||!convo.data().title)){await updateDoc(convoRef,{title:text.length>35?text.slice(0,35)+"…":text,updatedAt:serverTimestamp()})}else await updateDoc(convoRef,{updatedAt:serverTimestamp()});const context=await getProjectContext();const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text,studentId:currentUserId,conversationId:currentConversationId,projectId:currentProjectId,project:currentProject||null,context})});if(!response.ok)throw new Error(`API ${response.status}`);const data=await response.json();const answer=data.answer??data.response??data.message??"응답을 받지 못했습니다.";addMessage("assistant",answer);await addDoc(messagesRef(),{role:"assistant",content:answer,createdAt:serverTimestamp()});await updateDoc(convoRef,{updatedAt:serverTimestamp()});await loadChats()}catch(e){console.error(e);addMessage("assistant","죄송해요. 응답을 가져오는 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.");}finally{isSending=false;$("sendButton").disabled=false;$("userInput").focus()}}
-window.sendMessage=sendMessage;
-$("userInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}});
-$("projectModal").addEventListener("click",e=>{if(e.target===$("projectModal"))closeProjectModal()});
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    orderBy,
+    limit,
+    serverTimestamp,
+    updateDoc
+} from
+"https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-(async()=>{const ok=await loadUser();if(!ok)return;const chats=await getDocs(query(people(),orderBy("updatedAt","desc"),limit(1)));if(!chats.empty)await openConversation(chats.docs[0].id);else await createConversation(null)})();
+
+/* ======================================================
+   FIREBASE
+====================================================== */
+
+const mainFirebaseConfig = {
+
+    apiKey:
+        "AIzaSyBgArbW8dArbW8dO7OSYsTVEQtRHT049U20",
+
+    authDomain:
+        "points2026-f5e50.firebaseapp.com",
+
+    projectId:
+        "points2026-f5e50",
+
+    storageBucket:
+        "points2026-f5e50.firebasestorage.app",
+
+    messagingSenderId:
+        "248724251417",
+
+    appId:
+        "1:248724251417:web:02d85cdc4addac98069b88"
+};
+
+
+const cobyFirebaseConfig = {
+
+    apiKey:
+        "AIzaSyAiO65YzYeRfuf6fCzosuW7OAVV47o47Js",
+
+    authDomain:
+        "coby-ai-328dd.firebaseapp.com",
+
+    projectId:
+        "coby-ai-328dd",
+
+    storageBucket:
+        "coby-ai-328dd.firebasestorage.app",
+
+    messagingSenderId:
+        "865530259286",
+
+    appId:
+        "1:865530259286:web:6feaa5781dc538700b18f7"
+};
+
+
+const mainApp =
+    initializeApp(
+        mainFirebaseConfig,
+        "mainApp"
+    );
+
+
+const cobyApp =
+    initializeApp(
+        cobyFirebaseConfig,
+        "cobyApp"
+    );
+
+
+const mainDb =
+    getFirestore(mainApp);
+
+
+const db =
+    getFirestore(cobyApp);
+
+
+/* ======================================================
+   STATE
+====================================================== */
+
+let currentUserId = null;
+
+let currentPerson = null;
+
+let currentConversationId = null;
+
+let currentProjectId = null;
+
+let currentProject = null;
+
+let isSending = false;
+
+
+/* ======================================================
+   API
+====================================================== */
+
+const API_URL =
+    "https://two5withcoding.onrender.com/chat";
+
+
+/* ======================================================
+   HELPERS
+====================================================== */
+
+const $ = id =>
+    document.getElementById(id);
+
+
+const people = () =>
+    collection(
+        db,
+        "people",
+        currentUserId,
+        "conversations"
+    );
+
+
+const projects = () =>
+    collection(
+        db,
+        "people",
+        currentUserId,
+        "projects"
+    );
+
+
+const messagesRef = () =>
+    collection(
+        db,
+        "people",
+        currentUserId,
+        "conversations",
+        currentConversationId,
+        "messages"
+    );
+
+
+/* ======================================================
+   STATUS
+====================================================== */
+
+function setStatus(
+    text,
+    connected = false
+) {
+
+    $("statusText").textContent =
+        text;
+
+    $("statusDot")
+        .classList
+        .toggle(
+            "connected",
+            connected
+        );
+}
+
+
+/* ======================================================
+   PROFILE
+====================================================== */
+
+function updateProfile() {
+
+    const name =
+        currentPerson?.name ||
+        currentUserId ||
+        "사용자";
+
+    $("profileName")
+        .textContent = name;
+
+    $("profileId")
+        .textContent =
+        currentUserId
+            ? `학번 ${currentUserId}`
+            : "-";
+
+    $("profileCircle")
+        .textContent =
+        name.charAt(0);
+}
+
+
+/* ======================================================
+   HTML ESCAPE
+====================================================== */
+
+function escapeHtml(text) {
+
+    return String(text)
+        .replace(
+            /[&<>'"]/g,
+            char => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                "'": "&#39;",
+                '"': "&quot;"
+            })[char]
+        );
+}
+
+
+/* ======================================================
+   DATE
+====================================================== */
+
+function formatDate(timestamp) {
+
+    if (!timestamp)
+        return "";
+
+    const date =
+        timestamp.toDate
+            ? timestamp.toDate()
+            : new Date(timestamp);
+
+    return date.toLocaleDateString(
+        "ko-KR",
+        {
+            month: "numeric",
+            day: "numeric"
+        }
+    );
+}
+
+
+/* ======================================================
+   SIDEBAR
+====================================================== */
+
+function openMenu() {
+
+    $("sidebar")
+        .classList
+        .add("open");
+
+    $("overlay")
+        .classList
+        .add("show");
+}
+
+
+function closeMenu() {
+
+    $("sidebar")
+        .classList
+        .remove("open");
+
+    $("overlay")
+        .classList
+        .remove("show");
+}
+
+
+window.openMenu = openMenu;
+window.closeMenu = closeMenu;
+
+
+/* ======================================================
+   MESSAGE UI
+====================================================== */
+
+function clearMessages() {
+
+    $("messages").innerHTML = "";
+}
+
+
+function addMessage(
+    role,
+    content
+) {
+
+    const element =
+        document.createElement("div");
+
+    element.className =
+        `message ${
+            role === "user"
+                ? "user"
+                : "ai"
+        }`;
+
+    element.innerHTML = `
+        <div class="message-label">
+            ${
+                role === "user"
+                    ? "YOU"
+                    : "COBY"
+            }
+        </div>
+
+        ${escapeHtml(content)}
+    `;
+
+    $("messages")
+        .appendChild(element);
+
+    requestAnimationFrame(() => {
+
+        $("messages").scrollTop =
+            $("messages").scrollHeight;
+
+    });
+}
+
+
+function showWelcome() {
+
+    clearMessages();
+
+    const element =
+        document.createElement("div");
+
+    element.className =
+        "welcome";
+
+    element.id =
+        "welcome";
+
+    element.innerHTML = `
+        <h2>
+            어서오세요!
+        </h2>
+
+        <p>
+            무한한 상상의 나래를 펼쳐요 🚀<br>
+            Coby가 당신의 코딩 여정을 함께합니다.
+        </p>
+    `;
+
+    $("messages")
+        .appendChild(element);
+}
+
+
+/* ======================================================
+   USER LOAD
+====================================================== */
+
+async function loadUser() {
+
+    currentUserId =
+        localStorage.getItem("userId");
+
+
+    if (!currentUserId) {
+
+        setStatus(
+            "로그인이 필요합니다"
+        );
+
+        updateProfile();
+
+        return false;
+    }
+
+
+    try {
+
+        const snapshot =
+            await getDoc(
+                doc(
+                    mainDb,
+                    "users",
+                    currentUserId
+                )
+            );
+
+
+        currentPerson =
+            snapshot.exists()
+
+                ? {
+                    schoolNumber:
+                        currentUserId,
+
+                    ...snapshot.data()
+                }
+
+                : {
+                    schoolNumber:
+                        currentUserId
+                };
+
+
+        await setDoc(
+
+            doc(
+                db,
+                "people",
+                currentUserId
+            ),
+
+            {
+                schoolNumber:
+                    currentUserId,
+
+                name:
+                    currentPerson.name ||
+                    "사용자",
+
+                updatedAt:
+                    serverTimestamp()
+            },
+
+            {
+                merge: true
+            }
+
+        );
+
+
+        updateProfile();
+
+
+        setStatus(
+            `${currentPerson.name || "사용자"}님`,
+            true
+        );
+
+
+        await Promise.all([
+            loadChats(),
+            loadProjects()
+        ]);
+
+
+        return true;
+
+    } catch (error) {
+
+        console.error(error);
+
+        setStatus(
+            "Firebase 연결 실패"
+        );
+
+        updateProfile();
+
+        alert(
+            "Coby Firebase 연결에 실패했습니다.\n\n" +
+            "Firestore 보안 규칙도 확인해주세요."
+        );
+
+        return false;
+    }
+}
+
+
+/* ======================================================
+   LOAD CHATS
+====================================================== */
+
+async function loadChats() {
+
+    if (!currentUserId)
+        return;
+
+
+    const snapshot =
+        await getDocs(
+
+            query(
+                people(),
+                orderBy(
+                    "updatedAt",
+                    "desc"
+                ),
+                limit(30)
+            )
+
+        );
+
+
+    $("chatList").innerHTML = "";
+
+
+    if (snapshot.empty) {
+
+        $("chatList").innerHTML =
+            `
+            <div class="empty-chat">
+                아직 대화가 없습니다.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    snapshot.forEach(
+        snapshotItem => {
+
+            const data =
+                snapshotItem.data();
+
+
+            const element =
+                document.createElement("div");
+
+
+            element.className =
+                "chat-item" +
+                (
+                    snapshotItem.id ===
+                    currentConversationId
+                        ? " active"
+                        : ""
+                );
+
+
+            element.onclick =
+                () =>
+                    openConversation(
+                        snapshotItem.id
+                    );
+
+
+            element.innerHTML = `
+
+                <div class="chat-title">
+                    ${escapeHtml(
+                        data.title ||
+                        "새 대화"
+                    )}
+                </div>
+
+                <div class="chat-date">
+                    ${formatDate(
+                        data.updatedAt
+                    )}
+                </div>
+
+            `;
+
+
+            $("chatList")
+                .appendChild(element);
+
+        }
+    );
+}
+
+
+/* ======================================================
+   LOAD PROJECTS
+====================================================== */
+
+async function loadProjects() {
+
+    if (!currentUserId)
+        return;
+
+
+    const snapshot =
+        await getDocs(
+
+            query(
+                projects(),
+                orderBy(
+                    "updatedAt",
+                    "desc"
+                ),
+                limit(30)
+            )
+
+        );
+
+
+    $("projectList").innerHTML = "";
+
+
+    if (snapshot.empty) {
+
+        $("projectList").innerHTML =
+            `
+            <div class="empty-chat">
+                프로젝트가 없습니다.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    snapshot.forEach(
+        snapshotItem => {
+
+            const data =
+                snapshotItem.data();
+
+
+            const element =
+                document.createElement("div");
+
+
+            element.className =
+                "project-item" +
+                (
+                    snapshotItem.id ===
+                    currentProjectId
+                        ? " active"
+                        : ""
+                );
+
+
+            element.onclick =
+                () =>
+                    selectProject(
+                        snapshotItem.id,
+                        data
+                    );
+
+
+            element.textContent =
+                "📁 " +
+                (
+                    data.name ||
+                    "이름 없음"
+                );
+
+
+            $("projectList")
+                .appendChild(element);
+
+        }
+    );
+}
+
+
+/* ======================================================
+   CREATE CONVERSATION
+====================================================== */
+
+async function createConversation(
+    projectId = null
+) {
+
+    const reference =
+        await addDoc(
+            people(),
+            {
+                title:
+                    "새 대화",
+
+                projectId:
+                    projectId || null,
+
+                createdAt:
+                    serverTimestamp(),
+
+                updatedAt:
+                    serverTimestamp()
+            }
+        );
+
+
+    currentConversationId =
+        reference.id;
+
+
+    currentProjectId =
+        projectId || null;
+
+
+    showWelcome();
+
+
+    await loadChats();
+
+
+    return reference.id;
+}
+
+
+/* ======================================================
+   NEW CHAT
+====================================================== */
+
+async function newChat() {
+
+    if (!currentUserId) {
+
+        alert(
+            "먼저 로그인해주세요."
+        );
+
+        return;
+    }
+
+
+    await createConversation(
+        currentProjectId
+    );
+
+
+    closeMenu();
+
+
+    $("userInput")
+        .focus();
+}
+
+
+window.newChat =
+    newChat;
+
+
+/* ======================================================
+   OPEN CONVERSATION
+====================================================== */
+
+async function openConversation(id) {
+
+    if (!currentUserId)
+        return;
+
+
+    currentConversationId =
+        id;
+
+
+    const conversationSnapshot =
+        await getDoc(
+            doc(
+                db,
+                "people",
+                currentUserId,
+                "conversations",
+                id
+            )
+        );
+
+
+    if (!conversationSnapshot.exists())
+        return;
+
+
+    const conversation =
+        conversationSnapshot.data();
+
+
+    currentProjectId =
+        conversation.projectId ||
+        null;
+
+
+    currentProject =
+        null;
+
+
+    if (currentProjectId) {
+
+        const projectSnapshot =
+            await getDoc(
+                doc(
+                    db,
+                    "people",
+                    currentUserId,
+                    "projects",
+                    currentProjectId
+                )
+            );
+
+
+        if (projectSnapshot.exists()) {
+
+            currentProject =
+                projectSnapshot.data();
+        }
+    }
+
+
+    const messagesSnapshot =
+        await getDocs(
+
+            query(
+                messagesRef(),
+                orderBy(
+                    "createdAt",
+                    "asc"
+                )
+            )
+
+        );
+
+
+    clearMessages();
+
+
+    if (messagesSnapshot.empty) {
+
+        showWelcome();
+
+    } else {
+
+        messagesSnapshot.forEach(
+            snapshotItem => {
+
+                const message =
+                    snapshotItem.data();
+
+
+                addMessage(
+                    message.role,
+                    message.content
+                );
+
+            }
+        );
+    }
+
+
+    await loadChats();
+
+    await loadProjects();
+
+    closeMenu();
+}
+
+
+/* ======================================================
+   PROJECT
+====================================================== */
+
+async function selectProject(
+    id,
+    data
+) {
+
+    currentProjectId =
+        id;
+
+    currentProject =
+        data;
+
+
+    await createConversation(id);
+
+
+    await loadProjects();
+
+
+    closeMenu();
+}
+
+
+window.selectProject =
+    selectProject;
+
+
+/* ======================================================
+   PROJECT MODAL
+====================================================== */
+
+function openProjectModal() {
+
+    $("projectModal")
+        .classList
+        .add("show");
+
+    $("projectNameInput")
+        .focus();
+}
+
+
+function closeProjectModal() {
+
+    $("projectModal")
+        .classList
+        .remove("show");
+
+    $("projectNameInput")
+        .value = "";
+
+    $("projectDescriptionInput")
+        .value = "";
+}
+
+
+window.openProjectModal =
+    openProjectModal;
+
+window.closeProjectModal =
+    closeProjectModal;
+
+
+/* ======================================================
+   CREATE PROJECT
+====================================================== */
+
+async function createProject() {
+
+    if (!currentUserId) {
+
+        alert(
+            "먼저 로그인해주세요."
+        );
+
+        return;
+    }
+
+
+    const name =
+        $("projectNameInput")
+            .value
+            .trim();
+
+
+    const description =
+        $("projectDescriptionInput")
+            .value
+            .trim();
+
+
+    if (!name) {
+
+        alert(
+            "프로젝트 이름을 입력하세요."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const reference =
+            await addDoc(
+                projects(),
+                {
+                    name,
+                    description,
+
+                    createdAt:
+                        serverTimestamp(),
+
+                    updatedAt:
+                        serverTimestamp()
+                }
+            );
+
+
+        closeProjectModal();
+
+
+        await loadProjects();
+
+
+        await createConversation(
+            reference.id
+        );
+
+
+        closeMenu();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "프로젝트 생성에 실패했습니다."
+        );
+    }
+}
+
+
+window.createProject =
+    createProject;
+
+
+/* ======================================================
+   PROJECT CONTEXT
+====================================================== */
+
+async function getProjectContext() {
+
+    if (
+        !currentProjectId ||
+        !currentUserId
+    ) {
+        return [];
+    }
+
+
+    try {
+
+        const conversations =
+            await getDocs(
+
+                query(
+                    people(),
+                    orderBy(
+                        "updatedAt",
+                        "desc"
+                    ),
+                    limit(10)
+                )
+
+            );
+
+
+        const context = [];
+
+
+        for (
+            const conversation
+            of conversations.docs
+        ) {
+
+            const data =
+                conversation.data();
+
+
+            if (
+                data.projectId !==
+                currentProjectId
+            ) {
+                continue;
+            }
+
+
+            if (
+                conversation.id ===
+                currentConversationId
+            ) {
+                continue;
+            }
+
+
+            const messageSnapshot =
+                await getDocs(
+
+                    query(
+                        collection(
+                            db,
+                            "people",
+                            currentUserId,
+                            "conversations",
+                            conversation.id,
+                            "messages"
+                        ),
+
+                        orderBy(
+                            "createdAt",
+                            "desc"
+                        ),
+
+                        limit(6)
+                    )
+
+                );
+
+
+            const messages =
+                [...messageSnapshot.docs]
+                    .reverse();
+
+
+            messages.forEach(
+                messageSnapshot => {
+
+                    const message =
+                        messageSnapshot.data();
+
+
+                    context.push({
+
+                        role:
+                            message.role,
+
+                        content:
+                            message.content
+
+                    });
+
+                }
+            );
+        }
+
+
+        return context.slice(-30);
+
+
+    } catch (error) {
+
+        console.warn(
+            "프로젝트 컨텍스트 로드 실패",
+            error
+        );
+
+        return [];
+    }
+}
+
+
+/* ======================================================
+   SEND MESSAGE
+====================================================== */
+
+async function sendMessage() {
+
+    if (isSending)
+        return;
+
+
+    const input =
+        $("userInput");
+
+
+    const text =
+        input.value.trim();
+
+
+    if (!text)
+        return;
+
+
+    if (!currentUserId) {
+
+        alert(
+            "먼저 로그인해주세요."
+        );
+
+        return;
+    }
+
+
+    if (!currentConversationId) {
+
+        await createConversation(
+            currentProjectId
+        );
+    }
+
+
+    isSending = true;
+
+
+    $("sendButton")
+        .disabled = true;
+
+
+    input.value = "";
+
+
+    if ($("welcome")) {
+
+        $("welcome")
+            .remove();
+    }
+
+
+    addMessage(
+        "user",
+        text
+    );
+
+
+    try {
+
+        /* =========================
+           사용자 메시지 저장
+        ========================= */
+
+        await addDoc(
+            messagesRef(),
+            {
+                role:
+                    "user",
+
+                content:
+                    text,
+
+                createdAt:
+                    serverTimestamp()
+            }
+        );
+
+
+        const conversationReference =
+            doc(
+                db,
+                "people",
+                currentUserId,
+                "conversations",
+                currentConversationId
+            );
+
+
+        const conversationSnapshot =
+            await getDoc(
+                conversationReference
+            );
+
+
+        if (
+            conversationSnapshot.exists()
+        ) {
+
+            const conversation =
+                conversationSnapshot.data();
+
+
+            if (
+                conversation.title ===
+                    "새 대화" ||
+                !conversation.title
+            ) {
+
+                await updateDoc(
+
+                    conversationReference,
+
+                    {
+                        title:
+                            text.length > 35
+                                ? text.slice(
+                                    0,
+                                    35
+                                ) + "…"
+                                : text,
+
+                        updatedAt:
+                            serverTimestamp()
+                    }
+
+                );
+
+            } else {
+
+                await updateDoc(
+
+                    conversationReference,
+
+                    {
+                        updatedAt:
+                            serverTimestamp()
+                    }
+
+                );
+            }
+        }
+
+
+        /* =========================
+           프로젝트 컨텍스트
+        ========================= */
+
+        const context =
+            await getProjectContext();
+
+
+        /* =========================
+           AI 서버
+        ========================= */
+
+        const response =
+            await fetch(
+                API_URL,
+                {
+                    method:
+                        "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            message:
+                                text,
+
+                            studentId:
+                                currentUserId,
+
+                            userId:
+                                currentUserId,
+
+                            conversationId:
+                                currentConversationId,
+
+                            projectId:
+                                currentProjectId,
+
+                            project:
+                                currentProject ||
+                                null,
+
+                            context:
+                                context
+
+                        })
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `API ${response.status}`
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const answer =
+            data.answer ??
+            data.reply ??
+            data.response ??
+            data.message ??
+            "응답을 받지 못했습니다.";
+
+
+        /* =========================
+           AI 메시지 표시
+        ========================= */
+
+        addMessage(
+            "assistant",
+            answer
+        );
+
+
+        /* =========================
+           AI 메시지 저장
+        ========================= */
+
+        await addDoc(
+            messagesRef(),
+            {
+                role:
+                    "assistant",
+
+                content:
+                    answer,
+
+                createdAt:
+                    serverTimestamp()
+            }
+        );
+
+
+        await updateDoc(
+            conversationReference,
+            {
+                updatedAt:
+                    serverTimestamp()
+            }
+        );
+
+
+        await loadChats();
+
+
+    } catch (error) {
+
+        console.error(
+            "AI 요청 오류:",
+            error
+        );
+
+
+        addMessage(
+            "assistant",
+            "죄송해요. 응답을 가져오는 중 오류가 발생했어요.\n잠시 후 다시 시도해주세요."
+        );
+
+
+    } finally {
+
+        isSending = false;
+
+
+        $("sendButton")
+            .disabled = false;
+
+
+        input.focus();
+    }
+}
+
+
+window.sendMessage =
+    sendMessage;
+
+
+/* ======================================================
+   KEYBOARD
+====================================================== */
+
+$("userInput")
+    .addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+
+                event.preventDefault();
+
+                sendMessage();
+            }
+        }
+    );
+
+
+$("projectNameInput")
+    .addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Enter"
+            ) {
+
+                createProject();
+            }
+        }
+    );
+
+
+/* ======================================================
+   MODAL BACKGROUND
+====================================================== */
+
+$("projectModal")
+    .addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target ===
+                $("projectModal")
+            ) {
+
+                closeProjectModal();
+            }
+        }
+    );
+
+
+/* ======================================================
+   ESC
+====================================================== */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            closeMenu();
+
+            closeProjectModal();
+        }
+    }
+);
+
+
+/* ======================================================
+   INITIALIZE
+====================================================== */
+
+(async () => {
+
+    const success =
+        await loadUser();
+
+
+    if (!success)
+        return;
+
+
+    try {
+
+        const conversations =
+            await getDocs(
+
+                query(
+                    people(),
+                    orderBy(
+                        "updatedAt",
+                        "desc"
+                    ),
+                    limit(1)
+                )
+
+            );
+
+
+        if (
+            !conversations.empty
+        ) {
+
+            await openConversation(
+                conversations
+                    .docs[0]
+                    .id
+            );
+
+        } else {
+
+            await createConversation(
+                null
+            );
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "초기 대화 로드 실패:",
+            error
+        );
+
+        await createConversation(
+            null
+        );
+    }
+
+})();
+
 </script>
+
 </body>
 </html>
