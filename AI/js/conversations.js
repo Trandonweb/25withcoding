@@ -22,7 +22,12 @@ export async function loadChats() {
         const element = document.createElement("div");
         element.className = "chat-item" + (item.id === state.currentConversationId ? " active" : "");
         element.onclick = () => openConversation(item.id);
-        element.innerHTML = `<div class="chat-title">${escapeHtml(data.title || "새 대화")}</div><div class="chat-date">${formatDate(data.updatedAt)}</div><button type="button" class="chat-delete" aria-label="휴지통으로 이동">🗑</button>`;
+        element.innerHTML = `<div class="chat-title">${escapeHtml(data.title || "새 대화")}</div><div class="chat-date">${formatDate(data.updatedAt)}</div><button type="button" class="chat-rename" aria-label="채팅 제목 변경">✎</button><button type="button" class="chat-delete" aria-label="휴지통으로 이동">🗑</button>`;
+        element.querySelector(".chat-rename").onclick = async event => {
+            event.preventDefault();
+            event.stopPropagation();
+            await renameConversation(item.id, data.title || "새 대화");
+        };
         element.querySelector(".chat-delete").onclick = async event => {
             event.preventDefault();
             event.stopPropagation();
@@ -30,6 +35,31 @@ export async function loadChats() {
         };
         $("chatList").appendChild(element);
     });
+}
+
+export async function renameConversation(id, currentTitle = "새 대화") {
+    if (!state.currentUserId || !id) return;
+    const title = prompt("새 채팅 제목을 입력하세요.", currentTitle);
+    if (title === null) return;
+    const trimmed = title.trim();
+    if (!trimmed) {
+        alert("채팅 제목을 입력해주세요.");
+        return;
+    }
+    if (trimmed.length > 50) {
+        alert("채팅 제목은 50자 이내로 입력해주세요.");
+        return;
+    }
+    try {
+        await updateDoc(doc(db, "people", state.currentUserId, "conversations", id), {
+            title: trimmed,
+            updatedAt: serverTimestamp()
+        });
+        await loadChats();
+    } catch (error) {
+        console.error("채팅 제목 변경 실패:", error);
+        alert("채팅 제목을 변경하지 못했습니다.");
+    }
 }
 
 export async function createConversation(projectId = null) {
@@ -42,7 +72,7 @@ export async function createConversation(projectId = null) {
     });
     state.currentConversationId = result.id;
     state.currentProjectId = projectId || null;
-    showWelcome();
+    await showWelcome();
     await loadChats();
     return result.id;
 }
@@ -74,7 +104,7 @@ export async function openConversation(id) {
 
     const messages = await getDocs(query(messagesRef(), orderBy("createdAt", "asc")));
     clearMessages();
-    if (messages.empty) showWelcome();
+    if (messages.empty) await showWelcome();
     else messages.forEach(item => {
         const message = item.data();
         addMessage(message.role, message.content);
@@ -127,6 +157,6 @@ export async function initializeConversation() {
         else await createConversation(null);
     } catch (error) {
         console.error("초기 대화 로드 실패:", error);
-        showWelcome();
+        await showWelcome();
     }
 }
