@@ -19,12 +19,12 @@ export function renderCobyMarkup(source = "") {
 
     // <<< >>> = copy block
     text = text.replace(/<<<([\s\S]*?)>>>/g, (_, value) => stash(
-        `<div class="coby-copy"><div class="coby-copy-head"><span>복사할 내용</span><button type="button" class="coby-copy-btn">📋 복사</button></div><pre>${escapeHtml(value.trim())}</pre></div>`
+        `<div class="coby-copy"><div class="coby-copy-head"><span>복사할 내용</span><button type="button" class="coby-copy-btn" aria-label="내용 복사">📋 복사</button></div><pre>${escapeHtml(value.trim())}</pre></div>`
     ));
 
     // Backward-compatible Markdown code fences
     text = text.replace(/```(?:[\w+-]+)?\n?([\s\S]*?)```/g, (_, value) => stash(
-        `<div class="coby-copy"><div class="coby-copy-head"><span>코드</span><button type="button" class="coby-copy-btn">📋 복사</button></div><pre>${escapeHtml(value.trim())}</pre></div>`
+        `<div class="coby-copy"><div class="coby-copy-head"><span>코드</span><button type="button" class="coby-copy-btn" aria-label="코드 복사">📋 복사</button></div><pre>${escapeHtml(value.trim())}</pre></div>`
     ));
 
     text = escapeHtml(text);
@@ -52,6 +52,24 @@ export function plainCobyText(source = "") {
         .trim();
 }
 
+async function copyText(text) {
+    if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+    }
+
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    area.remove();
+    if (!ok) throw new Error("copy failed");
+}
+
 export function bindCobyCopy(root = document) {
     root.addEventListener("click", async event => {
         const button = event.target.closest(".coby-copy-btn, .coby-answer-copy");
@@ -63,12 +81,13 @@ export function bindCobyCopy(root = document) {
             : button.dataset.copyText ?? "";
 
         try {
-            await navigator.clipboard.writeText(text);
+            await copyText(text);
             const original = button.textContent;
             button.textContent = "✅ 복사됨";
             setTimeout(() => { button.textContent = original; }, 1200);
         } catch {
             button.textContent = "복사 실패";
+            setTimeout(() => { button.textContent = "📋 복사"; }, 1200);
         }
     });
 }
