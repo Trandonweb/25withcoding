@@ -44,6 +44,34 @@ export async function getOlderConversationHistory(beforeTimestamp, count = 40) {
     return snapshot.docs.reverse().map(extractMessage);
 }
 
+function needsOlderHistory(text) {
+    return /(아까|이전|전에|방금 전|위에서|앞에서|처음에|지난|예전에|전에 말한|앞서|기억|전에 했던|이전 대화|이전 내용|저번|지난번)/i.test(text);
+}
+
+async function getHistoryForRequest(text) {
+    if (!state.currentConversationId) return [];
+
+    const recentSnapshot = await getDocs(query(
+        messagesRef(),
+        orderBy("createdAt", "desc"),
+        limit(40)
+    ));
+
+    const recentDocs = recentSnapshot.docs;
+    let history = recentDocs.reverse().map(extractMessage);
+
+    // 평소에는 최근 40개만 사용한다. 사용자가 이전 대화를 명시적으로
+    // 참조할 때만 가장 오래된 최근 메시지보다 앞선 내용을 추가 조회한다.
+    if (needsOlderHistory(text) && recentDocs.length === 40) {
+        const oldestRecent = recentDocs[0];
+        const oldestTimestamp = oldestRecent.data()?.createdAt;
+        const older = await getOlderConversationHistory(oldestTimestamp, 40);
+        history = [...older, ...history];
+    }
+
+    return history;
+}
+
 function extractAssistantText(data) {
     return data?.reply ?? data?.response ?? data?.message ?? data?.content ?? data?.answer ?? "응답을 받지 못했습니다.";
 }
@@ -65,13 +93,13 @@ export async function sendMessage() {
     $("sendButton").disabled = true;
     if ($("welcome")) $("welcome").remove();
 
-    const history = await getConversationHistory();
-    const projectContext = await getProjectContext();
-    addMessage("user", text);
-    input.value = "";
-    input.style.height = "auto";
-
     try {
+        const history = await getHistoryForRequest(text);
+        const projectContext = await getProjectContext();
+        addMessage("user", text);
+        input.value = "";
+        input.style.height = "auto";
+
         await addDoc(messagesRef(), { role: "user", content: text, createdAt: serverTimestamp() });
 
         const conversationReference = doc(db, "people", state.currentUserId, "conversations", state.currentConversationId);
