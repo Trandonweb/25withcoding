@@ -1,18 +1,38 @@
-:root{--primary-color:#27ae60;--primary-soft:color-mix(in srgb,var(--primary-color) 10%,white);--primary-soft-strong:color-mix(in srgb,var(--primary-color) 16%,white);--primary-border:color-mix(in srgb,var(--primary-color) 28%,#e7e7e7)}
-.header{border-bottom-color:var(--primary-color)}
-.status-dot.connected{background:var(--primary-color)}
-.side-btn:hover{background:var(--primary-soft)}
+:root{--primary-color:#27ae60;--bg:#fff;--surface:#fff;--surface-soft:#f7f7f7;--text:#222;--text-muted:#777;--border:#e4e4e4;--shadow:rgba(0,0,0,.12);--primary-soft:color-mix(in srgb,var(--primary-color) 10%,white);--primary-soft-strong:color-mix(in srgb,var(--primary-color) 16%,white);--primary-border:color-mix(in srgb,var(--primary-color) 28%,#e7e7e7)}
+html.dark-mode{--bg:#121212;--surface:#1e1e1e;--surface-soft:#2a2a2a;--text:#f5f5f5;--text-muted:#aaa;--border:#3a3a3a;--shadow:rgba(0,0,0,.38);--primary-soft:color-mix(in srgb,var(--primary-color) 16%,#1e1e1e);--primary-soft-strong:color-mix(in srgb,var(--primary-color) 23%,#1e1e1e);--primary-border:color-mix(in srgb,var(--primary-color) 42%,#3a3a3a)}
+body{background:var(--bg);color:var(--text)}
+.header{background:var(--surface);border-bottom-color:var(--primary-color)}
+.sidebar{background:var(--surface);color:var(--text);box-shadow:5px 0 25px var(--shadow)}
+.side-btn,.chat-item:hover,.project-item[open],.project-item.active{background:var(--surface-soft);color:var(--text)}
+.side-btn:hover,.project-item summary:hover{background:var(--primary-soft)}
 .chat-item.active,.project-chat.active{background:var(--primary-soft-strong);color:var(--primary-color)}
+.chat-rename,.chat-delete,.project-delete{background:var(--surface);border-color:var(--border);color:var(--text-muted)}
 .chat-rename:hover{background:var(--primary-soft);border-color:var(--primary-border);color:var(--primary-color)}
-.project-item[open],.project-item.active{background:var(--primary-soft)}
-.project-delete:hover{background:#fff2f2}
+.chat-delete:hover,.project-delete:hover{background:#fff2f2;border-color:#f3cccc;color:#c62828}
+.project-section{border-top-color:var(--border)}
+.project-chat:hover{background:var(--surface-soft)}
+.profile{background:var(--surface-soft);color:var(--text)}
 .profile-circle{background:var(--primary-color)}
 .message.ai .message-label{color:var(--primary-color)}
 .message.user{background:var(--primary-color)}
+.message.ai .message-content{color:var(--text)}
+.input-area{background:var(--bg)}
+.input-box{background:var(--surface);border-color:var(--border);box-shadow:0 2px 12px var(--shadow)}
 .input-box:focus-within{border-color:var(--primary-color);box-shadow:0 2px 14px color-mix(in srgb,var(--primary-color) 18%,transparent)}
+#userInput{color:var(--text)}
 .send{background:var(--primary-color)}
 .create-btn{background:var(--primary-color)}
 .restore-btn{background:var(--primary-soft-strong);border-color:var(--primary-border);color:var(--primary-color)}
-.restore-btn:hover{background:color-mix(in srgb,var(--primary-color) 20%,white);border-color:color-mix(in srgb,var(--primary-color) 40%,#ddd)}
+.restore-btn:hover{background:color-mix(in srgb,var(--primary-color) 28%,#1e1e1e);border-color:color-mix(in srgb,var(--primary-color) 50%,#3a3a3a)}
+.settings-item{background:var(--surface);color:var(--text);border-color:var(--border)}
 .settings-item:hover{background:var(--primary-soft)}
-.project-item summary:hover{background:var(--primary-soft)}
+.modal-box,.system-box{background:var(--surface);color:var(--text)}
+.modal-box input{background:var(--surface);color:var(--text);border-color:var(--border)}
+.system-item{background:var(--surface);border-color:var(--border)}
+.system-desc,.chat-date,.project-description,.project-chat-date,.profile-id,.user-status,.settings-empty{color:var(--text-muted)}
+.empty-chat{color:var(--text-muted)}
+.modal-close,.cancel-btn{background:var(--surface-soft);color:var(--text)}
+.profile-menu{background:var(--surface);border-color:var(--border);box-shadow:0 10px 30px var(--shadow)}
+.profile-menu-item{color:var(--text)}
+.profile-menu-item:hover{background:var(--primary-soft)}
+body{transition:background .2s,color .2s}body *{transition-property:background-color,border-color,color,box-shadow;transition-duration:.15s}
