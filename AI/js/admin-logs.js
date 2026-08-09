@@ -113,6 +113,7 @@ function renderUserConversations(group, conversationList) {
     group.rows.forEach(row => {
         const element = document.createElement("details");
         element.className = "admin-log-conversation";
+
         const visibilityLabel = row.data.hiddenFromUser ? "사용자 화면에서 삭제됨" : row.data.isDeleted ? "휴지통" : "일반";
         const messagesHtml = row.messages.map(message => {
             const role = message.role === "user" ? "사용자" : "COBY";
@@ -120,37 +121,68 @@ function renderUserConversations(group, conversationList) {
             return `<div class="admin-message ${roleClass}"><span>${role}</span><p>${escapeHtml(plainCobyText(message.content || ""))}</p></div>`;
         }).join("");
 
-        element.innerHTML = `<summary><span>${escapeHtml(row.data.title || "새 대화")}</span><small>${formatDate(row.data.updatedAt)} · ${visibilityLabel} · ${row.messages.length}개 메시지</small></summary><div class="admin-log-messages">${messagesHtml || '<div class="settings-empty">메시지가 없습니다.</div>'}<button type="button" class="admin-db-delete danger-btn">DB 영구 삭제</button></div>`;
+        const summary = document.createElement("summary");
+        summary.innerHTML = `<span>${escapeHtml(row.data.title || "새 대화")}</span><small>${formatDate(row.data.updatedAt)} · ${visibilityLabel} · ${row.messages.length}개 메시지</small>`;
+        element.appendChild(summary);
 
-        const deleteButton = element.querySelector(".admin-db-delete");
+        const body = document.createElement("div");
+        body.className = "admin-log-messages";
+        body.innerHTML = messagesHtml || '<div class="settings-empty">메시지가 없습니다.</div>';
+
+        // 관리자 전용 DB 삭제 영역을 메시지 영역과 분리한다.
+        // CSS가 누락되거나 다른 버전의 CSS가 캐시되어도 버튼이 반드시 보이도록 최소 스타일을 직접 지정한다.
+        const deleteArea = document.createElement("div");
+        deleteArea.className = "admin-db-delete-area";
+        deleteArea.style.cssText = "display:flex;justify-content:flex-end;margin-top:12px;padding-top:10px;border-top:1px solid var(--border,#e4e4e4);";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "admin-db-delete danger-btn";
+        deleteButton.textContent = "DB 영구 삭제";
+        deleteButton.setAttribute("aria-label", `${row.data.title || "새 대화"} DB 영구 삭제`);
+        deleteButton.style.cssText = "display:inline-flex !important;align-items:center;justify-content:center;visibility:visible !important;opacity:1 !important;pointer-events:auto !important;min-height:38px;padding:9px 14px;border:1px solid #d9534f;border-radius:10px;background:#fff;color:#c62828;font-weight:800;font-size:12px;cursor:pointer;position:relative;z-index:2;";
+
         deleteButton.addEventListener("click", async event => {
             event.preventDefault();
             event.stopPropagation();
-            if (!confirm(`'${row.data.title || "새 대화"}'의 대화와 메시지를 Firebase에서 영구 삭제할까요?\n\n이 작업은 되돌릴 수 없습니다.`)) return;
+
+            const title = row.data.title || "새 대화";
+            if (!confirm(`'${title}'의 대화와 메시지를 Firebase에서 영구 삭제할까요?\n\n이 작업은 되돌릴 수 없습니다.`)) return;
 
             deleteButton.disabled = true;
             deleteButton.textContent = "삭제 중...";
+            deleteButton.style.opacity = "0.6";
 
-            const ok = await deleteConversationFromDb(row.uid, row.cid);
-            if (!ok) {
-                alert("DB 삭제에 실패했습니다.");
+            try {
+                const ok = await deleteConversationFromDb(row.uid, row.cid);
+                if (!ok) throw new Error("deleteConversationFromDb returned false");
+
+                group.rows = group.rows.filter(item => item.cid !== row.cid);
+                element.remove();
+
+                if (!group.rows.length) {
+                    conversationList.insertAdjacentHTML("beforeend", '<div class="settings-empty">이 사용자의 대화가 없습니다.</div>');
+                }
+
+                if (row.uid === state.currentUserId && row.cid === state.currentConversationId) {
+                    state.currentConversationId = null;
+                    await createConversation(state.currentProjectId);
+                }
+
+                await loadChats();
+                await loadTrash();
+            } catch (error) {
+                console.error("관리자 DB 영구 삭제 실패:", error);
+                alert("DB 삭제에 실패했습니다. 콘솔에서 오류를 확인해주세요.");
                 deleteButton.disabled = false;
                 deleteButton.textContent = "DB 영구 삭제";
-                return;
+                deleteButton.style.opacity = "1";
             }
-
-            element.remove();
-            group.rows = group.rows.filter(item => item.cid !== row.cid);
-
-            if (row.uid === state.currentUserId && row.cid === state.currentConversationId) {
-                state.currentConversationId = null;
-                await createConversation(state.currentProjectId);
-            }
-
-            await loadChats();
-            await loadTrash();
         });
 
+        deleteArea.appendChild(deleteButton);
+        body.appendChild(deleteArea);
+        element.appendChild(body);
         conversationList.appendChild(element);
     });
 }
