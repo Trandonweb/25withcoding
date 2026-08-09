@@ -6,19 +6,18 @@ import { loadChats, initializeConversation, newChat } from "./conversations.js";
 import { loadProjects, openProjectModal, closeProjectModal, createProject, selectProject } from "./projects.js";
 import { openTrash, closeTrash } from "./trash.js";
 import { openAdminLogs, closeAdminLogs, loadAdminLogs } from "./admin-logs.js";
+import { openSettings, closeSettings } from "./settings.js";
 import { sendMessage } from "./ai.js";
 import { bindCobyCopy } from "./coby-markup.js";
 import { initCobyInput } from "./input.js";
 
 async function loadUser() {
     state.currentUserId = localStorage.getItem("userId");
-
     if (!state.currentUserId) {
         setStatus("로그인이 필요합니다");
         updateProfile();
         return false;
     }
-
     try {
         const snapshot = await getDoc(doc(mainDb, "users", state.currentUserId));
         state.currentPerson = snapshot.exists()
@@ -37,18 +36,15 @@ async function loadUser() {
         await Promise.all([loadChats(), loadProjects()]);
         return true;
     } catch (error) {
-        console.error(error);
-        setStatus("Firebase 연결 실패");
+        console.error("사용자 확인 실패:", error);
+        setStatus("사용자 확인 실패");
         updateProfile();
-        alert("Coby Firebase 연결에 실패했습니다.\n\nFirestore 보안 규칙도 확인해주세요.");
+        alert(`사용자 확인에 실패했습니다.\n\n${error?.message || "Firebase 연결 또는 권한을 확인해주세요."}`);
         return false;
     }
 }
 
-function goHome() {
-    location.href = "/index.html";
-}
-
+function goHome() { location.href = "/index.html"; }
 function logout() {
     const redirect = encodeURIComponent("/index.html");
     location.href = `/signout/index.html?redirect=${redirect}`;
@@ -59,7 +55,6 @@ function toggleProfileMenu(event) {
     const menu = $("profileMenu");
     const profile = document.querySelector(".profile");
     if (!menu || !profile) return;
-
     const willOpen = menu.hidden;
     menu.hidden = !willOpen;
     profile.setAttribute("aria-expanded", String(willOpen));
@@ -73,26 +68,19 @@ function closeProfileMenu() {
     profile?.setAttribute("aria-expanded", "false");
 }
 
-function bindGlobalEvents() {
-    window.openMenu = openMenu;
-    window.closeMenu = closeMenu;
-    window.newChat = newChat;
-    window.selectProject = selectProject;
-    window.openProjectModal = openProjectModal;
-    window.closeProjectModal = closeProjectModal;
-    window.createProject = createProject;
-    window.openTrash = openTrash;
-    window.closeTrash = closeTrash;
-    window.openAdminLogs = openAdminLogs;
-    window.closeAdminLogs = closeAdminLogs;
-    window.loadAdminLogs = loadAdminLogs;
-    window.sendMessage = sendMessage;
-    window.goHome = goHome;
-    window.logout = logout;
-    window.toggleProfileMenu = toggleProfileMenu;
-    window.closeProfileMenu = closeProfileMenu;
+function bindIfExists(selector, eventName, handler) {
+    const element = $(selector);
+    if (element) element.addEventListener(eventName, handler);
+}
 
-    $("projectNameInput").addEventListener("keydown", event => {
+function bindGlobalEvents() {
+    Object.assign(window, {
+        openMenu, closeMenu, newChat, selectProject, openProjectModal, closeProjectModal,
+        createProject, openTrash, closeTrash, openAdminLogs, closeAdminLogs, loadAdminLogs,
+        openSettings, closeSettings, sendMessage, goHome, logout, toggleProfileMenu, closeProfileMenu
+    });
+
+    bindIfExists("projectNameInput", "keydown", event => {
         if (event.key === "Enter") createProject();
     });
 
@@ -106,20 +94,22 @@ function bindGlobalEvents() {
             closeProjectModal();
             closeTrash();
             closeAdminLogs();
+            closeSettings();
             closeProfileMenu();
         }
     });
 
-    $("projectModal").addEventListener("click", event => {
+    bindIfExists("projectModal", "click", event => {
         if (event.target === $("projectModal")) closeProjectModal();
     });
-
-    $("trashModal").addEventListener("click", event => {
+    bindIfExists("trashModal", "click", event => {
         if (event.target === $("trashModal")) closeTrash();
     });
-
-    $("adminLogsModal").addEventListener("click", event => {
+    bindIfExists("adminLogsModal", "click", event => {
         if (event.target === $("adminLogsModal")) closeAdminLogs();
+    });
+    bindIfExists("settingsModal", "click", event => {
+        if (event.target === $("settingsModal")) closeSettings();
     });
 }
 
@@ -127,7 +117,6 @@ async function init() {
     bindCobyCopy(document);
     initCobyInput({ input: $("userInput"), send: sendMessage });
     bindGlobalEvents();
-
     const success = await loadUser();
     if (success) await initializeConversation();
 }
