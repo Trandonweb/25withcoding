@@ -2,11 +2,11 @@ import { $, state } from "./state.js";
 import { renderCobyMarkup, plainCobyText } from "./coby-markup.js";
 import { addAnswerCopyButton } from "./chat-ui.js";
 
-export const escapeHtml = text => String(text ?? "").replace(/[&<>\\"]/g, ch => ({
+// HTML escaping intentionally preserves backslashes so Python/Windows paths stay intact.
+export const escapeHtml = text => String(text ?? "").replace(/[&<>"]/g, ch => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
-    "\\": "\\\\",
     "\"": "&quot;"
 }[ch]));
 
