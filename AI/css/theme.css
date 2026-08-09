@@ -1,0 +1,18 @@
+:root{--primary-color:#27ae60;--primary-soft:color-mix(in srgb,var(--primary-color) 10%,white);--primary-soft-strong:color-mix(in srgb,var(--primary-color) 16%,white);--primary-border:color-mix(in srgb,var(--primary-color) 28%,#e7e7e7)}
+.header{border-bottom-color:var(--primary-color)}
+.status-dot.connected{background:var(--primary-color)}
+.side-btn:hover{background:var(--primary-soft)}
+.chat-item.active,.project-chat.active{background:var(--primary-soft-strong);color:var(--primary-color)}
+.chat-rename:hover{background:var(--primary-soft);border-color:var(--primary-border);color:var(--primary-color)}
+.project-item[open],.project-item.active{background:var(--primary-soft)}
+.project-delete:hover{background:#fff2f2}
+.profile-circle{background:var(--primary-color)}
+.message.ai .message-label{color:var(--primary-color)}
+.message.user{background:var(--primary-color)}
+.input-box:focus-within{border-color:var(--primary-color);box-shadow:0 2px 14px color-mix(in srgb,var(--primary-color) 18%,transparent)}
+.send{background:var(--primary-color)}
+.create-btn{background:var(--primary-color)}
+.restore-btn{background:var(--primary-soft-strong);border-color:var(--primary-border);color:var(--primary-color)}
+.restore-btn:hover{background:color-mix(in srgb,var(--primary-color) 20%,white);border-color:color-mix(in srgb,var(--primary-color) 40%,#ddd)}
+.settings-item:hover{background:var(--primary-soft)}
+.project-item summary:hover{background:var(--primary-soft)}
