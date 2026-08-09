@@ -36,13 +36,13 @@ async function getHistoryForRequest(text) {
 
     const recentSnapshot = await getDocs(query(messagesRef(), orderBy("createdAt", "desc"), limit(40)));
     const recentDocs = recentSnapshot.docs;
-    const oldestRecentDoc = recentDocs[recentDocs.length - 1];
     let history = [...recentDocs].reverse().map(extractMessage);
 
     if (!needsOlderHistory(text) || recentDocs.length < 40) return history;
 
-    // 과거 참조가 명확할 때만 가장 최근 40개보다 오래된 한 페이지를 추가한다.
-    // 다음 요청에서 과거 참조가 다시 필요하면 그때 다시 조회한다.
+    // 과거 참조가 명확할 때만 한 페이지씩 추가한다.
+    // 이전 페이지가 필요할 때마다 호출자가 다시 요청하도록 하여 무제한 조회를 피한다.
+    const oldestRecentDoc = recentDocs[recentDocs.length - 1];
     const timestamp = oldestRecentDoc?.data()?.createdAt;
     if (!timestamp) return history;
 
