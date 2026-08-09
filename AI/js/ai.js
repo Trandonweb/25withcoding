@@ -18,13 +18,13 @@ const extractMessage = item => {
 export async function getConversationHistory() {
     if (!state.currentConversationId) return [];
     const snapshot = await getDocs(query(messagesRef(), orderBy("createdAt", "desc"), limit(40)));
-    return snapshot.docs.reverse().map(extractMessage);
+    return [...snapshot.docs].reverse().map(extractMessage);
 }
 
 export async function getOlderConversationHistory(beforeTimestamp, count = 40) {
     if (!state.currentConversationId || !beforeTimestamp) return [];
     const snapshot = await getDocs(query(messagesRef(), orderBy("createdAt", "desc"), startAfter(beforeTimestamp), limit(count)));
-    return snapshot.docs.reverse().map(extractMessage);
+    return [...snapshot.docs].reverse().map(extractMessage);
 }
 
 function needsOlderHistory(text) {
@@ -36,13 +36,13 @@ async function getHistoryForRequest(text) {
 
     const recentSnapshot = await getDocs(query(messagesRef(), orderBy("createdAt", "desc"), limit(40)));
     const recentDocs = recentSnapshot.docs;
-    let history = recentDocs.reverse().map(extractMessage);
+    const oldestRecentDoc = recentDocs[recentDocs.length - 1];
+    let history = [...recentDocs].reverse().map(extractMessage);
 
     if (!needsOlderHistory(text) || recentDocs.length < 40) return history;
 
-    // 과거 참조가 명확할 때만 한 페이지씩 추가한다.
-    // 각 요청은 최대 2페이지(80개)까지만 읽고, 다음 요청에서 다시 필요하면 추가 조회한다.
-    const oldestRecentDoc = recentSnapshot.docs[recentSnapshot.docs.length - 1];
+    // 과거 참조가 명확할 때만 가장 최근 40개보다 오래된 한 페이지를 추가한다.
+    // 다음 요청에서 과거 참조가 다시 필요하면 그때 다시 조회한다.
     const timestamp = oldestRecentDoc?.data()?.createdAt;
     if (!timestamp) return history;
 
