@@ -1,16 +1,81 @@
-/* COBY AI custom response markup */
+/* COBY AI custom response markup + chat UI */
+
+/* AI는 말풍선이 아니라 본문처럼 넓게 사용 */
+.message.ai {
+    width: min(920px, 100%);
+    max-width: min(920px, 100%);
+    margin: 24px auto;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    color: var(--text, #222);
+    box-shadow: none;
+}
+
+.message.ai .message-label {
+    margin: 0 0 8px;
+    font-size: 11px;
+    color: var(--primary, #27ae60);
+    opacity: 1;
+    letter-spacing: .4px;
+}
 
 .message.ai .message-content {
-    line-height: 1.7;
+    line-height: 1.75;
+    font-size: 15px;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .message.ai .message-content strong {
     font-weight: 800;
 }
 
+/* 사용자 메시지는 작고 자연스럽게 */
+.message.user {
+    width: fit-content;
+    max-width: min(620px, 72%);
+    margin: 14px max(0px, calc((100% - 920px) / 2)) 14px auto;
+    padding: 9px 13px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.message.user .message-label {
+    display: none;
+}
+
+/* 답변 전체 복사 */
+.coby-answer-actions {
+    margin-top: 12px;
+}
+
+.coby-answer-copy {
+    border: 1px solid #dcdcdc;
+    border-radius: 9px;
+    padding: 7px 10px;
+    background: #fff;
+    color: #555;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    transition: background .15s, transform .15s;
+}
+
+.coby-answer-copy:hover {
+    background: #f5f5f5;
+}
+
+.coby-answer-copy:active {
+    transform: scale(.97);
+}
+
+/* 복사 블록 */
 .coby-copy {
     width: 100%;
-    margin: 12px 0;
+    margin: 14px 0;
     overflow: hidden;
     border: 1px solid #303030;
     border-radius: 13px;
@@ -41,14 +106,10 @@
     cursor: pointer;
     font-size: 12px;
     font-weight: 700;
-    transition: transform .15s ease, opacity .15s ease;
 }
 
-.coby-copy-btn:hover {
-    opacity: .9;
-}
-
-.coby-copy-btn:active {
+.coby-copy-btn:active,
+.coby-answer-copy:active {
     transform: scale(.96);
 }
 
@@ -63,19 +124,15 @@
     tab-size: 4;
 }
 
+/* 경고 / 성공 / 팁 */
 .coby-callout {
     display: flex;
     align-items: flex-start;
     gap: 9px;
     width: 100%;
-    margin: 12px 0;
+    margin: 13px 0;
     padding: 12px 14px;
     border-radius: 12px;
-    line-height: 1.6;
-}
-
-.coby-callout-icon {
-    flex: none;
     line-height: 1.6;
 }
 
@@ -99,14 +156,77 @@
 
 .coby-divider {
     width: 100%;
-    margin: 16px 0;
+    margin: 18px 0;
     border: 0;
     border-top: 1px solid #dcdcdc;
 }
 
-@media (max-width: 600px) {
-    .coby-copy-head {
-        font-size: 11px;
+/* 삭제 버튼이 채팅 항목 안에 자연스럽게 들어가도록 */
+.chat-item {
+    position: relative;
+    padding-right: 38px;
+}
+
+.chat-delete {
+    position: absolute;
+    top: 50%;
+    right: 7px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #999;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    opacity: 0;
+}
+
+.chat-item:hover .chat-delete,
+.chat-delete:focus-visible {
+    opacity: 1;
+}
+
+.chat-delete:hover {
+    background: #fee;
+    color: #c33;
+}
+
+/* textarea */
+#userInput {
+    resize: none;
+    overflow-y: auto;
+    max-height: 150px;
+    line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+    .message.ai {
+        width: 100%;
+        max-width: 100%;
+        margin: 20px 0;
+    }
+
+    .message.ai .message-content {
+        font-size: 14px;
+    }
+
+    .message.user {
+        max-width: 82%;
+        margin-right: 0;
+        margin-left: auto;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .coby-answer-copy {
+        padding: 8px 10px;
+    }
+
+    .chat-delete {
+        opacity: 1;
     }
 
     .coby-copy pre {
