@@ -1,5 +1,5 @@
 import { state, $, isAdmin } from "./state.js";
-import { db, doc, getDocs, collection, query, orderBy, deleteDoc } from "./firebase.js";
+import { db, doc, getDocs, collection, query, orderBy } from "./firebase.js";
 import { escapeHtml, formatDate, closeMenu } from "./ui.js";
 import { conversationsRoot, deleteConversationFromDb, createConversation, loadChats } from "./conversations.js";
 import { loadTrash } from "./trash.js";
@@ -16,11 +16,13 @@ export async function loadAdminLogs() {
 
     try {
         const users = await getDocs(collection(db, "people"));
-        const rows = [];
+        const userGroups = [];
 
         for (const user of users.docs) {
             const uid = user.id;
+            const userData = user.data();
             const conversations = await getDocs(query(conversationsRoot(uid), orderBy("updatedAt", "desc")));
+            const rows = [];
 
             for (const conversation of conversations.docs) {
                 const data = conversation.data();
@@ -35,46 +37,76 @@ export async function loadAdminLogs() {
                     messages: messages.docs.map(message => message.data())
                 });
             }
+
+            if (rows.length) {
+                rows.sort((a, b) => (b.data.updatedAt?.toMillis?.() || 0) - (a.data.updatedAt?.toMillis?.() || 0));
+                userGroups.push({
+                    uid,
+                    name: userData.name || userData.displayName || uid,
+                    role: userData.role || "student",
+                    rows
+                });
+            }
         }
 
-        rows.sort((a, b) => (b.data.updatedAt?.toMillis?.() || 0) - (a.data.updatedAt?.toMillis?.() || 0));
-        list.innerHTML = "";
+        userGroups.sort((a, b) => {
+            const aTime = a.rows[0]?.data.updatedAt?.toMillis?.() || 0;
+            const bTime = b.rows[0]?.data.updatedAt?.toMillis?.() || 0;
+            return bTime - aTime;
+        });
 
-        if (!rows.length) {
+        list.innerHTML = "";
+        if (!userGroups.length) {
             list.innerHTML = '<div class="empty-chat">대화 로그가 없습니다.</div>';
             return;
         }
 
-        rows.forEach(row => {
-            const element = document.createElement("article");
-            element.className = "admin-log-item";
-            const messagesHtml = row.messages.map(message =>
-                `<div class="admin-log-message"><b>${message.role === "user" ? "사용자" : "COBY"}</b><div>${escapeHtml(plainCobyText(message.content || ""))}</div></div>`
-            ).join("");
+        userGroups.forEach(group => {
+            const userSection = document.createElement("details");
+            userSection.className = "admin-user-group";
+            userSection.open = true;
+            userSection.innerHTML = `<summary><strong>${escapeHtml(group.name)}</strong><span class="system-meta">${escapeHtml(group.uid)} · ${escapeHtml(group.role)} · ${group.rows.length}개 대화</span></summary><div class="admin-user-conversations"></div>`;
+            const conversationList = userSection.querySelector(".admin-user-conversations");
 
-            element.innerHTML = `<div class="admin-log-head"><div><strong>${escapeHtml(row.data.title || "새 대화")}</strong><div class="system-meta">사용자: ${escapeHtml(row.uid)} · ${formatDate(row.data.updatedAt)} ${row.data.isDeleted ? "· 휴지통" : ""}</div></div><button class="danger-btn" type="button">DB 삭제</button></div><details class="admin-log-details"><summary>대화 내용 보기 (${row.messages.length}개)</summary><div class="admin-log-messages">${messagesHtml || '<div class="empty-chat">메시지가 없습니다.</div>'}</div></details>`;
+            group.rows.forEach(row => {
+                const element = document.createElement("article");
+                element.className = "admin-log-item";
+                const messagesHtml = row.messages.map(message =>
+                    `<div class="admin-log-message"><b>${message.role === "user" ? "사용자" : "COBY"}</b><div>${escapeHtml(plainCobyText(message.content || ""))}</div></div>`
+                ).join("");
 
-            element.querySelector(".danger-btn").onclick = async () => {
-                if (!confirm(`'${row.data.title || "새 대화"}'의 대화와 메시지를 Firebase에서 영구 삭제할까요?`)) return;
-                const button = element.querySelector(".danger-btn");
-                button.disabled = true;
-                const ok = await deleteConversationFromDb(row.uid, row.cid);
-                if (!ok) {
-                    alert("DB 삭제에 실패했습니다.");
-                    button.disabled = false;
-                    return;
-                }
+                const visibilityLabel = row.data.hiddenFromUser
+                    ? " · 사용자 화면에서 영구 삭제됨"
+                    : row.data.isDeleted
+                        ? " · 휴지통"
+                        : "";
 
-                element.remove();
-                if (row.uid === state.currentUserId && row.cid === state.currentConversationId) {
-                    state.currentConversationId = null;
-                    await createConversation(state.currentProjectId);
-                }
-                await loadChats();
-                await loadTrash();
-            };
+                element.innerHTML = `<div class="admin-log-head"><div><strong>${escapeHtml(row.data.title || "새 대화")}</strong><div class="system-meta">${formatDate(row.data.updatedAt)}${visibilityLabel}</div></div><button class="danger-btn" type="button">DB 삭제</button></div><details class="admin-log-details"><summary>대화 내용 보기 (${row.messages.length}개)</summary><div class="admin-log-messages">${messagesHtml || '<div class="empty-chat">메시지가 없습니다.</div>'}</div></details>`;
 
-            list.appendChild(element);
+                element.querySelector(".danger-btn").onclick = async () => {
+                    if (!confirm(`'${row.data.title || "새 대화"}'의 대화와 메시지를 Firebase에서 영구 삭제할까요?`)) return;
+                    const button = element.querySelector(".danger-btn");
+                    button.disabled = true;
+                    const ok = await deleteConversationFromDb(row.uid, row.cid);
+                    if (!ok) {
+                        alert("DB 삭제에 실패했습니다.");
+                        button.disabled = false;
+                        return;
+                    }
+
+                    element.remove();
+                    if (row.uid === state.currentUserId && row.cid === state.currentConversationId) {
+                        state.currentConversationId = null;
+                        await createConversation(state.currentProjectId);
+                    }
+                    await loadChats();
+                    await loadTrash();
+                };
+
+                conversationList.appendChild(element);
+            });
+
+            list.appendChild(userSection);
         });
     } catch (error) {
         console.error(error);
