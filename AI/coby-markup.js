@@ -1,202 +1,232 @@
-/*
- * COBY AI custom response markup
- *
- * ***text***  -> bold
- * <<<text>>>  -> copy box
- * [[[text]]]  -> warning box
- * {{{text}}}  -> success box
- * (((text)))  -> tip box
- * ---         -> divider
- */
-
+/* COBY AI response markup + UI enhancements */
 (function () {
     "use strict";
 
+    const FIREBASE_VERSION = "12.17.1";
+    const MAIN_CONFIG = {
+        apiKey: "AIzaSyAiO65YzYeRfuf6fCzosuW7OAVV47o47Js",
+        authDomain: "coby-ai-328dd.firebaseapp.com",
+        projectId: "coby-ai-328dd",
+        storageBucket: "coby-ai-328dd.firebasestorage.app",
+        messagingSenderId: "865530259286",
+        appId: "1:865530259286:web:6feaa5781dc538700b18f7"
+    };
+
     function escapeHtml(value) {
-        return String(value).replace(/[&<>\"]/g, function (char) {
-            return {
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                "\"": "&quot;"
-            }[char];
+        return String(value ?? "").replace(/[&<>\"]/g, function (char) {
+            return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[char];
         });
     }
 
     function renderInline(text) {
-        let result = escapeHtml(text);
-
-        result = result.replace(/\*\*\*([\s\S]*?)\*\*\*/g, "<strong>$1</strong>");
-
-        return result;
+        return escapeHtml(text).replace(/\*\*\*([\s\S]*?)\*\*\*/g, "<strong>$1</strong>");
     }
 
     function renderCobyMarkup(text) {
         const source = String(text ?? "").replace(/\r\n?/g, "\n");
         const blocks = [];
         const token = "__COBY_BLOCK_";
-
-        function saveBlock(html) {
-            const index = blocks.length;
-            blocks.push(html);
-            return token + index + "__";
-        }
-
+        const save = html => { const i = blocks.length; blocks.push(html); return token + i + "__"; };
         let output = source;
 
-        // Copy blocks are processed first so their contents are never
-        // interpreted as HTML or as another COBY markup command.
         output = output.replace(/<<<([\s\S]*?)>>>/g, function (_, value) {
             const raw = value.replace(/^\n|\n$/g, "");
-            const encoded = escapeHtml(raw);
-
-            return saveBlock(
-                '<div class="coby-copy" data-copy-text="' +
-                escapeHtml(raw).replace(/'/g, "&#39;") +
-                '">' +
-                '<div class="coby-copy-head">' +
-                '<span>복사 가능한 내용</span>' +
-                '<button type="button" class="coby-copy-btn">📋 복사</button>' +
-                '</div>' +
-                '<pre>' + encoded + '</pre>' +
-                '</div>'
+            return save(
+                '<div class="coby-copy" data-copy-text="' + escapeHtml(raw).replace(/'/g, "&#39;") + '">' +
+                '<div class="coby-copy-head"><span>복사 가능한 내용</span><button type="button" class="coby-copy-btn">📋 복사</button></div>' +
+                '<pre>' + escapeHtml(raw) + '</pre></div>'
             );
         });
 
-        // Warning / success / tip blocks can contain bold markup.
-        output = output.replace(/\[\[\[([\s\S]*?)\]\]\]/g, function (_, value) {
-            return saveBlock(
-                '<div class="coby-callout coby-warning">' +
-                '<span class="coby-callout-icon">⚠️</span>' +
-                '<div>' + renderInline(value.trim()) + '</div>' +
-                '</div>'
-            );
-        });
+        output = output.replace(/\[\[\[([\s\S]*?)\]\]\]/g, (_, value) => save('<div class="coby-callout coby-warning"><span>⚠️</span><div>' + renderInline(value.trim()) + '</div></div>'));
+        output = output.replace(/\{\{\{([\s\S]*?)\}\}\}/g, (_, value) => save('<div class="coby-callout coby-success"><span>✅</span><div>' + renderInline(value.trim()) + '</div></div>'));
+        output = output.replace(/\(\(\(([\s\S]*?)\)\)\)/g, (_, value) => save('<div class="coby-callout coby-tip"><span>💡</span><div>' + renderInline(value.trim()) + '</div></div>'));
 
-        output = output.replace(/\{\{\{([\s\S]*?)\}\}\}/g, function (_, value) {
-            return saveBlock(
-                '<div class="coby-callout coby-success">' +
-                '<span class="coby-callout-icon">✅</span>' +
-                '<div>' + renderInline(value.trim()) + '</div>' +
-                '</div>'
-            );
-        });
-
-        output = output.replace(/\(\(\(([\s\S]*?)\)\)\)/g, function (_, value) {
-            return saveBlock(
-                '<div class="coby-callout coby-tip">' +
-                '<span class="coby-callout-icon">💡</span>' +
-                '<div>' + renderInline(value.trim()) + '</div>' +
-                '</div>'
-            );
-        });
-
-        // Ordinary text is escaped before formatting.
         output = renderInline(output);
-
-        // Divider: a line containing only three or more hyphens.
         output = output.replace(/^\s*-{3,}\s*$/gm, '<hr class="coby-divider">');
-
-        // Preserve line breaks without exposing HTML from the model.
         output = output.replace(/\n/g, "<br>");
-
-        // Restore trusted blocks created above.
-        output = output.replace(/__COBY_BLOCK_(\d+)__/g, function (_, index) {
-            return blocks[Number(index)] || "";
-        });
-
+        output = output.replace(/__COBY_BLOCK_(\d+)__/g, (_, i) => blocks[Number(i)] || "");
         return output;
     }
 
-    async function copyCobyText(text, button) {
+    async function copyText(text, button) {
         try {
             await navigator.clipboard.writeText(text);
-            button.textContent = "✅ 복사됨";
-        } catch (error) {
-            const textarea = document.createElement("textarea");
-            textarea.value = text;
-            textarea.style.position = "fixed";
-            textarea.style.opacity = "0";
-            document.body.appendChild(textarea);
-            textarea.select();
-
-            try {
-                document.execCommand("copy");
-                button.textContent = "✅ 복사됨";
-            } finally {
-                textarea.remove();
-            }
+        } catch (_) {
+            const area = document.createElement("textarea");
+            area.value = text;
+            area.style.position = "fixed";
+            area.style.opacity = "0";
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand("copy");
+            area.remove();
         }
-
-        window.setTimeout(function () {
-            button.textContent = "📋 복사";
-        }, 1400);
+        const old = button.textContent;
+        button.textContent = "✅ 복사됨";
+        setTimeout(() => button.textContent = old, 1400);
     }
 
-    document.addEventListener("click", function (event) {
+    function addAnswerCopyButton(message, rawText) {
+        if (message.querySelector(".coby-answer-actions")) return;
+        const actions = document.createElement("div");
+        actions.className = "coby-answer-actions";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "coby-answer-copy";
+        button.textContent = "📋 답변 복사";
+        button.addEventListener("click", () => copyText(rawText, button));
+        actions.appendChild(button);
+        message.appendChild(actions);
+    }
+
+    function enhanceMessage(message) {
+        if (!message || message.dataset.cobyEnhanced === "1") return;
+        const label = message.querySelector(".message-label");
+        if (!label) return;
+
+        const rawText = Array.from(message.childNodes)
+            .filter(node => node !== label)
+            .map(node => node.nodeType === Node.TEXT_NODE ? node.textContent : node.textContent)
+            .join("")
+            .trim();
+
+        if (message.classList.contains("ai")) {
+            const content = document.createElement("div");
+            content.className = "message-content";
+            content.innerHTML = renderCobyMarkup(rawText);
+            message.innerHTML = "";
+            message.appendChild(label);
+            message.appendChild(content);
+            addAnswerCopyButton(message, rawText);
+        }
+
+        message.dataset.cobyEnhanced = "1";
+    }
+
+    function enhanceMessages() {
+        document.querySelectorAll("#messages .message").forEach(enhanceMessage);
+    }
+
+    function replaceInputWithTextarea() {
+        const old = document.getElementById("userInput");
+        if (!old || old.tagName === "TEXTAREA") return;
+
+        const area = document.createElement("textarea");
+        area.id = "userInput";
+        area.placeholder = old.placeholder;
+        area.autocomplete = old.autocomplete || "off";
+        area.spellcheck = false;
+        area.rows = 1;
+        area.value = old.value;
+        old.replaceWith(area);
+
+        function resize() {
+            area.style.height = "auto";
+            area.style.height = Math.min(area.scrollHeight, 150) + "px";
+        }
+
+        area.addEventListener("input", resize);
+        area.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && event.shiftKey) return;
+            if (event.key === "Enter") {
+                event.preventDefault();
+                if (typeof window.sendMessage === "function") window.sendMessage();
+            }
+        });
+        resize();
+    }
+
+    async function deleteConversation(id, item) {
+        const userId = localStorage.getItem("userId");
+        if (!userId || !id) return;
+        if (!confirm("이 대화를 삭제할까요?")) return;
+
+        try {
+            const [{ initializeApp }, { getFirestore, doc, getDocs, collection, deleteDoc, writeBatch }] = await Promise.all([
+                import("https://www.gstatic.com/firebasejs/" + FIREBASE_VERSION + "/firebase-app.js"),
+                import("https://www.gstatic.com/firebasejs/" + FIREBASE_VERSION + "/firebase-firestore.js")
+            ]);
+            const app = initializeApp(MAIN_CONFIG, "cobyUiDelete");
+            const db = getFirestore(app);
+            const messages = collection(db, "people", userId, "conversations", id, "messages");
+            const snap = await getDocs(messages);
+            const batch = writeBatch(db);
+            snap.forEach(m => batch.delete(m.ref));
+            batch.delete(doc(db, "people", userId, "conversations", id));
+            await batch.commit();
+
+            const current = item && item.classList.contains("active");
+            item?.remove();
+            if (current) {
+                const input = document.getElementById("userInput");
+                if (typeof window.newChat === "function") await window.newChat();
+                else if (input) input.focus();
+            }
+        } catch (error) {
+            console.error("대화 삭제 실패:", error);
+            alert("대화 삭제에 실패했습니다.");
+        }
+    }
+
+    function enhanceChatList() {
+        document.querySelectorAll("#chatList .chat-item").forEach(item => {
+            if (item.querySelector(".chat-delete")) return;
+            const onclick = item.getAttribute("onclick");
+            let id = null;
+            if (onclick) {
+                const match = onclick.match(/openConversation\(['\"]([^'\"]+)['\"]\)/);
+                if (match) id = match[1];
+            }
+            // Current index.html uses element.onclick rather than inline onclick.
+            // The id is recovered from the active item only when available; for all
+            // other items we read the title/date and use the DOM event hook below.
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "chat-delete";
+            button.textContent = "×";
+            button.title = "대화 삭제";
+            button.addEventListener("click", async function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                let conversationId = id;
+                if (!conversationId && item.dataset.conversationId) conversationId = item.dataset.conversationId;
+                if (!conversationId) {
+                    alert("이 대화의 ID를 확인할 수 없습니다. 새로고침 후 다시 시도해주세요.");
+                    return;
+                }
+                await deleteConversation(conversationId, item);
+            });
+            item.appendChild(button);
+        });
+    }
+
+    document.addEventListener("click", event => {
         const button = event.target.closest(".coby-copy-btn");
         if (!button) return;
-
         const box = button.closest(".coby-copy");
-        if (!box) return;
-
-        const pre = box.querySelector("pre");
-        if (!pre) return;
-
-        copyCobyText(pre.textContent, button);
+        const pre = box?.querySelector("pre");
+        if (pre) copyText(pre.textContent, button);
     });
 
     window.renderCobyMarkup = renderCobyMarkup;
 
-    // addMessage() in the current COBY page builds the message bubble with
-    // innerHTML. Patch that function after the page has loaded so existing
-    // chat/history logic remains unchanged.
-    function patchAddMessage() {
-        if (typeof window.addMessage !== "function") return false;
-        if (window.addMessage.__cobyMarkupPatched) return true;
+    const observer = new MutationObserver(() => {
+        enhanceMessages();
+        enhanceChatList();
+        replaceInputWithTextarea();
+    });
 
-        const original = window.addMessage;
-
-        window.addMessage = function (role, content) {
-            const before = document.querySelectorAll("#messages .message").length;
-            const result = original.apply(this, arguments);
-            const messages = document.querySelectorAll("#messages .message");
-            const target = messages[messages.length - 1];
-
-            if (target && messages.length >= before + 1 && role !== "user") {
-                const contentNode = target.querySelector(".message-content");
-
-                if (contentNode) {
-                    contentNode.innerHTML = renderCobyMarkup(content);
-                } else {
-                    // Current COBY versions may not use .message-content.
-                    // Replace only the text portion while keeping the label.
-                    const label = target.querySelector(".message-label");
-                    target.innerHTML = "";
-                    if (label) target.appendChild(label);
-                    const body = document.createElement("div");
-                    body.className = "message-content";
-                    body.innerHTML = renderCobyMarkup(content);
-                    target.appendChild(body);
-                }
-            }
-
-            return result;
-        };
-
-        window.addMessage.__cobyMarkupPatched = true;
-        return true;
+    function start() {
+        replaceInputWithTextarea();
+        enhanceMessages();
+        enhanceChatList();
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    // Retry because the Firebase module script and application functions are
-    // initialized during page startup.
-    let attempts = 0;
-    const timer = window.setInterval(function () {
-        attempts += 1;
-        if (patchAddMessage() || attempts >= 100) {
-            window.clearInterval(timer);
-        }
-    }, 50);
-
-    window.addEventListener("load", patchAddMessage);
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start, { once: true });
+    } else {
+        start();
+    }
 })();
