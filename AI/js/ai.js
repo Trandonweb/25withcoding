@@ -58,17 +58,35 @@ async function getHistoryForRequest(text) {
     ));
 
     const recentDocs = recentSnapshot.docs;
-    const oldestRecentDoc = recentDocs[recentDocs.length - 1] || null;
     let history = [...recentDocs].reverse().map(extractMessage);
 
-    // 평소에는 최근 40개만 사용한다. 사용자가 이전 대화를 명시적으로
-    // 참조할 때만 가장 오래된 최근 메시지보다 앞선 내용을 추가 조회한다.
-    if (needsOlderHistory(text) && oldestRecentDoc) {
-        const oldestTimestamp = oldestRecentDoc.data()?.createdAt;
-        if (oldestTimestamp) {
-            const older = await getOlderConversationHistory(oldestTimestamp, 40);
-            history = [...older, ...history];
-        }
+    if (!needsOlderHistory(text) || recentDocs.length < 40) {
+        return history;
+    }
+
+    // 과거 참조가 감지되면 필요한 범위까지 이전 페이지를 순차적으로 가져온다.
+    // Firestore 커서가 없으면 더 이상 조회하지 않는다.
+    let cursor = recentDocs[recentDocs.length - 1];
+    const maxPages = 5;
+
+    for (let page = 0; page < maxPages && cursor; page += 1) {
+        const timestamp = cursor.data()?.createdAt;
+        if (!timestamp) break;
+
+        const olderSnapshot = await getDocs(query(
+            messagesRef(),
+            orderBy("createdAt", "desc"),
+            startAfter(timestamp),
+            limit(40)
+        ));
+
+        if (olderSnapshot.empty) break;
+
+        const olderDocs = olderSnapshot.docs;
+        history = [...olderDocs.reverse().map(extractMessage), ...history];
+
+        if (olderDocs.length < 40) break;
+        cursor = olderDocs[olderDocs.length - 1];
     }
 
     return history;
