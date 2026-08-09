@@ -54,6 +54,25 @@ function logout() {
     location.href = `/signout/index.html?redirect=${redirect}`;
 }
 
+function toggleProfileMenu(event) {
+    event?.stopPropagation();
+    const menu = $("profileMenu");
+    const profile = document.querySelector(".profile");
+    if (!menu || !profile) return;
+
+    const willOpen = menu.hidden;
+    menu.hidden = !willOpen;
+    profile.setAttribute("aria-expanded", String(willOpen));
+}
+
+function closeProfileMenu() {
+    const menu = $("profileMenu");
+    const profile = document.querySelector(".profile");
+    if (!menu) return;
+    menu.hidden = true;
+    profile?.setAttribute("aria-expanded", "false");
+}
+
 function bindGlobalEvents() {
     window.openMenu = openMenu;
     window.closeMenu = closeMenu;
@@ -70,9 +89,15 @@ function bindGlobalEvents() {
     window.sendMessage = sendMessage;
     window.goHome = goHome;
     window.logout = logout;
+    window.toggleProfileMenu = toggleProfileMenu;
+    window.closeProfileMenu = closeProfileMenu;
 
     $("projectNameInput").addEventListener("keydown", event => {
         if (event.key === "Enter") createProject();
+    });
+
+    document.addEventListener("click", event => {
+        if (!event.target.closest(".profile-area")) closeProfileMenu();
     });
 
     document.addEventListener("keydown", event => {
@@ -81,6 +106,7 @@ function bindGlobalEvents() {
             closeProjectModal();
             closeTrash();
             closeAdminLogs();
+            closeProfileMenu();
         }
     });
 
