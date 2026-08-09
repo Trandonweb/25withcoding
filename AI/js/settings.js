@@ -1,67 +1,25 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 import { getFirestore, doc, getDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
-import { state, $, isAdmin } from "./state.js";
+import { state, $ } from "./state.js";
+import { db as cobyDb } from "./firebase.js";
 
 const mainFirebaseConfig={apiKey:"AIzaSyBgAf4JrArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
 const mainDb=getFirestore(initializeApp(mainFirebaseConfig,"cobySettings"));
 const TONE_KEY="coby_settings";
 const TONES={friendly:"친근하게",professional:"전문적으로",easy:"쉽게 설명",concise:"간결하게",teacher:"선생님처럼",custom:"직접 입력"};
-
 export function isAdminRole(role){return role==="president"||role==="vice";}
 function getSavedSettings(){try{return JSON.parse(localStorage.getItem(TONE_KEY)||"{}")||{};}catch{return {};}}
 function saveTone(tone,customTone=""){localStorage.setItem(TONE_KEY,JSON.stringify({tone,customTone}));window.dispatchEvent(new CustomEvent("coby-tone-change"));}
 function escapeHtml(value){return String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));}
-
-function renderSettings(admin){
- const list=$("settingsList");if(!list)return;
- const saved=getSavedSettings(),selected=saved.tone||"friendly";
- list.innerHTML=`<section class="settings-section"><div class="settings-section-title">💬 COBY 말투</div><p class="settings-section-desc">COBY가 답변할 때 사용할 말투를 선택하세요.</p><div class="tone-options">${Object.entries(TONES).map(([v,l])=>`<button type="button" class="tone-option ${selected===v?"selected":""}" data-tone="${v}"><span>${l}</span><span class="tone-check">✓</span></button>`).join("")}</div><div class="custom-tone-wrap" id="customToneWrap" ${selected==="custom"?"":"hidden"}><label for="customToneInput">원하는 말투를 직접 입력하세요</label><textarea id="customToneInput" maxlength="300" placeholder="예: 중학생도 이해하기 쉽게, 너무 딱딱하지 않게 설명해줘.">${escapeHtml(saved.customTone||"")}</textarea><button type="button" class="custom-tone-save" id="customToneSave">저장</button></div></section>${admin?`<button type="button" class="settings-admin-button" id="settingsAdminLogsButton"><span class="settings-admin-icon">👥</span><span><strong>사용자별 대화 로그 보기</strong><small>관리자 전용 · 모든 사용자의 대화 기록</small></span><b>›</b></button>`:""}`;
- const wrap=$("customToneWrap");
- list.querySelectorAll(".tone-option").forEach(btn=>btn.addEventListener("click",()=>{const tone=btn.dataset.tone;const old=getSavedSettings();saveTone(tone,old.customTone||"");list.querySelectorAll(".tone-option").forEach(x=>x.classList.toggle("selected",x===btn));if(wrap)wrap.hidden=tone!=="custom";}));
- $("customToneSave")?.addEventListener("click",()=>{const value=$("customToneInput")?.value.trim()||"";saveTone("custom",value);const b=$("customToneSave");b.textContent="저장됨 ✓";setTimeout(()=>{if(b)b.textContent="저장";},1200);});
- $("settingsAdminLogsButton")?.addEventListener("click",openAdminLogs);
-}
-
-async function loadSettingsAccess(){
- const userId=state.currentUserId||localStorage.getItem("userId");let admin=false;
- if(userId){try{const s=await getDoc(doc(mainDb,"users",userId));admin=s.exists()&&isAdminRole(s.data().role);}catch(e){console.warn("설정 권한 확인 실패",e);}}
- renderSettings(admin);
-}
-
+function renderSettings(admin){const list=$("settingsList");if(!list)return;const saved=getSavedSettings(),selected=saved.tone||"friendly";list.innerHTML=`<section class="settings-section"><div class="settings-section-title">💬 COBY 말투</div><p class="settings-section-desc">COBY가 답변할 때 사용할 말투를 선택하세요.</p><div class="tone-options">${Object.entries(TONES).map(([v,l])=>`<button type="button" class="tone-option ${selected===v?"selected":""}" data-tone="${v}"><span>${l}</span><span class="tone-check">✓</span></button>`).join("")}</div><div class="custom-tone-wrap" id="customToneWrap" ${selected==="custom"?"":"hidden"}><label for="customToneInput">원하는 말투를 직접 입력하세요</label><textarea id="customToneInput" maxlength="300" placeholder="예: 중학생도 이해하기 쉽게, 너무 딱딱하지 않게 설명해줘.">${escapeHtml(saved.customTone||"")}</textarea><button type="button" class="custom-tone-save" id="customToneSave">저장</button></div></section>${admin?`<button type="button" class="settings-admin-button" id="settingsAdminLogsButton"><span class="settings-admin-icon">👥</span><span><strong>사용자별 대화 로그 보기</strong><small>관리자 전용 · 모든 사용자의 대화 기록</small></span><b>›</b></button>`:""}`;const wrap=$("customToneWrap");list.querySelectorAll(".tone-option").forEach(btn=>btn.addEventListener("click",()=>{const tone=btn.dataset.tone,old=getSavedSettings();saveTone(tone,old.customTone||"");list.querySelectorAll(".tone-option").forEach(x=>x.classList.toggle("selected",x===btn));if(wrap)wrap.hidden=tone!=="custom";}));$("customToneSave")?.addEventListener("click",()=>{const value=$("customToneInput")?.value.trim()||"";saveTone("custom",value);const b=$("customToneSave");b.textContent="저장됨 ✓";setTimeout(()=>{if(b)b.textContent="저장";},1200);});$("settingsAdminLogsButton")?.addEventListener("click",openAdminLogs);}
+async function loadSettingsAccess(){const userId=state.currentUserId||localStorage.getItem("userId");let admin=false;if(userId){try{const s=await getDoc(doc(mainDb,"users",userId));admin=s.exists()&&isAdminRole(s.data().role);}catch(e){console.warn("설정 권한 확인 실패",e);}}renderSettings(admin);}
 export function getCobyToneSettings(){const s=getSavedSettings();return{tone:s.tone||"friendly",toneLabel:TONES[s.tone]||TONES.friendly,customTone:s.customTone||""};}
 export function openSettings(){const m=$("settingsModal");if(!m)return;m.classList.add("show");m.setAttribute("aria-hidden","false");loadSettingsAccess();}
 export function closeSettings(){const m=$("settingsModal");if(!m)return;m.classList.remove("show");m.setAttribute("aria-hidden","true");}
-
 async function verifyAdmin(){if(!state.currentUserId)return false;try{const s=await getDoc(doc(mainDb,"users",state.currentUserId));return s.exists()&&isAdminRole(s.data().role);}catch{return false;}}
-
-export async function openAdminLogs(){
- if(!(await verifyAdmin())){alert("관리자 권한이 필요합니다.");return;}
- const modal=$("adminLogsModal");if(!modal)return;modal.classList.add("show");modal.setAttribute("aria-hidden","false");
- const users=$("adminUserList"),conversations=$("adminConversationList");conversations.hidden=true;users.hidden=false;users.innerHTML='<div class="settings-empty">사용자 목록을 불러오는 중...</div>';
- try{
-  const snap=await getDocs(collection(mainDb,"users"));
-  const list=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.name||a.id).localeCompare(String(b.name||b.id),"ko"));
-  users.innerHTML=list.length?list.map(u=>`<button class="admin-user-card" type="button" data-uid="${escapeHtml(u.id)}"><span class="admin-user-avatar">${escapeHtml(String(u.name||"?").slice(0,1))}</span><span><strong>${escapeHtml(u.name||"이름 없음")}</strong><small>${escapeHtml(u.id)} · ${escapeHtml(u.role||"student")}</small></span><b>›</b></button>`).join(""):'<div class="settings-empty">등록된 사용자가 없습니다.</div>';
-  users.querySelectorAll(".admin-user-card").forEach(b=>b.onclick=()=>loadUserLogs(b.dataset.uid,b.querySelector("strong")?.textContent||b.dataset.uid));
- }catch(e){console.error(e);users.innerHTML='<div class="settings-empty error">사용자 목록을 불러오지 못했습니다. Firestore 권한을 확인해주세요.</div>';}
-}
-
-async function loadUserLogs(uid,name){
- if(!(await verifyAdmin()))return;
- const users=$("adminUserList"),list=$("adminConversationList");users.hidden=true;list.hidden=false;list.innerHTML=`<div class="admin-log-back"><button type="button" id="adminLogsBack">‹ 사용자 목록</button><strong>${escapeHtml(name)}</strong></div><div class="settings-empty">대화 목록을 불러오는 중...</div>`;
- $("adminLogsBack").onclick=()=>{list.hidden=true;users.hidden=false;};
- try{
-  const snap=await getDocs(query(collection(mainDb,"people",uid,"conversations"),orderBy("updatedAt","desc"),limit(100)));
-  list.innerHTML=`<div class="admin-log-back"><button type="button" id="adminLogsBack">‹ 사용자 목록</button><strong>${escapeHtml(name)}</strong></div>`+(snap.empty?'<div class="settings-empty">대화 기록이 없습니다.</div>':snap.docs.map(d=>{const x=d.data();return `<details class="admin-log-conversation"><summary><span>${escapeHtml(x.title||"새 대화")}</span><small>${x.isDeleted?"휴지통":"대화"}</small></summary><div class="admin-log-messages" data-uid="${escapeHtml(uid)}" data-cid="${escapeHtml(d.id)}">불러오는 중...</div></details>`;}).join(""));
-  $("adminLogsBack").onclick=()=>{list.hidden=true;users.hidden=false;};
-  for(const box of list.querySelectorAll(".admin-log-messages"))loadConversationMessages(box.dataset.uid,box.dataset.cid,box);
- }catch(e){console.error(e);list.innerHTML='<div class="settings-empty error">대화 로그를 불러오지 못했습니다. Firestore 보안 규칙을 확인해주세요.</div>';}
-}
-
-async function loadConversationMessages(uid,cid,box){
- try{const snap=await getDocs(query(collection(mainDb,"people",uid,"conversations",cid,"messages"),orderBy("createdAt","asc"),limit(200)));box.innerHTML=snap.empty?'<span class="settings-empty">메시지가 없습니다.</span>':snap.docs.map(d=>{const x=d.data();return `<div class="admin-message ${x.role==="user"?"user":"assistant"}"><span>${x.role==="user"?"사용자":"COBY"}</span><p>${escapeHtml(x.content||"")}</p></div>`;}).join("");}catch{box.innerHTML='<span class="settings-empty error">메시지를 불러오지 못했습니다.</span>';}
-}
-
+export async function openAdminLogs(){if(!(await verifyAdmin())){alert("관리자 권한이 필요합니다.");return;}const modal=$("adminLogsModal");if(!modal)return;modal.classList.add("show");modal.setAttribute("aria-hidden","false");const users=$("adminUserList"),conversations=$("adminConversationList");conversations.hidden=true;users.hidden=false;users.innerHTML='<div class="settings-empty">사용자 목록을 불러오는 중...</div>';try{const snap=await getDocs(collection(mainDb,"users"));const list=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.name||a.id).localeCompare(String(b.name||b.id),"ko"));users.innerHTML=list.length?list.map(u=>`<button class="admin-user-card" type="button" data-uid="${escapeHtml(u.id)}"><span class="admin-user-avatar">${escapeHtml(String(u.name||"?").slice(0,1))}</span><span><strong>${escapeHtml(u.name||"이름 없음")}</strong><small>${escapeHtml(u.id)} · ${escapeHtml(u.role||"student")}</small></span><b>›</b></button>`).join(""):'<div class="settings-empty">등록된 사용자가 없습니다.</div>';users.querySelectorAll(".admin-user-card").forEach(b=>b.onclick=()=>loadUserLogs(b.dataset.uid,b.querySelector("strong")?.textContent||b.dataset.uid));}catch(e){console.error(e);users.innerHTML='<div class="settings-empty error">사용자 목록을 불러오지 못했습니다.</div>';}}
+async function loadUserLogs(uid,name){if(!(await verifyAdmin()))return;const users=$("adminUserList"),list=$("adminConversationList");users.hidden=true;list.hidden=false;list.innerHTML=`<div class="admin-log-back"><button type="button" id="adminLogsBack">‹ 사용자 목록</button><strong>${escapeHtml(name)}</strong></div><div class="settings-empty">대화 목록을 불러오는 중...</div>`;$("adminLogsBack").onclick=()=>{list.hidden=true;users.hidden=false;};try{const snap=await getDocs(query(collection(cobyDb,"people",uid,"conversations"),orderBy("updatedAt","desc"),limit(100)));list.innerHTML=`<div class="admin-log-back"><button type="button" id="adminLogsBack">‹ 사용자 목록</button><strong>${escapeHtml(name)}</strong></div>`+(snap.empty?'<div class="settings-empty">대화 기록이 없습니다.</div>':snap.docs.map(d=>{const x=d.data();return `<details class="admin-log-conversation"><summary><span>${escapeHtml(x.title||"새 대화")}</span><small>${x.isDeleted?"휴지통":"대화"}</small></summary><div class="admin-log-messages" data-uid="${escapeHtml(uid)}" data-cid="${escapeHtml(d.id)}">불러오는 중...</div></details>`;}).join(""));$("adminLogsBack").onclick=()=>{list.hidden=true;users.hidden=false;};for(const box of list.querySelectorAll(".admin-log-messages"))loadConversationMessages(box.dataset.uid,box.dataset.cid,box);}catch(e){console.error(e);list.innerHTML='<div class="settings-empty error">대화 로그를 불러오지 못했습니다. COBY Firestore 보안 규칙을 확인해주세요.</div>';}}
+async function loadConversationMessages(uid,cid,box){try{const snap=await getDocs(query(collection(cobyDb,"people",uid,"conversations",cid,"messages"),orderBy("createdAt","asc"),limit(200)));box.innerHTML=snap.empty?'<span class="settings-empty">메시지가 없습니다.</span>':snap.docs.map(d=>{const x=d.data();return `<div class="admin-message ${x.role==="user"?"user":"assistant"}"><span>${x.role==="user"?"사용자":"COBY"}</span><p>${escapeHtml(x.content||"")}</p></div>`;}).join("");}catch{box.innerHTML='<span class="settings-empty error">메시지를 불러오지 못했습니다.</span>';}}
 export function closeAdminLogs(){const m=$("adminLogsModal");if(!m)return;m.classList.remove("show");m.setAttribute("aria-hidden","true");}
 window.openSettings=openSettings;window.closeSettings=closeSettings;window.openAdminLogs=openAdminLogs;window.closeAdminLogs=closeAdminLogs;
 loadSettingsAccess();
