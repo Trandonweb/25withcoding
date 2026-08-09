@@ -45,6 +45,15 @@ async function loadUser() {
     }
 }
 
+function goHome() {
+    location.href = "/index.html";
+}
+
+function logout() {
+    const redirect = encodeURIComponent("/index.html");
+    location.href = `/signout/index.html?redirect=${redirect}`;
+}
+
 function bindGlobalEvents() {
     window.openMenu = openMenu;
     window.closeMenu = closeMenu;
@@ -59,6 +68,8 @@ function bindGlobalEvents() {
     window.closeAdminLogs = closeAdminLogs;
     window.loadAdminLogs = loadAdminLogs;
     window.sendMessage = sendMessage;
+    window.goHome = goHome;
+    window.logout = logout;
 
     $("projectNameInput").addEventListener("keydown", event => {
         if (event.key === "Enter") createProject();
