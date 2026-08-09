@@ -1,7 +1,7 @@
 import { state, $ } from "./state.js";
 import { db, doc, getDocs, addDoc, collection, query, orderBy, limit, serverTimestamp, updateDoc, deleteDoc } from "./firebase.js";
 import { escapeHtml, formatDate, closeMenu } from "./ui.js";
-import { createConversation, openConversation } from "./conversations.js";
+import { createConversation, openConversation, moveToTrash } from "./conversations.js";
 
 const projects = () => collection(db, "people", state.currentUserId, "projects");
 const conversations = () => collection(db, "people", state.currentUserId, "conversations");
@@ -10,7 +10,7 @@ async function getProjectConversations(projectId) {
     const snapshot = await getDocs(query(conversations(), orderBy("updatedAt", "desc"), limit(50)));
     return snapshot.docs.filter(item => {
         const data = item.data();
-        return data.projectId === projectId && !data.isDeleted;
+        return data.projectId === projectId && !data.isDeleted && !data.hiddenFromUser;
     });
 }
 
@@ -73,14 +73,24 @@ async function loadProjectConversations(projectId, container) {
 
         docs.forEach(item => {
             const data = item.data();
-            const chat = document.createElement("button");
-            chat.type = "button";
+            const chat = document.createElement("div");
             chat.className = "project-chat" + (item.id === state.currentConversationId ? " active" : "");
-            chat.innerHTML = `<span class="project-chat-title">${escapeHtml(data.title || "새 대화")}</span><span class="project-chat-date">${formatDate(data.updatedAt)}</span>`;
-            chat.onclick = async () => {
+            chat.innerHTML = `<button type="button" class="project-chat-open"><span class="project-chat-title">${escapeHtml(data.title || "새 대화")}</span><span class="project-chat-date">${formatDate(data.updatedAt)}</span></button><button type="button" class="project-chat-delete" aria-label="프로젝트 대화를 휴지통으로 이동" title="휴지통으로 이동">🗑</button>`;
+
+            chat.querySelector(".project-chat-open").onclick = async () => {
                 await openConversation(item.id);
                 await loadProjects();
             };
+
+            chat.querySelector(".project-chat-delete").onclick = async event => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (confirm(`"${data.title || "이 대화"}"를 휴지통으로 이동할까요?`)) {
+                    await moveToTrash(item.id);
+                    await loadProjects();
+                }
+            };
+
             container.appendChild(chat);
         });
     } catch (error) {
@@ -175,7 +185,7 @@ export async function getProjectContext() {
 
         for (const conversation of snapshot.docs) {
             const data = conversation.data();
-            if (data.projectId !== state.currentProjectId || conversation.id === state.currentConversationId || data.isDeleted) continue;
+            if (data.projectId !== state.currentProjectId || conversation.id === state.currentConversationId || data.isDeleted || data.hiddenFromUser) continue;
 
             const messages = await getDocs(query(
                 collection(db, "people", state.currentUserId, "conversations", conversation.id, "messages"),
