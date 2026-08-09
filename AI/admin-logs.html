@@ -1,38 +1,17 @@
-<!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>COBY · 대화 로그</title>
-<link rel="stylesheet" href="css/style.css">
-<style>
-body{padding:24px}.logs-head{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap}.logs-head h1{margin:0}.log-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.log-tools input{padding:12px 14px;border:1px solid var(--border-color,#ddd);border-radius:12px;min-width:240px}.coby-log-card{background:var(--card-bg,#fff);border:1px solid var(--border-color,#ddd);border-radius:18px;padding:18px;margin:12px 0}.coby-log-head{display:flex;justify-content:space-between;gap:12px}.coby-log-user{opacity:.7;font-size:13px;margin-top:4px}.coby-log-trash{padding:4px 8px;border-radius:8px;background:#fff3cd;color:#856404;font-size:12px}.coby-log-messages{margin:16px 0}.coby-log-message{padding:10px 12px;border-radius:12px;margin:7px 0;background:var(--card-sub-bg,#f5f5f5);white-space:pre-wrap;word-break:break-word}.coby-log-message.assistant{border-left:3px solid var(--primary-color,#27ae60)}.coby-log-message.user{border-left:3px solid #999}.coby-log-empty{opacity:.6}.danger{background:#e74c3c;color:#fff;border:0;border-radius:12px;padding:10px 14px;cursor:pointer}.notice{padding:20px;border-radius:16px;background:var(--card-bg,#fff);border:1px solid var(--border-color,#ddd)}
-</style>
-</head>
-<body>
-<div class="logs-head"><button onclick="history.back()">← 뒤로가기</button><h1>📋 COBY 대화 로그</h1></div>
-<div id="access" class="notice">권한 확인 중...</div>
-<div id="content" hidden>
-  <div class="log-tools"><input id="search" placeholder="사용자 또는 대화 검색"></div>
-  <div id="logs">불러오는 중...</div>
-</div>
-<script type="module">
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COBY · 대화 로그</title><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="coby-markup.css"><style>body{padding:24px}.logs-head{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap}.logs-head h1{margin:0}.log-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.log-tools input{padding:12px 14px;border:1px solid #ddd;border-radius:12px;min-width:240px}.coby-log-card{background:#fff;border:1px solid #ddd;border-radius:18px;padding:18px;margin:12px 0}.coby-log-head{display:flex;justify-content:space-between;gap:12px}.coby-log-user{opacity:.7;font-size:13px;margin-top:4px}.coby-log-trash{padding:4px 8px;border-radius:8px;background:#fff3cd;color:#856404;font-size:12px}.coby-log-messages{margin:16px 0}.coby-log-message{padding:10px 12px;border-radius:12px;margin:7px 0;background:#f5f5f5;white-space:pre-wrap;word-break:break-word}.coby-log-message.assistant{border-left:3px solid #27ae60}.coby-log-message.user{border-left:3px solid #999}.coby-log-empty{opacity:.6}.danger{background:#e74c3c;color:#fff;border:0;border-radius:12px;padding:10px 14px;cursor:pointer}.notice{padding:20px;border-radius:16px;background:#fff;border:1px solid #ddd}</style></head><body><div class="logs-head"><button onclick="history.back()">← 뒤로가기</button><h1>📋 COBY 대화 로그</h1></div><div id="access" class="notice">권한 확인 중...</div><div id="content" hidden><div class="log-tools"><input id="search" placeholder="사용자 또는 대화 검색"></div><div id="logs">불러오는 중...</div></div><script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import {getFirestore,getDoc,doc} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 import {loadAdminConversationLogs,permanentlyDeleteConversation,isCobyAdmin,renderAdminLogCard} from "./js/admin-logs.js";
-const firebaseConfig={apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
-const app=initializeApp(firebaseConfig),db=getFirestore(app);
-const myId=localStorage.getItem("userId");
-const access=document.getElementById("access"),content=document.getElementById("content"),logs=document.getElementById("logs"),search=document.getElementById("search");
-const escapeHtml=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
-let all=[];
+const firebaseConfig={apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
+const mainDb=getFirestore(initializeApp(firebaseConfig,"adminMain"));
+const cobyDb=getFirestore(initializeApp({apiKey:"AIzaSyAiO65YzYeRfuf6fCzosuW7OAVV47o47Js",authDomain:"coby-ai-328dd.firebaseapp.com",projectId:"coby-ai-328dd",storageBucket:"coby-ai-328dd.firebasestorage.app",messagingSenderId:"865530259286",appId:"1:248724251417:web:6feaa5781dc538700b18f7"},"adminCoby"));
+const myId=localStorage.getItem("userId"),access=document.getElementById("access"),content=document.getElementById("content"),logs=document.getElementById("logs"),search=document.getElementById("search");
+const escapeHtml=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));let all=[];
 if(!myId){access.textContent="로그인이 필요합니다.";throw new Error("login required");}
-const snap=await getDoc(doc(db,"users",myId));
+const snap=await getDoc(doc(mainDb,"users",myId));
 if(!snap.exists()||!isCobyAdmin(snap.data().role)){access.textContent="접근 권한이 없습니다.";throw new Error("forbidden");}
 access.remove();content.hidden=false;
-async function load(){all=await loadAdminConversationLogs(db,{id:myId,...snap.data()});render();}
-function render(){const q=search.value.trim().toLowerCase();const filtered=all.filter(x=>(x.user.name||x.user.id||"").toLowerCase().includes(q)||(x.conversation.title||"").toLowerCase().includes(q));logs.innerHTML=filtered.length?filtered.map(x=>renderAdminLogCard(x,escapeHtml)).join(""):"<div class='notice'>대화 로그가 없습니다.</div>";document.querySelectorAll(".coby-db-delete").forEach(btn=>btn.onclick=async()=>{if(!confirm("이 대화를 Firebase에서 영구 삭제할까요? 복구할 수 없습니다."))return;btn.disabled=true;try{await permanentlyDeleteConversation(db,{id:myId,...snap.data()},btn.dataset.userId,btn.dataset.conversationId);await load();}catch(e){alert("삭제 실패: "+e.message);btn.disabled=false;}});}
+async function load(){all=await loadAdminConversationLogs(cobyDb,{id:myId,...snap.data()});render();}
+function render(){const q=search.value.trim().toLowerCase();const filtered=all.filter(x=>(x.user.name||x.user.id||"").toLowerCase().includes(q)||(x.conversation.title||"").toLowerCase().includes(q));logs.innerHTML=filtered.length?filtered.map(x=>renderAdminLogCard(x,escapeHtml)).join(""):"<div class='notice'>대화 로그가 없습니다.</div>";document.querySelectorAll(".coby-db-delete").forEach(btn=>btn.onclick=async()=>{if(!confirm("이 대화를 Firebase에서 영구 삭제할까요? 복구할 수 없습니다."))return;btn.disabled=true;try{await permanentlyDeleteConversation(cobyDb,{id:myId,...snap.data()},btn.dataset.userId,btn.dataset.conversationId);await load();}catch(e){alert("삭제 실패: "+e.message);btn.disabled=false;}});}
 search.addEventListener("input",render);load().catch(e=>{logs.textContent="로그를 불러오지 못했습니다: "+e.message;});
-</script>
-</body>
-</html>
+</script></body></html>
