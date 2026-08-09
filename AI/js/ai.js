@@ -58,15 +58,17 @@ async function getHistoryForRequest(text) {
     ));
 
     const recentDocs = recentSnapshot.docs;
-    let history = recentDocs.reverse().map(extractMessage);
+    const oldestRecentDoc = recentDocs[recentDocs.length - 1] || null;
+    let history = [...recentDocs].reverse().map(extractMessage);
 
     // 평소에는 최근 40개만 사용한다. 사용자가 이전 대화를 명시적으로
     // 참조할 때만 가장 오래된 최근 메시지보다 앞선 내용을 추가 조회한다.
-    if (needsOlderHistory(text) && recentDocs.length === 40) {
-        const oldestRecent = recentDocs[0];
-        const oldestTimestamp = oldestRecent.data()?.createdAt;
-        const older = await getOlderConversationHistory(oldestTimestamp, 40);
-        history = [...older, ...history];
+    if (needsOlderHistory(text) && oldestRecentDoc) {
+        const oldestTimestamp = oldestRecentDoc.data()?.createdAt;
+        if (oldestTimestamp) {
+            const older = await getOlderConversationHistory(oldestTimestamp, 40);
+            history = [...older, ...history];
+        }
     }
 
     return history;
