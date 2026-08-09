@@ -28,12 +28,16 @@
         <div class="project-title">프로젝트</div>
         <div id="projectList"><div class="empty-chat">프로젝트가 없습니다.</div></div>
     </div>
-    <div class="profile">
-        <div class="profile-circle" id="profileCircle">?</div>
-        <div class="profile-info">
-            <div class="profile-name" id="profileName">사용자 확인 중...</div>
-            <div class="profile-id" id="profileId">-</div>
-        </div>
+    <div class="profile-area">
+        <button class="profile" type="button" onclick="goHome()" aria-label="홈으로 이동">
+            <div class="profile-circle" id="profileCircle">?</div>
+            <div class="profile-info">
+                <div class="profile-name" id="profileName">사용자 확인 중...</div>
+                <div class="profile-id" id="profileId">-</div>
+            </div>
+            <span class="profile-home-icon">⌂</span>
+        </button>
+        <button class="logout-btn" type="button" onclick="logout()">↪ 로그아웃</button>
     </div>
 </aside>
 
