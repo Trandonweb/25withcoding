@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, startAfter, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
 const mainFirebaseConfig = {
     apiKey: "AIzaSyBgOAO72ArWb8dO7OSYsTVEQtRHT049U20",
@@ -23,4 +23,4 @@ export const mainDb = getFirestore(initializeApp(mainFirebaseConfig, "mainApp"))
 export const db = getFirestore(initializeApp(cobyFirebaseConfig, "cobyApp"));
 export const API_URL = "https://two5withcoding.onrender.com/chat";
 
-export { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, updateDoc, deleteDoc };
+export { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, startAfter, serverTimestamp, updateDoc, deleteDoc };
