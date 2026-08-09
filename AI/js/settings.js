@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/fireba
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
 const mainFirebaseConfig = {
-    apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+    apiKey: "AIzaSyBgAf4JrArbW8dO7OSYsTVEQtRHT049U20",
     authDomain: "points2026-f5e50.firebaseapp.com",
     projectId: "points2026-f5e50",
     storageBucket: "points2026-f5e50.firebasestorage.app",
@@ -32,13 +32,13 @@ async function loadSettingsAccess() {
     }
 }
 
-function openSettings() {
+export function openSettings() {
     document.getElementById("settingsModal")?.classList.add("show");
     document.getElementById("settingsModal")?.setAttribute("aria-hidden", "false");
     loadSettingsAccess();
 }
 
-function closeSettings() {
+export function closeSettings() {
     document.getElementById("settingsModal")?.classList.remove("show");
     document.getElementById("settingsModal")?.setAttribute("aria-hidden", "true");
 }
