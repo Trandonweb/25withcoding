@@ -10,6 +10,28 @@ export const COBY_UI_INSTRUCTIONS = {
     rules: ["***text*** = bold", "<<<content>>> = copy block", "[[[content]]] = warning", "{{{content}}} = success", "(((content))) = tip", "--- = divider", "Do not expose delimiters", "Use <<< >>> for copyable code"]
 };
 
+export const COBY_USAGE_KNOWLEDGE = {
+    purpose: "COBY는 25withcoding.kr의 AI 서비스이며, 사용자가 사이트 기능 사용법을 물으면 실제 구현된 기능을 기준으로 안내한다.",
+    rules: [
+        "사용법 질문에는 실제 구현된 기능만 안내하고 없는 기능을 있다고 말하지 않는다.",
+        "버튼이나 메뉴 위치를 물으면 클릭 순서를 단계별로 설명한다.",
+        "관리자 기능은 president 또는 vice 권한에서만 이용할 수 있다고 안내한다."
+    ],
+    features: [
+        { name: "새 대화", usage: "왼쪽 사이드바의 새 대화 버튼으로 새 채팅을 시작한다." },
+        { name: "채팅 제목 수정", usage: "왼쪽 채팅 목록에서 제목 수정 버튼을 눌러 원하는 제목으로 변경한다." },
+        { name: "채팅 삭제", usage: "왼쪽 채팅 목록의 휴지통 버튼으로 채팅을 휴지통으로 이동한다." },
+        { name: "휴지통", usage: "사이드바의 휴지통에서 삭제된 채팅을 확인한다. 복구하거나 영구 삭제할 수 있다." },
+        { name: "프로젝트", usage: "프로젝트 메뉴에서 프로젝트를 만들고 대화를 연결한다. 프로젝트를 펼치면 연결된 채팅을 확인하고 선택할 수 있으며 프로젝트 안의 채팅도 삭제할 수 있다." },
+        { name: "프로필 메뉴", usage: "사이드바 맨 아래 프로필을 누르면 위쪽에 메뉴가 나타나며 홈으로 또는 로그아웃을 선택할 수 있다." },
+        { name: "홈", usage: "프로필 메뉴에서 홈으로를 선택하면 25withcoding.kr의 홈으로 이동한다." },
+        { name: "로그아웃", usage: "프로필 메뉴에서 로그아웃을 선택하면 로그아웃 처리 후 25withcoding.kr/index.html로 이동한다." },
+        { name: "AI 과거 대화", usage: "현재 대화의 최근 메시지를 우선 사용하며, 이전 대화를 명확히 언급하면 필요한 경우 과거 대화를 추가 조회해 답변한다." },
+        { name: "관리자 대화 로그", usage: "president 또는 vice 권한 사용자는 설정에서 대화 로그 보기를 사용할 수 있다. 관리자는 사용자별 대화 로그를 볼 수 있으며 일반 사용자에게 관리자 로그 기능을 노출하지 않는다." },
+        { name: "코드 복사", usage: "COBY가 코드를 제공할 때 복사 가능한 코드 블록으로 표시할 수 있으며 코드 블록의 복사 기능으로 쉽게 복사할 수 있다." }
+    ]
+};
+
 const extractMessage = item => {
     const data = item.data();
     return { role: data.role, content: data.content };
@@ -33,19 +55,13 @@ function needsOlderHistory(text) {
 
 async function getHistoryForRequest(text) {
     if (!state.currentConversationId) return [];
-
     const recentSnapshot = await getDocs(query(messagesRef(), orderBy("createdAt", "desc"), limit(40)));
     const recentDocs = recentSnapshot.docs;
-    let history = [...recentDocs].reverse().map(extractMessage);
-
+    const history = [...recentDocs].reverse().map(extractMessage);
     if (!needsOlderHistory(text) || recentDocs.length < 40) return history;
-
-    // 과거 참조가 명확할 때만 한 페이지씩 추가한다.
-    // 이전 페이지가 필요할 때마다 호출자가 다시 요청하도록 하여 무제한 조회를 피한다.
     const oldestRecentDoc = recentDocs[recentDocs.length - 1];
     const timestamp = oldestRecentDoc?.data()?.createdAt;
     if (!timestamp) return history;
-
     const older = await getOlderConversationHistory(timestamp, 40);
     return [...older, ...history];
 }
@@ -101,7 +117,8 @@ export async function sendMessage() {
                 history,
                 projectContext,
                 user: { id: state.currentUserId, name: state.currentPerson?.name || "사용자", role: state.currentPerson?.role || "student" },
-                uiInstructions: COBY_UI_INSTRUCTIONS
+                uiInstructions: COBY_UI_INSTRUCTIONS,
+                usageKnowledge: COBY_USAGE_KNOWLEDGE
             })
         });
         if (!response.ok) throw new Error(`API ${response.status}`);
