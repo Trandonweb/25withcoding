@@ -1,9 +1,10 @@
 /* COBY response renderer */
 
-const escapeHtml = (value = "") => String(value).replace(/[&<>\"]/g, ch => ({
+const escapeHtml = (value = "") => String(value).replace(/[&<>\\"]/g, ch => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
+    "\\": "\\\\",
     "\"": "&quot;"
 }[ch]));
 
