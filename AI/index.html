@@ -13,7 +13,7 @@
 </head>
 <body>
 <header class="header">
-    <button class="menu-btn" onclick="openMenu()" aria-label="메뉴 열기"><span aria-hidden="true">☰</span></button>
+    <button class="menu-btn" onclick="document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')" aria-label="메뉴 열기"><span aria-hidden="true">☰</span></button>
     <div class="logo"><img src="COBY_AI_logo.png" alt="Coby AI"></div>
     <div class="user-status"><span class="status-dot" id="statusDot"></span><span class="status-text" id="statusText">사용자 확인 중...</span></div>
 </header>
