@@ -6,18 +6,8 @@ import { addMessage } from "./ui.js";
 
 export const COBY_UI_INSTRUCTIONS = {
     name: "COBY markup",
-    system: "COBY 답변은 아래 전용 마크업을 우선 사용한다. ***텍스트***는 굵게, <<<내용>>>은 사용자가 한 번에 복사할 내용이나 코드, [[[내용]]]은 주의/경고, {{{내용}}}은 성공/완료, (((내용)))은 팁, ---는 구분선이다. 마크업 기호 자체를 설명문으로 노출하지 않는다. 코드 복사에는 Markdown ``` 코드펜스를 사용하지 않고 <<< >>>를 사용한다. 일반적인 설명은 COBY의 본문형 답변으로 작성하고, 필요한 경우에만 마크업을 사용한다.",
-    rules: [
-        "***text*** = bold",
-        "<<<content>>> = copy block",
-        "[[[content]]] = warning",
-        "{{{content}}} = success",
-        "(((content))) = tip",
-        "--- = divider",
-        "Do not expose the markup delimiters as an explanation",
-        "Use <<< >>> instead of Markdown triple-backtick code fences",
-        "Keep normal explanations as readable COBY body text"
-    ]
+    system: "COBY 답변은 전용 마크업을 사용할 수 있다. ***텍스트***는 굵게, <<<내용>>>은 복사 블록, [[[내용]]]은 경고, {{{내용}}}은 성공, (((내용)))은 팁, ---는 구분선이다. 마크업 기호 자체를 설명문으로 노출하지 않는다. 코드 복사에는 <<< >>>를 사용한다.",
+    rules: ["***text*** = bold", "<<<content>>> = copy block", "[[[content]]] = warning", "{{{content}}} = success", "(((content))) = tip", "--- = divider", "Do not expose delimiters", "Use <<< >>> for copyable code"]
 };
 
 const extractMessage = item => {
@@ -33,14 +23,7 @@ export async function getConversationHistory() {
 
 export async function getOlderConversationHistory(beforeTimestamp, count = 40) {
     if (!state.currentConversationId || !beforeTimestamp) return [];
-
-    const snapshot = await getDocs(query(
-        messagesRef(),
-        orderBy("createdAt", "desc"),
-        startAfter(beforeTimestamp),
-        limit(count)
-    ));
-
+    const snapshot = await getDocs(query(messagesRef(), orderBy("createdAt", "desc"), startAfter(beforeTimestamp), limit(count)));
     return snapshot.docs.reverse().map(extractMessage);
 }
 
@@ -51,45 +34,20 @@ function needsOlderHistory(text) {
 async function getHistoryForRequest(text) {
     if (!state.currentConversationId) return [];
 
-    const recentSnapshot = await getDocs(query(
-        messagesRef(),
-        orderBy("createdAt", "desc"),
-        limit(40)
-    ));
-
+    const recentSnapshot = await getDocs(query(messagesRef(), orderBy("createdAt", "desc"), limit(40)));
     const recentDocs = recentSnapshot.docs;
-    let history = [...recentDocs].reverse().map(extractMessage);
+    let history = recentDocs.reverse().map(extractMessage);
 
-    if (!needsOlderHistory(text) || recentDocs.length < 40) {
-        return history;
-    }
+    if (!needsOlderHistory(text) || recentDocs.length < 40) return history;
 
-    // 과거 참조가 감지되면 필요한 범위까지 이전 페이지를 순차적으로 가져온다.
-    // Firestore 커서가 없으면 더 이상 조회하지 않는다.
-    let cursor = recentDocs[recentDocs.length - 1];
-    const maxPages = 5;
+    // 과거 참조가 명확할 때만 한 페이지씩 추가한다.
+    // 각 요청은 최대 2페이지(80개)까지만 읽고, 다음 요청에서 다시 필요하면 추가 조회한다.
+    const oldestRecentDoc = recentSnapshot.docs[recentSnapshot.docs.length - 1];
+    const timestamp = oldestRecentDoc?.data()?.createdAt;
+    if (!timestamp) return history;
 
-    for (let page = 0; page < maxPages && cursor; page += 1) {
-        const timestamp = cursor.data()?.createdAt;
-        if (!timestamp) break;
-
-        const olderSnapshot = await getDocs(query(
-            messagesRef(),
-            orderBy("createdAt", "desc"),
-            startAfter(timestamp),
-            limit(40)
-        ));
-
-        if (olderSnapshot.empty) break;
-
-        const olderDocs = olderSnapshot.docs;
-        history = [...olderDocs.reverse().map(extractMessage), ...history];
-
-        if (olderDocs.length < 40) break;
-        cursor = olderDocs[olderDocs.length - 1];
-    }
-
-    return history;
+    const older = await getOlderConversationHistory(timestamp, 40);
+    return [...older, ...history];
 }
 
 function extractAssistantText(data) {
@@ -98,7 +56,6 @@ function extractAssistantText(data) {
 
 export async function sendMessage() {
     if (state.isSending) return;
-
     const input = $("userInput");
     const text = input.value.trim();
     if (!text) return;
@@ -106,7 +63,6 @@ export async function sendMessage() {
         alert("먼저 로그인해주세요.");
         return;
     }
-
     if (!state.currentConversationId) await createConversation(state.currentProjectId);
 
     state.isSending = true;
@@ -119,18 +75,14 @@ export async function sendMessage() {
         addMessage("user", text);
         input.value = "";
         input.style.height = "auto";
-
         await addDoc(messagesRef(), { role: "user", content: text, createdAt: serverTimestamp() });
 
         const conversationReference = doc(db, "people", state.currentUserId, "conversations", state.currentConversationId);
         const conversationSnapshot = await getDoc(conversationReference);
-
         if (conversationSnapshot.exists()) {
             const conversation = conversationSnapshot.data();
             await updateDoc(conversationReference, {
-                title: conversation.title && conversation.title !== "새 대화"
-                    ? conversation.title
-                    : (text.length > 35 ? text.slice(0, 35) + "…" : text),
+                title: conversation.title && conversation.title !== "새 대화" ? conversation.title : (text.length > 35 ? text.slice(0, 35) + "…" : text),
                 updatedAt: serverTimestamp()
             });
         }
@@ -148,15 +100,10 @@ export async function sendMessage() {
                 context: projectContext,
                 history,
                 projectContext,
-                user: {
-                    id: state.currentUserId,
-                    name: state.currentPerson?.name || "사용자",
-                    role: state.currentPerson?.role || "student"
-                },
+                user: { id: state.currentUserId, name: state.currentPerson?.name || "사용자", role: state.currentPerson?.role || "student" },
                 uiInstructions: COBY_UI_INSTRUCTIONS
             })
         });
-
         if (!response.ok) throw new Error(`API ${response.status}`);
 
         const result = await response.json();
