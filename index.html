@@ -139,13 +139,15 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
+      height: 69px;
+      padding: 10px 22px;
       text-decoration: none;
     }
 
     .coby-title {
       display: block;
       width: 190px;
-      height: 52px;
+      height: 45px;
       overflow: hidden;
       border-radius: 10px;
       flex: 0 0 190px;
@@ -332,14 +334,43 @@
       display: block;
     }
 
-    .password-setting .setting-info {
-      margin-bottom: 12px;
+    .password-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0;
+      border: none;
+      background: none;
+      color: var(--text-color);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .password-toggle .setting-info {
+      margin: 0;
+    }
+
+    .password-toggle-icon {
+      font-size: 18px;
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .password-setting.open .password-toggle-icon {
+      transform: rotate(180deg);
     }
 
     .password-form {
-      display: flex;
+      display: none;
       flex-direction: column;
       gap: 9px;
+      padding-bottom: 4px;
+    }
+
+    .password-setting.open .password-form {
+      display: flex;
     }
 
     .password-input {
@@ -393,7 +424,8 @@
       .header-btn, .auth-btn { padding: 8px 11px; font-size: 12px; }
       .container { margin-top: 25px; }
       .card { margin: 14px 0; padding: 19px; }
-      .coby-title { width: 135px; height: 44px; flex-basis: 135px; }
+      .coby-card { height: 63px; padding: 8px 19px; }
+      .coby-title { width: 135px; height: 43px; flex-basis: 135px; }
     }
   </style>
 </head>
@@ -468,14 +500,16 @@
         </label>
       </div>
 
-      <!-- 비밀번호 변경 -->
-      <div class="setting-item password-setting">
-        <div class="setting-info">
-          <span class="setting-title">비밀번호 변경</span>
-          <span class="setting-desc">현재 비밀번호를 확인한 후 새 비밀번호로 변경합니다.</span>
-        </div>
+      <div class="setting-item password-setting" id="passwordSetting">
+        <button type="button" class="password-toggle" onclick="togglePasswordForm()" aria-expanded="false" aria-controls="passwordForm">
+          <span class="setting-info">
+            <span class="setting-title">비밀번호 변경</span>
+            <span class="setting-desc">눌러서 비밀번호 변경</span>
+          </span>
+          <span class="password-toggle-icon">⌄</span>
+        </button>
 
-        <div class="password-form">
+        <div class="password-form" id="passwordForm">
           <input class="password-input" id="currentPassword" type="password" autocomplete="current-password" placeholder="현재 비밀번호">
           <input class="password-input" id="newPassword" type="password" autocomplete="new-password" placeholder="새 비밀번호">
           <input class="password-input" id="confirmPassword" type="password" autocomplete="new-password" placeholder="새 비밀번호 확인">
@@ -824,6 +858,13 @@
         button.disabled = false;
         button.textContent = "비밀번호 변경";
       }
+    };
+
+    window.togglePasswordForm = function() {
+      const setting = document.getElementById("passwordSetting");
+      const toggle = setting.querySelector(".password-toggle");
+      const isOpen = setting.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", String(isOpen));
     };
 
     updateUI();
