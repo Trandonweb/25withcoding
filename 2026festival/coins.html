@@ -22,6 +22,10 @@ body {
   color: white;
 }
 
+/* ================================
+   Header
+================================ */
+
 header {
   position: sticky;
   top: 0;
@@ -60,10 +64,24 @@ header {
   font-size: 14px;
 }
 
+.back:hover {
+  text-decoration: underline;
+}
+
+
+/* ================================
+   Container
+================================ */
+
 .container {
   width: min(1100px, calc(100% - 32px));
   margin: 30px auto 60px;
 }
+
+
+/* ================================
+   Page title
+================================ */
 
 .page-title {
   margin-bottom: 25px;
@@ -71,34 +89,63 @@ header {
 
 .page-title h1 {
   margin: 0;
-  font-family: "Black Han Sans", sans-serif;
+
+  font-family:
+    "Black Han Sans",
+    sans-serif;
+
   font-size: 32px;
 }
 
 .page-title p {
   margin: 8px 0 0;
+
   color: #aaa;
+
   font-size: 14px;
 }
 
+
+/* ================================
+   Card
+================================ */
+
 .card {
   background: #1c1c25;
-  border: 1px solid rgba(255,255,255,.06);
+
+  border:
+    1px solid
+    rgba(255,255,255,.06);
+
   border-radius: 18px;
+
   padding: 24px;
+
   margin-bottom: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+
+  box-shadow:
+    0 10px 30px
+    rgba(0,0,0,.2);
 }
 
 .card-title {
   margin: 0 0 18px;
+
   font-size: 19px;
   font-weight: bold;
 }
 
+
+/* ================================
+   Coin types
+================================ */
+
 .coin-types {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+
+  grid-template-columns:
+    repeat(5, 1fr);
+
   gap: 10px;
 }
 
@@ -108,21 +155,29 @@ header {
 
 .coin-type input {
   position: absolute;
+
   opacity: 0;
+
   pointer-events: none;
 }
 
 .coin-type label {
   display: block;
+
   padding: 16px 8px;
 
   text-align: center;
 
   background: #15151c;
-  border: 1px solid #353540;
+
+  border:
+    1px solid
+    #353540;
+
   border-radius: 12px;
 
   cursor: pointer;
+
   transition: .2s;
 }
 
@@ -132,9 +187,13 @@ header {
 
 .coin-type input:checked + label {
   border-color: #00c853;
-  background: rgba(0,200,83,.12);
+
+  background:
+    rgba(0,200,83,.12);
+
   box-shadow:
-    0 0 0 2px rgba(0,200,83,.08);
+    0 0 0 2px
+    rgba(0,200,83,.08);
 }
 
 .coin-number {
@@ -144,46 +203,74 @@ header {
 
 .coin-char {
   margin-top: 5px;
+
   color: #8cff9c;
+
   font-size: 12px;
 }
 
+
+/* ================================
+   Generate button
+================================ */
+
 .generate-btn {
   width: 100%;
+
   height: 52px;
 
   margin-top: 18px;
 
   border: none;
+
   border-radius: 12px;
 
-  background: linear-gradient(
-    90deg,
-    #00c853,
-    #64dd17
-  );
+  background:
+    linear-gradient(
+      90deg,
+      #00c853,
+      #64dd17
+    );
 
   color: white;
+
   font-size: 16px;
+
   font-weight: bold;
 
   cursor: pointer;
+
+  transition: .2s;
 }
 
 .generate-btn:hover {
   filter: brightness(.93);
 }
 
+.generate-btn:active {
+  transform: scale(.99);
+}
+
 .generate-btn:disabled {
   opacity: .5;
+
   cursor: not-allowed;
 }
 
+
+/* ================================
+   Status
+================================ */
+
 .status {
   min-height: 20px;
+
   margin-top: 12px;
+
   text-align: center;
+
   color: #aaa;
+
   font-size: 13px;
 }
 
@@ -195,22 +282,44 @@ header {
   color: #8cff9c;
 }
 
+
+/* ================================
+   Code list
+================================ */
+
 .code-list {
   display: flex;
+
   flex-direction: column;
+
   gap: 10px;
 }
 
 .code-item {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+
+  grid-template-columns:
+    1fr
+    auto
+    auto
+    auto
+    auto;
+
   align-items: center;
-  gap: 14px;
+
+  gap: 12px;
 
   padding: 15px;
 
   background: #15151c;
+
   border-radius: 12px;
+
+  transition: .15s;
+}
+
+.code-item:hover {
+  background: #191921;
 }
 
 .code-main {
@@ -219,39 +328,60 @@ header {
 
 .code {
   font-family: monospace;
+
   font-size: 18px;
+
   font-weight: bold;
+
   letter-spacing: 1px;
+
   word-break: break-all;
 }
 
 .code-info {
   margin-top: 5px;
+
   color: #999;
+
   font-size: 12px;
 }
 
 .badge {
   padding: 6px 9px;
+
   border-radius: 8px;
 
-  background: rgba(0,200,83,.12);
+  background:
+    rgba(0,200,83,.12);
+
   color: #8cff9c;
 
   font-size: 12px;
+
   white-space: nowrap;
 }
 
+
+/* ================================
+   Buttons
+================================ */
+
 .action-btn {
   border: none;
+
   border-radius: 8px;
 
   padding: 9px 12px;
 
   background: #292933;
+
   color: white;
 
   cursor: pointer;
+
+  transition: .15s;
+
+  white-space: nowrap;
 }
 
 .action-btn:hover {
@@ -262,17 +392,36 @@ header {
   color: #ff8585;
 }
 
+.action-btn.danger:hover {
+  background:
+    rgba(255,80,80,.12);
+}
+
+
+/* ================================
+   Empty
+================================ */
+
 .empty {
   padding: 35px;
+
   text-align: center;
+
   color: #777;
 }
 
 .loading {
   padding: 50px;
+
   text-align: center;
+
   color: #aaa;
 }
+
+
+/* ================================
+   Access denied
+================================ */
 
 #denied {
   display: none;
@@ -280,18 +429,22 @@ header {
   min-height: 100vh;
 
   align-items: center;
+
   justify-content: center;
 
   padding: 20px;
 }
 
 .denied-card {
-  width: min(420px, 100%);
+  width:
+    min(420px, 100%);
+
   padding: 35px;
 
   text-align: center;
 
   background: #1c1c25;
+
   border-radius: 20px;
 }
 
@@ -305,20 +458,33 @@ header {
 
 .denied-card p {
   color: #aaa;
+
   line-height: 1.7;
 }
 
 .denied-card a {
   display: inline-block;
+
   margin-top: 15px;
+
   color: #8cff9c;
 }
+
+
+/* ================================
+   App
+================================ */
 
 #app {
   display: none;
 }
 
-@media (max-width: 700px) {
+
+/* ================================
+   Mobile
+================================ */
+
+@media (max-width: 800px) {
 
   .coin-types {
     grid-template-columns:
@@ -326,27 +492,31 @@ header {
   }
 
   .code-item {
-    grid-template-columns: 1fr auto;
+    grid-template-columns:
+      1fr auto;
   }
 
-  .code-item .badge {
+  .badge {
     justify-self: start;
   }
 
-  .code-item .action-btn {
-    justify-self: stretch;
+  .action-btn {
+    width: 100%;
   }
 
 }
 
-@media (max-width: 420px) {
+
+@media (max-width: 500px) {
 
   .coin-types {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
   }
 
   .container {
-    width: min(100% - 20px, 1100px);
+    width:
+      calc(100% - 20px);
   }
 
   .card {
@@ -357,13 +527,25 @@ header {
     font-size: 27px;
   }
 
+  .logo {
+    font-size: 20px;
+  }
+
+  header {
+    padding: 15px;
+  }
+
 }
 </style>
 </head>
 
+
 <body>
 
-<!-- 권한 없음 -->
+
+<!-- =========================================
+     접근 거부
+========================================= -->
 
 <div id="denied">
 
@@ -373,7 +555,9 @@ header {
       🔒
     </div>
 
-    <h1>접근 권한이 없습니다</h1>
+    <h1>
+      접근 권한이 없습니다
+    </h1>
 
     <p>
       2026 Festival 이용권 관리 페이지는
@@ -389,9 +573,12 @@ header {
 </div>
 
 
-<!-- 실제 관리자 페이지 -->
+<!-- =========================================
+     관리자 페이지
+========================================= -->
 
 <div id="app">
+
 
 <header>
 
@@ -415,6 +602,11 @@ header {
 
 <main class="container">
 
+
+  <!-- =======================================
+       제목
+  ======================================== -->
+
   <div class="page-title">
 
     <h1>
@@ -428,7 +620,9 @@ header {
   </div>
 
 
-  <!-- 발급 -->
+  <!-- =======================================
+       발급
+  ======================================== -->
 
   <section class="card">
 
@@ -436,7 +630,11 @@ header {
       이용권 발급
     </h2>
 
+
     <div class="coin-types">
+
+
+      <!-- 1인 -->
 
       <div class="coin-type">
 
@@ -462,6 +660,8 @@ header {
       </div>
 
 
+      <!-- 2인 -->
+
       <div class="coin-type">
 
         <input
@@ -485,6 +685,8 @@ header {
 
       </div>
 
+
+      <!-- 3인 -->
 
       <div class="coin-type">
 
@@ -510,6 +712,8 @@ header {
       </div>
 
 
+      <!-- 4인 -->
+
       <div class="coin-type">
 
         <input
@@ -534,6 +738,8 @@ header {
       </div>
 
 
+      <!-- 5인 -->
+
       <div class="coin-type">
 
         <input
@@ -557,6 +763,7 @@ header {
 
       </div>
 
+
     </div>
 
 
@@ -576,13 +783,16 @@ header {
   </section>
 
 
-  <!-- 코드 목록 -->
+  <!-- =======================================
+       목록
+  ======================================== -->
 
   <section class="card">
 
     <h2 class="card-title">
       발급된 이용권
     </h2>
+
 
     <div
       class="code-list"
@@ -597,6 +807,7 @@ header {
 
   </section>
 
+
 </main>
 
 </div>
@@ -604,10 +815,16 @@ header {
 
 <script type="module">
 
+
+/* ==================================================
+   Firebase
+================================================== */
+
 import {
   initializeApp
 } from
 "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+
 
 import {
   getFirestore,
@@ -615,16 +832,16 @@ import {
   getDoc,
   setDoc,
   collection,
-  addDoc,
   onSnapshot,
   updateDoc,
+  deleteDoc,
   serverTimestamp
 } from
 "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 
 /* ==================================================
-   Firebase
+   Festival Firebase
 ================================================== */
 
 const firebaseConfig = {
@@ -649,15 +866,19 @@ const firebaseConfig = {
 
 };
 
+
 const app =
-  initializeApp(firebaseConfig);
+  initializeApp(
+    firebaseConfig
+  );
+
 
 const db =
   getFirestore(app);
 
 
 /* ==================================================
-   권한 확인용 Firebase
+   로그인 Firebase
 ================================================== */
 
 const loginFirebaseConfig = {
@@ -673,11 +894,13 @@ const loginFirebaseConfig = {
 
 };
 
+
 const loginApp =
   initializeApp(
     loginFirebaseConfig,
     "loginApp"
   );
+
 
 const loginDB =
   getFirestore(loginApp);
@@ -688,20 +911,28 @@ const loginDB =
 ================================================== */
 
 const appElement =
-  document.getElementById("app");
+  document.getElementById(
+    "app"
+  );
+
 
 const deniedElement =
-  document.getElementById("denied");
+  document.getElementById(
+    "denied"
+  );
+
 
 const generateButton =
   document.getElementById(
     "generateButton"
   );
 
+
 const generateStatus =
   document.getElementById(
     "generateStatus"
   );
+
 
 const codeList =
   document.getElementById(
@@ -710,7 +941,7 @@ const codeList =
 
 
 /* ==================================================
-   인원 → 마지막 문자
+   이용권 규칙
 ================================================== */
 
 const coinCharacters = {
@@ -725,7 +956,7 @@ const coinCharacters = {
 
 
 /* ==================================================
-   권한 확인
+   관리자 권한 확인
 ================================================== */
 
 async function checkAdminAccess() {
@@ -754,6 +985,7 @@ async function checkAdminAccess() {
         userId
       );
 
+
     const userSnap =
       await getDoc(
         userRef
@@ -774,8 +1006,11 @@ async function checkAdminAccess() {
 
 
     /*
-     * president / vice
-     * 또는 관리자가 지정한 사용자
+     * 접근 가능한 계정
+     *
+     * president
+     * vice
+     * coinManager === true
      */
 
     const allowed =
@@ -803,7 +1038,7 @@ async function checkAdminAccess() {
   catch (error) {
 
     console.error(
-      "관리자 권한 확인 오류:",
+      "관리자 권한 확인 실패:",
       error
     );
 
@@ -832,7 +1067,7 @@ function denyAccess() {
 
 
 /* ==================================================
-   랜덤 문자열
+   랜덤 코드
 ================================================== */
 
 function randomString(length) {
@@ -840,12 +1075,20 @@ function randomString(length) {
   const chars =
     "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+
   let result = "";
 
-  const array =
-    new Uint32Array(length);
 
-  crypto.getRandomValues(array);
+  const randomValues =
+    new Uint32Array(
+      length
+    );
+
+
+  crypto.getRandomValues(
+    randomValues
+  );
+
 
   for (
     let i = 0;
@@ -855,10 +1098,12 @@ function randomString(length) {
 
     result +=
       chars[
-        array[i] % chars.length
+        randomValues[i] %
+        chars.length
       ];
 
   }
+
 
   return result;
 
@@ -869,17 +1114,32 @@ function randomString(length) {
    코드 생성
 ================================================== */
 
-function createAccessCode(count) {
-
-  const lastCharacter =
-    coinCharacters[count];
+function createAccessCode(
+  people
+) {
 
   /*
-   * F26- + 랜덤 5자리 + 인원 식별 문자
+   * 65 + 인원 × 11
    *
-   * 예:
-   * F26-A7K2PL
+   * 1 → 76 → L
+   * 2 → 87 → W
+   * 3 → 98 → B
+   * 4 → 109 → M
+   * 5 → 120 → X
+   *
+   * JavaScript에서 ASCII를
+   * 직접 계산해서 마지막 문자를 생성
    */
+
+  const ascii =
+    65 + people * 11;
+
+
+  const lastCharacter =
+    String.fromCharCode(
+      ascii
+    ).toUpperCase();
+
 
   return (
     "F26-" +
@@ -915,13 +1175,15 @@ async function generateCode() {
   }
 
 
-  const count =
-    Number(selected.value);
+  const people =
+    Number(
+      selected.value
+    );
 
 
   if (
-    count < 1 ||
-    count > 5
+    people < 1 ||
+    people > 5
   ) {
 
     return;
@@ -936,6 +1198,7 @@ async function generateCode() {
   generateStatus.className =
     "status";
 
+
   generateStatus.textContent =
     "이용권을 발급하는 중...";
 
@@ -946,15 +1209,18 @@ async function generateCode() {
 
     let codeRef;
 
+
     /*
-     * 같은 코드가 나올 경우를 대비해
-     * 중복 검사
+     * 중복 방지
      */
 
     while (true) {
 
       code =
-        createAccessCode(count);
+        createAccessCode(
+          people
+        );
+
 
       codeRef =
         doc(
@@ -963,22 +1229,27 @@ async function generateCode() {
           code
         );
 
+
       const existing =
         await getDoc(
           codeRef
         );
 
-      if (!existing.exists()) {
+
+      if (
+        !existing.exists()
+      ) {
+
         break;
+
       }
 
     }
 
 
-    /*
-     * 첫 발급이라면
-     * _meta 문서를 자동 생성
-     */
+    /* ================================
+       _meta 최초 생성
+    ================================= */
 
     const metaRef =
       doc(
@@ -994,15 +1265,19 @@ async function generateCode() {
       );
 
 
-    if (!metaSnap.exists()) {
+    if (
+      !metaSnap.exists()
+    ) {
 
       await setDoc(
         metaRef,
         {
 
-          initialized: true,
+          initialized:
+            true,
 
-          version: 1,
+          version:
+            1,
 
           createdAt:
             serverTimestamp()
@@ -1013,22 +1288,22 @@ async function generateCode() {
     }
 
 
-    /*
-     * 실제 코드 저장
-     */
+    /* ================================
+       코드 저장
+    ================================= */
 
     await setDoc(
       codeRef,
       {
 
         type:
-          `${count}인권`,
+          `${people}인권`,
 
         people:
-          count,
+          people,
 
         maxUses:
-          count,
+          people,
 
         usedCount:
           0,
@@ -1051,13 +1326,10 @@ async function generateCode() {
     generateStatus.className =
       "status success";
 
+
     generateStatus.textContent =
       `${code} 발급 완료!`;
 
-
-    /*
-     * 선택 해제
-     */
 
     selected.checked =
       false;
@@ -1067,15 +1339,17 @@ async function generateCode() {
   catch (error) {
 
     console.error(
-      "코드 발급 오류:",
+      "이용권 발급 실패:",
       error
     );
+
 
     generateStatus.className =
       "status error";
 
+
     generateStatus.textContent =
-      "코드 발급에 실패했습니다.";
+      "이용권 발급에 실패했습니다.";
 
   }
 
@@ -1087,10 +1361,13 @@ async function generateCode() {
 
 
 /* ==================================================
-   복사
+   코드 복사
 ================================================== */
 
-async function copyCode(code, button) {
+async function copyCode(
+  code,
+  button
+) {
 
   try {
 
@@ -1098,23 +1375,33 @@ async function copyCode(code, button) {
       code
     );
 
+
     const oldText =
       button.textContent;
+
 
     button.textContent =
       "복사됨";
 
+
     setTimeout(
       () => {
+
         button.textContent =
           oldText;
+
       },
       1200
     );
 
   }
 
-  catch {
+  catch (error) {
+
+    console.error(
+      error
+    );
+
 
     alert(
       "코드를 복사하지 못했습니다.\n\n" +
@@ -1127,13 +1414,30 @@ async function copyCode(code, button) {
 
 
 /* ==================================================
-   활성 / 비활성
+   폐기 / 재활성화
 ================================================== */
 
 async function toggleCode(
   id,
   active
 ) {
+
+  const action =
+    active
+      ? "폐기"
+      : "재활성화";
+
+
+  const confirmed =
+    confirm(
+      `이 이용권을 ${action}할까요?\n\n${id}`
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
 
   try {
 
@@ -1157,11 +1461,13 @@ async function toggleCode(
   catch (error) {
 
     console.error(
+      "이용권 상태 변경 실패:",
       error
     );
 
+
     alert(
-      "상태 변경에 실패했습니다."
+      "이용권 상태 변경에 실패했습니다."
     );
 
   }
@@ -1170,7 +1476,71 @@ async function toggleCode(
 
 
 /* ==================================================
-   목록 표시
+   삭제
+================================================== */
+
+async function deleteCode(
+  id
+) {
+
+  const confirmed =
+    confirm(
+
+      `정말 이 이용권을 삭제할까요?\n\n` +
+
+      `${id}\n\n` +
+
+      `⚠️ 삭제하면 복구할 수 없습니다.`
+
+    );
+
+
+  if (!confirmed) {
+
+    return;
+
+  }
+
+
+  try {
+
+    await deleteDoc(
+
+      doc(
+        db,
+        "accessCodes",
+        id
+      )
+
+    );
+
+
+    /*
+     * onSnapshot이 자동으로
+     * 목록을 갱신한다.
+     */
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "이용권 삭제 실패:",
+      error
+    );
+
+
+    alert(
+      "이용권 삭제에 실패했습니다."
+    );
+
+  }
+
+}
+
+
+/* ==================================================
+   이용권 목록
 ================================================== */
 
 function loadCodes() {
@@ -1182,7 +1552,8 @@ function loadCodes() {
       "accessCodes"
     ),
 
-    (snapshot) => {
+
+    snapshot => {
 
       const codes = [];
 
@@ -1191,13 +1562,15 @@ function loadCodes() {
         item => {
 
           /*
-           * _meta는 실제 이용권이 아니므로 제외
+           * _meta 제외
            */
 
           if (
             item.id === "_meta"
           ) {
+
             return;
+
           }
 
 
@@ -1215,17 +1588,21 @@ function loadCodes() {
 
 
       /*
-       * 최신 코드부터
+       * 최신 발급 순
        */
 
       codes.sort(
         (a, b) => {
 
           const aTime =
-            a.createdAt?.toMillis?.() || 0;
+            a.createdAt
+              ?.toMillis?.() || 0;
+
 
           const bTime =
-            b.createdAt?.toMillis?.() || 0;
+            b.createdAt
+              ?.toMillis?.() || 0;
+
 
           return bTime - aTime;
 
@@ -1233,15 +1610,22 @@ function loadCodes() {
       );
 
 
-      codeList.innerHTML = "";
+      codeList.innerHTML =
+        "";
 
 
-      if (!codes.length) {
+      if (
+        codes.length === 0
+      ) {
 
         codeList.innerHTML = `
+
           <div class="empty">
+
             아직 발급된 이용권이 없습니다.
+
           </div>
+
         `;
 
         return;
@@ -1253,10 +1637,18 @@ function loadCodes() {
         item => {
 
           const used =
-            item.usedCount || 0;
+            Number(
+              item.usedCount || 0
+            );
+
 
           const max =
-            item.maxUses || item.people || 1;
+            Number(
+              item.maxUses ||
+              item.people ||
+              1
+            );
+
 
           const active =
             item.active !== false;
@@ -1266,6 +1658,7 @@ function loadCodes() {
             document.createElement(
               "div"
             );
+
 
           element.className =
             "code-item";
@@ -1280,7 +1673,9 @@ function loadCodes() {
               </div>
 
               <div class="code-info">
+
                 ${used} / ${max}명 사용
+
               </div>
 
             </div>
@@ -1288,7 +1683,10 @@ function loadCodes() {
 
             <div class="badge">
 
-              ${item.type || `${max}인권`}
+              ${
+                item.type ||
+                `${max}인권`
+              }
 
             </div>
 
@@ -1301,11 +1699,11 @@ function loadCodes() {
 
 
             <button
-              class="action-btn ${
-                active
-                  ? "danger"
-                  : ""
-              } toggle-btn"
+              class="
+                action-btn
+                toggle-btn
+                ${active ? "danger" : ""}
+              "
             >
 
               ${
@@ -1316,8 +1714,21 @@ function loadCodes() {
 
             </button>
 
+
+            <button
+              class="
+                action-btn
+                danger
+                delete-btn
+              "
+            >
+              삭제
+            </button>
+
           `;
 
+
+          /* 복사 */
 
           const copyButton =
             element.querySelector(
@@ -1336,6 +1747,8 @@ function loadCodes() {
             };
 
 
+          /* 폐기 / 재활성화 */
+
           const toggleButton =
             element.querySelector(
               ".toggle-btn"
@@ -1353,6 +1766,24 @@ function loadCodes() {
             };
 
 
+          /* 삭제 */
+
+          const deleteButton =
+            element.querySelector(
+              ".delete-btn"
+            );
+
+
+          deleteButton.onclick =
+            () => {
+
+              deleteCode(
+                item.id
+              );
+
+            };
+
+
           codeList.appendChild(
             element
           );
@@ -1362,17 +1793,23 @@ function loadCodes() {
 
     },
 
-    (error) => {
+
+    error => {
 
       console.error(
-        "이용권 목록 오류:",
+        "이용권 목록 불러오기 실패:",
         error
       );
 
+
       codeList.innerHTML = `
+
         <div class="empty">
+
           이용권 목록을 불러오지 못했습니다.
+
         </div>
+
       `;
 
     }
@@ -1386,6 +1823,12 @@ function loadCodes() {
    시작
 ================================================== */
 
+generateButton.addEventListener(
+  "click",
+  generateCode
+);
+
+
 const allowed =
   await checkAdminAccess();
 
@@ -1395,12 +1838,6 @@ if (allowed) {
   loadCodes();
 
 }
-
-
-generateButton.addEventListener(
-  "click",
-  generateCode
-);
 
 </script>
 
