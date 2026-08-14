@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>2026 Festival · 이용권 관리</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #0f0f14;
+  color: white;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  padding: 18px 24px;
+
+  background: linear-gradient(
+    90deg,
+    #00c853,
+    #64dd17
+  );
+
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+
+.header-inner {
+  max-width: 1100px;
+  margin: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+.logo {
+  font-family: "Black Han Sans", sans-serif;
+  font-size: 25px;
+}
+
+.back {
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.container {
+  width: min(1100px, calc(100% - 32px));
+  margin: 30px auto 60px;
+}
+
+.page-title {
+  margin-bottom: 25px;
+}
+
+.page-title h1 {
+  margin: 0;
+  font-family: "Black Han Sans", sans-serif;
+  font-size: 32px;
+}
+
+.page-title p {
+  margin: 8px 0 0;
+  color: #aaa;
+  font-size: 14px;
+}
+
+.card {
+  background: #1c1c25;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+
+.card-title {
+  margin: 0 0 18px;
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.coin-types {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.coin-type {
+  position: relative;
+}
+
+.coin-type input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.coin-type label {
+  display: block;
+  padding: 16px 8px;
+
+  text-align: center;
+
+  background: #15151c;
+  border: 1px solid #353540;
+  border-radius: 12px;
+
+  cursor: pointer;
+  transition: .2s;
+}
+
+.coin-type label:hover {
+  border-color: #00c853;
+}
+
+.coin-type input:checked + label {
+  border-color: #00c853;
+  background: rgba(0,200,83,.12);
+  box-shadow:
+    0 0 0 2px rgba(0,200,83,.08);
+}
+
+.coin-number {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.coin-char {
+  margin-top: 5px;
+  color: #8cff9c;
+  font-size: 12px;
+}
+
+.generate-btn {
+  width: 100%;
+  height: 52px;
+
+  margin-top: 18px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    90deg,
+    #00c853,
+    #64dd17
+  );
+
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+.generate-btn:hover {
+  filter: brightness(.93);
+}
+
+.generate-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.status {
+  min-height: 20px;
+  margin-top: 12px;
+  text-align: center;
+  color: #aaa;
+  font-size: 13px;
+}
+
+.status.error {
+  color: #ff7070;
+}
+
+.status.success {
+  color: #8cff9c;
+}
+
+.code-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.code-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 14px;
+
+  padding: 15px;
+
+  background: #15151c;
+  border-radius: 12px;
+}
+
+.code-main {
+  min-width: 0;
+}
+
+.code {
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  word-break: break-all;
+}
+
+.code-info {
+  margin-top: 5px;
+  color: #999;
+  font-size: 12px;
+}
+
+.badge {
+  padding: 6px 9px;
+  border-radius: 8px;
+
+  background: rgba(0,200,83,.12);
+  color: #8cff9c;
+
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.action-btn {
+  border: none;
+  border-radius: 8px;
+
+  padding: 9px 12px;
+
+  background: #292933;
+  color: white;
+
+  cursor: pointer;
+}
+
+.action-btn:hover {
+  background: #353540;
+}
+
+.action-btn.danger {
+  color: #ff8585;
+}
+
+.empty {
+  padding: 35px;
+  text-align: center;
+  color: #777;
+}
+
+.loading {
+  padding: 50px;
+  text-align: center;
+  color: #aaa;
+}
+
+#denied {
+  display: none;
+
+  min-height: 100vh;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+}
+
+.denied-card {
+  width: min(420px, 100%);
+  padding: 35px;
+
+  text-align: center;
+
+  background: #1c1c25;
+  border-radius: 20px;
+}
+
+.denied-icon {
+  font-size: 48px;
+}
+
+.denied-card h1 {
+  margin: 12px 0;
+}
+
+.denied-card p {
+  color: #aaa;
+  line-height: 1.7;
+}
+
+.denied-card a {
+  display: inline-block;
+  margin-top: 15px;
+  color: #8cff9c;
+}
+
+#app {
+  display: none;
+}
+
+@media (max-width: 700px) {
+
+  .coin-types {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .code-item {
+    grid-template-columns: 1fr auto;
+  }
+
+  .code-item .badge {
+    justify-self: start;
+  }
+
+  .code-item .action-btn {
+    justify-self: stretch;
+  }
+
+}
+
+@media (max-width: 420px) {
+
+  .coin-types {
+    grid-template-columns: 1fr;
+  }
+
+  .container {
+    width: min(100% - 20px, 1100px);
+  }
+
+  .card {
+    padding: 17px;
+  }
+
+  .page-title h1 {
+    font-size: 27px;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<!-- 권한 없음 -->
+
+<div id="denied">
+
+  <div class="denied-card">
+
+    <div class="denied-icon">
+      🔒
+    </div>
+
+    <h1>접근 권한이 없습니다</h1>
+
+    <p>
+      2026 Festival 이용권 관리 페이지는
+      지정된 관리자만 사용할 수 있습니다.
+    </p>
+
+    <a href="/2026festival/">
+      축제 페이지로 돌아가기
+    </a>
+
+  </div>
+
+</div>
+
+
+<!-- 실제 관리자 페이지 -->
+
+<div id="app">
+
+<header>
+
+  <div class="header-inner">
+
+    <div class="logo">
+      2026 Festival · 이용권 관리
+    </div>
+
+    <a
+      class="back"
+      href="/2026festival/"
+    >
+      축제로 돌아가기
+    </a>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <div class="page-title">
+
+    <h1>
+      🎟 이용권 관리
+    </h1>
+
+    <p>
+      축제 입장용 이용권을 발급하고 관리합니다.
+    </p>
+
+  </div>
+
+
+  <!-- 발급 -->
+
+  <section class="card">
+
+    <h2 class="card-title">
+      이용권 발급
+    </h2>
+
+    <div class="coin-types">
+
+      <div class="coin-type">
+
+        <input
+          type="radio"
+          name="coinType"
+          id="coin1"
+          value="1"
+        >
+
+        <label for="coin1">
+
+          <div class="coin-number">
+            1인권
+          </div>
+
+          <div class="coin-char">
+            마지막 문자 · L
+          </div>
+
+        </label>
+
+      </div>
+
+
+      <div class="coin-type">
+
+        <input
+          type="radio"
+          name="coinType"
+          id="coin2"
+          value="2"
+        >
+
+        <label for="coin2">
+
+          <div class="coin-number">
+            2인권
+          </div>
+
+          <div class="coin-char">
+            마지막 문자 · W
+          </div>
+
+        </label>
+
+      </div>
+
+
+      <div class="coin-type">
+
+        <input
+          type="radio"
+          name="coinType"
+          id="coin3"
+          value="3"
+        >
+
+        <label for="coin3">
+
+          <div class="coin-number">
+            3인권
+          </div>
+
+          <div class="coin-char">
+            마지막 문자 · B
+          </div>
+
+        </label>
+
+      </div>
+
+
+      <div class="coin-type">
+
+        <input
+          type="radio"
+          name="coinType"
+          id="coin4"
+          value="4"
+        >
+
+        <label for="coin4">
+
+          <div class="coin-number">
+            4인권
+          </div>
+
+          <div class="coin-char">
+            마지막 문자 · M
+          </div>
+
+        </label>
+
+      </div>
+
+
+      <div class="coin-type">
+
+        <input
+          type="radio"
+          name="coinType"
+          id="coin5"
+          value="5"
+        >
+
+        <label for="coin5">
+
+          <div class="coin-number">
+            5인권
+          </div>
+
+          <div class="coin-char">
+            마지막 문자 · X
+          </div>
+
+        </label>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="generate-btn"
+      id="generateButton"
+    >
+      이용권 발급
+    </button>
+
+
+    <div
+      class="status"
+      id="generateStatus"
+    ></div>
+
+  </section>
+
+
+  <!-- 코드 목록 -->
+
+  <section class="card">
+
+    <h2 class="card-title">
+      발급된 이용권
+    </h2>
+
+    <div
+      class="code-list"
+      id="codeList"
+    >
+
+      <div class="loading">
+        이용권을 불러오는 중...
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+</div>
+
+
+<script type="module">
+
+import {
+  initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  addDoc,
+  onSnapshot,
+  updateDoc,
+  serverTimestamp
+} from
+"https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+
+/* ==================================================
+   Firebase
+================================================== */
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
+
+  authDomain:
+    "festivallikes.firebaseapp.com",
+
+  projectId:
+    "festivallikes",
+
+  storageBucket:
+    "festivallikes.firebasestorage.app",
+
+  messagingSenderId:
+    "782245120700",
+
+  appId:
+    "1:782245120700:web:c61e16313e9ae688e6deb9"
+
+};
+
+const app =
+  initializeApp(firebaseConfig);
+
+const db =
+  getFirestore(app);
+
+
+/* ==================================================
+   권한 확인용 Firebase
+================================================== */
+
+const loginFirebaseConfig = {
+
+  apiKey:
+    "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+
+  authDomain:
+    "points2026-f5e50.firebaseapp.com",
+
+  projectId:
+    "points2026-f5e50"
+
+};
+
+const loginApp =
+  initializeApp(
+    loginFirebaseConfig,
+    "loginApp"
+  );
+
+const loginDB =
+  getFirestore(loginApp);
+
+
+/* ==================================================
+   Elements
+================================================== */
+
+const appElement =
+  document.getElementById("app");
+
+const deniedElement =
+  document.getElementById("denied");
+
+const generateButton =
+  document.getElementById(
+    "generateButton"
+  );
+
+const generateStatus =
+  document.getElementById(
+    "generateStatus"
+  );
+
+const codeList =
+  document.getElementById(
+    "codeList"
+  );
+
+
+/* ==================================================
+   인원 → 마지막 문자
+================================================== */
+
+const coinCharacters = {
+
+  1: "L",
+  2: "W",
+  3: "B",
+  4: "M",
+  5: "X"
+
+};
+
+
+/* ==================================================
+   권한 확인
+================================================== */
+
+async function checkAdminAccess() {
+
+  const userId =
+    localStorage.getItem(
+      "userId"
+    );
+
+
+  if (!userId) {
+
+    denyAccess();
+
+    return false;
+
+  }
+
+
+  try {
+
+    const userRef =
+      doc(
+        loginDB,
+        "users",
+        userId
+      );
+
+    const userSnap =
+      await getDoc(
+        userRef
+      );
+
+
+    if (!userSnap.exists()) {
+
+      denyAccess();
+
+      return false;
+
+    }
+
+
+    const user =
+      userSnap.data();
+
+
+    /*
+     * president / vice
+     * 또는 관리자가 지정한 사용자
+     */
+
+    const allowed =
+      user.role === "president" ||
+      user.role === "vice" ||
+      user.coinManager === true;
+
+
+    if (!allowed) {
+
+      denyAccess();
+
+      return false;
+
+    }
+
+
+    appElement.style.display =
+      "block";
+
+    return true;
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "관리자 권한 확인 오류:",
+      error
+    );
+
+    denyAccess();
+
+    return false;
+
+  }
+
+}
+
+
+/* ==================================================
+   접근 거부
+================================================== */
+
+function denyAccess() {
+
+  appElement.style.display =
+    "none";
+
+  deniedElement.style.display =
+    "flex";
+
+}
+
+
+/* ==================================================
+   랜덤 문자열
+================================================== */
+
+function randomString(length) {
+
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  let result = "";
+
+  const array =
+    new Uint32Array(length);
+
+  crypto.getRandomValues(array);
+
+  for (
+    let i = 0;
+    i < length;
+    i++
+  ) {
+
+    result +=
+      chars[
+        array[i] % chars.length
+      ];
+
+  }
+
+  return result;
+
+}
+
+
+/* ==================================================
+   코드 생성
+================================================== */
+
+function createAccessCode(count) {
+
+  const lastCharacter =
+    coinCharacters[count];
+
+  /*
+   * F26- + 랜덤 5자리 + 인원 식별 문자
+   *
+   * 예:
+   * F26-A7K2PL
+   */
+
+  return (
+    "F26-" +
+    randomString(5) +
+    lastCharacter
+  ).toUpperCase();
+
+}
+
+
+/* ==================================================
+   코드 발급
+================================================== */
+
+async function generateCode() {
+
+  const selected =
+    document.querySelector(
+      'input[name="coinType"]:checked'
+    );
+
+
+  if (!selected) {
+
+    generateStatus.className =
+      "status error";
+
+    generateStatus.textContent =
+      "이용권 종류를 선택해주세요.";
+
+    return;
+
+  }
+
+
+  const count =
+    Number(selected.value);
+
+
+  if (
+    count < 1 ||
+    count > 5
+  ) {
+
+    return;
+
+  }
+
+
+  generateButton.disabled =
+    true;
+
+
+  generateStatus.className =
+    "status";
+
+  generateStatus.textContent =
+    "이용권을 발급하는 중...";
+
+
+  try {
+
+    let code;
+
+    let codeRef;
+
+    /*
+     * 같은 코드가 나올 경우를 대비해
+     * 중복 검사
+     */
+
+    while (true) {
+
+      code =
+        createAccessCode(count);
+
+      codeRef =
+        doc(
+          db,
+          "accessCodes",
+          code
+        );
+
+      const existing =
+        await getDoc(
+          codeRef
+        );
+
+      if (!existing.exists()) {
+        break;
+      }
+
+    }
+
+
+    /*
+     * 첫 발급이라면
+     * _meta 문서를 자동 생성
+     */
+
+    const metaRef =
+      doc(
+        db,
+        "accessCodes",
+        "_meta"
+      );
+
+
+    const metaSnap =
+      await getDoc(
+        metaRef
+      );
+
+
+    if (!metaSnap.exists()) {
+
+      await setDoc(
+        metaRef,
+        {
+
+          initialized: true,
+
+          version: 1,
+
+          createdAt:
+            serverTimestamp()
+
+        }
+      );
+
+    }
+
+
+    /*
+     * 실제 코드 저장
+     */
+
+    await setDoc(
+      codeRef,
+      {
+
+        type:
+          `${count}인권`,
+
+        people:
+          count,
+
+        maxUses:
+          count,
+
+        usedCount:
+          0,
+
+        active:
+          true,
+
+        createdAt:
+          serverTimestamp(),
+
+        createdBy:
+          localStorage.getItem(
+            "userId"
+          )
+
+      }
+    );
+
+
+    generateStatus.className =
+      "status success";
+
+    generateStatus.textContent =
+      `${code} 발급 완료!`;
+
+
+    /*
+     * 선택 해제
+     */
+
+    selected.checked =
+      false;
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "코드 발급 오류:",
+      error
+    );
+
+    generateStatus.className =
+      "status error";
+
+    generateStatus.textContent =
+      "코드 발급에 실패했습니다.";
+
+  }
+
+
+  generateButton.disabled =
+    false;
+
+}
+
+
+/* ==================================================
+   복사
+================================================== */
+
+async function copyCode(code, button) {
+
+  try {
+
+    await navigator.clipboard.writeText(
+      code
+    );
+
+    const oldText =
+      button.textContent;
+
+    button.textContent =
+      "복사됨";
+
+    setTimeout(
+      () => {
+        button.textContent =
+          oldText;
+      },
+      1200
+    );
+
+  }
+
+  catch {
+
+    alert(
+      "코드를 복사하지 못했습니다.\n\n" +
+      code
+    );
+
+  }
+
+}
+
+
+/* ==================================================
+   활성 / 비활성
+================================================== */
+
+async function toggleCode(
+  id,
+  active
+) {
+
+  try {
+
+    await updateDoc(
+
+      doc(
+        db,
+        "accessCodes",
+        id
+      ),
+
+      {
+        active:
+          !active
+      }
+
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+    alert(
+      "상태 변경에 실패했습니다."
+    );
+
+  }
+
+}
+
+
+/* ==================================================
+   목록 표시
+================================================== */
+
+function loadCodes() {
+
+  onSnapshot(
+
+    collection(
+      db,
+      "accessCodes"
+    ),
+
+    (snapshot) => {
+
+      const codes = [];
+
+
+      snapshot.forEach(
+        item => {
+
+          /*
+           * _meta는 실제 이용권이 아니므로 제외
+           */
+
+          if (
+            item.id === "_meta"
+          ) {
+            return;
+          }
+
+
+          codes.push({
+
+            id:
+              item.id,
+
+            ...item.data()
+
+          });
+
+        }
+      );
+
+
+      /*
+       * 최신 코드부터
+       */
+
+      codes.sort(
+        (a, b) => {
+
+          const aTime =
+            a.createdAt?.toMillis?.() || 0;
+
+          const bTime =
+            b.createdAt?.toMillis?.() || 0;
+
+          return bTime - aTime;
+
+        }
+      );
+
+
+      codeList.innerHTML = "";
+
+
+      if (!codes.length) {
+
+        codeList.innerHTML = `
+          <div class="empty">
+            아직 발급된 이용권이 없습니다.
+          </div>
+        `;
+
+        return;
+
+      }
+
+
+      codes.forEach(
+        item => {
+
+          const used =
+            item.usedCount || 0;
+
+          const max =
+            item.maxUses || item.people || 1;
+
+          const active =
+            item.active !== false;
+
+
+          const element =
+            document.createElement(
+              "div"
+            );
+
+          element.className =
+            "code-item";
+
+
+          element.innerHTML = `
+
+            <div class="code-main">
+
+              <div class="code">
+                ${item.id}
+              </div>
+
+              <div class="code-info">
+                ${used} / ${max}명 사용
+              </div>
+
+            </div>
+
+
+            <div class="badge">
+
+              ${item.type || `${max}인권`}
+
+            </div>
+
+
+            <button
+              class="action-btn copy-btn"
+            >
+              복사
+            </button>
+
+
+            <button
+              class="action-btn ${
+                active
+                  ? "danger"
+                  : ""
+              } toggle-btn"
+            >
+
+              ${
+                active
+                  ? "폐기"
+                  : "재활성화"
+              }
+
+            </button>
+
+          `;
+
+
+          const copyButton =
+            element.querySelector(
+              ".copy-btn"
+            );
+
+
+          copyButton.onclick =
+            () => {
+
+              copyCode(
+                item.id,
+                copyButton
+              );
+
+            };
+
+
+          const toggleButton =
+            element.querySelector(
+              ".toggle-btn"
+            );
+
+
+          toggleButton.onclick =
+            () => {
+
+              toggleCode(
+                item.id,
+                active
+              );
+
+            };
+
+
+          codeList.appendChild(
+            element
+          );
+
+        }
+      );
+
+    },
+
+    (error) => {
+
+      console.error(
+        "이용권 목록 오류:",
+        error
+      );
+
+      codeList.innerHTML = `
+        <div class="empty">
+          이용권 목록을 불러오지 못했습니다.
+        </div>
+      `;
+
+    }
+
+  );
+
+}
+
+
+/* ==================================================
+   시작
+================================================== */
+
+const allowed =
+  await checkAdminAccess();
+
+
+if (allowed) {
+
+  loadCodes();
+
+}
+
+
+generateButton.addEventListener(
+  "click",
+  generateCode
+);
+
+</script>
+
+</body>
+</html>
