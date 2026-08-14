@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>2026 Festival · 이용권 관리</title>
+<title>코딩과 함께라면 2026 Festival</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,16 +22,60 @@ body {
   color: white;
 }
 
-/* ================================
-   Header
-================================ */
+/* =========================================
+   Festival Gate
+========================================= */
 
-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+#festivalGate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
 
-  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(0, 200, 83, 0.20),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(100, 221, 23, 0.18),
+      transparent 35%
+    ),
+    #0f0f14;
+}
+
+.gate-card {
+  width: min(420px, 100%);
+  padding: 34px 28px;
+
+  text-align: center;
+
+  background: rgba(28, 28, 37, 0.96);
+
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,0.5);
+}
+
+.gate-icon {
+  font-size: 52px;
+  margin-bottom: 8px;
+}
+
+.gate-title {
+  margin: 0;
+
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 32px;
 
   background: linear-gradient(
     90deg,
@@ -39,191 +83,209 @@ header {
     #64dd17
   );
 
-  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.header-inner {
-  max-width: 1100px;
-  margin: auto;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 20px;
-}
-
-.logo {
-  font-family: "Black Han Sans", sans-serif;
-  font-size: 25px;
-}
-
-.back {
-  color: white;
-  text-decoration: none;
-  font-size: 14px;
-}
-
-.back:hover {
-  text-decoration: underline;
-}
-
-
-/* ================================
-   Container
-================================ */
-
-.container {
-  width: min(1100px, calc(100% - 32px));
-  margin: 30px auto 60px;
-}
-
-
-/* ================================
-   Page title
-================================ */
-
-.page-title {
-  margin-bottom: 25px;
-}
-
-.page-title h1 {
-  margin: 0;
-
-  font-family:
-    "Black Han Sans",
-    sans-serif;
-
-  font-size: 32px;
-}
-
-.page-title p {
-  margin: 8px 0 0;
+.gate-description {
+  margin: 14px 0 24px;
 
   color: #aaa;
 
   font-size: 14px;
+  line-height: 1.7;
 }
 
+/* =========================================
+   Input
+========================================= */
 
-/* ================================
-   Card
-================================ */
+.gate-input {
+  width: 100%;
+  height: 50px;
 
-.card {
-  background: #1c1c25;
+  padding: 0 16px;
 
-  border:
-    1px solid
-    rgba(255,255,255,.06);
-
-  border-radius: 18px;
-
-  padding: 24px;
-
-  margin-bottom: 20px;
-
-  box-shadow:
-    0 10px 30px
-    rgba(0,0,0,.2);
-}
-
-.card-title {
-  margin: 0 0 18px;
-
-  font-size: 19px;
-  font-weight: bold;
-}
-
-
-/* ================================
-   Coin types
-================================ */
-
-.coin-types {
-  display: grid;
-
-  grid-template-columns:
-    repeat(5, 1fr);
-
-  gap: 10px;
-}
-
-.coin-type {
-  position: relative;
-}
-
-.coin-type input {
-  position: absolute;
-
-  opacity: 0;
-
-  pointer-events: none;
-}
-
-.coin-type label {
-  display: block;
-
-  padding: 16px 8px;
-
-  text-align: center;
+  border: 1px solid #3a3a45;
+  border-radius: 13px;
 
   background: #15151c;
+  color: white;
 
-  border:
-    1px solid
-    #353540;
+  outline: none;
 
-  border-radius: 12px;
+  font-size: 15px;
+  text-align: center;
+
+  transition: 0.2s;
+}
+
+.gate-input::placeholder {
+  color: #777;
+}
+
+.gate-input:focus {
+  border-color: #00c853;
+
+  box-shadow:
+    0 0 0 3px rgba(0,200,83,0.12);
+}
+
+/* =========================================
+   Button
+========================================= */
+
+.gate-button {
+  width: 100%;
+  height: 50px;
+
+  margin-top: 10px;
+
+  border: none;
+  border-radius: 13px;
+
+  background: linear-gradient(
+    90deg,
+    #00c853,
+    #64dd17
+  );
+
+  color: white;
+
+  font-size: 15px;
+  font-weight: bold;
 
   cursor: pointer;
 
-  transition: .2s;
+  transition: 0.2s;
 }
 
-.coin-type label:hover {
-  border-color: #00c853;
+.gate-button:hover {
+  filter: brightness(0.92);
+  transform: translateY(-1px);
 }
 
-.coin-type input:checked + label {
-  border-color: #00c853;
-
-  background:
-    rgba(0,200,83,.12);
-
-  box-shadow:
-    0 0 0 2px
-    rgba(0,200,83,.08);
+.gate-button:active {
+  transform: translateY(0);
 }
 
-.coin-number {
-  font-size: 22px;
-  font-weight: bold;
+.gate-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.coin-char {
-  margin-top: 5px;
+/* =========================================
+   Divider
+========================================= */
 
-  color: #8cff9c;
+.gate-divider {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin: 18px 0;
+
+  color: #666;
 
   font-size: 12px;
 }
 
+.gate-divider::before,
+.gate-divider::after {
+  content: "";
 
-/* ================================
-   Generate button
-================================ */
+  flex: 1;
 
-.generate-btn {
-  width: 100%;
+  height: 1px;
 
-  height: 52px;
+  background: #33333d;
+}
 
-  margin-top: 18px;
+/* =========================================
+   Error
+========================================= */
 
-  border: none;
+.gate-error {
+  min-height: 20px;
 
-  border-radius: 12px;
+  margin-top: 10px;
+
+  color: #ff7070;
+
+  font-size: 13px;
+}
+
+/* =========================================
+   Success
+========================================= */
+
+.gate-success {
+  min-height: 20px;
+
+  margin-top: 10px;
+
+  color: #7cff91;
+
+  font-size: 13px;
+}
+
+/* =========================================
+   Loading
+========================================= */
+
+.gate-loading {
+  color: #aaa;
+  font-size: 14px;
+}
+
+/* =========================================
+   Hide
+========================================= */
+
+#festivalGate.hidden {
+  display: none;
+}
+
+body.gate-open {
+  overflow: hidden;
+}
+
+/* =========================================
+   Home
+========================================= */
+
+.home-link {
+  position: fixed;
+  top: 18px;
+  left: 20px;
+
+  color: rgba(255,255,255,0.75);
+
+  text-decoration: none;
+
+  font-size: 13px;
+
+  z-index: 1000;
+}
+
+.home-link:hover {
+  color: white;
+}
+
+/* =========================================
+   Header
+========================================= */
+
+header {
+  text-align: center;
+
+  padding: 12px 20px;
+
+  font-family: 'Black Han Sans', sans-serif;
+
+  font-size: 30px;
 
   background:
     linear-gradient(
@@ -234,339 +296,273 @@ header {
 
   color: white;
 
-  font-size: 16px;
-
-  font-weight: bold;
-
-  cursor: pointer;
-
-  transition: .2s;
+  box-shadow:
+    0 4px 20px rgba(0,0,0,.3);
 }
 
-.generate-btn:hover {
-  filter: brightness(.93);
-}
+/* =========================================
+   Subtitle
+========================================= */
 
-.generate-btn:active {
-  transform: scale(.99);
-}
-
-.generate-btn:disabled {
-  opacity: .5;
-
-  cursor: not-allowed;
-}
-
-
-/* ================================
-   Status
-================================ */
-
-.status {
-  min-height: 20px;
-
-  margin-top: 12px;
-
+.subtitle {
   text-align: center;
 
-  color: #aaa;
+  padding: 10px;
 
-  font-size: 13px;
+  color: #b8ffb8;
+
+  font-size: 14px;
+
+  line-height: 1.8;
 }
 
-.status.error {
-  color: #ff7070;
-}
+/* =========================================
+   Grid
+========================================= */
 
-.status.success {
-  color: #8cff9c;
-}
-
-
-/* ================================
-   Code list
-================================ */
-
-.code-list {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 10px;
-}
-
-.code-item {
+.grid {
   display: grid;
 
   grid-template-columns:
-    1fr
-    auto
-    auto
-    auto
-    auto;
+    repeat(3, 1fr);
 
-  align-items: center;
-
-  gap: 12px;
-
-  padding: 15px;
-
-  background: #15151c;
-
-  border-radius: 12px;
-
-  transition: .15s;
-}
-
-.code-item:hover {
-  background: #191921;
-}
-
-.code-main {
-  min-width: 0;
-}
-
-.code {
-  font-family: monospace;
-
-  font-size: 18px;
-
-  font-weight: bold;
-
-  letter-spacing: 1px;
-
-  word-break: break-all;
-}
-
-.code-info {
-  margin-top: 5px;
-
-  color: #999;
-
-  font-size: 12px;
-}
-
-.badge {
-  padding: 6px 9px;
-
-  border-radius: 8px;
-
-  background:
-    rgba(0,200,83,.12);
-
-  color: #8cff9c;
-
-  font-size: 12px;
-
-  white-space: nowrap;
-}
-
-
-/* ================================
-   Buttons
-================================ */
-
-.action-btn {
-  border: none;
-
-  border-radius: 8px;
-
-  padding: 9px 12px;
-
-  background: #292933;
-
-  color: white;
-
-  cursor: pointer;
-
-  transition: .15s;
-
-  white-space: nowrap;
-}
-
-.action-btn:hover {
-  background: #353540;
-}
-
-.action-btn.danger {
-  color: #ff8585;
-}
-
-.action-btn.danger:hover {
-  background:
-    rgba(255,80,80,.12);
-}
-
-
-/* ================================
-   Empty
-================================ */
-
-.empty {
-  padding: 35px;
-
-  text-align: center;
-
-  color: #777;
-}
-
-.loading {
-  padding: 50px;
-
-  text-align: center;
-
-  color: #aaa;
-}
-
-
-/* ================================
-   Access denied
-================================ */
-
-#denied {
-  display: none;
-
-  min-height: 100vh;
-
-  align-items: center;
-
-  justify-content: center;
+  gap: 20px;
 
   padding: 20px;
 }
 
-.denied-card {
-  width:
-    min(420px, 100%);
-
-  padding: 35px;
-
-  text-align: center;
-
-  background: #1c1c25;
-
-  border-radius: 20px;
-}
-
-.denied-icon {
-  font-size: 48px;
-}
-
-.denied-card h1 {
-  margin: 12px 0;
-}
-
-.denied-card p {
-  color: #aaa;
-
-  line-height: 1.7;
-}
-
-.denied-card a {
-  display: inline-block;
-
-  margin-top: 15px;
-
-  color: #8cff9c;
-}
-
-
-/* ================================
-   App
-================================ */
-
-#app {
-  display: none;
-}
-
-
-/* ================================
+/* =========================================
    Mobile
-================================ */
+========================================= */
 
-@media (max-width: 800px) {
+@media (max-width: 768px) {
 
-  .coin-types {
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
-
-  .code-item {
-    grid-template-columns:
-      1fr auto;
-  }
-
-  .badge {
-    justify-self: start;
-  }
-
-  .action-btn {
-    width: 100%;
-  }
-
-}
-
-
-@media (max-width: 500px) {
-
-  .coin-types {
-    grid-template-columns:
-      1fr;
-  }
-
-  .container {
-    width:
-      calc(100% - 20px);
-  }
-
-  .card {
-    padding: 17px;
-  }
-
-  .page-title h1 {
-    font-size: 27px;
-  }
-
-  .logo {
-    font-size: 20px;
+  .grid {
+    grid-template-columns: 1fr;
   }
 
   header {
-    padding: 15px;
+    font-size: 24px;
   }
 
+  .gate-card {
+    padding: 30px 22px;
+  }
+
+  .gate-title {
+    font-size: 28px;
+  }
+
+}
+
+/* =========================================
+   Card
+========================================= */
+
+.card {
+  background: #1c1c25;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
+
+.card img {
+  width: 100%;
+
+  aspect-ratio: 16 / 9;
+
+  object-fit: cover;
+
+  display: block;
+}
+
+.info {
+  padding: 12px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  flex: 1;
+}
+
+.title {
+  font-weight: bold;
+
+  font-size: 18px;
+}
+
+.desc {
+  font-size: 13px;
+
+  color: #bbb;
+
+  height: 2.6em;
+
+  overflow: hidden;
+}
+
+.likes {
+  color: #64dd17;
+
+  margin-top: auto;
+}
+
+.like-btn {
+  margin-top: 8px;
+
+  padding: 8px;
+
+  border: none;
+
+  border-radius: 6px;
+
+  cursor: pointer;
+
+  background: #00c853;
+
+  color: white;
+
+  font-weight: bold;
 }
 </style>
 </head>
 
-
-<body>
+<body class="gate-open">
 
 
 <!-- =========================================
-     접근 거부
+     Festival Gate
 ========================================= -->
 
-<div id="denied">
+<div id="festivalGate">
 
-  <div class="denied-card">
+  <div class="gate-card">
 
-    <div class="denied-icon">
-      🔒
+    <div class="gate-icon">
+      🎉
     </div>
 
-    <h1>
-      접근 권한이 없습니다
+    <h1 class="gate-title">
+      2026 FESTIVAL
     </h1>
 
-    <p>
-      2026 Festival 이용권 관리 페이지는
-      지정된 관리자만 사용할 수 있습니다.
-    </p>
+    <div
+      class="gate-description"
+      id="gateDescription"
+    >
+      축제 입장 정보를 확인하고 있습니다...
+    </div>
 
-    <a href="/2026festival/">
-      축제 페이지로 돌아가기
-    </a>
+
+    <!-- =====================================
+         비로그인
+    ====================================== -->
+
+    <div
+      id="guestArea"
+      style="display:none;"
+    >
+
+      <button
+        class="gate-button"
+        id="loginButton"
+      >
+        로그인하기
+      </button>
+
+
+      <div class="gate-divider">
+        또는
+      </div>
+
+
+      <input
+        id="accessCodeInput"
+        class="gate-input"
+        type="text"
+        maxlength="30"
+        placeholder="축제 이용 코드를 입력하세요"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+      >
+
+
+      <button
+        class="gate-button"
+        id="accessCodeButton"
+      >
+        코드로 입장
+      </button>
+
+
+      <div
+        class="gate-error"
+        id="gateError"
+      ></div>
+
+    </div>
+
+
+    <!-- =====================================
+         로그인했지만 부원 계정 확인 불가
+    ====================================== -->
+
+    <div
+      id="memberCodeArea"
+      style="display:none;"
+    >
+
+      <input
+        id="memberAccessCodeInput"
+        class="gate-input"
+        type="text"
+        maxlength="30"
+        placeholder="축제 이용 코드를 입력하세요"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+      >
+
+
+      <button
+        class="gate-button"
+        id="memberAccessCodeButton"
+      >
+        코드로 입장
+      </button>
+
+
+      <div
+        class="gate-error"
+        id="memberGateError"
+      ></div>
+
+    </div>
+
+
+    <div
+      id="loadingArea"
+      class="gate-loading"
+    >
+      확인 중...
+    </div>
 
   </div>
 
@@ -574,275 +570,70 @@ header {
 
 
 <!-- =========================================
-     관리자 페이지
+     Festival
 ========================================= -->
 
-<div id="app">
+<a
+  class="home-link"
+  href="/"
+>
+  Home
+</a>
 
 
 <header>
-
-  <div class="header-inner">
-
-    <div class="logo">
-      2026 Festival · 이용권 관리
-    </div>
-
-    <a
-      class="back"
-      href="/2026festival/"
-    >
-      축제로 돌아가기
-    </a>
-
-  </div>
-
+  코딩과 함께라면 2026 Festival
 </header>
 
 
-<main class="container">
-
-
-  <!-- =======================================
-       제목
-  ======================================== -->
-
-  <div class="page-title">
-
-    <h1>
-      🎟 이용권 관리
-    </h1>
-
-    <p>
-      축제 입장용 이용권을 발급하고 관리합니다.
-    </p>
-
+<div
+  class="subtitle"
+  id="subtitle"
+>
+  <div>
+    since 2025
   </div>
 
-
-  <!-- =======================================
-       발급
-  ======================================== -->
-
-  <section class="card">
-
-    <h2 class="card-title">
-      이용권 발급
-    </h2>
-
-
-    <div class="coin-types">
-
-
-      <!-- 1인 -->
-
-      <div class="coin-type">
-
-        <input
-          type="radio"
-          name="coinType"
-          id="coin1"
-          value="1"
-        >
-
-        <label for="coin1">
-
-          <div class="coin-number">
-            1인권
-          </div>
-
-          <div class="coin-char">
-            마지막 문자 · L
-          </div>
-
-        </label>
-
-      </div>
-
-
-      <!-- 2인 -->
-
-      <div class="coin-type">
-
-        <input
-          type="radio"
-          name="coinType"
-          id="coin2"
-          value="2"
-        >
-
-        <label for="coin2">
-
-          <div class="coin-number">
-            2인권
-          </div>
-
-          <div class="coin-char">
-            마지막 문자 · W
-          </div>
-
-        </label>
-
-      </div>
-
-
-      <!-- 3인 -->
-
-      <div class="coin-type">
-
-        <input
-          type="radio"
-          name="coinType"
-          id="coin3"
-          value="3"
-        >
-
-        <label for="coin3">
-
-          <div class="coin-number">
-            3인권
-          </div>
-
-          <div class="coin-char">
-            마지막 문자 · B
-          </div>
-
-        </label>
-
-      </div>
-
-
-      <!-- 4인 -->
-
-      <div class="coin-type">
-
-        <input
-          type="radio"
-          name="coinType"
-          id="coin4"
-          value="4"
-        >
-
-        <label for="coin4">
-
-          <div class="coin-number">
-            4인권
-          </div>
-
-          <div class="coin-char">
-            마지막 문자 · M
-          </div>
-
-        </label>
-
-      </div>
-
-
-      <!-- 5인 -->
-
-      <div class="coin-type">
-
-        <input
-          type="radio"
-          name="coinType"
-          id="coin5"
-          value="5"
-        >
-
-        <label for="coin5">
-
-          <div class="coin-number">
-            5인권
-          </div>
-
-          <div class="coin-char">
-            마지막 문자 · X
-          </div>
-
-        </label>
-
-      </div>
-
-
-    </div>
-
-
-    <button
-      class="generate-btn"
-      id="generateButton"
-    >
-      이용권 발급
-    </button>
-
-
-    <div
-      class="status"
-      id="generateStatus"
-    ></div>
-
-  </section>
-
-
-  <!-- =======================================
-       목록
-  ======================================== -->
-
-  <section class="card">
-
-    <h2 class="card-title">
-      발급된 이용권
-    </h2>
-
-
-    <div
-      class="code-list"
-      id="codeList"
-    >
-
-      <div class="loading">
-        이용권을 불러오는 중...
-      </div>
-
-    </div>
-
-  </section>
-
-
-</main>
-
+  <div>
+    ❤️ 지금까지 0번의 응원이 도착했어요!
+  </div>
 </div>
+
+
+<div
+  class="grid"
+  id="grid"
+></div>
 
 
 <script type="module">
 
 
-/* ==================================================
-   Firebase
-================================================== */
+/* =========================================
+   Firebase imports
+========================================= */
 
 import {
   initializeApp
 } from
 "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 
-
 import {
   getFirestore,
-  doc,
-  getDoc,
-  setDoc,
   collection,
   onSnapshot,
+  doc,
   updateDoc,
-  deleteDoc,
-  serverTimestamp
+  increment,
+  getDoc,
+  runTransaction
 } from
 "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 
-/* ==================================================
+/* =========================================
    Festival Firebase
-================================================== */
+========================================= */
 
 const firebaseConfig = {
 
@@ -877,9 +668,9 @@ const db =
   getFirestore(app);
 
 
-/* ==================================================
-   로그인 Firebase
-================================================== */
+/* =========================================
+   Login Firebase
+========================================= */
 
 const loginFirebaseConfig = {
 
@@ -906,60 +697,645 @@ const loginDB =
   getFirestore(loginApp);
 
 
-/* ==================================================
-   Elements
-================================================== */
+/* =========================================
+   Gate Elements
+========================================= */
 
-const appElement =
+const festivalGate =
   document.getElementById(
-    "app"
+    "festivalGate"
+  );
+
+const guestArea =
+  document.getElementById(
+    "guestArea"
+  );
+
+const memberCodeArea =
+  document.getElementById(
+    "memberCodeArea"
+  );
+
+const loadingArea =
+  document.getElementById(
+    "loadingArea"
+  );
+
+const gateDescription =
+  document.getElementById(
+    "gateDescription"
+  );
+
+const gateError =
+  document.getElementById(
+    "gateError"
+  );
+
+const memberGateError =
+  document.getElementById(
+    "memberGateError"
   );
 
 
-const deniedElement =
-  document.getElementById(
-    "denied"
+/* =========================================
+   Festival Enter
+========================================= */
+
+function enterFestival() {
+
+  festivalGate.classList.add(
+    "hidden"
+  );
+
+  document.body.classList.remove(
+    "gate-open"
+  );
+
+}
+
+
+/* =========================================
+   Guest Gate
+========================================= */
+
+function showGuestGate() {
+
+  loadingArea.style.display =
+    "none";
+
+  guestArea.style.display =
+    "block";
+
+  memberCodeArea.style.display =
+    "none";
+
+  gateDescription.textContent =
+    "축제에 입장하려면 로그인하거나 이용 코드를 입력해주세요.";
+
+}
+
+
+/* =========================================
+   Code Gate
+========================================= */
+
+function showCodeGate() {
+
+  loadingArea.style.display =
+    "none";
+
+  guestArea.style.display =
+    "none";
+
+  memberCodeArea.style.display =
+    "block";
+
+  gateDescription.textContent =
+    "축제 이용 코드를 입력해주세요.";
+
+}
+
+
+/* =========================================
+   Login
+========================================= */
+
+document
+  .getElementById(
+    "loginButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      const redirect =
+        encodeURIComponent(
+          "/2026festival/"
+        );
+
+      location.href =
+        `/signin/?redirect=${redirect}`;
+
+    }
   );
 
 
-const generateButton =
-  document.getElementById(
-    "generateButton"
+/* =========================================
+   Normalize Code
+========================================= */
+
+function normalizeCode(
+  value
+) {
+
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+
+}
+
+
+/* =========================================
+   Access Code
+========================================= */
+
+async function redeemAccessCode(
+  rawCode
+) {
+
+  const code =
+    normalizeCode(
+      rawCode
+    );
+
+
+  if (!code) {
+
+    return {
+      success: false,
+      message:
+        "이용 코드를 입력해주세요."
+    };
+
+  }
+
+
+  /*
+   * accessCodes/{CODE}
+   */
+
+  const codeRef =
+    doc(
+      db,
+      "accessCodes",
+      code
+    );
+
+
+  try {
+
+    const result =
+      await runTransaction(
+        db,
+        async transaction => {
+
+          const codeSnap =
+            await transaction.get(
+              codeRef
+            );
+
+
+          /* 코드가 없음 */
+
+          if (
+            !codeSnap.exists()
+          ) {
+
+            throw new Error(
+              "CODE_NOT_FOUND"
+            );
+
+          }
+
+
+          const data =
+            codeSnap.data();
+
+
+          /*
+           * coins.html에서 생성할 때
+           *
+           * active: true
+           *
+           * 가 들어가야 한다.
+           */
+
+          if (
+            data.active !== true
+          ) {
+
+            throw new Error(
+              "CODE_INACTIVE"
+            );
+
+          }
+
+
+          /*
+           * maxUses:
+           * 1 / 2 / 3 / 4 / 5
+           */
+
+          const maxUses =
+            Number(
+              data.maxUses || 0
+            );
+
+
+          const usedCount =
+            Number(
+              data.usedCount || 0
+            );
+
+
+          if (
+            ![1, 2, 3, 4, 5]
+              .includes(maxUses)
+          ) {
+
+            throw new Error(
+              "CODE_INVALID"
+            );
+
+          }
+
+
+          /*
+           * 이미 모두 사용됨
+           */
+
+          if (
+            usedCount >= maxUses
+          ) {
+
+            throw new Error(
+              "CODE_EXHAUSTED"
+            );
+
+          }
+
+
+          /*
+           * 사용 횟수 +1
+           */
+
+          transaction.update(
+            codeRef,
+            {
+              usedCount:
+                usedCount + 1
+            }
+          );
+
+
+          return {
+
+            people:
+              maxUses,
+
+            usedCount:
+              usedCount + 1,
+
+            maxUses:
+              maxUses
+
+          };
+
+        }
+      );
+
+
+    /*
+     * 이 탭에서는 이미 입장권을
+     * 사용했다는 표시.
+     *
+     * 새로고침 시 같은 코드가
+     * 다시 차감되는 것을 방지.
+     */
+
+    sessionStorage.setItem(
+      "festival2026CodeAccess",
+      "true"
+    );
+
+
+    sessionStorage.setItem(
+      "festival2026AccessCode",
+      code
+    );
+
+
+    return {
+
+      success: true,
+
+      message:
+        `${result.people}인 이용권으로 입장했습니다.`
+
+    };
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "이용 코드 처리 오류:",
+      error
+    );
+
+
+    switch (
+      error.message
+    ) {
+
+      case "CODE_NOT_FOUND":
+
+        return {
+          success: false,
+          message:
+            "존재하지 않는 이용 코드입니다."
+        };
+
+
+      case "CODE_INACTIVE":
+
+        return {
+          success: false,
+          message:
+            "사용할 수 없는 이용 코드입니다."
+        };
+
+
+      case "CODE_EXHAUSTED":
+
+        return {
+          success: false,
+          message:
+            "이미 모두 사용된 이용 코드입니다."
+        };
+
+
+      case "CODE_INVALID":
+
+        return {
+          success: false,
+          message:
+            "올바르지 않은 이용 코드입니다."
+        };
+
+
+      default:
+
+        return {
+          success: false,
+          message:
+            "코드 확인 중 오류가 발생했습니다."
+        };
+
+    }
+
+  }
+
+}
+
+
+/* =========================================
+   Guest Code Button
+========================================= */
+
+document
+  .getElementById(
+    "accessCodeButton"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      const input =
+        document.getElementById(
+          "accessCodeInput"
+        );
+
+      const button =
+        document.getElementById(
+          "accessCodeButton"
+        );
+
+
+      gateError.className =
+        "gate-error";
+
+      gateError.textContent =
+        "";
+
+
+      button.disabled =
+        true;
+
+      button.textContent =
+        "확인 중...";
+
+
+      const result =
+        await redeemAccessCode(
+          input.value
+        );
+
+
+      if (
+        result.success
+      ) {
+
+        gateError.className =
+          "gate-success";
+
+        gateError.textContent =
+          result.message;
+
+
+        setTimeout(
+          enterFestival,
+          450
+        );
+
+      }
+
+      else {
+
+        gateError.className =
+          "gate-error";
+
+        gateError.textContent =
+          result.message;
+
+      }
+
+
+      button.disabled =
+        false;
+
+      button.textContent =
+        "코드로 입장";
+
+    }
   );
 
 
-const generateStatus =
-  document.getElementById(
-    "generateStatus"
+/* =========================================
+   Member Code Button
+========================================= */
+
+document
+  .getElementById(
+    "memberAccessCodeButton"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      const input =
+        document.getElementById(
+          "memberAccessCodeInput"
+        );
+
+      const button =
+        document.getElementById(
+          "memberAccessCodeButton"
+        );
+
+
+      memberGateError.className =
+        "gate-error";
+
+      memberGateError.textContent =
+        "";
+
+
+      button.disabled =
+        true;
+
+      button.textContent =
+        "확인 중...";
+
+
+      const result =
+        await redeemAccessCode(
+          input.value
+        );
+
+
+      if (
+        result.success
+      ) {
+
+        memberGateError.className =
+          "gate-success";
+
+        memberGateError.textContent =
+          result.message;
+
+
+        setTimeout(
+          enterFestival,
+          450
+        );
+
+      }
+
+      else {
+
+        memberGateError.className =
+          "gate-error";
+
+        memberGateError.textContent =
+          result.message;
+
+      }
+
+
+      button.disabled =
+        false;
+
+      button.textContent =
+        "코드로 입장";
+
+    }
   );
 
 
-const codeList =
-  document.getElementById(
-    "codeList"
+/* =========================================
+   Enter Key
+========================================= */
+
+document
+  .getElementById(
+    "accessCodeInput"
+  )
+  .addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        document
+          .getElementById(
+            "accessCodeButton"
+          )
+          .click();
+
+      }
+
+    }
   );
 
 
-/* ==================================================
-   이용권 규칙
-================================================== */
+document
+  .getElementById(
+    "memberAccessCodeInput"
+  )
+  .addEventListener(
+    "keydown",
+    event => {
 
-const coinCharacters = {
+      if (
+        event.key === "Enter"
+      ) {
 
-  1: "L",
-  2: "W",
-  3: "B",
-  4: "M",
-  5: "X"
+        document
+          .getElementById(
+            "memberAccessCodeButton"
+          )
+          .click();
 
-};
+      }
+
+    }
+  );
 
 
-/* ==================================================
-   관리자 권한 확인
-================================================== */
+/* =========================================
+   Check Festival Access
+========================================= */
 
-async function checkAdminAccess() {
+async function checkFestivalAccess() {
+
+  /*
+   * 코드로 이미 입장한 경우
+   *
+   * 같은 탭의 새로고침에서는
+   * 다시 코드를 차감하지 않는다.
+   */
+
+  if (
+    sessionStorage.getItem(
+      "festival2026CodeAccess"
+    ) === "true"
+  ) {
+
+    enterFestival();
+
+    return;
+
+  }
+
+
+  /*
+   * /signin에서 로그인 성공 시
+   * 저장되는 userId
+   */
 
   const userId =
     localStorage.getItem(
@@ -967,14 +1343,31 @@ async function checkAdminAccess() {
     );
 
 
+  /*
+   * 로그인하지 않음
+   */
+
   if (!userId) {
 
-    denyAccess();
+    showGuestGate();
 
-    return false;
+    return;
 
   }
 
+
+  /*
+   * 로그인한 계정이 users 컬렉션에
+   * 실제로 존재하는지 확인.
+   *
+   * role은 검사하지 않는다.
+   *
+   * student
+   * vice
+   * president
+   *
+   * 모두 부원 프리패스.
+   */
 
   try {
 
@@ -992,594 +1385,94 @@ async function checkAdminAccess() {
       );
 
 
-    if (!userSnap.exists()) {
+    if (
+      userSnap.exists()
+    ) {
 
-      denyAccess();
+      enterFestival();
 
-      return false;
+      return;
 
     }
-
-
-    const user =
-      userSnap.data();
 
 
     /*
-     * 접근 가능한 계정
+     * 로그인 정보는 있지만
+     * users 문서가 없는 경우
      *
-     * president
-     * vice
-     * coinManager === true
+     * → 코드 입장 가능
      */
 
-    const allowed =
-      user.role === "president" ||
-      user.role === "vice" ||
-      user.coinManager === true;
-
-
-    if (!allowed) {
-
-      denyAccess();
-
-      return false;
-
-    }
-
-
-    appElement.style.display =
-      "block";
-
-    return true;
+    showCodeGate();
 
   }
 
   catch (error) {
 
     console.error(
-      "관리자 권한 확인 실패:",
+      "로그인 상태 확인 실패:",
       error
     );
 
-    denyAccess();
 
-    return false;
+    /*
+     * 확인에 실패했다고
+     * 프리패스시키지 않는다.
+     */
+
+    showCodeGate();
+
+    gateDescription.textContent =
+      "로그인 상태를 확인하지 못했습니다. 이용 코드를 입력해주세요.";
 
   }
 
 }
 
 
-/* ==================================================
-   접근 거부
-================================================== */
+/* =========================================
+   Start Gate
+========================================= */
 
-function denyAccess() {
-
-  appElement.style.display =
-    "none";
-
-  deniedElement.style.display =
-    "flex";
-
-}
+checkFestivalAccess();
 
 
-/* ==================================================
-   랜덤 코드
-================================================== */
+/* =========================================
+   Projects
+========================================= */
 
-function randomString(length) {
-
-  const chars =
-    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-
-  let result = "";
-
-
-  const randomValues =
-    new Uint32Array(
-      length
-    );
-
-
-  crypto.getRandomValues(
-    randomValues
+const grid =
+  document.getElementById(
+    "grid"
   );
 
 
-  for (
-    let i = 0;
-    i < length;
-    i++
-  ) {
-
-    result +=
-      chars[
-        randomValues[i] %
-        chars.length
-      ];
-
-  }
-
-
-  return result;
-
-}
-
-
-/* ==================================================
-   코드 생성
-================================================== */
-
-function createAccessCode(
-  people
-) {
-
-  /*
-   * 65 + 인원 × 11
-   *
-   * 1 → 76 → L
-   * 2 → 87 → W
-   * 3 → 98 → B
-   * 4 → 109 → M
-   * 5 → 120 → X
-   *
-   * JavaScript에서 ASCII를
-   * 직접 계산해서 마지막 문자를 생성
-   */
-
-  const ascii =
-    65 + people * 11;
-
-
-  const lastCharacter =
-    String.fromCharCode(
-      ascii
-    ).toUpperCase();
-
-
-  return (
-    "F26-" +
-    randomString(5) +
-    lastCharacter
-  ).toUpperCase();
-
-}
-
-
-/* ==================================================
-   코드 발급
-================================================== */
-
-async function generateCode() {
-
-  const selected =
-    document.querySelector(
-      'input[name="coinType"]:checked'
-    );
-
-
-  if (!selected) {
-
-    generateStatus.className =
-      "status error";
-
-    generateStatus.textContent =
-      "이용권 종류를 선택해주세요.";
-
-    return;
-
-  }
-
-
-  const people =
-    Number(
-      selected.value
-    );
-
-
-  if (
-    people < 1 ||
-    people > 5
-  ) {
-
-    return;
-
-  }
-
-
-  generateButton.disabled =
-    true;
-
-
-  generateStatus.className =
-    "status";
-
-
-  generateStatus.textContent =
-    "이용권을 발급하는 중...";
-
-
-  try {
-
-    let code;
-
-    let codeRef;
-
-
-    /*
-     * 중복 방지
-     */
-
-    while (true) {
-
-      code =
-        createAccessCode(
-          people
-        );
-
-
-      codeRef =
-        doc(
-          db,
-          "accessCodes",
-          code
-        );
-
-
-      const existing =
-        await getDoc(
-          codeRef
-        );
-
-
-      if (
-        !existing.exists()
-      ) {
-
-        break;
-
-      }
-
-    }
-
-
-    /* ================================
-       _meta 최초 생성
-    ================================= */
-
-    const metaRef =
-      doc(
-        db,
-        "accessCodes",
-        "_meta"
-      );
-
-
-    const metaSnap =
-      await getDoc(
-        metaRef
-      );
-
-
-    if (
-      !metaSnap.exists()
-    ) {
-
-      await setDoc(
-        metaRef,
-        {
-
-          initialized:
-            true,
-
-          version:
-            1,
-
-          createdAt:
-            serverTimestamp()
-
-        }
-      );
-
-    }
-
-
-    /* ================================
-       코드 저장
-    ================================= */
-
-    await setDoc(
-      codeRef,
-      {
-
-        type:
-          `${people}인권`,
-
-        people:
-          people,
-
-        maxUses:
-          people,
-
-        usedCount:
-          0,
-
-        active:
-          true,
-
-        createdAt:
-          serverTimestamp(),
-
-        createdBy:
-          localStorage.getItem(
-            "userId"
-          )
-
-      }
-    );
-
-
-    generateStatus.className =
-      "status success";
-
-
-    generateStatus.textContent =
-      `${code} 발급 완료!`;
-
-
-    selected.checked =
-      false;
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "이용권 발급 실패:",
-      error
-    );
-
-
-    generateStatus.className =
-      "status error";
-
-
-    generateStatus.textContent =
-      "이용권 발급에 실패했습니다.";
-
-  }
-
-
-  generateButton.disabled =
-    false;
-
-}
-
-
-/* ==================================================
-   코드 복사
-================================================== */
-
-async function copyCode(
-  code,
-  button
-) {
-
-  try {
-
-    await navigator.clipboard.writeText(
-      code
-    );
-
-
-    const oldText =
-      button.textContent;
-
-
-    button.textContent =
-      "복사됨";
-
-
-    setTimeout(
-      () => {
-
-        button.textContent =
-          oldText;
-
-      },
-      1200
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-
-    alert(
-      "코드를 복사하지 못했습니다.\n\n" +
-      code
-    );
-
-  }
-
-}
-
-
-/* ==================================================
-   폐기 / 재활성화
-================================================== */
-
-async function toggleCode(
-  id,
-  active
-) {
-
-  const action =
-    active
-      ? "폐기"
-      : "재활성화";
-
-
-  const confirmed =
-    confirm(
-      `이 이용권을 ${action}할까요?\n\n${id}`
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  try {
-
-    await updateDoc(
-
-      doc(
-        db,
-        "accessCodes",
-        id
-      ),
-
-      {
-        active:
-          !active
-      }
-
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "이용권 상태 변경 실패:",
-      error
-    );
-
-
-    alert(
-      "이용권 상태 변경에 실패했습니다."
-    );
-
-  }
-
-}
-
-
-/* ==================================================
-   삭제
-================================================== */
-
-async function deleteCode(
-  id
-) {
-
-  const confirmed =
-    confirm(
-
-      `정말 이 이용권을 삭제할까요?\n\n` +
-
-      `${id}\n\n` +
-
-      `⚠️ 삭제하면 복구할 수 없습니다.`
-
-    );
-
-
-  if (!confirmed) {
-
-    return;
-
-  }
-
-
-  try {
-
-    await deleteDoc(
-
-      doc(
-        db,
-        "accessCodes",
-        id
-      )
-
-    );
-
-
-    /*
-     * onSnapshot이 자동으로
-     * 목록을 갱신한다.
-     */
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "이용권 삭제 실패:",
-      error
-    );
-
-
-    alert(
-      "이용권 삭제에 실패했습니다."
-    );
-
-  }
-
-}
-
-
-/* ==================================================
-   이용권 목록
-================================================== */
-
-function loadCodes() {
+function loadProjects() {
 
   onSnapshot(
 
     collection(
       db,
-      "accessCodes"
+      "projects"
     ),
 
+    snap => {
 
-    snapshot => {
-
-      const codes = [];
-
-
-      snapshot.forEach(
-        item => {
-
-          /*
-           * _meta 제외
-           */
-
-          if (
-            item.id === "_meta"
-          ) {
-
-            return;
-
-          }
+      grid.innerHTML = "";
 
 
-          codes.push({
+      let projects = [];
+
+
+      snap.forEach(
+        docSnap => {
+
+          projects.push({
 
             id:
-              item.id,
+              docSnap.id,
 
-            ...item.data()
+            ...docSnap.data()
 
           });
 
@@ -1587,205 +1480,163 @@ function loadCodes() {
       );
 
 
-      /*
-       * 최신 발급 순
-       */
+      /* 응원 순 정렬 */
 
-      codes.sort(
-        (a, b) => {
-
-          const aTime =
-            a.createdAt
-              ?.toMillis?.() || 0;
-
-
-          const bTime =
-            b.createdAt
-              ?.toMillis?.() || 0;
-
-
-          return bTime - aTime;
-
-        }
+      projects.sort(
+        (a, b) =>
+          (b.likes || 0) -
+          (a.likes || 0)
       );
 
 
-      codeList.innerHTML =
-        "";
+      /* 총 응원 수 */
+
+      const totalLikes =
+        projects.reduce(
+
+          (sum, p) =>
+            sum + (p.likes || 0),
+
+          0
+
+        );
 
 
-      if (
-        codes.length === 0
-      ) {
+      document
+        .getElementById(
+          "subtitle"
+        )
+        .innerHTML = `
 
-        codeList.innerHTML = `
+          <div>
+            since 2025
+          </div>
 
-          <div class="empty">
-
-            아직 발급된 이용권이 없습니다.
-
+          <div>
+            ❤️ 지금까지
+            ${totalLikes.toLocaleString()}
+            번의 응원이 도착했어요
           </div>
 
         `;
 
-        return;
 
-      }
+      /* 카드 */
 
+      projects.forEach(
+        (p, index) => {
 
-      codes.forEach(
-        item => {
+          const medal =
 
-          const used =
-            Number(
-              item.usedCount || 0
-            );
+            index === 0
+              ? "🥇 "
 
+            : index === 1
+              ? "🥈 "
 
-          const max =
-            Number(
-              item.maxUses ||
-              item.people ||
-              1
-            );
+            : index === 2
+              ? "🥉 "
+
+            : "";
 
 
-          const active =
-            item.active !== false;
-
-
-          const element =
+          const card =
             document.createElement(
               "div"
             );
 
 
-          element.className =
-            "code-item";
+          card.className =
+            "card";
 
 
-          element.innerHTML = `
+          card.innerHTML = `
 
-            <div class="code-main">
+            <img
+              src="${p.thum}"
+              alt="${p.id}"
+            >
 
-              <div class="code">
-                ${item.id}
+            <div class="info">
+
+              <div class="title">
+                ${medal}${p.id}
               </div>
 
-              <div class="code-info">
-
-                ${used} / ${max}명 사용
-
+              <div class="desc">
+                ${p.detail}
               </div>
 
+              <div class="likes">
+                ❤️ ${p.likes || 0}
+              </div>
+
+              <button
+                class="like-btn"
+              >
+                응원하기
+              </button>
+
             </div>
-
-
-            <div class="badge">
-
-              ${
-                item.type ||
-                `${max}인권`
-              }
-
-            </div>
-
-
-            <button
-              class="action-btn copy-btn"
-            >
-              복사
-            </button>
-
-
-            <button
-              class="
-                action-btn
-                toggle-btn
-                ${active ? "danger" : ""}
-              "
-            >
-
-              ${
-                active
-                  ? "폐기"
-                  : "재활성화"
-              }
-
-            </button>
-
-
-            <button
-              class="
-                action-btn
-                danger
-                delete-btn
-              "
-            >
-              삭제
-            </button>
 
           `;
 
 
-          /* 복사 */
+          /* 카드 클릭 */
 
-          const copyButton =
-            element.querySelector(
-              ".copy-btn"
-            );
+          card.onclick = () => {
 
+            location.href =
+              p.url;
 
-          copyButton.onclick =
-            () => {
-
-              copyCode(
-                item.id,
-                copyButton
-              );
-
-            };
+          };
 
 
-          /* 폐기 / 재활성화 */
+          /* 좋아요 */
 
-          const toggleButton =
-            element.querySelector(
-              ".toggle-btn"
-            );
+          card
+            .querySelector(
+              ".like-btn"
+            )
+            .onclick =
+            async event => {
 
-
-          toggleButton.onclick =
-            () => {
-
-              toggleCode(
-                item.id,
-                active
-              );
-
-            };
+              event.stopPropagation();
 
 
-          /* 삭제 */
+              try {
 
-          const deleteButton =
-            element.querySelector(
-              ".delete-btn"
-            );
+                await updateDoc(
 
+                  doc(
+                    db,
+                    "projects",
+                    p.id
+                  ),
 
-          deleteButton.onclick =
-            () => {
+                  {
+                    likes:
+                      increment(1)
+                  }
 
-              deleteCode(
-                item.id
-              );
+                );
+
+              }
+
+              catch (error) {
+
+                console.error(
+                  "응원 처리 실패:",
+                  error
+                );
+
+              }
 
             };
 
 
-          codeList.appendChild(
-            element
+          grid.appendChild(
+            card
           );
 
         }
@@ -1793,24 +1644,12 @@ function loadCodes() {
 
     },
 
-
     error => {
 
       console.error(
-        "이용권 목록 불러오기 실패:",
+        "작품 목록 불러오기 실패:",
         error
       );
-
-
-      codeList.innerHTML = `
-
-        <div class="empty">
-
-          이용권 목록을 불러오지 못했습니다.
-
-        </div>
-
-      `;
 
     }
 
@@ -1819,25 +1658,7 @@ function loadCodes() {
 }
 
 
-/* ==================================================
-   시작
-================================================== */
-
-generateButton.addEventListener(
-  "click",
-  generateCode
-);
-
-
-const allowed =
-  await checkAdminAccess();
-
-
-if (allowed) {
-
-  loadCodes();
-
-}
+loadProjects();
 
 </script>
 
