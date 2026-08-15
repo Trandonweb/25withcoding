@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#27ae60">
   <meta name="robots" content="noindex">
-  <title>페이지를 찾을 수 없습니다 | 코딩과 함께라면</title>
+  <title>404 | 코딩과 함께라면</title>
   <style>
     :root {
       --bg-color: #F0F0F0;
@@ -54,7 +54,7 @@
 
     .error-image-wrap {
       width: min(100%, 520px);
-      margin: 0 auto;
+      margin: 0 auto 28px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -67,19 +67,6 @@
       width: 100%;
       max-height: 360px;
       object-fit: contain;
-    }
-
-    h1 {
-      margin: 24px 0 10px;
-      font-size: clamp(22px, 5vw, 30px);
-    }
-
-    p {
-      margin: 0 auto 28px;
-      max-width: 440px;
-      color: var(--muted-color);
-      font-size: 15px;
-      line-height: 1.7;
     }
 
     .actions {
@@ -136,12 +123,6 @@
       <img class="error-image" id="errorImage" src="/404error.png" alt="404 오류">
     </div>
 
-    <h1>페이지를 찾을 수 없습니다.</h1>
-    <p>
-      입력한 주소가 잘못되었거나,<br>
-      찾으시는 페이지가 이동 또는 삭제되었을 수 있습니다.
-    </p>
-
     <div class="actions">
       <a class="home-btn" href="/">🏠 메인으로</a>
       <button class="back-btn" type="button" onclick="history.back()">← 이전 페이지</button>
@@ -151,7 +132,6 @@
   </main>
 
   <script>
-    // 메인 사이트의 설정을 이어받습니다.
     (function () {
       try {
         if (localStorage.getItem('darkMode') === 'true') {
@@ -165,12 +145,7 @@
       } catch (error) {}
     })();
 
-    /*
-     * 404error.png의 바깥쪽 배경을 브라우저에서 자동으로 투명 처리합니다.
-     * 별도의 이미지 파일 수정 없이 canvas + flood fill 방식으로 처리합니다.
-     * 모서리의 색을 기준으로 비슷한 색의 연결된 영역을 제거하므로,
-     * 이미지 내부의 같은 색 요소는 최대한 보존합니다.
-     */
+    // 404error.png의 바깥쪽 배경을 브라우저에서 자동으로 투명 처리합니다.
     (function removeImageBackground() {
       const img = document.getElementById('errorImage');
 
@@ -188,7 +163,6 @@
           const width = canvas.width;
           const height = canvas.height;
 
-          // 네 모서리의 평균 색을 배경색으로 사용합니다.
           const corners = [
             [0, 0],
             [width - 1, 0],
@@ -207,11 +181,9 @@
           bgG /= corners.length;
           bgB /= corners.length;
 
-          // 배경색과 얼마나 비슷해야 제거할지 결정합니다.
           const tolerance = 42;
-          const maxPixels = width * height;
-          const visited = new Uint8Array(maxPixels);
-          const queue = new Int32Array(maxPixels);
+          const visited = new Uint8Array(width * height);
+          const queue = new Int32Array(width * height);
           let head = 0;
           let tail = 0;
 
@@ -233,7 +205,6 @@
             }
           }
 
-          // 이미지 가장자리에서 시작하여 배경 영역만 따라갑니다.
           for (let x = 0; x < width; x++) {
             add(x, 0);
             add(x, height - 1);
@@ -260,7 +231,6 @@
           ctx.putImageData(imageData, 0, 0);
           img.src = canvas.toDataURL('image/png');
         } catch (error) {
-          // 이미지 처리에 실패하면 원본 이미지를 그대로 표시합니다.
           console.warn('404 이미지 배경 제거를 적용하지 못했습니다.', error);
         }
       }, { once: true });
