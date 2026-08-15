@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#27ae60">
+  <meta name="robots" content="noindex">
+  <title>페이지를 찾을 수 없습니다 | 코딩과 함께라면</title>
+  <style>
+    :root {
+      --bg-color: #F0F0F0;
+      --card-bg: #ffffff;
+      --text-color: #111111;
+      --muted-color: #777777;
+      --primary-color: #27ae60;
+      --btn-bg: #e0e0e0;
+      --btn-text: #333333;
+      --btn-hover: #d0d0d0;
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1E1E1E;
+      --text-color: #FFFFFF;
+      --muted-color: #aaaaaa;
+      --btn-bg: #2C2C2C;
+      --btn-text: #FFFFFF;
+      --btn-hover: #3A3A3A;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .error-card {
+      width: min(90%, 600px);
+      padding: 42px 30px 34px;
+      text-align: center;
+      background: var(--card-bg);
+      border: 2px solid var(--primary-color);
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .code {
+      margin: 0;
+      color: var(--primary-color);
+      font-size: clamp(76px, 18vw, 130px);
+      line-height: 0.9;
+      font-weight: 900;
+      letter-spacing: 4px;
+    }
+
+    h1 {
+      margin: 24px 0 10px;
+      font-size: clamp(22px, 5vw, 30px);
+    }
+
+    p {
+      margin: 0 auto 28px;
+      max-width: 440px;
+      color: var(--muted-color);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button, a {
+      min-width: 145px;
+      padding: 12px 18px;
+      border-radius: 11px;
+      border: none;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      transition: filter 0.2s, background 0.2s, transform 0.2s;
+    }
+
+    .home-btn {
+      background: var(--primary-color);
+      color: #fff;
+    }
+
+    .back-btn {
+      background: var(--btn-bg);
+      color: var(--btn-text);
+    }
+
+    button:hover, a:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.94);
+    }
+
+    .brand {
+      margin-top: 22px;
+      color: var(--muted-color);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 480px) {
+      .error-card { padding: 34px 20px 28px; }
+      .actions { flex-direction: column; }
+      button, a { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="error-card">
+    <div class="code">404</div>
+    <h1>페이지를 찾을 수 없습니다.</h1>
+    <p>
+      입력한 주소가 잘못되었거나,<br>
+      찾으시는 페이지가 이동 또는 삭제되었을 수 있습니다.
+    </p>
+
+    <div class="actions">
+      <a class="home-btn" href="/">🏠 메인으로</a>
+      <button class="back-btn" type="button" onclick="history.back()">← 이전 페이지</button>
+    </div>
+
+    <div class="brand">2026 코딩과함께라면 | SINCE 2025</div>
+  </main>
+
+  <script>
+    // 메인 사이트와 같은 localStorage 설정을 최대한 이어받습니다.
+    (function () {
+      try {
+        const darkMode = localStorage.getItem('darkMode');
+        if (darkMode === 'true') {
+          document.body.classList.add('dark-mode');
+        }
+
+        const primaryColor = localStorage.getItem('primaryColor');
+        if (primaryColor) {
+          document.documentElement.style.setProperty('--primary-color', primaryColor);
+        }
+      } catch (error) {
+        // 저장소 접근이 제한된 환경에서도 404 페이지는 정상 표시합니다.
+      }
+    })();
+  </script>
+</body>
+</html>
