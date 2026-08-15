@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Festival Admin Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0f0f14;color:#fff;font-family:sans-serif}.card{width:min(460px,100%);padding:30px;background:#1c1c25;border:1px solid rgba(255,255,255,.08);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.4)}h1{margin:0 0 8px;font-family:'Black Han Sans',sans-serif;font-size:30px;background:linear-gradient(90deg,#00c853,#64dd17);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.sub{margin:0 0 24px;color:#999;font-size:13px;line-height:1.6}.label{display:block;margin:16px 0 7px;color:#bbb;font-size:13px}.input{width:100%;height:50px;padding:0 15px;border:1px solid #3a3a45;border-radius:12px;background:#15151c;color:#fff;outline:none;font-size:18px;text-align:center}.input:focus{border-color:#00c853;box-shadow:0 0 0 3px rgba(0,200,83,.12)}button{width:100%;height:50px;margin-top:18px;border:0;border-radius:12px;background:linear-gradient(90deg,#00c853,#64dd17);color:#fff;font-weight:bold;font-size:15px;cursor:pointer}button:hover{filter:brightness(.94)}.result{display:none;margin-top:24px;padding:22px;border-radius:15px;background:#15151c;border:1px solid rgba(0,200,83,.3);text-align:center}.result.show{display:block}.challenge{font:700 34px monospace;letter-spacing:5px;color:#8cff9c}.arrow{margin:10px 0;color:#777}.answer{font:700 42px monospace;color:#fff}.error{display:none;margin-top:12px;color:#ff7777;text-align:center;font-size:13px}.error.show{display:block}.hint{margin-top:18px;color:#777;font-size:12px;line-height:1.6;text-align:center}.back{display:block;margin-top:16px;color:#888;text-align:center;text-decoration:none;font-size:12px}.back:hover{color:#fff}@media(max-width:500px){.card{padding:24px}.challenge{font-size:29px}.answer{font-size:36px}}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>Festival Admin Code</h1>
+<p class="sub">콘솔에서 <code>admin.time()</code>으로 받은 인증 문제를 입력하세요.</p>
+<label class="label" for="challenge">인증 문제</label>
+<input class="input" id="challenge" maxlength="3" placeholder="예: K55" autocomplete="off" autocapitalize="characters" spellcheck="false">
+<button id="convert">변환하기</button>
+<div class="error" id="error"></div>
+<section class="result" id="result">
+<div class="challenge" id="displayChallenge"></div>
+<div class="arrow">첫 숫자 + 둘째 숫자만큼 뒤로 이동</div>
+<div class="answer" id="answer"></div>
+</section>
+<p class="hint">예: K55 → K에서 10칸 뒤로 → A</p>
+<a class="back" href="/2026festival/">← Festival로 돌아가기</a>
+</main>
+<script>
+const challenge=document.getElementById('challenge');
+const result=document.getElementById('result');
+const error=document.getElementById('error');
+const displayChallenge=document.getElementById('displayChallenge');
+const answer=document.getElementById('answer');
+function convert(){
+ const value=challenge.value.trim().toUpperCase();
+ error.classList.remove('show');result.classList.remove('show');
+ if(!/^[A-Z][1-5][1-5]$/.test(value)){error.textContent='문자는 A-Z, 숫자는 각각 1-5 형식이어야 합니다. 예: K55';error.classList.add('show');return}
+ const letter=value[0], move=Number(value[1])+Number(value[2]);
+ const index=(letter.charCodeAt(0)-65-move+26)%26;
+ const converted=String.fromCharCode(65+index);
+ displayChallenge.textContent=value;answer.textContent=converted;result.classList.add('show');
+}
+document.getElementById('convert').addEventListener('click',convert);
+challenge.addEventListener('keydown',e=>{if(e.key==='Enter')convert()});
+</script>
+</body>
+</html>
