@@ -1,64 +1,85 @@
-let root=null,canvas=null,ctx=null,raf=0,timers=[],keydownHandler=null,clickHandler=null;
+let root=null,canvas=null,ctx=null,raf=0,timers=[],keydownHandler=null;
+let state=null;
+
+const PITCHES=[
+  {name:'FOUR-SEAM',kr:'포심',speed:148,move:0},
+  {name:'TWO-SEAM',kr:'투심',speed:143,move:1},
+  {name:'CUTTER',kr:'커터',speed:139,move:-1},
+  {name:'SLIDER',kr:'슬라이더',speed:132,move:-2},
+  {name:'CURVE',kr:'커브',speed:120,move:2},
+  {name:'FORK',kr:'포크',speed:128,move:1}
+];
 
 export function openBaseball(container){
+  destroy();
   root=container;
   root.innerHTML=`
   <style>
-  .bb{height:100%;min-height:640px;background:#071018;color:#eef5f8;position:relative;overflow:hidden;display:flex;flex-direction:column}
-  .bb *{box-sizing:border-box}.bb-head{height:76px;background:linear-gradient(180deg,#111c28,#0c141e);border-bottom:1px solid #273746;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 22px;z-index:3}
-  .team{font-weight:900;letter-spacing:.04em}.team.ai{text-align:right}.team small{display:block;color:#718393;font-size:10px;font-weight:600;letter-spacing:.15em}.score{font-size:27px;font-weight:900;text-align:center;padding:0 25px}.score em{font-style:normal;color:#43d37c;font-size:13px;margin:0 9px}
-  .count{position:absolute;top:88px;left:22px;z-index:4;display:flex;gap:7px}.pill{background:#111d29;border:1px solid #2a3b4a;border-radius:9px;padding:7px 10px;font-size:12px;color:#9eacb7}.pill b{color:#fff;margin-left:4px}
-  .stadium{position:relative;flex:1;min-height:500px;background:radial-gradient(ellipse at 50% 42%,#2d653f 0%,#183e2a 42%,#0a2118 75%,#071018 100%)}
-  .stadium:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#101b26aa 0 17%,transparent 18%),repeating-linear-gradient(90deg,transparent 0 8%,#ffffff03 8.1% 8.4%);pointer-events:none}
-  .lights{position:absolute;top:5%;left:4%;right:4%;height:12px;background:radial-gradient(circle,#fff 0 2px,transparent 3px) 0 0/18px 12px;opacity:.45}
+  .bb{height:100%;min-height:620px;background:#071018;color:#eef5f8;display:flex;flex-direction:column;overflow:hidden;position:relative;font-family:Arial,Pretendard,sans-serif}
+  .bb *{box-sizing:border-box}
+  .bb-head{height:72px;flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 24px;background:linear-gradient(#152331,#0b141d);border-bottom:1px solid #304252}
+  .team{font-weight:900;font-size:15px;letter-spacing:.08em}.team small{display:block;color:#728595;font-size:9px;margin-top:4px;letter-spacing:.15em}.team.ai{text-align:right}
+  .score{font-size:29px;font-weight:900}.score em{font-style:normal;color:#48d27e;font-size:11px;margin:0 12px}
+  .stadium{position:relative;flex:1;min-height:420px;overflow:hidden;background:radial-gradient(ellipse at 50% 58%,#2d7043 0,#1b4a2e 40%,#0b2319 72%,#071018 100%)}
+  .stadium:before{content:'';position:absolute;inset:0;background:linear-gradient(#111c27dd 0 14%,transparent 14%),repeating-linear-gradient(90deg,transparent 0 7%,#fff2 7.2% 7.35%);opacity:.35}
+  .stands{position:absolute;top:5%;left:8%;right:8%;height:17%;border-radius:50%;background:repeating-linear-gradient(90deg,#1a2732 0 14px,#263743 14px 18px);box-shadow:0 8px 25px #0008}
+  .lights{position:absolute;top:3%;left:10%;right:10%;height:9px;background:radial-gradient(circle,#fff 0 2px,transparent 3px) 0 0/20px 9px;opacity:.8}
   canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-  .hud{position:absolute;right:18px;top:18px;width:190px;background:#09121bdd;border:1px solid #334653;border-radius:15px;padding:13px;backdrop-filter:blur(8px);z-index:2}.hud-title{font-size:10px;color:#728595;letter-spacing:.15em}.pitch{font-size:20px;font-weight:900;margin:3px 0}.pitch-meta{font-size:11px;color:#9badb9}.bar{height:5px;border-radius:4px;background:#263744;overflow:hidden;margin-top:9px}.bar i{display:block;height:100%;background:#43d37c;width:70%;transition:width .2s}
-  .bottom{background:linear-gradient(180deg,#0d1721,#0a1119);border-top:1px solid #273746;padding:14px 18px 17px;display:grid;grid-template-columns:1fr minmax(280px,500px) 1fr;gap:15px;align-items:end;z-index:3}.status{font-size:13px;color:#9eacb7}.status strong{display:block;color:#fff;font-size:17px;margin-bottom:4px}.controls{display:flex;gap:9px}.swing{height:56px;flex:1;border:1px solid #49d27f;background:linear-gradient(180deg,#1d9f59,#13763f);border-radius:15px;font-weight:900;font-size:18px;cursor:pointer;box-shadow:0 7px 20px #0005}.swing:active{transform:scale(.98)}.hint{text-align:right;color:#6f818f;font-size:11px;line-height:1.5}.restart{border:1px solid #344654;background:#16222d;border-radius:10px;padding:9px 12px;cursor:pointer;margin-top:6px}
-  .result{position:absolute;inset:0;display:grid;place-items:center;background:#03080dcc;z-index:10;opacity:0;pointer-events:none;transition:.2s}.result.show{opacity:1;pointer-events:auto}.result-card{width:min(460px,90%);padding:30px;border:1px solid #3a4d5c;border-radius:24px;background:linear-gradient(145deg,#14202c,#0a1119);text-align:center;box-shadow:0 25px 70px #0009}.result-card h2{font-size:38px}.result-card p{color:#9baab6;margin:9px 0 22px}.again{border:0;background:#43d37c;color:#07120c;border-radius:12px;padding:13px 28px;font-weight:900;cursor:pointer}
-  @media(max-width:760px){.bb-head{height:64px;padding:0 12px}.score{font-size:22px;padding:0 8px}.count{top:72px;left:10px}.hud{right:10px;top:10px;width:155px}.bottom{grid-template-columns:1fr;padding:10px}.status,.hint{display:none}.stadium{min-height:420px}}
+  .count{position:absolute;z-index:4;left:18px;top:18px;display:flex;gap:7px}.pill{background:#09131ddd;border:1px solid #334755;border-radius:9px;padding:7px 10px;color:#93a5b3;font-size:11px}.pill b{color:#fff;margin-left:4px}
+  .hud{position:absolute;z-index:4;right:18px;top:18px;width:190px;padding:13px;background:#08121de8;border:1px solid #344958;border-radius:14px;backdrop-filter:blur(8px)}.label{font-size:9px;color:#718493;letter-spacing:.16em}.pitch-name{font-size:19px;font-weight:900;margin:4px 0}.meta{font-size:11px;color:#9eb0bc}.energy{height:5px;background:#263743;border-radius:5px;margin-top:9px;overflow:hidden}.energy i{display:block;height:100%;width:100%;background:#45d27d}
+  .bottom{flex:none;padding:13px 18px 16px;display:grid;grid-template-columns:1fr minmax(260px,460px) 1fr;gap:15px;align-items:center;background:linear-gradient(#0e1923,#091119);border-top:1px solid #293b49}.status strong{display:block;font-size:17px;margin-bottom:4px}.status span,.hint{font-size:11px;color:#7e919f}.hint{text-align:right;line-height:1.5}.swing{width:100%;height:56px;border:1px solid #4bdd86;border-radius:15px;background:linear-gradient(#24a861,#126e3c);color:white;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 8px 25px #0006}.swing:active{transform:scale(.98)}
+  .result{position:absolute;inset:0;z-index:10;display:grid;place-items:center;background:#02070ccc;opacity:0;pointer-events:none;transition:.2s}.result.show{opacity:1;pointer-events:auto}.card{width:min(450px,90%);padding:30px;border-radius:23px;background:linear-gradient(145deg,#172431,#0a1118);border:1px solid #405362;text-align:center;box-shadow:0 25px 70px #000b}.card h2{font-size:38px;margin-bottom:8px}.card p{color:#9cacb8;margin-bottom:20px}.again{border:0;border-radius:12px;padding:13px 28px;background:#45d27d;color:#06130c;font-weight:900;cursor:pointer}
+  @media(max-width:760px){.bb-head{height:62px;padding:0 12px}.score{font-size:22px}.score em{margin:0 6px}.count{left:8px;top:8px}.hud{right:8px;top:8px;width:155px}.bottom{grid-template-columns:1fr;padding:10px}.status,.hint{display:none}.stadium{min-height:430px}}
   </style>
-  <div class="bb">
-   <div class="bb-head"><div class="team">HUMAN<small>HOME</small></div><div class="score"><span id="hs">0</span><em>VS</em><span id="as">0</span></div><div class="team ai">AI PITCHER<small>AWAY</small></div></div>
-   <div class="count"><span class="pill">INN <b id="inn">1</b></span><span class="pill">OUT <b id="out">0</b></span><span class="pill">COUNT <b id="cnt">0-0</b></span></div>
-   <div class="stadium"><div class="lights"></div><canvas id="bbCanvas"></canvas><div class="hud"><div class="hud-title">PITCHER</div><div class="pitch" id="pitchName">FOUR-SEAM</div><div class="pitch-meta"><span id="pitchSpeed">148</span> km/h · <span id="pitchInfo">준비</span></div><div class="bar"><i id="energy"></i></div></div>
-    <div class="result" id="result"><div class="result-card"><h2 id="resultTitle">HOME RUN!</h2><p id="resultText"></p><button class="again" id="again">다음 이닝</button></div></div>
-   </div>
-   <div class="bottom"><div class="status"><strong id="playText">타석에 들어섭니다.</strong><span id="subText">공이 홈플레이트를 통과하기 전에 타격하세요.</span></div><div class="controls"><button class="swing" id="swing">⚾ SWING</button></div><div class="hint">SPACE / 클릭<br>타이밍이 핵심입니다.</div></div>
+  <div class='bb'>
+    <div class='bb-head'><div class='team'>HUMAN<small>BATTER</small></div><div class='score'><span id='hs'>0</span><em>VS</em><span id='as'>0</span></div><div class='team ai'>AI PITCHER<small>OPPONENT</small></div></div>
+    <div class='stadium'><div class='stands'></div><div class='lights'></div><canvas id='bbCanvas'></canvas>
+      <div class='count'><span class='pill'>INN <b id='inn'>1</b></span><span class='pill'>OUT <b id='out'>0</b></span><span class='pill'>COUNT <b id='cnt'>0-0</b></span></div>
+      <div class='hud'><div class='label'>PITCHER</div><div class='pitch-name' id='pitchName'>READY</div><div class='meta'><span id='speed'>---</span> km/h · <span id='pitchState'>준비</span></div><div class='energy'><i id='energy'></i></div></div>
+      <div class='result' id='result'><div class='card'><h2 id='resultTitle'></h2><p id='resultText'></p><button class='again' id='again'>다시 플레이</button></div></div>
+    </div>
+    <div class='bottom'><div class='status'><strong id='playText'>타석에 들어섭니다.</strong><span id='subText'>투구가 홈플레이트에 도달하기 전에 SWING!</span></div><button class='swing' id='swing'>⚾ SWING</button><div class='hint'>SPACE / 버튼<br>타이밍이 승부를 결정합니다.</div></div>
   </div>`;
-  canvas=root.querySelector('#bbCanvas');ctx=canvas.getContext('2d');
-  state={inning:1,outs:0,strikes:0,balls:0,score:0,aiScore:0,bases:[0,0,0],pitch:null,pitching:false,hitAnim:null,over:false,energy:100};
-  resize();window.addEventListener('resize',resize);keydownHandler=e=>{if(e.code==='Space'){e.preventDefault();swing()}};window.addEventListener('keydown',keydownHandler);clickHandler=e=>{if(e.target.closest('#swing'))swing()};root.addEventListener('click',clickHandler);root.querySelector('#again').onclick=nextInning;
-  draw();newAtBat();
+
+  canvas=root.querySelector('#bbCanvas');
+  ctx=canvas.getContext('2d');
+  state={inning:1,outs:0,balls:0,strikes:0,score:0,aiScore:0,bases:[0,0,0],pitch:null,pitching:false,over:false,energy:100,hit:null};
+  root.querySelector('#swing').addEventListener('click',swing);
+  root.querySelector('#again').addEventListener('click',resetGame);
+  keydownHandler=e=>{if(e.code==='Space'){e.preventDefault();swing()}};
+  window.addEventListener('keydown',keydownHandler);
+  window.addEventListener('resize',resize);
+  resize();
+  draw();
+  schedulePitch(650);
 }
-let state={};
-function resize(){if(!canvas)return;const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=r.width*d;canvas.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);draw()}
-function q(s){return root.querySelector(s)}
-const pitches=[['FOUR-SEAM','포심',148,0],['TWO-SEAM','투심',142,1],['CUTTER','커터',139,-1],['SLIDER','슬라이더',132,-2],['CURVE','커브',119,2],['FORK','포크',128,1]];
-function newAtBat(){if(state.over)return;state.pitching=false;state.pitch=null;q('#pitchInfo').textContent='준비';q('#playText').textContent='AI 투수가 준비합니다.';q('#subText').textContent='릴리즈 후 타이밍을 보고 SWING';const delay=500+Math.random()*650;timers.push(setTimeout(()=>pitch(),delay));updateHud()}
-function pitch(){if(state.over)return;state.pitching=true;const p=pitches[Math.floor(Math.random()*pitches.length)];const zone=Math.floor(Math.random()*9);state.pitch={type:p[0],kr:p[1],speed:p[2]+Math.floor(Math.random()*7-3),drift:p[3],zone,progress:0,start:performance.now(),swung:false};q('#pitchName').textContent=p[0];q('#pitchSpeed').textContent=state.pitch.speed;q('#pitchInfo').textContent='투구 중';q('#playText').textContent='공이 들어옵니다!';raf=requestAnimationFrame(loop)}
-function zoneXY(zone,w,h){const cols=3,rows=3,c=zone%3,r=Math.floor(zone/3);return{x:w*.43+c*w*.065,y:h*.42+r*h*.055}}
-function loop(t){if(!state.pitching||!state.pitch)return;const elapsed=t-state.pitch.start,dur=Math.max(520,850-(state.pitch.speed-115)*2.2);state.pitch.progress=Math.min(1,elapsed/dur);draw();if(state.pitch.progress>=1){state.pitching=false;resolvePitch(false);return}raf=requestAnimationFrame(loop)}
-function swing(){if(state.over||!state.pitching||!state.pitch)return;state.pitch.swung=true;const p=state.pitch.progress;const ideal=.72;const timing=Math.abs(p-ideal);const zone=state.pitch.zone;const inZone=zone!==-1;const quality=Math.max(0,1-timing/0.24)*(inZone?1:.68);state.pitching=false;resolveSwing(quality,timing,zone)}
-function resolveSwing(qty,timing,zone){const good=qty>.72,contact=qty>.38;state.energy=Math.max(0,state.energy-4);if(!contact){state.strikes++;play('헛스윙!','타이밍을 조금 더 빠르게 잡아보세요.');if(state.strikes>=3)return outAtBat('삼진 아웃');nextCount();return}const p=state.pitch;const roll=Math.random();let result;if(qty>.94&&roll<.22)result='HR';else if(qty>.82&&roll<.55)result='3B';else if(qty>.65&&roll<.72)result='2B';else if(qty>.5&&roll<.66)result='1B';else if(roll<.22)result='FO';else if(roll<.39)result='GO';else result='1B';if(p.type==='CURVE'&&qty<.7&&Math.random()<.28)result='FO';applyHit(result,good,timing)}
-function resolvePitch(){const p=state.pitch;state.pitch=null;state.pitching=false;if(!p)return;if(Math.random()<.34){state.balls++;play('볼','스트라이크 존을 벗어났습니다.');if(state.balls>=4){advanceWalk();return}nextCount()}else{state.strikes++;play('스트라이크','좋은 공을 놓쳤습니다.');if(state.strikes>=3)outAtBat('루킹 삼진');else nextCount()}}
-function nextCount(){updateHud();timers.push(setTimeout(newAtBat,700))}
-function outAtBat(msg){state.outs++;state.strikes=0;state.balls=0;state.pitch=null;play(msg,'아웃 카운트가 올라갑니다.');if(state.outs>=3){timers.push(setTimeout(endHalf,900));return}timers.push(setTimeout(newAtBat,850))}
-function advanceWalk(){state.strikes=0;state.balls=0;let b=state.bases;if(b[0]){if(b[1]){if(b[2])scoreRun();else b[2]=1}if(!b[1])b[1]=1}b[0]=1;play('볼넷','침착하게 1루로 진루합니다.');timers.push(setTimeout(newAtBat,800));updateHud()}
-function applyHit(result,good,timing){state.strikes=0;state.balls=0;state.pitch=null;const names={HR:'홈런!',3B:'3루타!',2B:'2루타!',1B:'안타!',FO:'뜬공 아웃',GO:'땅볼 아웃'};if(result==='FO'||result==='GO'){state.outs++;play(names[result],good?'타구 질은 좋았지만 수비에 잡혔습니다.':'수비 정면으로 향했습니다.');if(state.outs>=3)timers.push(setTimeout(endHalf,900));else timers.push(setTimeout(newAtBat,800));return}const bases=result==='HR'?4:result==='3B'?3:result==='2B'?2:1;for(let i=2;i>=0;i--)if(state.bases[i]){if(i+bases>=3)scoreRun();else state.bases[i+bases]=1;state.bases[i]=0}if(result==='HR'){scoreRun();state.bases=[0,0,0]}else state.bases[bases-1]=1;play(names[result],good?'완벽한 타이밍!':'컨택 성공!');animateHit(result);timers.push(setTimeout(newAtBat,1100));updateHud()}
+
+function q(s){return root?.querySelector(s)}
+function resize(){if(!canvas)return;const r=canvas.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.max(1,r.width*d);canvas.height=Math.max(1,r.height*d);ctx.setTransform(d,0,0,d,0,0);draw()}
+function schedule(fn,ms){const id=setTimeout(fn,ms);timers.push(id)}
+function schedulePitch(ms){if(state?.over)return;state.pitching=false;state.pitch=null;q('#pitchState').textContent='준비';q('#playText').textContent='AI 투수가 준비합니다.';schedule(pitch,ms)}
+function pitch(){if(!state||state.over)return;const p=PITCHES[Math.floor(Math.random()*PITCHES.length)];state.pitch={...p,zone:Math.floor(Math.random()*9),progress:0,start:performance.now()};state.pitching=true;q('#pitchName').textContent=p.kr;q('#speed').textContent=p.speed+Math.floor(Math.random()*7-3);q('#pitchState').textContent='투구 중';q('#playText').textContent='공이 들어옵니다!';raf=requestAnimationFrame(tick)}
+function tick(t){if(!state?.pitching||!state.pitch)return;const speed=Number(q('#speed').textContent)||145;const duration=Math.max(520,900-(speed-115)*2.1);state.pitch.progress=Math.min(1,(t-state.pitch.start)/duration);draw();if(state.pitch.progress>=1){state.pitching=false;resolvePitch();return}raf=requestAnimationFrame(tick)}
+function swing(){if(!state||state.over||!state.pitching||!state.pitch)return;const p=state.pitch.progress;const timing=Math.abs(p-.72);const quality=Math.max(0,1-timing/.25);state.pitching=false;cancelAnimationFrame(raf);state.energy=Math.max(0,state.energy-3);resolveSwing(quality)}
+function resolvePitch(){const strike=Math.random()<.38;if(strike){state.strikes++;announce('스트라이크','좋은 공이 지나갔습니다.');if(state.strikes>=3){out('루킹 삼진');return}}else{state.balls++;announce('볼','존을 벗어난 공입니다.');if(state.balls>=4){walk();return}}nextAtBat()}
+function resolveSwing(quality){if(quality<.34){state.strikes++;announce('헛스윙','조금 더 늦게 또는 빠르게 타격해 보세요.');if(state.strikes>=3){out('삼진 아웃');return}return nextAtBat()}const roll=Math.random();let result='1B';if(quality>.94&&roll<.30)result='HR';else if(quality>.84&&roll<.35)result='3B';else if(quality>.68&&roll<.48)result='2B';else if(quality<.48&&roll<.30)result='FO';else if(quality<.55&&roll<.50)result='GO';applyResult(result,quality)}
+function applyResult(result,quality){state.strikes=0;state.balls=0;if(result==='FO'||result==='GO'){out(result==='FO'?'뜬공 아웃':'땅볼 아웃');return}const bases=result==='HR'?4:result==='3B'?3:result==='2B'?2:1;advance(bases);const text={HR:'HOME RUN!',3B:'3루타!',2B:'2루타!',1B:'안타!'}[result];announce(text,quality>.85?'완벽한 타이밍!':'좋은 컨택입니다.');state.hit={type:result,start:performance.now()};raf=requestAnimationFrame(hitAnim);schedulePitch(950)}
+function advance(n){if(n===4){scoreRun();state.bases=[0,0,0];return}const old=state.bases.slice();state.bases=[0,0,0];for(let i=2;i>=0;i--){if(!old[i])continue;const dest=i+n;if(dest>=3)scoreRun();else state.bases[dest]=1}state.bases[n-1]=1}
+function walk(){state.strikes=0;state.balls=0;const old=state.bases.slice();if(old[0]){if(old[1]){if(old[2])scoreRun();else state.bases[2]=1}else state.bases[1]=1}state.bases[0]=1;announce('볼넷','침착하게 1루로 진루합니다.');schedulePitch(800)}
+function out(text){state.outs++;state.strikes=0;state.balls=0;state.pitch=null;announce(text,'아웃 카운트가 올라갑니다.');if(state.outs>=3){schedule(endInning,850)}else schedulePitch(850)}
+function endInning(){if(state.inning>=3){finish();return}state.inning++;state.outs=0;state.balls=0;state.strikes=0;state.bases=[0,0,0];state.energy=100;announce(state.inning+'회 시작','새로운 이닝입니다.');schedulePitch(1000)}
 function scoreRun(){state.score++;q('#hs').textContent=state.score}
-function endHalf(){if(state.inning>=3){finishGame();return}state.inning++;state.outs=0;state.strikes=0;state.balls=0;state.bases=[0,0,0];state.energy=100;play(`${state.inning}회 시작`,'새로운 이닝, 다시 승부합니다.');updateHud();timers.push(setTimeout(newAtBat,1000))}
-function finishGame(){state.over=true;cancelAnimationFrame(raf);q('#resultTitle').textContent=state.score>state.aiScore?'HUMAN WIN!':state.score===state.aiScore?'DRAW':'AI WIN';q('#resultText').textContent=`최종 스코어  HUMAN ${state.score} : ${state.aiScore} AI · ${state.inning}회까지 진행`;q('#again').textContent='다시 플레이';q('#again').onclick=resetGame;q('#result').classList.add('show')}
-function resetGame(){q('#result').classList.remove('show');state={inning:1,outs:0,strikes:0,balls:0,score:0,aiScore:0,bases:[0,0,0],pitch:null,pitching:false,hitAnim:null,over:false,energy:100};q('#hs').textContent='0';q('#as').textContent='0';newAtBat();updateHud()}
-function nextInning(){if(state.over){resetGame();return}q('#result').classList.remove('show');endHalf()}
-function play(title,sub){q('#playText').textContent=title;q('#subText').textContent=sub;updateHud()}
-function updateHud(){if(!root)return;q('#inn').textContent=state.inning;q('#out').textContent=state.outs;q('#cnt').textContent=`${state.balls}-${state.strikes}`;q('#energy').style.width=state.energy+'%'}
-function animateHit(type){state.hitAnim={type,t:performance.now()};raf=requestAnimationFrame(hitLoop)}
-function hitLoop(t){if(!state.hitAnim)return;draw();if(t-state.hitAnim.t<1000)raf=requestAnimationFrame(hitLoop);else state.hitAnim=null}
-function draw(){if(!ctx||!canvas)return;const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);drawStadium(w,h);drawDiamond(w,h);drawPitcher(w,h);drawBatter(w,h);if(state.pitching&&state.pitch)drawBall(w,h);if(state.hitAnim)drawHit(w,h)}
-function drawStadium(w,h){const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#172b39');g.addColorStop(.22,'#315e43');g.addColorStop(1,'#0c2b1d');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);ctx.fillStyle='#172631';ctx.fillRect(0,0,w,h*.18);for(let i=0;i<80;i++){ctx.fillStyle=i%3?'#8ea1ac':'#d8e0e4';ctx.globalAlpha=.25;ctx.beginPath();ctx.arc(10+(i*53)%w,18+(i*19)%(h*.12),1.5,0,7);ctx.fill()}ctx.globalAlpha=1}
-function drawDiamond(w,h){const cx=w/2,cy=h*.79,r=Math.min(w*.28,h*.28);ctx.save();ctx.translate(cx,cy);ctx.rotate(Math.PI/4);ctx.fillStyle='#a47a50';ctx.fillRect(-r*.55,-r*.55,r*1.1,r*1.1);ctx.strokeStyle='#d9c4a6';ctx.lineWidth=2;ctx.strokeRect(-r*.55,-r*.55,r*1.1,r*1.1);ctx.restore();ctx.fillStyle='#f7f2e8';[[cx,cy-r],[cx+r,cy],[cx,cy+r],[cx-r,cy]].forEach(([x,y])=>{ctx.beginPath();ctx.moveTo(x,y-7);ctx.lineTo(x+7,y);ctx.lineTo(x,y+7);ctx.lineTo(x-7,y);ctx.closePath();ctx.fill()});ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx,cy+r*.82,7,0,7);ctx.fill()}
-function drawPitcher(w,h){const x=w/2,y=h*.43;ctx.save();ctx.translate(x,y);ctx.fillStyle='#cfd8df';ctx.fillRect(-14,0,28,48);ctx.fillStyle='#b3bec7';ctx.beginPath();ctx.arc(0,-13,13,0,7);ctx.fill();ctx.strokeStyle='#dce6ec';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-9,12);ctx.lineTo(-34,33);ctx.moveTo(9,12);ctx.lineTo(30,5);ctx.moveTo(-7,47);ctx.lineTo(-18,76);ctx.moveTo(7,47);ctx.lineTo(20,74);ctx.stroke();ctx.restore()}
-function drawBatter(w,h){const x=w*.73,y=h*.78;ctx.save();ctx.translate(x,y);ctx.fillStyle='#d9e0e5';ctx.fillRect(-13,0,26,50);ctx.fillStyle='#b9c4cc';ctx.beginPath();ctx.arc(0,-13,13,0,7);ctx.fill();ctx.strokeStyle='#dce6ec';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(-9,10);ctx.lineTo(-35,35);ctx.moveTo(9,10);ctx.lineTo(29,36);ctx.moveTo(-7,49);ctx.lineTo(-20,79);ctx.moveTo(7,49);ctx.lineTo(20,79);ctx.stroke();ctx.strokeStyle='#d1ad78';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-31,27);ctx.lineTo(-3,-3);ctx.stroke();ctx.restore()}
-function drawBall(w,h){const p=state.pitch,sp=p.progress;const sx=w/2,sy=h*.43,ex=w*.73,ey=h*.79;let x=sx+(ex-sx)*sp,y=sy+(ey-sy)*sp;const z=zoneXY(p.zone,w,h);x+=(z.x-w*.73)*Math.min(1,sp*1.4);y+=(z.y-h*.79)*Math.min(1,sp*1.4);const r=5+sp*3;ctx.shadowBlur=14;ctx.shadowColor='#fff';ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#c44';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,r*.7,-.7,.7);ctx.stroke()}
-function drawHit(w,h){const a=Math.min(1,(performance.now()-state.hitAnim.t)/1000),cx=w*.73,cy=h*.79;const type=state.hitAnim.type;const end={HR:[w*.5,h*.16],3B:[w*.24,h*.3],2B:[w*.31,h*.42],1B:[w*.42,h*.54]}[type];if(!end)return;ctx.strokeStyle=`rgba(255,255,255,${1-a})`;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx,cy);ctx.quadraticCurveTo(w*.63,h*.3,end[0],end[1]);ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(end[0],end[1],5,0,7);ctx.fill()}
-export function destroy(){timers.forEach(clearTimeout);timers=[];cancelAnimationFrame(raf);window.removeEventListener('resize',resize);if(keydownHandler)window.removeEventListener('keydown',keydownHandler);if(root&&clickHandler)root.removeEventListener('click',clickHandler);root=null;canvas=null;ctx=null}
+function finish(){state.over=true;state.pitching=false;cancelAnimationFrame(raf);const title=state.score>state.aiScore?'HUMAN WIN!':state.score<state.aiScore?'AI WIN':'DRAW';q('#resultTitle').textContent=title;q('#resultText').textContent=`최종 스코어  HUMAN ${state.score} : ${state.aiScore} AI`;q('#result').classList.add('show')}
+function resetGame(){timers.forEach(clearTimeout);timers=[];q('#result').classList.remove('show');state={inning:1,outs:0,balls:0,strikes:0,score:0,aiScore:0,bases:[0,0,0],pitch:null,pitching:false,over:false,energy:100,hit:null};q('#hs').textContent='0';q('#as').textContent='0';schedulePitch(500);update()}
+function announce(title,sub){q('#playText').textContent=title;q('#subText').textContent=sub;update()}
+function update(){if(!state)return;q('#inn').textContent=state.inning;q('#out').textContent=state.outs;q('#cnt').textContent=state.balls+'-'+state.strikes;q('#energy').style.width=state.energy+'%'}
+function hitAnim(t){if(!state?.hit)return;draw();if(t-state.hit.start<900)raf=requestAnimationFrame(hitAnim);else state.hit=null}
+
+function draw(){if(!ctx||!canvas)return;const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);drawField(w,h);drawPlayers(w,h);if(state?.pitching&&state.pitch)drawBall(w,h);if(state?.hit)drawHit(w,h);drawBases(w,h)}
+function drawField(w,h){const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#183f2b');g.addColorStop(.55,'#24643b');g.addColorStop(1,'#0c2b1c');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);ctx.fillStyle='#b7a176';ctx.beginPath();ctx.moveTo(w*.5,h*.46);ctx.lineTo(w*.23,h*.86);ctx.lineTo(w*.77,h*.86);ctx.closePath();ctx.fill();ctx.fillStyle='#315e35';ctx.beginPath();ctx.arc(w*.5,h*.77,w*.29,Math.PI,0);ctx.fill();ctx.fillStyle='#caa875';ctx.beginPath();ctx.arc(w*.5,h*.69,Math.min(w,h)*.13,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(w*.47,h*.84,w*.06,5)}
+function drawPlayers(w,h){ctx.fillStyle='#27333b';ctx.beginPath();ctx.arc(w*.5,h*.47,17,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d8b08a';ctx.beginPath();ctx.arc(w*.5,h*.45,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='#26333e';ctx.fillRect(w*.5-11,h*.46,22,34);ctx.fillStyle='#18242d';ctx.beginPath();ctx.arc(w*.43,h*.82,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d4ad88';ctx.beginPath();ctx.arc(w*.43,h*.79,6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c1cbd1';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(w*.43,h*.82);ctx.lineTo(w*.37,h*.72);ctx.stroke()}
+function drawBall(w,h){const p=state.pitch.progress;const x=w*.5+(state.pitch.move||0)*p*16;const y=h*(.48+.35*p);const r=4+5*p;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#d33';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,r*.7,.2,2);ctx.stroke()}
+function drawBases(w,h){const bx=w*.5,by=h*.82,s=Math.min(w,h)*.045;[[0,1,2],[1,0,2],[2,1,2]].forEach(()=>{});const pts=[[bx,by],[bx-s*4,by-s*2],[bx,by-s*4],[bx+s*4,by-s*2]];ctx.fillStyle='#fff';for(let i=0;i<3;i++){if(state.bases[i]){const p=pts[i+1];ctx.save();ctx.translate(p[0],p[1]);ctx.rotate(Math.PI/4);ctx.fillRect(-s/2,-s/2,s,s);ctx.restore()}}}
+function drawHit(w,h){const p=Math.min(1,(performance.now()-state.hit.start)/900);const power=state.hit.type==='HR'?1.8:state.hit.type==='3B'?1.45:1;ctx.strokeStyle='#fff8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(w*.5,h*.78);ctx.lineTo(w*(.5+(p*power*.35)),h*(.78-p*.5));ctx.stroke();ctx.fillStyle='#fff';ctx.font='900 34px Arial';ctx.textAlign='center';ctx.fillText(state.hit.type==='HR'?'HOMERUN!':'HIT!',w*.5,h*.25)}
+
+export function destroy(){if(raf)cancelAnimationFrame(raf);timers.forEach(clearTimeout);timers=[];if(keydownHandler)window.removeEventListener('keydown',keydownHandler);window.removeEventListener('resize',resize);if(root)root.innerHTML='';root=null;canvas=null;ctx=null;state=null;keydownHandler=null}
