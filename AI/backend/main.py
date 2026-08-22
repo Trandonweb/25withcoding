@@ -1,6 +1,8 @@
+from typing import Any
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ai import ask_ai
 
@@ -8,7 +10,6 @@ from ai import ask_ai
 app = FastAPI()
 
 
-# 25withcoding.kr의 웹 페이지가 Coby 서버에 요청할 수 있도록 허용
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -23,6 +24,12 @@ app.add_middleware(
 
 class ChatRequest(BaseModel):
     message: str
+    history: list[dict[str, Any]] = Field(default_factory=list)
+    context: Any = None
+    projectContext: Any = None
+    uiInstructions: dict[str, Any] | None = None
+    usageKnowledge: dict[str, Any] | None = None
+    toneSettings: dict[str, Any] | None = None
 
 
 @app.get("/")
@@ -30,13 +37,22 @@ def home():
     return {
         "status": "online",
         "name": "Coby AI",
-        "version": "0.1"
+        "version": "0.2"
     }
 
 
 @app.post("/chat")
 def chat(request: ChatRequest):
-    answer = ask_ai(request.message)
+    context = request.projectContext if request.projectContext is not None else request.context
+
+    answer = ask_ai(
+        request.message,
+        history=request.history,
+        context=context,
+        ui_instructions=request.uiInstructions,
+        usage_knowledge=request.usageKnowledge,
+        tone_settings=request.toneSettings,
+    )
 
     return {
         "answer": answer
