@@ -2,28 +2,12 @@ import os
 import requests
 
 
-SYSTEM_PROMPT = """
-너는 25withcoding.kr의 코딩 도우미 Coby다.
-
-주요 전문 분야는 Python, HTML, CSS, JavaScript, Entry, GitHub이다.
-사용자가 코드를 보여주면 오류를 찾아 수정하고, 필요하면 전체 코드를 제공한다.
-설명은 중학생도 이해할 수 있도록 명확하고 단계적으로 한다.
-답변은 한국어를 기본으로 한다.
-간단한 질문에는 짧고 빠르게 답한다.
-코드 작성 요청에는 실행 가능한 코드를 제공하고 핵심 사용법을 설명한다.
-모르는 내용은 아는 척하지 말고 모른다고 말한다.
-
-COBY 전용 답변 마크업을 사용할 수 있다.
-***텍스트*** = 굵게 강조
-<<<내용>>> = 복사 가능한 블록
-[[[내용]]] = 경고/주의
-{{{내용}}} = 성공/완료
-(((내용))) = 팁
---- = 구분선
-마크업 기호 자체를 설명문으로 노출하지 않는다.
-코드나 복사할 내용에는 <<< >>>를 사용한다.
-사용자가 이전 대화 내용을 언급하면 제공된 대화 기록을 참고해 자연스럽게 이어서 답한다.
-""".strip()
+SYSTEM_PROMPT = """너는 25withcoding의 코딩 도우미 Coby다.
+Python, HTML, CSS, JavaScript, Entry, GitHub를 다루며 한국어로 답한다.
+중학생도 이해하기 쉽게 설명하고, 간단한 질문은 짧게 답한다. 코드는 실행 가능하게 제공한다. 모르면 모른다고 말한다.
+이전 대화 기록이 제공되면 자연스럽게 이어서 답한다.
+COBY 마크업: ***강조***, <<<복사 블록>>>, [[[주의]]], {{{성공}}}, (((팁))), --- (구분선).
+마크업 기호 자체는 설명하지 않는다.""".strip()
 
 
 # DeepSeek OpenAI-compatible API
@@ -41,7 +25,7 @@ def _clean_history(history):
         return []
 
     cleaned = []
-    for item in history[-24:]:
+    for item in history[-10:]:
         if not isinstance(item, dict):
             continue
         role = item.get("role")
@@ -78,24 +62,16 @@ def ask_ai(
     system_parts = [SYSTEM_PROMPT]
 
     if isinstance(ui_instructions, dict):
-        system_parts.append(
-            "COBY UI 지침:\n" + str(ui_instructions.get("system", ""))
-        )
+        system_parts.append("COBY UI 지침:\n" + str(ui_instructions.get("system", ""))[:3000])
 
     if isinstance(usage_knowledge, dict):
-        system_parts.append(
-            "COBY 서비스 사용 지식:\n" + str(usage_knowledge)
-        )
+        system_parts.append("COBY 서비스 사용 지식:\n" + str(usage_knowledge)[:3000])
 
     if isinstance(tone_settings, dict):
-        system_parts.append(
-            "사용자가 설정한 답변 스타일:\n" + str(tone_settings)
-        )
+        system_parts.append("사용자가 설정한 답변 스타일:\n" + str(tone_settings)[:1500])
 
     if context:
-        system_parts.append(
-            "현재 프로젝트/작업 맥락:\n" + str(context)[:12000]
-        )
+        system_parts.append("현재 프로젝트/작업 맥락:\n" + str(context)[:5000])
 
     messages = [{"role": "system", "content": "\n\n".join(system_parts)}]
     messages.extend(_clean_history(history))
