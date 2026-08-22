@@ -12,20 +12,60 @@ SYSTEM_PROMPT = """
 간단한 질문에는 짧고 빠르게 답한다.
 코드 작성 요청에는 실행 가능한 코드를 제공하고 핵심 사용법을 설명한다.
 모르는 내용은 아는 척하지 말고 모른다고 말한다.
+
+COBY 전용 답변 마크업을 사용할 수 있다.
+***텍스트*** = 굵게 강조
+<<<내용>>> = 복사 가능한 블록
+[[[내용]]] = 경고/주의
+{{{내용}}} = 성공/완료
+(((내용))) = 팁
+--- = 구분선
+마크업 기호 자체를 설명문으로 노출하지 않는다.
+코드나 복사할 내용에는 <<< >>>를 사용한다.
+사용자가 이전 대화 내용을 언급하면 제공된 대화 기록을 참고해 자연스럽게 이어서 답한다.
 """.strip()
 
 
-# Hugging Face Inference Providers의 OpenAI-compatible router API
 API_URL = "https://router.huggingface.co/v1/chat/completions"
-# 환경변수로 모델을 바꿀 수 있으며, 기본값은 비교적 가벼운 instruct 모델이다.
-MODEL = os.getenv("HF_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct-1M"
 
 
-def ask_ai(message: str):
+def get_model():
+    """Render 환경변수가 있으면 사용하되, 현재 지원되지 않는 구형 기본값은 교체한다."""
+    model = os.getenv("HF_MODEL", DEFAULT_MODEL).strip()
+    if model == "Qwen/Qwen2.5-7B-Instruct":
+        return DEFAULT_MODEL
+    return model or DEFAULT_MODEL
+
+
+def _clean_history(history):
+    if not isinstance(history, list):
+        return []
+
+    cleaned = []
+    for item in history[-24:]:
+        if not isinstance(item, dict):
+            continue
+        role = item.get("role")
+        content = item.get("content")
+        if role not in {"user", "assistant"} or not isinstance(content, str):
+            continue
+        content = content.strip()
+        if content:
+            cleaned.append({"role": role, "content": content[:12000]})
+    return cleaned
+
+
+def ask_ai(
+    message: str,
+    history=None,
+    context=None,
+    ui_instructions=None,
+    usage_knowledge=None,
+    tone_settings=None,
+):
     """Hugging Face Inference Providers의 OpenAI-compatible API로 Coby의 답변을 생성한다."""
 
-    # 기존 Render 환경변수 이름(EXAONE_API_KEY)을 그대로 사용한다.
-    # 값만 Hugging Face의 새 토큰으로 교체하면 된다.
     api_key = os.getenv("EXAONE_API_KEY", "").strip()
 
     if not api_key:
@@ -37,18 +77,45 @@ def ask_ai(message: str):
         "Content-Type": "application/json",
     }
 
+    system_parts = [SYSTEM_PROMPT]
+
+    if isinstance(ui_instructions, dict):
+        system_parts.append(
+            "COBY UI 지침:\n" + str(ui_instructions.get("system", ""))
+        )
+
+    if isinstance(usage_knowledge, dict):
+        system_parts.append(
+            "COBY 서비스 사용 지식:\n" + str(usage_knowledge)
+        )
+
+    if isinstance(tone_settings, dict):
+        system_parts.append(
+            "사용자가 설정한 답변 스타일:\n" + str(tone_settings)
+        )
+
+    if context:
+        system_parts.append(
+            "현재 프로젝트/작업 맥락:\n" + str(context)[:12000]
+        )
+
+    messages = [{"role": "system", "content": "\n\n".join(system_parts)}]
+    messages.extend(_clean_history(history))
+    messages.append({"role": "user", "content": message})
+
+    model = get_model()
     payload = {
-        "model": MODEL,
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": message},
-        ],
+        "model": model,
+        "messages": messages,
         "temperature": 0.4,
         "max_tokens": 2048,
     }
 
     try:
-        print(f"Coby: requesting Hugging Face model={MODEL}, message_length={len(message)}")
+        print(
+            f"Coby: requesting Hugging Face model={model}, "
+            f"history={len(messages) - 2}, message_length={len(message)}"
+        )
 
         response = requests.post(
             API_URL,
