@@ -26,16 +26,14 @@ COBY 전용 답변 마크업을 사용할 수 있다.
 """.strip()
 
 
-API_URL = "https://router.huggingface.co/v1/chat/completions"
-DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct-1M"
+# DeepSeek OpenAI-compatible API
+API_URL = "https://api.deepseek.com/chat/completions"
+DEFAULT_MODEL = "deepseek-v4-flash"
 
 
 def get_model():
-    """Render 환경변수가 있으면 사용하되, 현재 지원되지 않는 구형 기본값은 교체한다."""
-    model = os.getenv("HF_MODEL", DEFAULT_MODEL).strip()
-    if model == "Qwen/Qwen2.5-7B-Instruct":
-        return DEFAULT_MODEL
-    return model or DEFAULT_MODEL
+    """Render에서 필요하면 DEEPSEEK_MODEL로 모델을 바꿀 수 있지만 기본값은 V4 Flash다."""
+    return os.getenv("DEEPSEEK_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
 
 
 def _clean_history(history):
@@ -64,13 +62,13 @@ def ask_ai(
     usage_knowledge=None,
     tone_settings=None,
 ):
-    """Hugging Face Inference Providers의 OpenAI-compatible API로 Coby의 답변을 생성한다."""
+    """DeepSeek OpenAI-compatible API로 Coby의 답변을 생성한다."""
 
-    api_key = os.getenv("EXAONE_API_KEY", "").strip()
+    api_key = os.getenv("AI_API_KEY", "").strip()
 
     if not api_key:
-        print("Coby error: EXAONE_API_KEY is not configured")
-        return "Coby의 AI API 키가 서버에 설정되지 않았어요. Render 환경변수를 확인해주세요."
+        print("Coby error: AI_API_KEY is not configured")
+        return "Coby의 AI API 키가 서버에 설정되지 않았어요. Render 환경변수 AI_API_KEY를 확인해주세요."
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -109,11 +107,12 @@ def ask_ai(
         "messages": messages,
         "temperature": 0.4,
         "max_tokens": 2048,
+        "stream": False,
     }
 
     try:
         print(
-            f"Coby: requesting Hugging Face model={model}, "
+            f"Coby: requesting DeepSeek model={model}, "
             f"history={len(messages) - 2}, message_length={len(message)}"
         )
 
@@ -124,11 +123,11 @@ def ask_ai(
             timeout=120,
         )
 
-        print(f"Coby: Hugging Face status={response.status_code}")
+        print(f"Coby: DeepSeek status={response.status_code}")
         response.raise_for_status()
 
         data = response.json()
-        print(f"Coby: response keys={list(data.keys())}")
+        print(f"Coby: DeepSeek response keys={list(data.keys())}")
 
         choices = data.get("choices")
         if not choices:
@@ -148,19 +147,23 @@ def ask_ai(
             print(f"Coby: empty content, message={message_data}")
             return "AI 모델이 빈 답변을 반환했어요. 다시 시도해주세요."
 
+        usage = data.get("usage")
+        if usage:
+            print(f"Coby: DeepSeek usage={usage}")
+
         return answer.strip()
 
     except requests.HTTPError as error:
-        print(f"Coby: Hugging Face API HTTP error: {error}")
-        print(f"Coby: Hugging Face API response: {response.text[:2000]}")
+        print(f"Coby: DeepSeek API HTTP error: {error}")
+        print(f"Coby: DeepSeek API response: {response.text[:2000]}")
         return "Coby의 AI 모델 요청이 거부되었어요. Render 로그를 확인해주세요."
 
     except requests.RequestException as error:
-        print(f"Coby: Hugging Face API request failed: {error}")
+        print(f"Coby: DeepSeek API request failed: {error}")
         return "Coby의 AI 모델 서버에 연결하지 못했어요. 잠시 후 다시 시도해주세요."
 
     except (KeyError, IndexError, TypeError, ValueError) as error:
-        print(f"Coby: Hugging Face API response parsing failed: {error}")
+        print(f"Coby: DeepSeek API response parsing failed: {error}")
         return "AI 모델에서 예상하지 못한 응답이 왔어요. Render 로그를 확인해주세요."
 
     except Exception as error:
