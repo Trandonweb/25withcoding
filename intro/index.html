@@ -1,1 +1,75 @@
-
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#030504">
+<title>코딩과 함께라면 — Intro</title>
+<style>
+:root{--bg:#030504;--fg:#f4f7f5;--muted:#8d9791;--green:#27ae60}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font-family:"Segoe UI","Noto Sans KR",system-ui,sans-serif}button{font:inherit}
+/* 전체 인트로 화면 */
+#intro{position:fixed;inset:0;overflow:hidden;background:radial-gradient(circle at 50% 45%,rgba(39,174,96,.09),transparent 27%),radial-gradient(circle at 50% 100%,rgba(39,174,96,.04),transparent 45%),#030504;transition:opacity .85s,visibility .85s}#intro.leave{opacity:0;visibility:hidden;pointer-events:none}
+/* 은은한 기술적 격자 */
+.grid{position:absolute;inset:-20%;opacity:.32;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:64px 64px;transform:perspective(700px) rotateX(62deg) scale(1.8) translateY(25%);mask-image:linear-gradient(to top,#000,transparent 75%);-webkit-mask-image:linear-gradient(to top,#000,transparent 75%)}
+/* 배경 파티클 효과 */
+#particles{position:absolute;inset:0;width:100%;height:100%;opacity:.75}
+/* 배경 상하 이동 장식 요소 */
+.ambient{position:absolute;width:1px;height:40vh;background:linear-gradient(transparent,rgba(39,174,96,.28),transparent);opacity:0;animation:in 1.4s forwards,drift 8s ease-in-out infinite}.a{left:12%;top:-5%;animation-delay:.4s}.b{left:25%;bottom:-10%;animation-delay:.7s,1.5s}.c{right:18%;top:-7%;animation-delay:.9s,2.4s}.d{right:7%;bottom:-10%;animation-delay:1.1s,3.2s}
+/* 중앙 광원 */
+.glow{position:absolute;left:50%;top:47%;width:min(44vw,520px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(39,174,96,.14),rgba(39,174,96,.025) 40%,transparent 70%);filter:blur(8px);opacity:0;animation:glow 1.5s 1s forwards,breathe 5s 2.5s ease-in-out infinite}
+/* 로고 주변 기술적 링 */
+.orbit,.orbit2{position:absolute;left:50%;top:47%;border-radius:50%;transform:translate(-50%,-50%);opacity:0}.orbit{width:min(58vw,690px);aspect-ratio:1;border:1px solid rgba(255,255,255,.055);animation:orbitIn 1.4s 1s forwards,spin 18s 2.4s linear infinite}.orbit2{width:min(35vw,410px);aspect-ratio:1;border:1px dashed rgba(39,174,96,.17);animation:orbitIn2 1.2s 1.25s forwards,spin2 24s 2.4s linear infinite}.orbit:before,.orbit:after{content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 18px rgba(39,174,96,.8)}.orbit:before{left:12%;top:18%}.orbit:after{right:8%;bottom:27%;opacity:.45}
+/* 코딩과 함께라면 메인 로고 */
+.brand{position:absolute;left:50%;top:45%;width:min(42vw,390px);max-width:72vw;transform:translate(-50%,-50%) scale(.72);opacity:0;filter:blur(10px) brightness(.75);animation:brand 1.25s 1.35s cubic-bezier(.16,1,.3,1) forwards;z-index:2;user-select:none;-webkit-user-drag:none}.fallback{display:none;position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);text-align:center;white-space:nowrap;z-index:2}.fallback strong{display:block;font-size:clamp(28px,5vw,64px);letter-spacing:.12em}.fallback span{display:block;margin-top:9px;color:var(--muted);font-size:12px;letter-spacing:.45em}
+/* WITH / CODING 타이포그래피 */
+.wordmark{position:absolute;left:50%;top:66%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;z-index:3;pointer-events:none}.word{display:flex;justify-content:center;line-height:1;min-height:1em;overflow:hidden;font-weight:700;letter-spacing:.34em;text-indent:.34em}.with{font-size:clamp(12px,1.35vw,17px);color:#aeb7b1;margin-bottom:12px}.coding{font-size:clamp(22px,3.1vw,42px);letter-spacing:.28em;text-indent:.28em}.letter{display:inline-block;opacity:0;transform:translateY(18px) scale(.9);filter:blur(5px)}.letter.show{animation:letter .65s cubic-bezier(.16,1,.3,1) forwards}
+/* 상태 표시 */
+.status{position:absolute;left:50%;top:82%;transform:translateX(-50%);color:rgba(255,255,255,.3);font-size:9px;letter-spacing:.42em;text-indent:.42em;opacity:0;animation:status 1s 4.5s forwards}.status:before{content:"";display:inline-block;width:5px;height:5px;margin-right:9px;border-radius:50%;background:var(--green);box-shadow:0 0 10px rgba(39,174,96,.7);animation:blink 1.5s infinite}
+/* 인트로 종료용 블랙 오버레이 */
+#blackout{position:absolute;inset:0;z-index:20;background:#000;opacity:0;pointer-events:none;transition:opacity .6s}#blackout.active{opacity:1}
+/* 인트로 종료 및 메인 진입 버튼 */
+#start{position:absolute;left:50%;bottom:6vh;z-index:30;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 23px;color:rgba(255,255,255,.8);background:rgba(255,255,255,.035);backdrop-filter:blur(12px);cursor:pointer;opacity:0;visibility:hidden;transform:translateX(-50%) translateY(14px);transition:.7s}#start.ready{opacity:1;visibility:visible;transform:translateX(-50%);animation:pulse 2.6s 1s infinite}#start:hover{transform:translateX(-50%) translateY(-2px) scale(1.035);border-color:rgba(39,174,96,.45);background:rgba(39,174,96,.08)}
+/* 테스트용 메인 장면 — 실제 작품에서는 다음 페이지로 이동 */
+#main{position:fixed;inset:0;display:grid;place-items:center;background:#080a09;opacity:0;visibility:hidden;transition:.8s}#main.visible{opacity:1;visibility:visible}.placeholder{padding:30px;text-align:center;border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(255,255,255,.025)}
+@keyframes in{to{opacity:1}}@keyframes drift{0%,100%{transform:translateY(0)}50%{transform:translateY(60px)}}@keyframes glow{to{opacity:1}}@keyframes breathe{0%,100%{scale:1;opacity:.75}50%{scale:1.08;opacity:1}}@keyframes orbitIn{to{opacity:1;transform:translate(-50%,-50%) rotate(-18deg) scale(1)}}@keyframes orbitIn2{to{opacity:1;transform:translate(-50%,-50%) scale(1)}}@keyframes spin{to{transform:translate(-50%,-50%) rotate(342deg)}}@keyframes spin2{to{transform:translate(-50%,-50%) rotate(-360deg)}}@keyframes brand{0%{opacity:0;transform:translate(-50%,-50%) scale(.72);filter:blur(10px) brightness(.7)}65%{opacity:1;filter:blur(0) brightness(1.15)}100%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0) brightness(1)}}@keyframes letter{to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}@keyframes status{to{opacity:1}}@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}@keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(39,174,96,0)}50%{box-shadow:0 0 28px rgba(39,174,96,.08)}}
+@media(max-width:600px){.grid{background-size:42px 42px}.orbit{width:100vw}.orbit2{width:66vw}.brand{width:min(68vw,330px)}.wordmark{top:65%}.status{top:80%;font-size:8px}#start{bottom:4vh}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<!-- 전체 인트로 화면 -->
+<section id="intro" aria-label="코딩과 함께라면 인트로">
+  <!-- 은은한 기술적 격자 --> <div class="grid" aria-hidden="true"></div>
+  <!-- 배경 파티클 효과 --> <canvas id="particles" aria-hidden="true"></canvas>
+  <!-- 배경 상하 이동 장식 요소 -->
+  <div class="ambient a"></div><div class="ambient b"></div><div class="ambient c"></div><div class="ambient d"></div>
+  <!-- 중앙 광원 --> <div class="glow"></div>
+  <!-- 로고 주변 장식 링 --> <div class="orbit"></div><div class="orbit2"></div>
+  <!-- 코딩과 함께라면 메인 로고: 현재 저장소의 /logo1.png 사용 -->
+  <img class="brand" src="../logo1.png" alt="코딩과 함께라면 로고" onerror="this.style.display='none';document.querySelector('.fallback').style.display='block'">
+  <div class="fallback"><strong>코딩과 함께라면</strong><span>WITH CODING</span></div>
+  <!-- WITH / CODING 타이포그래피 -->
+  <div class="wordmark"><div id="with" class="word with"></div><div id="coding" class="word coding"></div></div>
+  <!-- 인트로 상태 표시 --> <div class="status">SYSTEM READY</div>
+  <!-- 인트로 종료 및 메인 진입 버튼 --> <button id="start" type="button">클릭하여 시작하기</button>
+  <!-- 인트로 전환용 블랙 그라데이션 오버레이 --> <div id="blackout"></div>
+</section>
+<!-- Scene 2: 테스트용 메인 장면 -->
+<main id="main"><div class="placeholder"><h1>MAIN SCENE</h1><p>실제 작품에서는 인트로 후 다음 페이지로 이동합니다.</p></div></main>
+<script>
+/* 공통 인트로. /intro/?next=/작품경로 로 호출하면 버튼 클릭 후 해당 작품으로 이동합니다. */
+const intro=document.getElementById('intro'),start=document.getElementById('start'),blackout=document.getElementById('blackout'),main=document.getElementById('main');
+const canvas=document.getElementById('particles'),ctx=canvas.getContext('2d');let ps=[],raf;
+function resize(){const d=Math.min(devicePixelRatio||1,2);canvas.width=innerWidth*d;canvas.height=innerHeight*d;canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';ctx.setTransform(d,0,0,d,0,0)}
+function seed(){const n=Math.min(95,Math.max(38,Math.floor(innerWidth*innerHeight/18000)));ps=Array.from({length:n},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.2+.25,s:Math.random()*.22+.05,d:(Math.random()-.5)*.12,a:Math.random()*.45+.08,p:Math.random()*Math.PI*2}))}
+function particles(t){ctx.clearRect(0,0,innerWidth,innerHeight);for(const p of ps){p.y-=p.s;p.x+=p.d;if(p.y<-5)p.y=innerHeight+5;if(p.x<-5)p.x=innerWidth+5;if(p.x>innerWidth+5)p.x=-5;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(145,185,160,${p.a*(.65+Math.sin(t*.001+p.p)*.35)})`;ctx.fill()}raf=requestAnimationFrame(particles)}
+/* 글자를 순서대로 삽입 */
+function letters(el,text,delay=0){el.innerHTML='';[...text].forEach((c,i)=>{const s=document.createElement('span');s.className='letter';s.textContent=c;el.appendChild(s);setTimeout(()=>s.classList.add('show'),delay+i*105)})}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function startIntro(){resize();seed();cancelAnimationFrame(raf);raf=requestAnimationFrame(particles);await wait(650);letters(document.getElementById('with'),'WITH');await wait(570);letters(document.getElementById('coding'),'CODING');await wait(2800);start.classList.add('ready')}
+/* next 파라미터가 있으면 같은 사이트 내부 경로로만 이동 */
+function nextUrl(){const n=new URLSearchParams(location.search).get('next');if(!n)return null;try{const u=new URL(n,location.origin);return u.origin===location.origin?u.pathname+u.search+u.hash:null}catch{return null}}
+async function enter(){start.disabled=true;start.classList.remove('ready');blackout.classList.add('active');await wait(620);const n=nextUrl();if(n){location.href=n;return}intro.classList.add('leave');main.classList.add('visible');cancelAnimationFrame(raf)}
+start.addEventListener('click',enter);document.addEventListener('keydown',e=>{if(e.key==='Enter'&&start.classList.contains('ready'))enter()});addEventListener('resize',()=>{resize();seed()});startIntro();
+</script>
+</body>
+</html>
