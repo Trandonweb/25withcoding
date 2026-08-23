@@ -12,36 +12,10 @@ export async function getConversationHistory(){if(!state.currentConversationId)r
 export async function getOlderConversationHistory(beforeTimestamp,count=40){if(!state.currentConversationId||!beforeTimestamp)return[];const s=await getDocs(query(messagesRef(),orderBy("createdAt","desc"),startAfter(beforeTimestamp),limit(count)));return[...s.docs].reverse().map(extractMessage);}
 function needsOlderHistory(text){return/(아까|이전|전에|방금 전|위에서|앞에서|처음에|지난|예전에|전에 말한|앞서|기억|전에 했던|이전 대화|이전 내용|저번|지난번)/i.test(text);}
 async function getHistoryForRequest(text){if(!state.currentConversationId)return[];const s=await getDocs(query(messagesRef(),orderBy("createdAt","desc"),limit(40)));const recent=[...s.docs].reverse().map(extractMessage);if(!needsOlderHistory(text)||s.docs.length<40)return recent;const ts=s.docs[s.docs.length-1]?.data()?.createdAt;if(!ts)return recent;return[...(await getOlderConversationHistory(ts,40)),...recent];}
-
-function isStandaloneNamePart(text, part){
-    if(!part || part.length < 2) return false;
-    let index = text.indexOf(part);
-    while(index !== -1){
-        const before = index > 0 ? text[index - 1] : "";
-        const after = index + part.length < text.length ? text[index + part.length] : "";
-        const isWordChar = char => !!char && /[0-9A-Za-z가-힣]/u.test(char);
-        if(!isWordChar(before) && !isWordChar(after)) return true;
-        index = text.indexOf(part, index + 1);
-    }
-    return false;
-}
-
-function containsPersonalName(text){
-    const name=String(state.currentPerson?.name||"").trim();
-    if(name.length !== 3) return false;
-    if(text.includes(name)) return true;
-    const firstTwo=name.slice(0,2), lastTwo=name.slice(1,3);
-    return isStandaloneNamePart(text, firstTwo) || isStandaloneNamePart(text, lastTwo);
-}
-
-function getPersonalNameBlockMessage(){
-    return "[[[개인정보 보호를 위해 이름이 포함된 메시지는 AI에게 전송할 수 없어요.]]]\\n\\n이름이나 이름의 일부가 들어간 내용을 빼고 다시 보내주세요.";
-}
-
+function isStandaloneNamePart(text,part){if(!part||part.length<2)return false;let index=text.indexOf(part);while(index!==-1){const before=index>0?text[index-1]:"",after=index+part.length<text.length?text[index+part.length]:"";const isWordChar=char=>!!char&&/[0-9A-Za-z가-힣]/u.test(char);if(!isWordChar(before)&&!isWordChar(after))return true;index=text.indexOf(part,index+1);}return false;}
+function containsPersonalName(text){const name=String(state.currentPerson?.name||"").trim();if(name.length!==3)return false;if(text.includes(name))return true;const firstTwo=name.slice(0,2),lastTwo=name.slice(1,3);return isStandaloneNamePart(text,firstTwo)||isStandaloneNamePart(text,lastTwo);}
+function getPersonalNameBlockMessage(){return "[[[개인정보 보호를 위해 이름이 포함된 메시지는 AI에게 전송할 수 없어요.]]]\n\n이름이나 이름의 일부가 들어간 내용을 빼고 다시 보내주세요.";}
 function extractAssistantText(data){return data?.reply??data?.response??data?.message??data?.content??data?.answer??"응답을 받지 못했습니다.";}
-export async function sendMessage(){if(state.isSending)return;const input=$("userInput"),text=input.value.trim();if(!text)return;if(!state.currentUserId){alert("먼저 로그인해주세요.");return;}
-    if(containsPersonalName(text)){
-        addMessage("assistant",getPersonalNameBlockMessage());
-        return;
-    }
-    if(!state.currentConversationId)await createConversation(state.currentProjectId);state.isSending=true;$("sendButton").disabled=true;if($("welcome"))$("welcome").remove();try{const history=await getHistoryForRequest(text),projectContext=await getProjectContext(),tone=getCobyToneSettings();addMessage("user",text);input.value="";input.style.height="auto";await addDoc(messagesRef(),{role:"user",content:text,createdAt:serverTimestamp()});const ref=doc(db,"people",state.currentUserId,"conversations",state.currentConversationId),snap=await getDoc(ref);if(snap.exists()){const c=snap.data();await updateDoc(ref,{title:c.title&&c.title!=="새 대화"?c.title:(text.length>35?text.slice(0,35)+"…":text),updatedAt:serverTimestamp()});}const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text,studentId:state.currentUserId,userId:state.currentUserId,conversationId:state.currentConversationId,projectId:state.currentProjectId,project:state.currentProject||null,context:projectContext,history,projectContext,user:{id:state.currentUserId,name:state.currentPerson?.name||"사용자",role:state.currentPerson?.role||"student"},uiInstructions:COBY_UI_INSTRUCTIONS,usageKnowledge:COBY_USAGE_KNOWLEDGE,toneSettings:tone})});if(!response.ok)throw new Error(`API ${response.status}`);const result=await response.json(),answer=String(extractAssistantText(result));addMessage("assistant",answer);await addDoc(messagesRef(),{role:"assistant",content:answer,createdAt:serverTimestamp()});await updateDoc(ref,{updatedAt:serverTimestamp()});await loadChats();}catch(error){console.error("AI 요청 오류:",error);addMessage("assistant",`[[[COBY 응답을 가져오지 못했습니다.]]]\n\n${error.message||"잠시 후 다시 시도해주세요."}`);}finally{state.isSending=false;$("sendButton").disabled=false;input.focus();}}
+function setThinking(active){const indicator=$("thinkingIndicator"),button=$("sendButton");if(indicator)indicator.hidden=!active;if(button){button.textContent=active?"■":"↑";button.setAttribute("aria-label",active?"응답 중지":"메시지 전송");button.classList.toggle("stop",active);button.disabled=false;}}
+export async function stopMessage(){if(!state.isSending||!state.abortController)return;state.abortController.abort();}
+export async function sendMessage(){if(state.isSending){await stopMessage();return;}const input=$("userInput"),text=input.value.trim();if(!text)return;if(!state.currentUserId){alert("먼저 로그인해주세요.");return;}if(containsPersonalName(text)){addMessage("assistant",getPersonalNameBlockMessage());return;}if(!state.currentConversationId)await createConversation(state.currentProjectId);state.isSending=true;state.abortController=new AbortController();setThinking(true);if($("welcome"))$("welcome").remove();try{const history=await getHistoryForRequest(text),projectContext=await getProjectContext(),tone=getCobyToneSettings();addMessage("user",text);input.value="";input.style.height="auto";await addDoc(messagesRef(),{role:"user",content:text,createdAt:serverTimestamp()});const ref=doc(db,"people",state.currentUserId,"conversations",state.currentConversationId),snap=await getDoc(ref);if(snap.exists()){const c=snap.data();await updateDoc(ref,{title:c.title&&c.title!=="새 대화"?c.title:(text.length>35?text.slice(0,35)+"…":text),updatedAt:serverTimestamp()});}const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},signal:state.abortController.signal,body:JSON.stringify({message:text,studentId:state.currentUserId,userId:state.currentUserId,conversationId:state.currentConversationId,projectId:state.currentProjectId,project:state.currentProject||null,context:projectContext,history,projectContext,user:{id:state.currentUserId,name:state.currentPerson?.name||"사용자",role:state.currentPerson?.role||"student"},uiInstructions:COBY_UI_INSTRUCTIONS,usageKnowledge:COBY_USAGE_KNOWLEDGE,toneSettings:tone})});if(!response.ok)throw new Error(`API ${response.status}`);const result=await response.json();if(state.abortController.signal.aborted)return;const answer=String(extractAssistantText(result));if(!answer.trim())throw new Error("빈 응답을 받았습니다.");addMessage("assistant",answer);await addDoc(messagesRef(),{role:"assistant",content:answer,createdAt:serverTimestamp()});await updateDoc(ref,{updatedAt:serverTimestamp()});await loadChats();}catch(error){if(error?.name==="AbortError"){addMessage("assistant","(((응답을 중지했어요. 원하면 다시 질문해 주세요.)))");}else{console.error("AI 요청 오류:",error);addMessage("assistant",`[[[COBY 응답을 가져오지 못했습니다.]]]\n\n${error.message||"잠시 후 다시 시도해주세요."}`);}}finally{state.isSending=false;state.abortController=null;setThinking(false);input.focus();}}
