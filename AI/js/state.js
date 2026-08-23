@@ -4,7 +4,8 @@ export const state = {
     currentConversationId: null,
     currentProjectId: null,
     currentProject: null,
-    isSending: false
+    isSending: false,
+    abortController: null
 };
 
 export const $ = id => document.getElementById(id);
