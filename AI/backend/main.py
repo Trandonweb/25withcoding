@@ -166,17 +166,32 @@ def discipline_apply(request: DisciplineApplyRequest):
     if request.targetId == request.actorId:
         raise HTTPException(status_code=400, detail="본인에게 벌점을 부여할 수 없습니다.")
 
-    assessment = coby_check_discipline(reason, request.points)
+    # '하루'는 한국 시간(Asia/Seoul) 기준으로 계산한다.
+    today_key = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d")
+    daily_ref = db.collection("discipline_daily").document(f"{request.targetId}_{today_key}")
+    daily_snap = daily_ref.get()
+    daily_data = daily_snap.to_dict() if daily_snap.exists else {}
+    awarded_today = int(daily_data.get("points", 0) or 0)
+    remaining_today = max(0, 5 - awarded_today)
+
+    if remaining_today <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="하루 최대 5점입니다. (이미 부여한 점수-5)점만 적용됩니다. 오늘은 추가 적용할 수 있는 벌점이 없습니다."
+        )
+
+    # 신청 점수가 오늘 남은 한도를 초과하면 남은 점수까지만 적용한다.
+    apply_points = min(request.points, remaining_today)
+
+    assessment = coby_check_discipline(reason, apply_points)
     if not assessment["approved"]:
         return {
             "applied": False,
             "approved": False,
             "reason": assessment["reason"],
+            "points": 0,
         }
 
-    # '하루'는 한국 시간(Asia/Seoul) 기준으로 계산한다.
-    today_key = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d")
-    daily_ref = db.collection("discipline_daily").document(f"{request.targetId}_{today_key}")
     record_ref = db.collection("discipline_records").document()
     transaction = db.transaction()
 
@@ -184,35 +199,33 @@ def discipline_apply(request: DisciplineApplyRequest):
     def apply_transaction(txn):
         fresh_actor = actor_ref.get(transaction=txn)
         fresh_target = target_ref.get(transaction=txn)
-        daily_snap = daily_ref.get(transaction=txn)
+        fresh_daily = daily_ref.get(transaction=txn)
 
         if not fresh_actor.exists or fresh_actor.to_dict().get("role") != "committee_chair":
             raise ValueError("상벌관리위원회장 권한이 없습니다.")
         if not fresh_target.exists:
             raise ValueError("대상 사용자를 찾을 수 없습니다.")
 
-        daily_data = daily_snap.to_dict() if daily_snap.exists else {}
-        awarded_today = int(daily_data.get("points", 0) or 0)
-        remaining_today = max(0, 5 - awarded_today)
+        fresh_daily_data = fresh_daily.to_dict() if fresh_daily.exists else {}
+        fresh_awarded_today = int(fresh_daily_data.get("points", 0) or 0)
+        fresh_remaining = max(0, 5 - fresh_awarded_today)
 
-        # 한 학생(대상자)에게 하루 총 5점까지만 부여할 수 있다.
-        if awarded_today + request.points > 5:
-            raise ValueError(
-                f"오늘 이 학생에게 부여된 벌점은 {awarded_today}점입니다. "
-                f"하루 최대 5점까지만 가능하여 현재 추가 가능한 벌점은 {remaining_today}점입니다."
-            )
+        if fresh_remaining <= 0:
+            raise ValueError("하루 최대 5점입니다. (이미 부여한 점수-5)점만 적용됩니다. 오늘은 추가 적용할 수 있는 벌점이 없습니다.")
+
+        actual_points = min(request.points, fresh_remaining)
 
         txn.update(target_ref, {
-            "score": firestore.Increment(-request.points)
+            "score": firestore.Increment(-actual_points)
         })
 
         daily_payload = {
             "targetId": request.targetId,
             "date": today_key,
-            "points": awarded_today + request.points,
+            "points": fresh_awarded_today + actual_points,
             "updatedAt": firestore.SERVER_TIMESTAMP,
         }
-        if daily_snap.exists:
+        if fresh_daily.exists:
             txn.update(daily_ref, daily_payload)
         else:
             txn.set(daily_ref, daily_payload)
@@ -220,7 +233,8 @@ def discipline_apply(request: DisciplineApplyRequest):
         txn.set(record_ref, {
             "actorId": request.actorId,
             "targetId": request.targetId,
-            "points": -request.points,
+            "points": -actual_points,
+            "requestedPoints": request.points,
             "reason": reason,
             "cobyApproved": True,
             "cobyReason": assessment["reason"],
@@ -228,17 +242,26 @@ def discipline_apply(request: DisciplineApplyRequest):
             "createdAt": firestore.SERVER_TIMESTAMP,
         })
 
+        return actual_points
+
     try:
-        apply_transaction(transaction)
+        actual_points = apply_transaction(transaction)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
 
+    was_capped = actual_points < request.points
     return {
         "applied": True,
         "approved": True,
         "reason": assessment["reason"],
-        "points": request.points,
+        "points": actual_points,
+        "requestedPoints": request.points,
         "dailyLimit": 5,
+        "capped": was_capped,
+        "message": (
+            f"하루 최대 5점입니다. (이미 부여한 점수-5)점만 적용됩니다. {actual_points}점이 적용되었습니다."
+            if was_capped else f"{actual_points}점이 적용되었습니다."
+        ),
     }
 
 
