@@ -185,6 +185,15 @@
       background: var(--delete-btn-hover);
     }
 
+    .copy {
+      background: var(--primary-color);
+      color: #ffffff;
+    }
+
+    .copy:hover {
+      filter: brightness(0.92);
+    }
+
     #version {
       position: fixed;
       right: 15px;
@@ -221,6 +230,7 @@
 
   <!-- 버튼 -->
   <div class="actions" id="actions">
+    <button class="copy" onclick="copyMemo()">전체복사</button>
     <button class="edit" onclick="goEdit()">수정</button>
     <button class="delete" onclick="deleteMemo()">삭제</button>
   </div>
@@ -403,6 +413,39 @@ function checkPin() {
   document.getElementById("content").innerText = memoData.content || "";
 }
 
+async function copyMemo() {
+  const title = document.getElementById("title").innerText.trim();
+  const content = memoData?.content || "";
+  const text = content ? `${title}\n\n${content}` : title;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("메모 전체가 복사되었습니다.");
+  } catch (error) {
+    // 일부 브라우저/환경에서 Clipboard API가 막힌 경우를 위한 fallback
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+      const success = document.execCommand("copy");
+      if (success) {
+        alert("메모 전체가 복사되었습니다.");
+      } else {
+        alert("복사에 실패했습니다.");
+      }
+    } catch (fallbackError) {
+      alert("복사에 실패했습니다.");
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  }
+}
+
 async function deleteMemo() {
   if (isNotice(memoData.title)) {
     const password = prompt("관리자 마스터키 입력");
@@ -439,6 +482,7 @@ function goBack() {
 }
 
 window.checkPin = checkPin;
+window.copyMemo = copyMemo;
 window.deleteMemo = deleteMemo;
 window.goEdit = goEdit;
 window.goBack = goBack;
