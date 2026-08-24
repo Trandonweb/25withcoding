@@ -1,6 +1,8 @@
 import json
 import os
+from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -172,21 +174,49 @@ def discipline_apply(request: DisciplineApplyRequest):
             "reason": assessment["reason"],
         }
 
-    transaction = db.transaction()
+    # '하루'는 한국 시간(Asia/Seoul) 기준으로 계산한다.
+    today_key = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d")
+    daily_ref = db.collection("discipline_daily").document(f"{request.targetId}_{today_key}")
     record_ref = db.collection("discipline_records").document()
+    transaction = db.transaction()
 
     @firestore.transactional
     def apply_transaction(txn):
         fresh_actor = actor_ref.get(transaction=txn)
         fresh_target = target_ref.get(transaction=txn)
+        daily_snap = daily_ref.get(transaction=txn)
+
         if not fresh_actor.exists or fresh_actor.to_dict().get("role") != "committee_chair":
             raise ValueError("상벌관리위원회장 권한이 없습니다.")
         if not fresh_target.exists:
             raise ValueError("대상 사용자를 찾을 수 없습니다.")
 
+        daily_data = daily_snap.to_dict() if daily_snap.exists else {}
+        awarded_today = int(daily_data.get("points", 0) or 0)
+        remaining_today = max(0, 5 - awarded_today)
+
+        # 한 학생(대상자)에게 하루 총 5점까지만 부여할 수 있다.
+        if awarded_today + request.points > 5:
+            raise ValueError(
+                f"오늘 이 학생에게 부여된 벌점은 {awarded_today}점입니다. "
+                f"하루 최대 5점까지만 가능하여 현재 추가 가능한 벌점은 {remaining_today}점입니다."
+            )
+
         txn.update(target_ref, {
             "score": firestore.Increment(-request.points)
         })
+
+        daily_payload = {
+            "targetId": request.targetId,
+            "date": today_key,
+            "points": awarded_today + request.points,
+            "updatedAt": firestore.SERVER_TIMESTAMP,
+        }
+        if daily_snap.exists:
+            txn.update(daily_ref, daily_payload)
+        else:
+            txn.set(daily_ref, daily_payload)
+
         txn.set(record_ref, {
             "actorId": request.actorId,
             "targetId": request.targetId,
@@ -194,19 +224,21 @@ def discipline_apply(request: DisciplineApplyRequest):
             "reason": reason,
             "cobyApproved": True,
             "cobyReason": assessment["reason"],
+            "dateKey": today_key,
             "createdAt": firestore.SERVER_TIMESTAMP,
         })
 
     try:
         apply_transaction(transaction)
     except ValueError as error:
-        raise HTTPException(status_code=403, detail=str(error))
+        raise HTTPException(status_code=400, detail=str(error))
 
     return {
         "applied": True,
         "approved": True,
         "reason": assessment["reason"],
         "points": request.points,
+        "dailyLimit": 5,
     }
 
 
