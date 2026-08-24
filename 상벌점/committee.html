@@ -6,46 +6,25 @@
   <title>상벌관리위원회</title>
   <style>
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 24px;
-      font-family: "Malgun Gothic", sans-serif;
-      background: #f4f6f9;
-      color: #333;
-    }
-    .wrap { max-width: 760px; margin: 0 auto; }
+    body { margin:0; padding:24px; font-family:"Malgun Gothic",sans-serif; background:#f4f6f9; color:#333; }
+    .wrap { max-width:760px; margin:0 auto; }
     .top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
     h1 { margin:0; font-size:24px; }
-    .badge {
-      display:inline-block; padding:7px 12px; border-radius:10px;
-      background:#e8f5e9; color:#16803c; font-weight:700; font-size:13px;
-    }
-    .card {
-      background:#fff; border:1px solid #e7ebef; border-radius:20px;
-      padding:22px; margin-bottom:16px; box-shadow:0 3px 12px rgba(0,0,0,.04);
-    }
+    .badge { display:inline-block; padding:7px 12px; border-radius:10px; background:#e8f5e9; color:#16803c; font-weight:700; font-size:13px; }
+    .card { background:#fff; border:1px solid #e7ebef; border-radius:20px; padding:22px; margin-bottom:16px; box-shadow:0 3px 12px rgba(0,0,0,.04); }
     h2 { margin:0 0 14px; font-size:18px; }
     label { display:block; margin:12px 0 7px; font-weight:700; }
-    select, input, textarea {
-      width:100%; padding:12px 14px; border:1px solid #dfe5ea;
-      border-radius:12px; background:#f9fafb; font:inherit; outline:none;
-    }
+    select,input,textarea { width:100%; padding:12px 14px; border:1px solid #dfe5ea; border-radius:12px; background:#f9fafb; font:inherit; outline:none; }
     textarea { min-height:120px; resize:vertical; }
-    select:focus, input:focus, textarea:focus { border-color:#27ae60; background:#fff; }
+    select:focus,input:focus,textarea:focus { border-color:#27ae60; background:#fff; }
     .points { display:flex; gap:8px; }
-    .point {
-      flex:1; padding:12px 4px; border:1px solid #dfe5ea; border-radius:12px;
-      background:#fff; cursor:pointer; font-weight:700;
-    }
+    .point { flex:1; padding:12px 4px; border:1px solid #dfe5ea; border-radius:12px; background:#fff; cursor:pointer; font-weight:700; }
     .point.active { background:#27ae60; color:#fff; border-color:#27ae60; }
-    button {
-      border:0; border-radius:12px; padding:12px 18px; background:#27ae60;
-      color:#fff; font-weight:700; cursor:pointer;
-    }
+    button { border:0; border-radius:12px; padding:12px 18px; background:#27ae60; color:#fff; font-weight:700; cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; }
     .secondary { background:#667085; }
     .notice { padding:12px 14px; border-radius:12px; background:#f8fafc; line-height:1.55; font-size:14px; }
-    .result { margin-top:14px; padding:14px; border-radius:12px; display:none; line-height:1.55; }
+    .result { margin-top:14px; padding:14px; border-radius:12px; display:none; line-height:1.55; white-space:pre-line; }
     .result.ok { display:block; background:#eaf7ee; color:#176b37; }
     .result.no { display:block; background:#fff0f0; color:#a52a2a; }
     .hidden { display:none; }
@@ -55,11 +34,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <h1>상벌관리위원회</h1>
-    <span id="roleBadge" class="badge">확인 중...</span>
-  </div>
-
+  <div class="top"><h1>상벌관리위원회</h1><span id="roleBadge" class="badge">확인 중...</span></div>
   <div id="loading" class="card">사용자 정보를 확인하는 중...</div>
 
   <section id="assignCard" class="card hidden">
@@ -73,11 +48,9 @@
 
   <section id="applyCard" class="card hidden">
     <h2>벌점 부여</h2>
-    <div class="notice">상벌관리위원회장은 <b>벌점만</b> 부여할 수 있습니다. 한 번에 1~5점만 가능하며, 사유는 반드시 직접 입력해야 합니다.</div>
-
+    <div class="notice">상벌관리위원회장은 <b>벌점만</b> 부여할 수 있습니다. 한 번에 1~5점만 가능하며, 사유는 반드시 직접 입력해야 합니다.<br><b>하루 대상자별 최대 -5점</b>까지만 적용됩니다. 한도를 넘는 경우 남은 점수만 적용됩니다.</div>
     <label for="targetSelect">대상 사용자</label>
     <select id="targetSelect"></select>
-
     <label>벌점</label>
     <div class="points" id="pointButtons">
       <button type="button" class="point active" data-point="1">1점</button>
@@ -86,10 +59,8 @@
       <button type="button" class="point" data-point="4">4점</button>
       <button type="button" class="point" data-point="5">5점</button>
     </div>
-
     <label for="reason">벌점 사유</label>
     <textarea id="reason" maxlength="500" placeholder="실제로 발생한 행동과 상황을 구체적으로 입력하세요."></textarea>
-
     <div style="margin-top:14px" class="row">
       <button id="applyBtn">COBY 타당성 검사 후 적용</button>
       <button class="secondary" type="button" onclick="location.href='main.html'">상벌점으로 돌아가기</button>
@@ -102,152 +73,69 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-  authDomain: "points2026-f5e50.firebaseapp.com",
-  projectId: "points2026-f5e50"
-};
-
+const firebaseConfig = { apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20", authDomain:"points2026-f5e50.firebaseapp.com", projectId:"points2026-f5e50" };
 const db = getFirestore(initializeApp(firebaseConfig));
 const API = "https://two5withcoding.onrender.com";
 const myId = localStorage.getItem("userId");
-let myData = null;
 let selectedPoints = 1;
-let users = [];
+const $ = id => document.getElementById(id);
 
-const $ = (id) => document.getElementById(id);
-
-function showResult(el, ok, text) {
-  el.className = "result " + (ok ? "ok" : "no");
-  el.textContent = text;
-}
+function showResult(el, ok, text) { el.className="result "+(ok?"ok":"no"); el.textContent=text; }
+function escapeHtml(value) { return String(value).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
 
 async function loadUsers() {
-  const snap = await getDocs(collection(db, "users"));
-  users = [];
-  snap.forEach(d => users.push({ id:d.id, ...d.data() }));
-  users.sort((a,b) => Number(a.id) - Number(b.id));
-
-  const targets = users.filter(u => u.id !== myId);
-  $("targetSelect").innerHTML = targets.map(u =>
-    `<option value="${u.id}">${u.id} ${escapeHtml(u.name)} (${Number(u.score || 0)}점)</option>`
-  ).join("");
-
-  const candidates = users.filter(u => u.id !== myId && u.role !== "president");
-  $("chairSelect").innerHTML = candidates.map(u =>
-    `<option value="${u.id}">${u.id} ${escapeHtml(u.name)}${u.role === "committee_chair" ? " — 현재 위원장" : ""}</option>`
-  ).join("");
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]));
+  const snap=await getDocs(collection(db,"users"));
+  const users=[];
+  snap.forEach(d=>users.push({id:d.id,...d.data()}));
+  users.sort((a,b)=>Number(a.id)-Number(b.id));
+  const targets=users.filter(u=>u.id!==myId);
+  $("targetSelect").innerHTML=targets.map(u=>`<option value="${u.id}">${u.id} ${escapeHtml(u.name)} (${Number(u.score||0)}점)</option>`).join("");
+  const candidates=users.filter(u=>u.id!==myId&&u.role!=="president");
+  $("chairSelect").innerHTML=candidates.map(u=>`<option value="${u.id}">${u.id} ${escapeHtml(u.name)}${u.role==="committee_chair"?" — 현재 위원장":""}</option>`).join("");
 }
 
 async function init() {
-  if (!myId) {
-    location.href = "/signin/?redirect=/상벌점/committee.html";
-    return;
-  }
-
-  const snap = await getDoc(doc(db, "users", myId));
-  if (!snap.exists()) {
-    alert("사용자 정보를 찾을 수 없습니다.");
-    return;
-  }
-
-  myData = snap.data();
+  if(!myId){ location.href="/signin/?redirect=/상벌점/committee.html"; return; }
+  const snap=await getDoc(doc(db,"users",myId));
+  if(!snap.exists()){ alert("사용자 정보를 찾을 수 없습니다."); return; }
+  const data=snap.data();
   $("loading").classList.add("hidden");
-  $("roleBadge").textContent = myData.role === "president" ? "회장" : myData.role === "committee_chair" ? "상벌관리위원회장" : "권한 없음";
-
-  if (myData.role === "president") {
-    $("assignCard").classList.remove("hidden");
-    $("applyCard").classList.add("hidden");
-  } else if (myData.role === "committee_chair") {
-    $("applyCard").classList.remove("hidden");
-    $("assignCard").classList.add("hidden");
-  } else {
-    $("loading").textContent = "이 페이지에 접근할 권한이 없습니다.";
-    $("loading").classList.remove("hidden");
-  }
-
+  $("roleBadge").textContent=data.role==="president"?"회장":data.role==="committee_chair"?"상벌관리위원회장":"권한 없음";
+  if(data.role==="president") $("assignCard").classList.remove("hidden");
+  else if(data.role==="committee_chair") $("applyCard").classList.remove("hidden");
+  else { $("loading").textContent="이 페이지에 접근할 권한이 없습니다."; $("loading").classList.remove("hidden"); }
   await loadUsers();
 }
 
-for (const button of document.querySelectorAll(".point")) {
-  button.addEventListener("click", () => {
-    selectedPoints = Number(button.dataset.point);
-    document.querySelectorAll(".point").forEach(b => b.classList.remove("active"));
-    button.classList.add("active");
-  });
-}
+for(const button of document.querySelectorAll(".point")) button.addEventListener("click",()=>{ selectedPoints=Number(button.dataset.point); document.querySelectorAll(".point").forEach(b=>b.classList.remove("active")); button.classList.add("active"); });
 
-$("assignBtn").addEventListener("click", async () => {
-  const targetId = $("chairSelect").value;
-  const btn = $("assignBtn");
-  if (!targetId) return;
-  btn.disabled = true;
-  try {
-    const response = await fetch(API + "/committee/assign", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({actorId:myId, targetId})
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || "지정에 실패했습니다.");
-    showResult($("assignResult"), true, "상벌관리위원회장이 지정되었습니다.");
-    await loadUsers();
-  } catch (error) {
-    showResult($("assignResult"), false, error.message);
-  } finally {
-    btn.disabled = false;
-  }
+$("assignBtn").addEventListener("click",async()=>{
+  const targetId=$("chairSelect").value, btn=$("assignBtn"); if(!targetId)return; btn.disabled=true;
+  try{ const r=await fetch(API+"/committee/assign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({actorId:myId,targetId})}); const d=await r.json(); if(!r.ok)throw new Error(d.detail||"지정에 실패했습니다."); showResult($("assignResult"),true,"상벌관리위원회장이 지정되었습니다."); await loadUsers(); }
+  catch(e){showResult($("assignResult"),false,e.message);} finally{btn.disabled=false;}
 });
 
-$("applyBtn").addEventListener("click", async () => {
-  const targetId = $("targetSelect").value;
-  const reason = $("reason").value.trim();
-  const btn = $("applyBtn");
-
-  if (!targetId) {
-    showResult($("applyResult"), false, "벌점 대상을 선택해주세요.");
-    return;
-  }
-  if (!reason) {
-    showResult($("applyResult"), false, "벌점 사유를 입력해주세요.");
-    return;
-  }
-  if (reason.length < 2) {
-    showResult($("applyResult"), false, "벌점 사유를 조금 더 구체적으로 입력해주세요.");
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = "COBY가 타당성을 검사하는 중...";
-  try {
-    const response = await fetch(API + "/discipline/apply", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({actorId:myId, targetId, points:selectedPoints, reason})
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || "벌점 적용에 실패했습니다.");
-
-    if (!data.applied) {
-      showResult($("applyResult"), false, "COBY가 적용을 거부했습니다.\n판정: " + data.reason);
-      return;
-    }
-
-    showResult($("applyResult"), true, `${data.points}점 벌점이 적용되었습니다.\nCOBY 판정: ${data.reason}`);
-    $("reason").value = "";
+$("applyBtn").addEventListener("click",async()=>{
+  const targetId=$("targetSelect").value, reason=$("reason").value.trim(), btn=$("applyBtn");
+  if(!targetId)return showResult($("applyResult"),false,"벌점 대상을 선택해주세요.");
+  if(!reason)return showResult($("applyResult"),false,"벌점 사유를 입력해주세요.");
+  if(reason.length<2)return showResult($("applyResult"),false,"벌점 사유를 조금 더 구체적으로 입력해주세요.");
+  btn.disabled=true; btn.textContent="COBY가 타당성을 검사하는 중...";
+  try{
+    const response=await fetch(API+"/discipline/apply",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({actorId:myId,targetId,points:selectedPoints,reason})});
+    const data=await response.json(); if(!response.ok)throw new Error(data.detail||"벌점 적용에 실패했습니다.");
+    if(!data.applied){ showResult($("applyResult"),false,"COBY가 적용을 거부했습니다.\n판정: "+data.reason); return; }
+    const capped=Boolean(data.capped);
+    const appliedNegative=-Math.abs(Number(data.points||0));
+    const resultText=capped
+      ? `하루 최대 -5점 부여 가능합니다. ${appliedNegative}점만 적용되었습니다.\nCOBY 판정: ${data.reason}`
+      : `${appliedNegative}점이 적용되었습니다.\nCOBY 판정: ${data.reason}`;
+    showResult($("applyResult"),true,resultText);
+    $("reason").value="";
     await loadUsers();
-  } catch (error) {
-    showResult($("applyResult"), false, error.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "COBY 타당성 검사 후 적용";
-  }
+  }catch(e){showResult($("applyResult"),false,e.message);}
+  finally{btn.disabled=false;btn.textContent="COBY 타당성 검사 후 적용";}
 });
-
 init();
 </script>
 </body>
