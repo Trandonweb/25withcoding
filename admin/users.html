@@ -4,665 +4,95 @@
   <meta charset="UTF-8">
   <title>코딩과 함께라면_사용자_관리</title>
   <style>
-    :root {
-      --bg-color: #f4f6f9;
-      --card-bg: #ffffff;
-      --text-color: #333333;
-      --header-text: #2c3e50;
-      --card-sub-bg: #fdfdfe;
-      --border-color: #e1e8ed;
-      --border-sub-color: #edf2f7;
-      --input-bg: #f8fafc;
-      --input-focus-bg: #ffffff;
-      --primary-color: #27ae60;
-      --btn-bg: var(--primary-color);
-      --btn-hover: #219653;
-      --btn-text: #ffffff;
-      --badge-bg: #edf2f7;
-      --badge-text: #4a5568;
-    }
-
-    body.dark-mode {
-      --bg-color: #121212;
-      --card-bg: #1E1E1E;
-      --text-color: #FFFFFF;
-      --header-text: #FFFFFF;
-      --card-sub-bg: #2A2A2A;
-      --border-color: #333333;
-      --border-sub-color: #333333;
-      --input-bg: #2A2A2A;
-      --input-focus-bg: #1E1E1E;
-      --btn-bg: var(--primary-color);
-      --btn-hover: color-mix(in srgb, var(--primary-color) 80%, black);
-      --btn-text: #FFFFFF;
-      --badge-bg: #333333;
-      --badge-text: #E0E0E0;
-    }
-
-    body {
-      font-family: 'Malgun Gothic', sans-serif;
-      padding: 30px;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      transition: background 0.2s, color 0.2s;
-    }
-
-    .top-bar {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    h2 {
-      margin: 0;
-      color: var(--header-text);
-    }
-
-    .card {
-      background: var(--card-bg);
-      color: var(--text-color);
-      padding: 25px;
-      border-radius: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-      border: 1px solid var(--border-color);
-      transition: background 0.2s, border 0.2s;
-    }
-
-    h3 {
-      margin-top: 0;
-      margin-bottom: 15px;
-      color: var(--header-text);
-      font-size: 1.1rem;
-    }
-
-    input, select {
-      padding: 12px 16px;
-      border-radius: 16px;
-      border: 1px solid var(--border-color);
-      margin: 5px;
-      background: var(--input-bg);
-      color: var(--text-color);
-      font-size: 14px;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    input:focus, select:focus {
-      border-color: var(--primary-color);
-      background: var(--input-focus-bg);
-    }
-
-    button {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 16px;
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      font-weight: bold;
-      cursor: pointer;
-      margin: 5px;
-      transition: filter 0.2s, background 0.2s;
-    }
-
-    button:hover {
-      filter: brightness(0.9);
-    }
-
-    /* 위험한 액션 (삭제 등) 버튼 스타일 구분 */
-    button.danger {
-      background: #e74c3c !important;
-      color: white !important;
-    }
-
-    button.danger:hover {
-      filter: brightness(0.9);
-    }
-
-    /* 사용자 목록 한 줄 정렬 레이아웃 */
-    .user {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      border-radius: 16px;
-      background: var(--card-sub-bg);
-      border: 1px solid var(--border-sub-color);
-      margin-top: 10px;
-      transition: transform 0.1s, background 0.2s;
-    }
-
-    .user:hover {
-      background: color-mix(in srgb, var(--primary-color) 8%, var(--card-sub-bg));
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      font-size: 15px;
-    }
-
-    .user-info input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-      accent-color: var(--primary-color);
-    }
-
-    .role-badge {
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: bold;
-      background: var(--badge-bg);
-      color: var(--badge-text);
-    }
-
-    .role-president {
-      background: #fef3c7;
-      color: #d97706;
-    }
-
-    body.dark-mode .role-president {
-      background: #451a03;
-      color: #ffb703;
-    }
-
-    .role-vice {
-      background: #e0e7ff;
-      color: #4f46e5;
-    }
-
-    body.dark-mode .role-vice {
-      background: #1e1b4b;
-      color: #818cf8;
-    }
-
-    .action-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    :root { --bg-color:#f4f6f9; --card-bg:#ffffff; --text-color:#333333; --header-text:#2c3e50; --card-sub-bg:#fdfdfe; --border-color:#e1e8ed; --border-sub-color:#edf2f7; --input-bg:#f8fafc; --input-focus-bg:#ffffff; --primary-color:#27ae60; --btn-bg:var(--primary-color); --btn-hover:#219653; --btn-text:#ffffff; --badge-bg:#edf2f7; --badge-text:#4a5568; }
+    body.dark-mode { --bg-color:#121212; --card-bg:#1E1E1E; --text-color:#FFFFFF; --header-text:#FFFFFF; --card-sub-bg:#2A2A2A; --border-color:#333333; --border-sub-color:#333333; --input-bg:#2A2A2A; --input-focus-bg:#1E1E1E; --btn-bg:var(--primary-color); --btn-hover:color-mix(in srgb,var(--primary-color) 80%,black); --btn-text:#FFFFFF; --badge-bg:#333333; --badge-text:#E0E0E0; }
+    body { font-family:'Malgun Gothic',sans-serif; padding:30px; background-color:var(--bg-color); color:var(--text-color); transition:background .2s,color .2s; }
+    .top-bar { display:flex; align-items:center; gap:15px; margin-bottom:20px; }
+    h2 { margin:0; color:var(--header-text); }
+    .card { background:var(--card-bg); color:var(--text-color); padding:25px; border-radius:24px; margin-bottom:20px; box-shadow:0 4px 15px rgba(0,0,0,.05); border:1px solid var(--border-color); transition:background .2s,border .2s; }
+    h3 { margin-top:0; margin-bottom:15px; color:var(--header-text); font-size:1.1rem; }
+    input,select { padding:12px 16px; border-radius:16px; border:1px solid var(--border-color); margin:5px; background:var(--input-bg); color:var(--text-color); font-size:14px; outline:none; transition:all .2s; }
+    input:focus,select:focus { border-color:var(--primary-color); background:var(--input-focus-bg); }
+    button { padding:12px 20px; border:none; border-radius:16px; background:var(--btn-bg); color:var(--btn-text); font-weight:bold; cursor:pointer; margin:5px; transition:filter .2s,background .2s; }
+    button:hover { filter:brightness(.9); }
+    button.danger { background:#e74c3c !important; color:white !important; }
+    button.danger:hover { filter:brightness(.9); }
+    .user { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-radius:16px; background:var(--card-sub-bg); border:1px solid var(--border-sub-color); margin-top:10px; transition:transform .1s,background .2s; }
+    .user:hover { background:color-mix(in srgb,var(--primary-color) 8%,var(--card-sub-bg)); }
+    .user-info { display:flex; align-items:center; gap:20px; font-size:15px; }
+    .user-info input[type="checkbox"] { width:18px; height:18px; cursor:pointer; accent-color:var(--primary-color); }
+    .role-badge { padding:6px 12px; border-radius:10px; font-size:13px; font-weight:bold; background:var(--badge-bg); color:var(--badge-text); }
+    .role-president { background:#fef3c7; color:#d97706; }
+    body.dark-mode .role-president { background:#451a03; color:#ffb703; }
+    .role-vice { background:#e0e7ff; color:#4f46e5; }
+    body.dark-mode .role-vice { background:#1e1b4b; color:#818cf8; }
+    .role-committee { background:#d1fae5; color:#047857; }
+    body.dark-mode .role-committee { background:#064e3b; color:#6ee7b7; }
+    .action-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   </style>
 </head>
-
 <body>
-
-<div class="top-bar">
-  <button onclick="goBack()">← 뒤로가기</button>
-  <h2>사용자 관리</h2>
-</div>
-
+<div class="top-bar"><button onclick="goBack()">← 뒤로가기</button><h2>사용자 관리</h2></div>
 <div class="card">
   <h3>학생 추가</h3>
   <div class="action-row">
     <input id="newId" placeholder="학번 (예: 10101)">
     <input id="newName" placeholder="이름">
-    <select id="newRole">
-      <option value="student">학생</option>
-    </select>
+    <select id="newRole"><option value="student">학생</option></select>
     <button onclick="createUser()">추가하기</button>
   </div>
 </div>
-
 <div class="card">
   <h3>사용자 검색</h3>
-  <input id="searchInput" placeholder="학번 또는 이름 검색" oninput="filterUsers()" style="width: 100%; box-sizing: border-box;">
+  <input id="searchInput" placeholder="학번 또는 이름 검색" oninput="filterUsers()" style="width:100%;box-sizing:border-box;">
 </div>
-
 <div class="card">
   <h3 id="selectedCountText">선택된 사용자 : 0명</h3>
-  <div id="selectedUserList" style="margin-bottom: 15px; color: var(--text-color); opacity: 0.8; max-height: 150px; overflow-y: auto; font-size: 14px; line-height: 1.6;">
-    선택된 사용자가 없습니다.
-  </div>
+  <div id="selectedUserList" style="margin-bottom:15px;color:var(--text-color);opacity:.8;max-height:150px;overflow-y:auto;font-size:14px;line-height:1.6;">선택된 사용자가 없습니다.</div>
   <div class="action-row">
-    <select id="batchRoleSelect">
-      <option value="student">학생</option>
-    </select>
+    <select id="batchRoleSelect"><option value="student">학생</option></select>
     <button onclick="batchChangeRole()">권한 변경</button>
     <button onclick="batchResetPassword()">비밀번호 초기화</button>
     <button class="danger" onclick="batchDeleteUsers()">선택 삭제</button>
   </div>
 </div>
-
-<div class="card">
-  <h3>사용자 목록</h3>
-  <div id="userList">로딩중...</div>
-</div>
-
+<div class="card"><h3>사용자 목록</h3><div id="userList">로딩중...</div></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-    authDomain: "points2026-f5e50.firebaseapp.com",
-    projectId: "points2026-f5e50"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// 테마 동기화 로직
-const SETTINGS_KEY = "coding_with_ramen_settings";
-
-function applyStoredSettings() {
-    const saved = localStorage.getItem(SETTINGS_KEY);
-    if (saved) {
-        try {
-            const settings = JSON.parse(saved);
-            if (settings.darkMode) {
-                document.body.classList.add("dark-mode");
-            } else {
-                document.body.classList.remove("dark-mode");
-            }
-            if (settings.primaryColor) {
-                document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
-            }
-        } catch (e) {
-            console.error("설정 로드 실패", e);
-        }
-    }
-}
-
-// 페이지 로드 즉시 테마 적용 (깜빡임 방지)
+import { getFirestore,collection,getDocs,doc,getDoc,setDoc,updateDoc,deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
+const app=initializeApp(firebaseConfig); const db=getFirestore(app);
+const SETTINGS_KEY="coding_with_ramen_settings";
+function applyStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{const settings=JSON.parse(saved);document.body.classList.toggle("dark-mode",!!settings.darkMode);if(settings.primaryColor)document.documentElement.style.setProperty('--primary-color',settings.primaryColor);}catch(e){console.error("설정 로드 실패",e);}}}
 applyStoredSettings();
-
-const myId = localStorage.getItem("userId");
-
-if (!myId) {
-    alert("로그인이 필요합니다.");
-    location.href = "/index.html";
-    throw new Error("로그인 필요");
+const myId=localStorage.getItem("userId");
+if(!myId){alert("로그인이 필요합니다.");location.href="/index.html";throw new Error("로그인 필요");}
+const mySnap=await getDoc(doc(db,"users",myId));
+if(!mySnap.exists()){alert("사용자 없음");location.href="/index.html";throw new Error("사용자 없음");}
+const myData=mySnap.data();
+if(myData.role==="student"){alert("접근 권한이 없습니다.");location.replace("/admin");throw new Error("권한 없음");}
+let allUsers=[]; let selectedUsers=[];
+if(myData.role==="president"){
+ document.getElementById("newRole").innerHTML=`<option value="student">학생</option><option value="vice">부회장</option><option value="president">회장</option><option value="committee_chair">상벌관리위원회장</option>`;
+ document.getElementById("batchRoleSelect").innerHTML=`<option value="student">학생</option><option value="vice">부회장</option><option value="president">회장</option><option value="committee_chair">상벌관리위원회장</option>`;
 }
-
-const mySnap = await getDoc(doc(db, "users", myId));
-
-if (!mySnap.exists()) {
-    alert("사용자 없음");
-    location.href = "/index.html";
-    throw new Error("사용자 없음");
-}
-
-const myData = mySnap.data();
-
-if (myData.role === "student") {
-    alert("접근 권한이 없습니다.");
-    location.replace("/admin");
-    throw new Error("권한 없음");
-}
-
-let allUsers = [];
-let selectedUsers = [];
-
-if (myData.role === "president") {
-    document.getElementById("newRole").innerHTML = `
-        <option value="student">학생</option>
-        <option value="vice">부회장</option>
-        <option value="president">회장</option>
-    `;
-    document.getElementById("batchRoleSelect").innerHTML = `
-        <option value="student">학생</option>
-        <option value="vice">부회장</option>
-        <option value="president">회장</option>
-    `;
-}
-
-function roleToBadge(role) {
-    if (role === "president") {
-        return `<span class="role-badge role-president">회장</span>`;
-    }
-    if (role === "vice") {
-        return `<span class="role-badge role-vice">부회장</span>`;
-    }
-    return `<span class="role-badge">학생</span>`;
-}
-
-function roleToText(role) {
-    if (role === "president") return "회장";
-    if (role === "vice") return "부회장";
-    return "학생";
-}
-
-window.goBack = () => {
-    location.href = "/admin";
-};
-
-window.createUser = async () => {
-    const id = document.getElementById("newId").value.trim();
-    const name = document.getElementById("newName").value.trim();
-    const role = document.getElementById("newRole").value;
-
-    if (!id || !name) {
-        alert("입력해주세요.");
-        return;
-    }
-
-    if (id.length !== 5) {
-        alert("학번은 5자리입니다.");
-        return;
-    }
-
-    if (isNaN(id)) {
-        alert("숫자만 입력해주세요.");
-        return;
-    }
-
-    const gradeNum = Number(id[0]);
-    const classNum = Number(id.slice(1, 3));
-    const numberNum = Number(id.slice(3, 5));
-
-    if (gradeNum < 1 || gradeNum > 3 || classNum < 1 || classNum > 9 || numberNum < 1 || numberNum > 99) {
-        alert("올바른 학번이 아닙니다.");
-        return;
-    }
-
-    if (myData.role === "vice") {
-        if (role === "vice" || role === "president") {
-            alert("권한이 없습니다.");
-            return;
-        }
-    }
-
-    try {
-        const ref = doc(db, "users", id);
-        const snap = await getDoc(ref);
-
-        if (snap.exists()) {
-            alert("이미 존재하는 학번");
-            return;
-        }
-
-        const grade = id.charAt(0);
-
-        await setDoc(ref, {
-            grade: grade,
-            name: name,
-            password: "qwer1234!",
-            role: role,
-            score: 0
-        });
-
-        alert("생성 완료");
-        location.reload();
-    } catch (error) {
-        alert("생성 중 오류가 발생했습니다.");
-    }
-};
-
-async function loadUsers() {
-    const userListDiv = document.getElementById("userList");
-    userListDiv.innerHTML = "로딩중...";
-
-    try {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        allUsers = [];
-
-        querySnapshot.forEach((docu) => {
-            allUsers.push({
-                id: docu.id,
-                ...docu.data()
-            });
-        });
-
-        allUsers.sort((a, b) => Number(a.id) - Number(b.id));
-        renderUserList(allUsers);
-    } catch (error) {
-        userListDiv.innerHTML = "데이터를 불러오는 중 오류가 발생했습니다.";
-    }
-}
-
-function renderUserList(users) {
-    const userListDiv = document.getElementById("userList");
-    userListDiv.innerHTML = "";
-
-    for (const user of users) {
-        const div = document.createElement("div");
-        div.className = "user";
-
-        let selectable = true;
-        let statusText = "";
-
-        if (user.id === myId) {
-            selectable = false;
-            statusText = "(본인 계정)";
-        } else if (myData.role === "vice") {
-            if (user.role === "vice" || user.role === "president") {
-                selectable = false;
-                statusText = roleToText(user.role);
-            }
-        }
-
-        let leftHTML = "";
-        if (selectable) {
-            const isChecked = selectedUsers.includes(user.id) ? "checked" : "";
-            leftHTML = `<input type="checkbox" value="${user.id}" onchange="toggleSelectUser('${user.id}')" ${isChecked}>`;
-        } else {
-            leftHTML = `<span style="font-size: 13px; opacity: 0.6; font-weight: bold;">${statusText}</span>`;
-        }
-
-        let roleControlHTML = roleToBadge(user.role);
-        if (myData.role === "president" && user.id !== myId) {
-            roleControlHTML = `
-                <select onchange="changeSingleRole('${user.id}', this.value)" style="padding: 6px 10px; font-size: 13px; border-radius: 10px; margin: 0;">
-                    <option value="student" ${user.role === "student" ? "selected" : ""}>학생</option>
-                    <option value="vice" ${user.role === "vice" ? "selected" : ""}>부회장</option>
-                    <option value="president" ${user.role === "president" ? "selected" : ""}>회장</option>
-                </select>
-            `;
-        }
-
-        div.innerHTML = `
-            <div class="user-info">
-                ${leftHTML}
-                <b>${user.id}</b>
-                <span>${user.name}</span>
-            </div>
-            <div>
-                ${roleControlHTML}
-            </div>
-        `;
-
-        userListDiv.appendChild(div);
-    }
-}
-
-window.changeSingleRole = async (targetId, newRole) => {
-    if (targetId === myId) {
-        alert("본인의 권한은 변경할 수 없습니다.");
-        loadUsers();
-        return;
-    }
-
-    try {
-        await updateDoc(doc(db, "users", targetId), { role: newRole });
-        alert("권한이 변경되었습니다.");
-        loadUsers();
-    } catch (error) {
-        alert("권한 변경 중 오류가 발생했습니다.");
-        loadUsers();
-    }
-};
-
-window.filterUsers = () => {
-    const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
-    if (!keyword) {
-        renderUserList(allUsers);
-        return;
-    }
-
-    const filtered = [];
-    for (const user of allUsers) {
-        if (user.id.toLowerCase().includes(keyword) || user.name.toLowerCase().includes(keyword)) {
-            filtered.push(user);
-        }
-    }
-
-    renderUserList(filtered);
-};
-
-window.toggleSelectUser = (id) => {
-    const index = selectedUsers.indexOf(id);
-    if (index > -1) {
-        selectedUsers.splice(index, 1);
-    } else {
-        if (!selectedUsers.includes(id)) {
-            selectedUsers.push(id);
-        }
-    }
-    updateSelectedUI();
-};
-
-function updateSelectedUI() {
-    const countText = document.getElementById("selectedCountText");
-    const selectedListDiv = document.getElementById("selectedUserList");
-
-    countText.innerText = `선택된 사용자 : ${selectedUsers.length}명`;
-
-    if (selectedUsers.length === 0) {
-        selectedListDiv.innerText = "선택된 사용자가 없습니다.";
-        return;
-    }
-
-    let textArray = [];
-    for (const id of selectedUsers) {
-        for (const user of allUsers) {
-            if (user.id === id) {
-                textArray.push(`${user.id} ${user.name}`);
-            }
-        }
-    }
-
-    selectedListDiv.innerHTML = textArray.join(" | ");
-}
-
-window.batchChangeRole = async () => {
-    if (selectedUsers.length === 0) {
-        alert("선택된 사용자가 없습니다.");
-        return;
-    }
-
-    for (const id of selectedUsers) {
-        if (id === myId) {
-            alert("본인의 권한은 변경할 수 없습니다.");
-            return;
-        }
-    }
-
-    const newRole = document.getElementById("batchRoleSelect").value;
-
-    if (myData.role === "vice") {
-        if (newRole === "vice" || newRole === "president") {
-            alert("권한이 없습니다.");
-            return;
-        }
-    }
-
-    let namesArray = [];
-    for (const id of selectedUsers) {
-        for (const user of allUsers) {
-            if (user.id === id) {
-                namesArray.push(`${user.id} ${user.name}`);
-            }
-        }
-    }
-
-    const confirmMessage = `${selectedUsers.length}명의 권한을 변경하시겠습니까?\n\n` + namesArray.join("\n");
-
-    if (!confirm(confirmMessage)) return;
-
-    try {
-        for (const id of selectedUsers) {
-            const targetUser = allUsers.find(user => user.id === id);
-            if (targetUser && targetUser.role === newRole) continue;
-
-            await updateDoc(doc(db, "users", id), { role: newRole });
-        }
-
-        alert("권한 변경 완료");
-        selectedUsers = [];
-        location.reload();
-    } catch (error) {
-        alert("권한 변경 중 오류가 발생했습니다.");
-    }
-};
-
-window.batchResetPassword = async () => {
-    if (selectedUsers.length === 0) {
-        alert("선택된 사용자 목록이 없습니다.");
-        return;
-    }
-
-    let namesArray = [];
-    for (const id of selectedUsers) {
-        for (const user of allUsers) {
-            if (user.id === id) {
-                namesArray.push(`${user.id} ${user.name}`);
-            }
-        }
-    }
-
-    const confirmMessage = `${selectedUsers.length}명의 비밀번호를 초기화하시겠습니까?\n\n` + namesArray.join("\n");
-
-    if (!confirm(confirmMessage)) return;
-
-    try {
-        for (const id of selectedUsers) {
-            await updateDoc(doc(db, "users", id), { password: "qwer1234!" });
-        }
-
-        alert("비밀번호 초기화 완료");
-        selectedUsers = [];
-        location.reload();
-    } catch (error) {
-        alert("비밀번호 초기화 중 오류가 발생했습니다.");
-    }
-};
-
-window.batchDeleteUsers = async () => {
-    if (selectedUsers.length === 0) {
-        alert("선택된 사용자가 없습니다.");
-        return;
-    }
-
-    for (const id of selectedUsers) {
-        if (id === myId) {
-            alert("본인의 계정은 삭제할 수 없습니다.");
-            return;
-        }
-    }
-
-    let namesArray = [];
-    for (const id of selectedUsers) {
-        for (const user of allUsers) {
-            if (user.id === id) {
-                namesArray.push(`${user.id} ${user.name}`);
-            }
-        }
-    }
-
-    const confirmMessage = `${selectedUsers.length}명을 삭제하시겠습니까?\n\n` + namesArray.join("\n");
-
-    if (!confirm(confirmMessage)) return;
-
-    try {
-        for (const id of selectedUsers) {
-            await deleteDoc(doc(db, "users", id));
-        }
-
-        alert("삭제 완료");
-        selectedUsers = [];
-        location.reload();
-    } catch (error) {
-        alert("삭제 중 오류가 발생했습니다.");
-    }
-};
-
+function roleToBadge(role){if(role==="president")return `<span class="role-badge role-president">회장</span>`;if(role==="vice")return `<span class="role-badge role-vice">부회장</span>`;if(role==="committee_chair")return `<span class="role-badge role-committee">상벌관리위원회장</span>`;return `<span class="role-badge">학생</span>`;}
+function roleToText(role){if(role==="president")return "회장";if(role==="vice")return "부회장";if(role==="committee_chair")return "상벌관리위원회장";return "학생";}
+window.goBack=()=>{location.href="/admin";};
+window.createUser=async()=>{const id=document.getElementById("newId").value.trim(),name=document.getElementById("newName").value.trim(),role=document.getElementById("newRole").value;if(!id||!name){alert("입력해주세요.");return;}if(id.length!==5){alert("학번은 5자리입니다.");return;}if(isNaN(id)){alert("숫자만 입력해주세요.");return;}const gradeNum=Number(id[0]),classNum=Number(id.slice(1,3)),numberNum=Number(id.slice(3,5));if(gradeNum<1||gradeNum>3||classNum<1||classNum>9||numberNum<1||numberNum>99){alert("올바른 학번이 아닙니다.");return;}if(myData.role==="vice"&&(role==="vice"||role==="president"||role==="committee_chair")){alert("권한이 없습니다.");return;}try{const ref=doc(db,"users",id),snap=await getDoc(ref);if(snap.exists()){alert("이미 존재하는 학번");return;}await setDoc(ref,{grade:id.charAt(0),name,password:"qwer1234!",role,score:0});alert("생성 완료");location.reload();}catch(error){alert("생성 중 오류가 발생했습니다.");}};
+async function loadUsers(){const userListDiv=document.getElementById("userList");userListDiv.innerHTML="로딩중...";try{const querySnapshot=await getDocs(collection(db,"users"));allUsers=[];querySnapshot.forEach(d=>allUsers.push({id:d.id,...d.data()}));allUsers.sort((a,b)=>Number(a.id)-Number(b.id));renderUserList(allUsers);}catch(error){userListDiv.innerHTML="데이터를 불러오는 중 오류가 발생했습니다.";}}
+function renderUserList(users){const userListDiv=document.getElementById("userList");userListDiv.innerHTML="";for(const user of users){const div=document.createElement("div");div.className="user";let selectable=true,statusText="";if(user.id===myId){selectable=false;statusText="(본인 계정)";}else if(myData.role==="vice"){if(user.role==="vice"||user.role==="president"||user.role==="committee_chair"){selectable=false;statusText=roleToText(user.role);}}
+let leftHTML=selectable?`<input type="checkbox" value="${user.id}" onchange="toggleSelectUser('${user.id}')" ${selectedUsers.includes(user.id)?"checked":""}>`:`<span style="font-size:13px;opacity:.6;font-weight:bold;">${statusText}</span>`;
+let roleControlHTML=roleToBadge(user.role);if(myData.role==="president"&&user.id!==myId){roleControlHTML=`<select onchange="changeSingleRole('${user.id}',this.value)" style="padding:6px 10px;font-size:13px;border-radius:10px;margin:0;"><option value="student" ${user.role==="student"?"selected":""}>학생</option><option value="vice" ${user.role==="vice"?"selected":""}>부회장</option><option value="president" ${user.role==="president"?"selected":""}>회장</option><option value="committee_chair" ${user.role==="committee_chair"?"selected":""}>상벌관리위원회장</option></select>`;}
+div.innerHTML=`<div class="user-info">${leftHTML}<b>${user.id}</b><span>${user.name}</span></div><div>${roleControlHTML}</div>`;userListDiv.appendChild(div);}}
+window.changeSingleRole=async(targetId,newRole)=>{if(targetId===myId){alert("본인의 권한은 변경할 수 없습니다.");loadUsers();return;}try{if(newRole==="committee_chair"){for(const user of allUsers){if(user.id!==targetId&&user.role==="committee_chair")await updateDoc(doc(db,"users",user.id),{role:"student"});}}await updateDoc(doc(db,"users",targetId),{role:newRole});alert("권한이 변경되었습니다.");loadUsers();}catch(error){alert("권한 변경 중 오류가 발생했습니다.");loadUsers();}};
+window.filterUsers=()=>{const keyword=document.getElementById("searchInput").value.trim().toLowerCase();if(!keyword){renderUserList(allUsers);return;}renderUserList(allUsers.filter(user=>user.id.toLowerCase().includes(keyword)||String(user.name||"").toLowerCase().includes(keyword)));};
+window.toggleSelectUser=(id)=>{const index=selectedUsers.indexOf(id);if(index>-1)selectedUsers.splice(index,1);else if(!selectedUsers.includes(id))selectedUsers.push(id);updateSelectedUI();};
+function updateSelectedUI(){const countText=document.getElementById("selectedCountText"),selectedListDiv=document.getElementById("selectedUserList");countText.innerText=`선택된 사용자 : ${selectedUsers.length}명`;if(selectedUsers.length===0){selectedListDiv.innerText="선택된 사용자가 없습니다.";return;}selectedListDiv.innerHTML=selectedUsers.map(id=>{const u=allUsers.find(x=>x.id===id);return u?`${u.id} ${u.name}`:"";}).filter(Boolean).join(" | ");}
+window.batchChangeRole=async()=>{if(selectedUsers.length===0){alert("선택된 사용자가 없습니다.");return;}if(selectedUsers.includes(myId)){alert("본인의 권한은 변경할 수 없습니다.");return;}const newRole=document.getElementById("batchRoleSelect").value;if(myData.role==="vice"&&(newRole==="vice"||newRole==="president"||newRole==="committee_chair")){alert("권한이 없습니다.");return;}const namesArray=selectedUsers.map(id=>{const u=allUsers.find(x=>x.id===id);return u?`${u.id} ${u.name}`:"";}).filter(Boolean);if(!confirm(`${selectedUsers.length}명의 권한을 변경하시겠습니까?\n\n${namesArray.join("\n")}`))return;try{if(newRole==="committee_chair"){for(const user of allUsers){if(user.id!==selectedUsers[0]&&user.role==="committee_chair")await updateDoc(doc(db,"users",user.id),{role:"student"});}}for(const id of selectedUsers){const targetUser=allUsers.find(user=>user.id===id);if(targetUser&&targetUser.role===newRole)continue;await updateDoc(doc(db,"users",id),{role:newRole});}alert("권한 변경 완료");selectedUsers=[];location.reload();}catch(error){alert("권한 변경 중 오류가 발생했습니다.");}};
+window.batchResetPassword=async()=>{if(selectedUsers.length===0){alert("선택된 사용자 목록이 없습니다.");return;}const namesArray=selectedUsers.map(id=>{const u=allUsers.find(x=>x.id===id);return u?`${u.id} ${u.name}`:"";}).filter(Boolean);if(!confirm(`${selectedUsers.length}명의 비밀번호를 초기화하시겠습니까?\n\n${namesArray.join("\n")}`))return;try{for(const id of selectedUsers)await updateDoc(doc(db,"users",id),{password:"qwer1234!"});alert("비밀번호 초기화 완료");selectedUsers=[];location.reload();}catch(error){alert("비밀번호 초기화 중 오류가 발생했습니다.");}};
+window.batchDeleteUsers=async()=>{if(selectedUsers.length===0){alert("선택된 사용자가 없습니다.");return;}if(selectedUsers.includes(myId)){alert("본인의 계정은 삭제할 수 없습니다.");return;}const namesArray=selectedUsers.map(id=>{const u=allUsers.find(x=>x.id===id);return u?`${u.id} ${u.name}`:"";}).filter(Boolean);if(!confirm(`${selectedUsers.length}명을 삭제하시겠습니까?\n\n${namesArray.join("\n")}`))return;try{for(const id of selectedUsers)await deleteDoc(doc(db,"users",id));alert("삭제 완료");selectedUsers=[];location.reload();}catch(error){alert("삭제 중 오류가 발생했습니다.");}};
 loadUsers();
 </script>
-
 </body>
 </html>
