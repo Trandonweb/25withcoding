@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>RACING | 2026 Festival</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07110c;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+body{display:flex;align-items:center;justify-content:center}
+#game{position:relative;width:100vw;height:100vh;max-width:1100px;max-height:760px;overflow:hidden;background:#07110c}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;top:18px;left:18px;right:18px;display:flex;gap:10px;justify-content:space-between;pointer-events:none;z-index:5}
+.panel{min-width:105px;padding:10px 14px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:rgba(4,12,8,.58);backdrop-filter:blur(8px);box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.label{font-size:11px;opacity:.6;letter-spacing:.12em}.value{font-size:22px;font-weight:800;line-height:1.15;margin-top:2px}
+#lapPanel{min-width:120px;text-align:right}
+.overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at center,rgba(0,0,0,.18),rgba(0,0,0,.66));transition:opacity .25s}
+.overlay.hidden{opacity:0;pointer-events:none}
+.card{width:min(460px,92vw);padding:32px 28px;border:1px solid rgba(255,255,255,.17);border-radius:26px;background:rgba(5,15,10,.84);backdrop-filter:blur(14px);text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.45)}
+.badge{display:inline-block;padding:6px 11px;border-radius:99px;background:#1ea857;color:#fff;font-weight:800;font-size:12px;letter-spacing:.08em}
+h1{font-size:clamp(42px,9vw,72px);line-height:.9;margin:18px 0 12px;letter-spacing:-.06em} .subtitle{opacity:.7;margin:0 0 22px}
+button{border:0;border-radius:14px;padding:14px 22px;background:#1ea857;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 10px 30px rgba(30,168,87,.25)}
+button:active{transform:scale(.97)}
+.help{margin-top:18px;font-size:13px;opacity:.58;line-height:1.7}
+#result{font-size:18px;font-weight:700;margin:10px 0 20px}.big{font-size:42px;font-weight:900;margin:5px 0}
+.controls{position:absolute;bottom:18px;left:18px;right:18px;z-index:7;display:flex;justify-content:space-between;pointer-events:none}
+.controlGroup{display:flex;gap:12px;pointer-events:auto}.ctrl{width:66px;height:66px;border:1px solid rgba(255,255,255,.2);border-radius:20px;background:rgba(4,12,8,.62);color:white;font-size:26px;font-weight:900;backdrop-filter:blur(8px);box-shadow:0 8px 25px rgba(0,0,0,.25);user-select:none}
+@media(min-width:700px){.controls{opacity:.72}.ctrl{width:58px;height:58px}}
+@media(max-height:560px){.hud{top:10px}.panel{padding:7px 10px}.value{font-size:17px}.controls{bottom:10px}.ctrl{width:54px;height:54px}}
+</style>
+</head>
+<body>
+<div id="game">
+<canvas id="canvas"></canvas>
+<div class="hud">
+  <div class="panel"><div class="label">SCORE</div><div class="value" id="score">0</div></div>
+  <div class="panel"><div class="label">SPEED</div><div class="value"><span id="speed">0</span> KM/H</div></div>
+  <div class="panel" id="lapPanel"><div class="label">DISTANCE</div><div class="value"><span id="distance">0.0</span> KM</div></div>
+</div>
+<div class="controls">
+  <div class="controlGroup"><button class="ctrl" id="left" aria-label="왼쪽">◀</button><button class="ctrl" id="right" aria-label="오른쪽">▶</button></div>
+  <div class="controlGroup"><button class="ctrl" id="boost" aria-label="부스터">⚡</button></div>
+</div>
+<div class="overlay" id="startOverlay">
+ <div class="card"><span class="badge">2026 FESTIVAL</span><h1>RACING</h1><p class="subtitle">피하고, 달리고, 기록을 세워라.</p><button id="startBtn">RACE START</button><div class="help">PC: ← → / A D 로 이동 · SPACE 로 부스터<br>모바일: 아래 버튼으로 조작</div></div>
+</div>
+<div class="overlay hidden" id="gameOverOverlay">
+ <div class="card"><span class="badge">RACE OVER</span><h1>FINISH</h1><div id="result"></div><button id="restartBtn">RESTART</button><div class="help">더 오래 달릴수록 점수가 올라갑니다.</div></div>
+</div>
+</div>
+<script>
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+const scoreEl=document.getElementById('score'),speedEl=document.getElementById('speed'),distanceEl=document.getElementById('distance');
+const startOverlay=document.getElementById('startOverlay'),overOverlay=document.getElementById('gameOverOverlay'),resultEl=document.getElementById('result');
+let W=0,H=0,dpr=1,raf=0,last=0,gameRunning=false;
+let score=0,distance=0,speed=0,boost=0,roadOffset=0,spawnTimer=0,difficulty=0;
+let player={lane:1,x:0,targetX:0,tilt:0};
+let enemies=[];
+const keys={left:false,right:false,boost:false};
+const road={lanes:3,topY:.25,bottomY:1.05};
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=canvas.clientWidth;H=canvas.clientHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);player.x=laneX(player.lane, .82)}
+window.addEventListener('resize',resize);resize();
+function laneX(lane,p){const roadWidth=lerp(W*.13,W*.86,p);return W/2+(lane-1)*roadWidth/3}
+function lerp(a,b,t){return a+(b-a)*t}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function roadY(p){return lerp(H*road.topY,H*road.bottomY,p)}
+function carScale(p){return lerp(.28,1.05,p)}
+function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function drawSky(){
+ const g=ctx.createLinearGradient(0,0,0,H*.55);g.addColorStop(0,'#071b2c');g.addColorStop(1,'#3c6f61');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='rgba(255,226,151,.8)';ctx.beginPath();ctx.arc(W*.78,H*.18,Math.min(W,H)*.07,0,Math.PI*2);ctx.fill();
+ // distant hills
+ ctx.fillStyle='#173e36';ctx.beginPath();ctx.moveTo(0,H*.42);for(let x=0;x<=W;x+=90)ctx.lineTo(x,H*.36+Math.sin(x*.018)*H*.045);ctx.lineTo(W,H*.53);ctx.lineTo(0,H*.53);ctx.fill();
+ ctx.fillStyle='#102d29';ctx.beginPath();ctx.moveTo(0,H*.49);for(let x=0;x<=W;x+=70)ctx.lineTo(x,H*.43+Math.sin(x*.025+2)*H*.04);ctx.lineTo(W,H*.58);ctx.lineTo(0,H*.58);ctx.fill();
+}
+function drawRoad(){
+ const top=H*road.topY,bottom=H*road.bottomY;const topW=W*.13,bottomW=W*.88;
+ // grass
+ ctx.fillStyle='#163f28';ctx.fillRect(0,top,W,H-top);
+ // road trapezoid
+ ctx.fillStyle='#252a2b';ctx.beginPath();ctx.moveTo(W/2-topW/2,top);ctx.lineTo(W/2+topW/2,top);ctx.lineTo(W/2+bottomW/2,bottom);ctx.lineTo(W/2-bottomW/2,bottom);ctx.closePath();ctx.fill();
+ // shoulders
+ ctx.strokeStyle='#e6e0c8';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(W/2-topW/2,top);ctx.lineTo(W/2-bottomW/2,bottom);ctx.moveTo(W/2+topW/2,top);ctx.lineTo(W/2+bottomW/2,bottom);ctx.stroke();
+ // lane markers
+ ctx.lineWidth=3;ctx.strokeStyle='rgba(255,255,255,.7)';
+ for(let lane=1;lane<3;lane++){
+  for(let i=0;i<14;i++){
+   let p=((i/14+roadOffset)%1);let p2=Math.min(1,p+.045+ p*.035);let x1=laneX(lane,p),x2=laneX(lane,p2);ctx.beginPath();ctx.moveTo(x1,roadY(p));ctx.lineTo(x2,roadY(p2));ctx.stroke();
+  }
+ }
+ // roadside posts
+ for(let i=0;i<18;i++){let p=((i/18+roadOffset*1.2)%1);let y=roadY(p),s=lerp(.15,1,p),xL=W/2-lerp(topW,bottomW,p)/2-20*s,xR=W/2+lerp(topW,bottomW,p)/2+20*s;ctx.fillStyle='#f4f0df';ctx.fillRect(xL,y-18*s,4*s,18*s);ctx.fillRect(xR,y-18*s,4*s,18*s)}
+}
+function drawCar(x,y,s,body,accent,enemy=false){
+ ctx.save();ctx.translate(x,y);ctx.rotate(enemy?0:player.tilt);
+ // shadow
+ ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(0,12*s,29*s,9*s,0,0,Math.PI*2);ctx.fill();
+ // wheels
+ ctx.fillStyle='#0a0b0b';roundedRect(-25*s,-18*s,10*s,25*s,4*s);roundedRect(15*s,-18*s,10*s,25*s,4*s);
+ // body
+ ctx.fillStyle=body;ctx.beginPath();ctx.moveTo(-23*s,20*s);ctx.lineTo(-20*s,-15*s);ctx.quadraticCurveTo(-15*s,-34*s,0,-36*s);ctx.quadraticCurveTo(15*s,-34*s,20*s,-15*s);ctx.lineTo(23*s,20*s);ctx.quadraticCurveTo(0,28*s,-23*s,20*s);ctx.fill();
+ // windows
+ ctx.fillStyle='#162a31';ctx.beginPath();ctx.moveTo(-13*s,-13*s);ctx.quadraticCurveTo(0,-29*s,13*s,-13*s);ctx.lineTo(10*s,0);ctx.lineTo(-10*s,0);ctx.closePath();ctx.fill();
+ // center stripe
+ ctx.fillStyle=accent;ctx.fillRect(-3*s,-32*s,6*s,48*s);
+ // lights
+ ctx.fillStyle='#fff1bf';roundedRect(-16*s,11*s,7*s,6*s,2*s);roundedRect(9*s,11*s,7*s,6*s,2*s);
+ ctx.restore();
+}
+function spawnEnemy(){let lane=Math.floor(Math.random()*3);let colors=[['#e94f64','#ffd166'],['#4d8dff','#dff4ff'],['#9b59ff','#f0dcff'],['#f28c28','#fff0c4']];let c=colors[Math.floor(Math.random()*colors.length)];enemies.push({lane,p:0.05-Math.random()*.04,speed:0.14+Math.random()*.08+Math.min(.12,difficulty*.012),body:c[0],accent:c[1]})}
+function reset(){score=0;distance=0;speed=0;boost=0;roadOffset=0;spawnTimer=0;difficulty=0;enemies=[];player.lane=1;player.x=laneX(1,.82);player.targetX=player.x;player.tilt=0;updateHud()}
+function updateHud(){scoreEl.textContent=Math.floor(score).toLocaleString();speedEl.textContent=Math.floor(speed);distanceEl.textContent=distance.toFixed(1)}
+function start(){reset();gameRunning=true;startOverlay.classList.add('hidden');overOverlay.classList.add('hidden');last=performance.now();raf=requestAnimationFrame(loop)}
+function end(){gameRunning=false;resultEl.innerHTML=`최종 점수 <div class="big">${Math.floor(score).toLocaleString()}</div>주행 거리 ${distance.toFixed(1)} KM`;overOverlay.classList.remove('hidden')}
+function move(dir){if(!gameRunning)return;player.lane=clamp(player.lane+dir,0,2);player.targetX=laneX(player.lane,.82)}
+function loop(now){if(!gameRunning)return;let dt=Math.min((now-last)/1000,.035);last=now;update(dt);draw();raf=requestAnimationFrame(loop)}
+function update(dt){
+ difficulty+=dt*.12;
+ let boosting=keys.boost||boost>0;if(keys.boost)boost=Math.min(1,boost+dt*1.4);else boost=Math.max(0,boost-dt*1.8);
+ let targetSpeed=245+difficulty*9+(boosting?125:0);speed=lerp(speed,targetSpeed,1-Math.pow(.001,dt));roadOffset=(roadOffset+dt*(.17+speed/1450))%1;distance+=speed*dt/3600;score+=speed*dt*.48+(boosting?dt*10:0);
+ player.x=lerp(player.x,player.targetX,1-Math.pow(.0001,dt));let wantedTilt=(player.targetX-player.x)*.0018;player.tilt=lerp(player.tilt,wantedTilt,dt*9);
+ spawnTimer-=dt;if(spawnTimer<=0){spawnEnemy();spawnTimer=Math.max(.34,.82-difficulty*.025)-Math.random()*.18}
+ for(const e of enemies){e.p+=dt*e.speed*(speed/270);}
+ enemies=enemies.filter(e=>e.p<1.12);
+ for(const e of enemies){if(e.p>.72&&e.p<.92&&e.lane===player.lane){end();return}}
+ updateHud();
+}
+function draw(){ctx.clearRect(0,0,W,H);drawSky();drawRoad();
+ // enemies sorted by depth
+ enemies.slice().sort((a,b)=>a.p-b.p).forEach(e=>{let p=e.p,x=laneX(e.lane,p),y=roadY(p),s=carScale(p);drawCar(x,y,s,e.body,e.accent,true)});
+ drawCar(player.x,roadY(.82),1.03,'#1ea857','#eafff1');
+ // boost glow
+ if(keys.boost||boost>.35){ctx.save();ctx.globalAlpha=.18+.18*boost;ctx.fillStyle='#6effa4';ctx.beginPath();ctx.ellipse(player.x,roadY(.82)+34,25,45,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+}
+function key(e,down){if(['ArrowLeft','ArrowRight','KeyA','KeyD','Space'].includes(e.code))e.preventDefault();if(e.code==='ArrowLeft'||e.code==='KeyA'){if(down&&!keys.left)move(-1);keys.left=down}if(e.code==='ArrowRight'||e.code==='KeyD'){if(down&&!keys.right)move(1);keys.right=down}if(e.code==='Space')keys.boost=down}
+window.addEventListener('keydown',e=>key(e,true));window.addEventListener('keyup',e=>key(e,false));
+function bind(id,prop,dir){const b=document.getElementById(id);['pointerdown'].forEach(ev=>b.addEventListener(ev,e=>{e.preventDefault();if(dir)move(dir);else keys[prop]=true}));['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,e=>{if(!dir)keys[prop]=false}));}
+bind('left','left',-1);bind('right','right',1);bind('boost','boost',0);
+document.getElementById('startBtn').onclick=start;document.getElementById('restartBtn').onclick=start;
+// Start screen background preview
+reset();draw();
+</script>
+</body>
+</html>
