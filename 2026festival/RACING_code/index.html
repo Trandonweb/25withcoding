@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>RACING</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-family:Arial,sans-serif;color:#fff;touch-action:none}canvas{display:block;width:100%;height:100%}#ui{position:fixed;inset:0;pointer-events:none}.hud{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;font-weight:800;font-size:18px;text-shadow:0 2px 4px #000}.panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;background:rgba(0,0,0,.78);padding:32px 42px;border-radius:20px;pointer-events:auto;min-width:280px}.panel h1{margin:0 0 10px;font-size:42px}.panel p{margin:8px 0 20px;color:#ddd}.btn{border:0;border-radius:12px;padding:13px 25px;font-size:18px;font-weight:800;cursor:pointer;background:#fff;color:#111}.hidden{display:none}.controls{position:absolute;bottom:24px;left:0;right:0;display:flex;justify-content:space-between;padding:0 24px}.control{pointer-events:auto;width:78px;height:78px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:rgba(255,255,255,.12);color:#fff;font-size:32px;font-weight:900}.boost{width:100px;border-radius:20px;font-size:16px}@media(min-width:700px){.controls{display:none}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="ui"><div class="hud"><span id="score">SCORE 0</span><span id="speed">SPEED 0</span></div>
+<div id="start" class="panel"><h1>🏎️ RACING</h1><p>← → / A D 로 차선을 바꾸세요<br>SPACE로 부스터!</p><button class="btn" id="startBtn">START</button></div>
+<div id="over" class="panel hidden"><h1>GAME OVER</h1><p id="result">SCORE 0</p><button class="btn" id="restartBtn">RESTART</button></div>
+<div class="controls"><button class="control" id="left">‹</button><button class="control boost" id="boost">BOOST</button><button class="control" id="right">›</button></div></div>
+<script>
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+let W,H,dpr,playing=false,last=0,score=0,distance=0,speed=8,boost=0,spawn=0,roadOffset=0;
+let player={lane:1,x:0,y:0,w:54,h:92},enemies=[];
+function resize(){dpr=devicePixelRatio||1;W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);player.y=H-145;player.x=laneX(player.lane)}
+addEventListener('resize',resize);resize();
+function road(){return{top:H*.28,bottom:H,center:W/2,widthTop:W*.16,widthBottom:W*.86}}
+function laneX(i){const r=road();return r.center+(i-1)*r.widthBottom/3}
+function draw(){ctx.clearRect(0,0,W,H);let r=road();let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#4b9b45');g.addColorStop(1,'#17351b');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.fillStyle='#333';ctx.beginPath();ctx.moveTo(r.center-r.widthTop/2,r.top);ctx.lineTo(r.center+r.widthTop/2,r.top);ctx.lineTo(r.center+r.widthBottom/2,r.bottom);ctx.lineTo(r.center-r.widthBottom/2,r.bottom);ctx.closePath();ctx.fill();ctx.strokeStyle='#eee';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(r.center-r.widthTop/2,r.top);ctx.lineTo(r.center-r.widthBottom/2,r.bottom);ctx.moveTo(r.center+r.widthTop/2,r.top);ctx.lineTo(r.center+r.widthBottom/2,r.bottom);ctx.stroke();ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=5;ctx.setLineDash([32,28]);ctx.lineDashOffset=roadOffset;for(let i=1;i<3;i++){let t=i/3,tx=r.center-r.widthTop/2+r.widthTop*t,bx=r.center-r.widthBottom/2+r.widthBottom*t;ctx.beginPath();ctx.moveTo(tx,r.top);ctx.lineTo(bx,r.bottom);ctx.stroke()}ctx.setLineDash([]);for(const e of enemies)drawCar(e.x,e.y,e.w,e.h,e.color,false);drawCar(player.x,player.y,player.w,player.h,'#e53935',true)}
+function drawCar(x,y,w,h,color,me){ctx.save();ctx.translate(x,y);ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(0,h*.45,w*.72,10,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#111';ctx.fillRect(-w*.58,-h*.28,w*.18,h*.55);ctx.fillRect(w*.40,-h*.28,w*.18,h*.55);ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(-w/2,-h/2,w,h,10);ctx.fill();ctx.fillStyle='#9bd5e8';ctx.beginPath();ctx.roundRect(-w*.34,-h*.18,w*.68,h*.27,7);ctx.fill();ctx.fillStyle='#222';ctx.beginPath();ctx.roundRect(-w*.33,h*.12,w*.66,h*.22,6);ctx.fill();ctx.fillStyle=me?'#fff':'#ffdf65';ctx.fillRect(-w*.35,-h*.46,w*.18,7);ctx.fillRect(w*.17,-h*.46,w*.18,7);ctx.restore()}
+function move(dir){if(!playing)return;player.lane=Math.max(0,Math.min(2,player.lane+dir));player.x=laneX(player.lane)}
+function spawnEnemy(){let lane=Math.floor(Math.random()*3),w=50,h=86;enemies.push({lane,x:laneX(lane),y:road().top-100,w,h,color:['#1976d2','#f5c542','#8e44ad','#fafafa'][Math.floor(Math.random()*4)],vy:speed*(.75+Math.random()*.35)})}
+function endGame(){playing=false;document.getElementById('result').textContent='SCORE '+score;document.getElementById('over').classList.remove('hidden')}
+function loop(t){let dt=Math.min(.035,(t-last)/1000||0);last=t;if(playing){let actual=speed+(boost>0?9:0);distance+=actual*dt;score=Math.floor(distance*10);spawn-=dt;if(spawn<=0){spawnEnemy();spawn=Math.max(.38,1.05-speed*.025)}roadOffset+=actual*dt*45;for(const e of enemies)e.y+=e.vy*dt*35;enemies=enemies.filter(e=>e.y<H+120);for(const e of enemies)if(e.lane===player.lane&&Math.abs(e.y-player.y)<(e.h+player.h)*.38){endGame();break}speed=Math.min(19,8+distance/180);if(boost>0)boost-=dt;document.getElementById('score').textContent='SCORE '+score;document.getElementById('speed').textContent='SPEED '+Math.round(actual*12)}draw();requestAnimationFrame(loop)}
+function start(){playing=true;score=0;distance=0;speed=8;boost=0;spawn=.5;enemies=[];player.lane=1;player.x=laneX(1);document.getElementById('start').classList.add('hidden');document.getElementById('over').classList.add('hidden')}
+addEventListener('keydown',e=>{if(['ArrowLeft','a','A'].includes(e.key)){e.preventDefault();move(-1)}if(['ArrowRight','d','D'].includes(e.key)){e.preventDefault();move(1)}if(e.code==='Space'){e.preventDefault();boost=1.2}});
+function touch(id,fn){document.getElementById(id).addEventListener('pointerdown',e=>{e.preventDefault();fn()})}touch('left',()=>move(-1));touch('right',()=>move(1));touch('boost',()=>boost=1.2);document.getElementById('startBtn').onclick=start;document.getElementById('restartBtn').onclick=start;requestAnimationFrame(loop);
+</script></body></html>
