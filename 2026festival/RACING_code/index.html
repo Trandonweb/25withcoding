@@ -1,25 +1,52 @@
 <!DOCTYPE html>
-<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>RACING</title>
-<style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b0d;color:#fff;font-family:Arial,sans-serif;touch-action:none}canvas{display:block;width:100%;height:100%}#ui{position:fixed;inset:0;pointer-events:none}.hud{position:absolute;top:14px;left:18px;right:18px;display:flex;justify-content:space-between;font-weight:900;text-shadow:0 2px 5px #000;font-size:18px}.panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.82);padding:32px 40px;border-radius:20px;text-align:center;pointer-events:auto;min-width:300px}.panel h1{font-size:42px;margin:0 0 12px}.panel p{line-height:1.6;color:#ddd}.btn{border:0;border-radius:12px;padding:13px 26px;font-size:18px;font-weight:900;cursor:pointer}.hidden{display:none}.mobile{position:absolute;bottom:20px;left:18px;right:18px;display:flex;justify-content:space-between;pointer-events:none}.mobile button{pointer-events:auto;border:1px solid #aaa;background:rgba(0,0,0,.35);color:#fff;border-radius:16px;height:65px;min-width:78px;font-weight:900;font-size:16px}.steer{display:flex;gap:10px}.steer button{font-size:30px;width:75px}.pedals{display:flex;gap:10px}.brake{background:rgba(180,40,40,.35)!important}.gas{background:rgba(30,150,70,.35)!important}.boost{background:rgba(30,100,190,.35)!important}@media(min-width:800px){.mobile{display:none}}</style></head>
-<body><canvas id="game"></canvas><div id="ui"><div class="hud"><span id="score">DIST 0 m</span><span id="speed">0 km/h</span></div>
-<div id="start" class="panel"><h1>🏎️ RACING</h1><p>운전자의 시점에서 자유롭게 조향하세요.<br>W/↑ 가속 · S/↓ 브레이크 · A/D 조향<br>SPACE 부스터</p><button class="btn" id="startBtn">START</button></div>
-<div id="over" class="panel hidden"><h1>CRASH!</h1><p id="result">DIST 0 m</p><button class="btn" id="restartBtn">RESTART</button></div>
-<div class="mobile"><div class="steer"><button id="left">◀</button><button id="right">▶</button></div><div class="pedals"><button class="brake" id="brake">BRAKE</button><button class="boost" id="boost">BOOST</button><button class="gas" id="gas">GAS</button></div></div></div>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>RACING</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#79b9e6;font-family:Arial,sans-serif;color:#fff;touch-action:none}canvas{width:100%;height:100%;display:block}.hud{position:fixed;top:18px;left:20px;right:20px;display:flex;justify-content:space-between;font-weight:900;font-size:18px;text-shadow:0 2px 5px #000;pointer-events:none}.panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(8,12,18,.86);padding:30px 42px;border-radius:18px;text-align:center;min-width:290px}.panel h1{font-size:42px;margin:0 0 12px}.panel p{line-height:1.7;color:#ddd}.btn{border:0;border-radius:10px;padding:13px 28px;font-weight:900;font-size:18px;cursor:pointer}.hidden{display:none}.touch{position:fixed;bottom:22px;left:18px;right:18px;display:none;justify-content:space-between;pointer-events:none}.touch button{pointer-events:auto;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.5);color:#fff;border-radius:15px;padding:18px 24px;font-weight:900;font-size:18px}.pedals{display:flex;gap:10px}@media(max-width:700px){.touch{display:flex}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud"><span id="speed">0 km/h</span><span id="dist">0 m</span></div>
+<div id="start" class="panel"><h1>RACING</h1><p>진짜 운전자 시점 레이싱<br>W / ↑ 가속 · S / ↓ 브레이크<br>A D / ← → 자유 조향</p><button class="btn" onclick="startGame()">START</button></div>
+<div id="over" class="panel hidden"><h1>CRASH!</h1><p id="result"></p><button class="btn" onclick="startGame()">RESTART</button></div>
+<div class="touch"><div><button id="tl">◀</button><button id="tr">▶</button></div><div class="pedals"><button id="tb">BRAKE</button><button id="ta">GAS</button></div></div>
 <script>
-const c=document.getElementById('game'),x=c.getContext('2d');let W,H,dpr,last=0,playing=false,dist=0,speed=0,boost=0,steer=0,accel=false,brake=false,keys={};
-let car={x:0,heading:0};let traffic=[];let spawn=0;
-function resize(){dpr=devicePixelRatio||1;W=innerWidth;H=innerHeight;c.width=W*dpr;c.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
-function roadPoint(depth,lane){let horizon=H*.40, t=1-depth, y=horizon+t*(H-horizon), roadW=80+t*t*W*1.05;return{x:W/2+lane*roadW*.34-car.x*roadW*.15,y,w:roadW}}
-function road(){let horizon=H*.40;let grad=x.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#80a9c0');grad.addColorStop(.4,'#b9c6c8');grad.addColorStop(1,'#263126');x.fillStyle=grad;x.fillRect(0,0,W,H);x.fillStyle='#343638';x.beginPath();x.moveTo(W/2-42,horizon);x.lineTo(W/2+42,horizon);x.lineTo(W*1.03,H);x.lineTo(-W*.03,H);x.closePath();x.fill();
-for(let i=0;i<18;i++){let z=(i/18+dist*.018)%1;let p=roadPoint(z,0);let yy=p.y;let half=p.w/2;x.fillStyle=i%2?'#fff':'#d33';x.fillRect(W/2-half,yy,half*.025,Math.max(2,5*(1-z)));x.fillRect(W/2+half-half*.025,yy,half*.025,Math.max(2,5*(1-z)))}
-for(let lane=-.5;lane<=.5;lane+=1){x.strokeStyle='rgba(255,255,255,.55)';x.lineWidth=2;x.beginPath();let a=roadPoint(.98,lane),b=roadPoint(.02,lane);x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke()}}
-function trafficCar(t){let p=roadPoint(t.z,t.lane);let s=.25+(1-t.z)*.85,w=54*s,h=90*s;x.save();x.translate(p.x,p.y-h/2);x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.ellipse(0,h*.55,w*.65,7*s,0,0,Math.PI*2);x.fill();x.fillStyle=t.color;x.beginPath();x.roundRect(-w/2,-h/2,w,h,7*s);x.fill();x.fillStyle='#a9d9e8';x.fillRect(-w*.3,-h*.18,w*.6,h*.22);x.fillStyle='#ffdd65';x.fillRect(-w*.35,-h*.42,w*.18,5*s);x.fillRect(w*.17,-h*.42,w*.18,5*s);x.restore()}
-function cockpit(){let v=ctx=>{};x.fillStyle='rgba(0,0,0,.28)';x.fillRect(0,H*.82,W,H*.18);x.fillStyle='#15181b';x.beginPath();x.moveTo(0,H);x.lineTo(W*.22,H*.84);x.lineTo(W*.39,H*.84);x.lineTo(W*.32,H);x.closePath();x.fill();x.beginPath();x.moveTo(W,H);x.lineTo(W*.78,H*.84);x.lineTo(W*.61,H*.84);x.lineTo(W*.68,H);x.closePath();x.fill();x.strokeStyle='#0b0d0f';x.lineWidth=18;x.beginPath();x.arc(W/2,H*1.03,Math.min(W,H)*.25,Math.PI*1.15,Math.PI*1.85);x.stroke();x.fillStyle='#222';x.fillRect(W/2-4,H*.88,8,H*.12)}
-function draw(){x.clearRect(0,0,W,H);road();traffic.forEach(trafficCar);cockpit();if(boost>0){x.fillStyle='rgba(50,140,255,.16)';x.fillRect(0,0,W,H)} }
-function reset(){dist=0;speed=0;boost=0;car.x=0;car.heading=0;traffic=[];spawn=.8}
-function start(){reset();playing=true;document.getElementById('start').classList.add('hidden');document.getElementById('over').classList.add('hidden')}
-function crash(){playing=false;document.getElementById('result').textContent='DIST '+Math.floor(dist)+' m';document.getElementById('over').classList.remove('hidden')}
-function loop(t){let dt=Math.min(.035,(t-last)/1000||0);last=t;if(playing){let gas=accel||keys.w||keys.ArrowUp,br=brake||keys.s||keys.ArrowDown;let target=gas?26:0;if(br)target=0;speed+=(target-speed)*(br?7:2.2)*dt;speed-=speed*.06*dt;if(boost>0){speed+=32*dt;boost-=dt}speed=Math.max(0,Math.min(38,speed));let steerInput=(keys.a||keys.ArrowLeft?-1:0)+(keys.d||keys.ArrowRight?1:0)+steer;car.heading+=(steerInput*1.9-car.heading)*7*dt;car.x+=car.heading*speed*.0019;car.x*=.999;car.x=Math.max(-1.15,Math.min(1.15,car.x));dist+=speed*dt*.92;spawn-=dt;if(spawn<=0){traffic.push({z:.02,lane:(Math.random()*1.8-.9),color:['#1976d2','#e53935','#f5c542','#8e44ad'][Math.floor(Math.random()*4)]});spawn=Math.max(.35,1.1-speed*.018)}traffic.forEach(t=>t.z+=speed*dt*.025);traffic=traffic.filter(t=>t.z<1.05);for(const t of traffic)if(t.z>.86&&Math.abs(t.lane-car.x)<.25){crash();break}document.getElementById('score').textContent='DIST '+Math.floor(dist)+' m';document.getElementById('speed').textContent=Math.floor(speed*7.5)+' km/h'}draw();requestAnimationFrame(loop)}
-addEventListener('keydown',e=>{keys[e.key]=true;if(e.code==='Space'){boost=1.4;e.preventDefault()}if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault()});addEventListener('keyup',e=>keys[e.key]=false);
-function hold(id,fn){let b=document.getElementById(id);b.onpointerdown=e=>{e.preventDefault();fn(true)};b.onpointerup=b.onpointercancel=b.onpointerleave=e=>{e.preventDefault();fn(false)}}hold('left',v=>steer=v?-1:0);hold('right',v=>steer=v?1:0);hold('gas',v=>accel=v);hold('brake',v=>brake=v);document.getElementById('boost').onpointerdown=e=>{e.preventDefault();boost=1.4};document.getElementById('startBtn').onclick=start;document.getElementById('restartBtn').onclick=start;requestAnimationFrame(loop);
+const c=document.getElementById('c'),x=c.getContext('2d');let W,H,D,run=false,last=0,spd=0,dist=0,steer=0,road=0,traffic=[],spawn=0,gas=false,brake=false;
+function size(){D=devicePixelRatio||1;W=innerWidth;H=innerHeight;c.width=W*D;c.height=H*D;x.setTransform(D,0,0,D,0,0)}addEventListener('resize',size);size();
+function reset(){spd=0;dist=0;road=0;steer=0;traffic=[];spawn=1}
+function startGame(){reset();run=true;document.getElementById('start').classList.add('hidden');document.getElementById('over').classList.add('hidden');last=performance.now();requestAnimationFrame(loop)}
+function crash(){run=false;document.getElementById('result').textContent=`주행거리 ${Math.floor(dist)} m · 최고속도 ${Math.floor(spd)} km/h`;document.getElementById('over').classList.remove('hidden')}
+function roadPoint(z){let horizon=H*.39;let p=Math.max(0,Math.min(1,z));let y=horizon+(H-horizon)*p*p;let half=40+(W*.48-40)*p;return{y,half}}
+function drawWorld(){
+let sky=x.createLinearGradient(0,0,0,H*.5);sky.addColorStop(0,'#66aee0');sky.addColorStop(1,'#d9efff');x.fillStyle=sky;x.fillRect(0,0,W,H*.55);
+// distant scenery
+x.fillStyle='#6d9b59';x.beginPath();x.moveTo(0,H*.42);x.lineTo(W*.18,H*.31);x.lineTo(W*.32,H*.41);x.lineTo(W*.5,H*.29);x.lineTo(W*.68,H*.4);x.lineTo(W*.84,H*.32);x.lineTo(W,H*.42);x.lineTo(W,H);x.lineTo(0,H);x.fill();
+let h=H*.39;let top=roadPoint(0),bot=roadPoint(1);x.fillStyle='#404348';x.beginPath();x.moveTo(W/2-top.half,h);x.lineTo(W/2+top.half,h);x.lineTo(W/2+bot.half,H);x.lineTo(W/2-bot.half,H);x.fill();
+// road edge
+x.strokeStyle='#f5f5f5';x.lineWidth=5;x.beginPath();x.moveTo(W/2-top.half,h);x.lineTo(W/2-bot.half,H);x.moveTo(W/2+top.half,h);x.lineTo(W/2+bot.half,H);x.stroke();
+// moving center/side markings create forward motion
+for(let i=0;i<22;i++){let z=((i/22+road*.018)%1);let q=roadPoint(z);let dash=7+z*28;let cx=W/2+steer*W*.08*z; x.fillStyle='#eee';x.fillRect(cx-3,q.y-dash/2,6,dash)}
+for(const t of traffic){let z=t.z,q=roadPoint(z);let px=W/2+t.offset*q.half*.72;let cw=14+z*55,ch=22+z*75;drawTraffic(px,q.y-cw*.05,cw,ch,t.color)}
+// dashboard and windshield bottom
+let grad=x.createLinearGradient(0,H*.78,0,H);grad.addColorStop(0,'rgba(15,18,22,0)');grad.addColorStop(1,'#11151a');x.fillStyle=grad;x.fillRect(0,H*.75,W,H*.25);
+// steering wheel: gives actual cockpit impression
+x.save();x.translate(W/2+steer*35,H*1.02);x.strokeStyle='#15171a';x.lineWidth=16;x.beginPath();x.arc(0,0,Math.min(W,H)*.115,Math.PI*1.05,Math.PI*1.95);x.stroke();x.lineWidth=7;x.beginPath();x.moveTo(-42,-20);x.lineTo(0,0);x.lineTo(42,-20);x.stroke();x.restore();
+}
+function drawTraffic(px,py,w,h,col){x.save();x.translate(px,py);x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.ellipse(0,h*.45,w*.65,8,0,0,Math.PI*2);x.fill();x.fillStyle=col;x.beginPath();x.roundRect(-w/2,-h/2,w,h,Math.max(3,w*.12));x.fill();x.fillStyle='#91cfe2';x.beginPath();x.roundRect(-w*.32,-h*.25,w*.64,h*.27,3);x.fill();x.fillStyle='#ffdd55';x.fillRect(-w*.32,-h*.46,w*.18,4+ w*.05);x.fillRect(w*.14,-h*.46,w*.18,4+w*.05);x.restore()}
+function spawnCar(){traffic.push({z:.04,offset:(Math.random()*2-1)*.75,color:['#d93636','#2469c5','#e2b52b','#eee','#222'][Math.floor(Math.random()*5)]})}
+function loop(now){if(!run)return;let dt=Math.min(.04,(now-last)/1000);last=now;
+let accel=gas?34:0;let decel=brake?62:8;spd+=((accel)-(decel))*dt;spd=Math.max(0,Math.min(220,spd));
+// free steering, stronger at speed
+let steerInput=0;if(keys.a||keys.left)steerInput--;if(keys.d||keys.right)steerInput++;steer+=steerInput*dt*(1.8+spd/90);steer*=Math.pow(.72,dt*8);steer=Math.max(-1,Math.min(1,steer));
+road+=spd*dt*.012;dist+=spd*dt/3.6;spawn-=dt;if(spawn<=0&&spd>25){spawnCar();spawn=Math.max(.55,1.5-spd/180)}
+for(const t of traffic)t.z+=spd*dt*.00075;if(steer||steerInput)for(const t of traffic)t.offset-=steerInput*dt*.12;
+for(const t of traffic){if(t.z>.78&&Math.abs(t.offset-steer*.85)<.22){crash();return}}traffic=traffic.filter(t=>t.z<1.15);drawWorld();document.getElementById('speed').textContent=Math.floor(spd)+' km/h';document.getElementById('dist').textContent=Math.floor(dist)+' m';requestAnimationFrame(loop)}
+const keys={a:false,d:false,left:false,right:false};addEventListener('keydown',e=>{if(e.key==='w'||e.key==='ArrowUp')gas=true;if(e.key==='s'||e.key==='ArrowDown')brake=true;if(e.key==='a'||e.key==='A')keys.a=true;if(e.key==='d'||e.key==='D')keys.d=true;if(e.key==='ArrowLeft')keys.left=true;if(e.key==='ArrowRight')keys.right=true});addEventListener('keyup',e=>{if(e.key==='w'||e.key==='ArrowUp')gas=false;if(e.key==='s'||e.key==='ArrowDown')brake=false;if(e.key==='a'||e.key==='A')keys.a=false;if(e.key==='d'||e.key==='D')keys.d=false;if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false});
+function hold(id,on,off){let b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();on()});['pointerup','pointercancel','pointerleave'].forEach(v=>b.addEventListener(v,off))}hold('tl',()=>keys.left=true,()=>keys.left=false);hold('tr',()=>keys.right=true,()=>keys.right=false);hold('ta',()=>gas=true,()=>gas=false);hold('tb',()=>brake=true,()=>brake=false);
+// render a still cockpit before start
+reset();drawWorld();
 </script></body></html>
