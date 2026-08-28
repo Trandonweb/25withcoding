@@ -33,6 +33,9 @@
       --role-vice-bg: #e0e7ff;
       --role-vice-text: #4f46e5;
 
+      --role-committee-bg: #d1fae5;
+      --role-committee-text: #047857;
+
       --warning-bg: #ffffff;
       --warning-text: #000000;
     }
@@ -64,6 +67,9 @@
 
       --role-vice-bg: #1e1b4b;
       --role-vice-text: #818cf8;
+
+      --role-committee-bg: #064e3b;
+      --role-committee-text: #6ee7b7;
 
       --warning-bg: #1E1E1E;
       --warning-text: #FFFFFF;
@@ -252,6 +258,11 @@
     .role-vice {
       background: var(--role-vice-bg);
       color: var(--role-vice-text);
+    }
+
+    .role-committee {
+      background: var(--role-committee-bg);
+      color: var(--role-committee-text);
     }
 
     .action-row {
@@ -465,6 +476,9 @@ window.roleToBadge = function(role) {
   if (role === "vice") {
     return `<span class="role-badge role-vice">부회장</span>`;
   }
+  if (role === "committee_chair") {
+    return `<span class="role-badge role-committee">상벌관리위원회장</span>`;
+  }
   return `<span class="role-badge">학생</span>`;
 }
 
@@ -472,6 +486,7 @@ window.roleToBadge = function(role) {
 window.roleToText = function(role) {
   if (role === "president") return "회장";
   if (role === "vice") return "부회장";
+  if (role === "committee_chair") return "상벌관리위원회장";
   return "학생";
 }
 
