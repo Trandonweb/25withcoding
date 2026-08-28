@@ -3,445 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <title>메모 보기</title>
-
   <style>
-    :root {
-      --bg-color: #f4f6f9;
-      --card-bg: #ffffff;
-      --text-color: #333333;
-      --input-bg: #f8fafc;
-      --input-border: #e1e8ed;
-      --btn-bg: #ffffff;
-      --btn-text: #333333;
-      --btn-hover: #e6e6e6;
-      --primary-color: #27ae60;
-      --content-bg: #f8fafc;
-      --content-border: #edf2f7;
-      --title-color: #2c3e50;
-      --info-color: #718096;
-      --pin-title-color: #34495e;
-      --edit-btn-bg: #2c3e50;
-      --edit-btn-text: #ffffff;
-      --edit-btn-hover: #1a252f;
-      --delete-btn-bg: #e74c3c;
-      --delete-btn-text: #ffffff;
-      --delete-btn-hover: #c0392b;
-    }
-
-    body.dark-mode {
-      --bg-color: #121212;
-      --card-bg: #1E1E1E;
-      --text-color: #FFFFFF;
-      --input-bg: #2C2C2C;
-      --input-border: #3A3A3A;
-      --btn-bg: #2C2C2C;
-      --btn-text: #FFFFFF;
-      --btn-hover: #3A3A3A;
-      --content-bg: #252525;
-      --content-border: #3A3A3A;
-      --title-color: #FFFFFF;
-      --info-color: #A0AEC0;
-      --pin-title-color: #FFFFFF;
-      --edit-btn-bg: #334155;
-      --edit-btn-text: #FFFFFF;
-      --edit-btn-hover: #475569;
-      --delete-btn-bg: #991b1b;
-      --delete-btn-text: #FFFFFF;
-      --delete-btn-hover: #7f1d1d;
-    }
-
-    body {
-      font-family: 'Malgun Gothic', sans-serif;
-      background: var(--bg-color);
-      padding: 15px 20px;
-      color: var(--text-color);
-      transition: background 0.2s, color 0.2s;
-      min-height: 100vh;
-      box-sizing: border-box;
-      margin: 0;
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    button {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 12px;
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      font-weight: bold;
-      cursor: pointer;
-      margin: 3px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      transition: background 0.2s;
-      font-size: 13px;
-    }
-
-    button:hover { background-color: var(--btn-hover); }
-
-    .card {
-      background: var(--card-bg);
-      padding: 16px 20px;
-      border-radius: 16px;
-      position: relative;
-      min-height: 350px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      border: 1px solid var(--input-border);
-    }
-
-    h2 {
-      margin-top: 0;
-      margin-bottom: 6px;
-      color: var(--title-color);
-      font-size: 1.2rem;
-    }
-
-    .meta {
-      font-size: 12px;
-      color: var(--info-color);
-      margin-bottom: 16px;
-    }
-
-    .content {
-      white-space: pre-wrap;
-      line-height: 1.6;
-      display: none;
-      background: var(--content-bg);
-      padding: 14px 16px;
-      border-radius: 12px;
-      border: 1px solid var(--content-border);
-      font-size: 14px;
-      color: var(--text-color);
-    }
-
-    .pin-box { text-align: center; margin-top: 60px; }
-    .pin-box p {
-      font-weight: bold;
-      color: var(--pin-title-color);
-      font-size: 14px;
-      margin-bottom: 6px;
-    }
-
-    input {
-      width: 180px;
-      box-sizing: border-box;
-      border: 1px solid var(--input-border);
-      border-radius: 12px;
-      padding: 10px 14px;
-      margin-top: 4px;
-      background: var(--input-bg);
-      color: var(--text-color);
-      font-family: 'Malgun Gothic', sans-serif;
-      font-size: 14px;
-      outline: none;
-      transition: all 0.2s;
-      text-align: center;
-    }
-
-    input:focus {
-      border-color: var(--primary-color);
-      background: var(--card-bg);
-    }
-
-    .actions {
-      margin-top: 12px;
-      margin-bottom: 16px;
-      display: none;
-      justify-content: flex-end;
-      gap: 6px;
-    }
-
-    .edit { background: var(--edit-btn-bg); color: var(--edit-btn-text); }
-    .edit:hover { background: var(--edit-btn-hover); }
-    .delete { background: var(--delete-btn-bg); color: var(--delete-btn-text); }
-    .delete:hover { background: var(--delete-btn-hover); }
-    .copy { background: var(--primary-color); color: #ffffff; }
-    .copy:hover { filter: brightness(0.92); }
-
-    #copyToast {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      background: rgba(39, 174, 96, 0.95);
-      color: #ffffff;
-      font-size: 13px;
-      font-weight: bold;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(6px);
-      transition: opacity 0.5s ease, transform 0.5s ease, visibility 0.5s;
-      z-index: 10000;
-      pointer-events: none;
-    }
-
-    #copyToast.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    #copyToast .check {
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    #version {
-      position: fixed;
-      right: 15px;
-      bottom: 10px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 5px 8px;
-      border-radius: 8px;
-      font-size: 11px;
-      z-index: 9999;
-    }
+    :root { --bg-color:#f4f6f9;--card-bg:#fff;--text-color:#333;--input-bg:#f8fafc;--input-border:#e1e8ed;--btn-bg:#fff;--btn-text:#333;--btn-hover:#e6e6e6;--primary-color:#27ae60;--content-bg:#f8fafc;--content-border:#edf2f7;--title-color:#2c3e50;--info-color:#718096;--pin-title-color:#34495e;--edit-btn-bg:#2c3e50;--edit-btn-text:#fff;--edit-btn-hover:#1a252f;--delete-btn-bg:#e74c3c;--delete-btn-text:#fff;--delete-btn-hover:#c0392b; }
+    body.dark-mode { --bg-color:#121212;--card-bg:#1E1E1E;--text-color:#fff;--input-bg:#2C2C2C;--input-border:#3A3A3A;--btn-bg:#2C2C2C;--btn-text:#fff;--btn-hover:#3A3A3A;--content-bg:#252525;--content-border:#3A3A3A;--title-color:#fff;--info-color:#A0AEC0;--pin-title-color:#fff;--edit-btn-bg:#334155;--edit-btn-text:#fff;--edit-btn-hover:#475569;--delete-btn-bg:#991b1b;--delete-btn-text:#fff;--delete-btn-hover:#7f1d1d; }
+    body { font-family:'Malgun Gothic',sans-serif;background:var(--bg-color);padding:15px 20px;color:var(--text-color);transition:background .2s,color .2s;min-height:100vh;box-sizing:border-box;margin:0; }
+    .top-bar { display:flex;justify-content:space-between;align-items:center;margin-bottom:10px; }
+    button { padding:8px 14px;border:none;border-radius:12px;background:var(--btn-bg);color:var(--btn-text);font-weight:bold;cursor:pointer;margin:3px;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:background .2s;font-size:13px; }
+    button:hover { background-color:var(--btn-hover); }
+    .card { background:var(--card-bg);padding:16px 20px;border-radius:16px;position:relative;min-height:350px;box-shadow:0 2px 8px rgba(0,0,0,.04);border:1px solid var(--input-border); }
+    h2 { margin-top:0;margin-bottom:6px;color:var(--title-color);font-size:1.2rem; }
+    .meta { font-size:12px;color:var(--info-color);margin-bottom:16px; }
+    .content { white-space:pre-wrap;line-height:1.6;display:none;background:var(--content-bg);padding:14px 16px;border-radius:12px;border:1px solid var(--content-border);font-size:14px;color:var(--text-color); }
+    .pin-box { text-align:center;margin-top:60px; }
+    .pin-box p { font-weight:bold;color:var(--pin-title-color);font-size:14px;margin-bottom:6px; }
+    input { width:180px;box-sizing:border-box;border:1px solid var(--input-border);border-radius:12px;padding:10px 14px;margin-top:4px;background:var(--input-bg);color:var(--text-color);font-family:'Malgun Gothic',sans-serif;font-size:14px;outline:none;transition:all .2s;text-align:center; }
+    input:focus { border-color:var(--primary-color);background:var(--card-bg); }
+    .actions { margin-top:12px;margin-bottom:16px;display:none;justify-content:flex-end;gap:6px; }
+    .edit { background:var(--edit-btn-bg);color:var(--edit-btn-text); }.edit:hover{background:var(--edit-btn-hover)}
+    .delete { background:var(--delete-btn-bg);color:var(--delete-btn-text); }.delete:hover{background:var(--delete-btn-hover)}
+    .copy { background:var(--primary-color);color:#fff; }.copy:hover{filter:brightness(.92)}
+    #copyToast { position:fixed;right:20px;bottom:20px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(39,174,96,.95);color:#fff;font-size:13px;font-weight:bold;box-shadow:0 4px 14px rgba(0,0,0,.15);opacity:0;visibility:hidden;transform:translateY(6px);transition:opacity .5s ease,transform .5s ease,visibility .5s;z-index:10000;pointer-events:none; }
+    #copyToast.show { opacity:1;visibility:visible;transform:translateY(0); }
+    #copyToast .check { font-size:16px;line-height:1; }
+    #version { position:fixed;right:15px;bottom:10px;background:rgba(0,0,0,.7);color:#fff;padding:5px 8px;border-radius:8px;font-size:11px;z-index:9999; }
   </style>
 </head>
-
 <body>
-
-<div class="top-bar">
-  <button onclick="goBack()">뒤로가기</button>
-</div>
-
+<div class="top-bar"><button onclick="goBack()">뒤로가기</button></div>
 <div class="card">
-  <h2 id="title">로딩중...</h2>
-  <div class="meta" id="meta"></div>
-
-  <div class="pin-box" id="pinBox">
-    <p>PIN 입력</p>
-    <input id="pinInput" type="password" maxlength="8" placeholder="PIN 입력">
-    <button onclick="checkPin()" style="background: var(--primary-color); color: white;">확인</button>
-  </div>
-
-  <div class="actions" id="actions">
-    <button class="copy" onclick="copyMemo()">전체복사</button>
-    <button class="edit" onclick="goEdit()">수정</button>
-    <button class="delete" onclick="deleteMemo()">삭제</button>
-  </div>
-
+  <h2 id="title">로딩중...</h2><div class="meta" id="meta"></div>
+  <div class="pin-box" id="pinBox"><p>PIN 입력</p><input id="pinInput" type="password" maxlength="8" placeholder="PIN 입력"><button onclick="checkPin()" style="background:var(--primary-color);color:white;">확인</button></div>
+  <div class="actions" id="actions"><button class="copy" onclick="copyMemo()">전체복사</button><button class="edit" onclick="goEdit()">수정</button><button class="delete" onclick="deleteMemo()">삭제</button></div>
   <div class="content" id="content"></div>
 </div>
-
 <div id="copyToast"><span class="check">✓</span><span>복사됨</span></div>
-
 <script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
-  authDomain: "memo-5123c.firebaseapp.com",
-  projectId: "memo-5123c"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const id = new URLSearchParams(location.search).get("id");
-
-let memoRef;
-let memoData;
-let copyToastTimer;
-const MASTER_KEY = "20262326";
-
-const SETTINGS_KEY = "coding_with_ramen_settings";
-const defaultSettings = { darkMode: false, primaryColor: "#27ae60", keepLogin: true };
-
-function getStoredSettings() {
-  const saved = localStorage.getItem(SETTINGS_KEY);
-  if (saved) {
-    try { return { ...defaultSettings, ...JSON.parse(saved) }; }
-    catch (e) { return defaultSettings; }
-  }
-  return defaultSettings;
-}
-
-function saveStoredSettings(settings) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
-
-function applySettings(settings) {
-  document.body.classList.toggle("dark-mode", !!settings.darkMode);
-  if (settings.primaryColor) document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
-}
-
-const initialSettings = getStoredSettings();
-applySettings(initialSettings);
-
-async function checkUserSettings(userId) {
-  const userRef = doc(db, "users", userId);
-  const snap = await getDoc(userRef);
-  if (!snap.exists()) return;
-
-  const data = snap.data();
-  const firebaseSettings = data.settings || {};
-  const settings = {
-    darkMode: firebaseSettings.darkMode ?? defaultSettings.darkMode,
-    primaryColor: firebaseSettings.primaryColor ?? defaultSettings.primaryColor,
-    keepLogin: firebaseSettings.keepLogin ?? defaultSettings.keepLogin
-  };
-
-  const updateData = {};
-  if (firebaseSettings.darkMode === undefined) updateData.darkMode = settings.darkMode;
-  if (firebaseSettings.primaryColor === undefined) updateData.primaryColor = settings.primaryColor;
-  if (firebaseSettings.keepLogin === undefined) updateData.keepLogin = settings.keepLogin;
-  if (Object.keys(updateData).length > 0) await setDoc(userRef, { settings: updateData }, { merge: true });
-
-  saveStoredSettings(settings);
-  applySettings(settings);
-}
-
-const currentUser = localStorage.getItem("userId");
-if (currentUser) checkUserSettings(currentUser);
-
-function isNotice(title) {
-  if (!title) return false;
-  return title.startsWith("!@#") && title.endsWith("#@!");
-}
-
-async function load() {
-  memoRef = doc(db, "notes", id);
-  const snap = await getDoc(memoRef);
-  if (!snap.exists()) {
-    alert("메모 없음");
-    location.href = "index.html";
-    return;
-  }
-
-  memoData = snap.data();
-  document.getElementById("title").innerText =
-    (memoData.title || "").replace("!@#", "").replace("#@!", "").trim() || "제목 없음";
-
-  let dateString = "알 수 없음";
-  if (memoData.createdAt) {
-    const d = new Date(memoData.createdAt);
-    if (!isNaN(d.getTime())) dateString = d.toLocaleString();
-  }
-
-  document.getElementById("meta").innerText =
-    `👤 ${memoData.authorName || "unknown"} &nbsp;|&nbsp; 🕒 ${dateString}`;
-
-  if (isNotice(memoData.title)) {
-    document.getElementById("pinBox").style.display = "none";
-    document.getElementById("content").style.display = "block";
-    document.getElementById("actions").style.display = "flex";
-    document.getElementById("content").innerText = memoData.content || "";
-  }
-}
-
-const pinInput = document.getElementById("pinInput");
-pinInput.addEventListener("input", () => {
-  let value = pinInput.value.replace(/\D/g, "");
-  const isMasterPrefix = MASTER_KEY.startsWith(value);
-  if (!isMasterPrefix && value.length > 4) value = value.slice(0, 4);
-  if (value.length > MASTER_KEY.length) value = value.slice(0, MASTER_KEY.length);
-  pinInput.value = value;
-});
-
-pinInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") checkPin();
-});
-
-function checkPin() {
-  const pin = pinInput.value;
-  const ok = pin === memoData.pin || pin === MASTER_KEY;
-  if (!ok) {
-    alert("PIN 틀림");
-    return;
-  }
-  document.getElementById("pinBox").style.display = "none";
-  document.getElementById("actions").style.display = "flex";
-  document.getElementById("content").style.display = "block";
-  document.getElementById("content").innerText = memoData.content || "";
-}
-
-function showCopyToast() {
-  const toast = document.getElementById("copyToast");
-  clearTimeout(copyToastTimer);
-  toast.classList.remove("show");
-  void toast.offsetWidth;
-  toast.classList.add("show");
-
-  copyToastTimer = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2000);
-}
-
-async function copyMemo() {
-  const title = document.getElementById("title").innerText.trim();
-  const content = memoData?.content || "";
-  const text = content ? `${title}\n\n${content}` : title;
-
-  let copied = false;
-  try {
-    await navigator.clipboard.writeText(text);
-    copied = true;
-  } catch (error) {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.left = "-9999px";
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-
-    try { copied = document.execCommand("copy"); }
-    catch (fallbackError) { copied = false; }
-    finally { document.body.removeChild(textarea); }
-  }
-
-  if (copied) showCopyToast();
-}
-
-async function deleteMemo() {
-  if (isNotice(memoData.title)) {
-    const password = prompt("관리자 마스터키 입력");
-    if (password !== MASTER_KEY) {
-      alert("마스터키 틀림");
-      return;
-    }
-  }
-
-  if (!confirm("삭제할까요?")) return;
-  await updateDoc(memoRef, { deleted: true });
-  location.href = "index.html";
-}
-
-function goEdit() {
-  if (isNotice(memoData.title)) {
-    const password = prompt("관리자 마스터키 입력");
-    if (password !== MASTER_KEY) {
-      alert("마스터키 틀림");
-      return;
-    }
-  }
-  location.href = "edit.html?id=" + id;
-}
-
-function goBack() { location.href = "index.html"; }
-
-window.checkPin = checkPin;
-window.copyMemo = copyMemo;
-window.deleteMemo = deleteMemo;
-window.goEdit = goEdit;
-window.goBack = goBack;
-
-load();
-
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";import{getFirestore,doc,getDoc,setDoc,updateDoc}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",authDomain:"memo-5123c.firebaseapp.com",projectId:"memo-5123c"};const app=initializeApp(firebaseConfig);const db=getFirestore(app);const id=new URLSearchParams(location.search).get("id");let memoRef,memoData,copyToastTimer;const MASTER_KEY="20262326";const SETTINGS_KEY="coding_with_ramen_settings";const defaultSettings={darkMode:false,primaryColor:"#27ae60",keepLogin:true};
+function getStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{return{...defaultSettings,...JSON.parse(saved)}}catch(e){return defaultSettings}}return defaultSettings}function saveStoredSettings(settings){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}function applySettings(settings){document.body.classList.toggle("dark-mode",!!settings.darkMode);if(settings.primaryColor)document.documentElement.style.setProperty('--primary-color',settings.primaryColor)}const initialSettings=getStoredSettings();applySettings(initialSettings);
+async function checkUserSettings(userId){const userRef=doc(db,"users",userId);const snap=await getDoc(userRef);if(!snap.exists())return;const data=snap.data(),firebaseSettings=data.settings||{};const settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin};const updateData={};if(firebaseSettings.darkMode===undefined)updateData.darkMode=settings.darkMode;if(firebaseSettings.primaryColor===undefined)updateData.primaryColor=settings.primaryColor;if(firebaseSettings.keepLogin===undefined)updateData.keepLogin=settings.keepLogin;if(Object.keys(updateData).length>0)await setDoc(userRef,{settings:updateData},{merge:true});saveStoredSettings(settings);applySettings(settings)}const currentUser=localStorage.getItem("userId");if(currentUser)checkUserSettings(currentUser);
+function isNotice(title){return!!title&&title.startsWith("!@#")&&title.endsWith("#@!")}
+async function load(){memoRef=doc(db,"notes",id);const snap=await getDoc(memoRef);if(!snap.exists()){alert("메모 없음");location.href="index.html";return}memoData=snap.data();document.getElementById("title").innerText=(memoData.title||"").replace("!@#","").replace("#@!","").trim()||"제목 없음";let dateString="알 수 없음";if(memoData.createdAt){const d=new Date(memoData.createdAt);if(!isNaN(d.getTime()))dateString=d.toLocaleString()}document.getElementById("meta").innerText=`👤 ${memoData.authorName||"unknown"} &nbsp;|&nbsp; 🕒 ${dateString}`;if(isNotice(memoData.title)){document.getElementById("pinBox").style.display="none";document.getElementById("content").style.display="block";document.getElementById("actions").style.display="flex";document.getElementById("content").innerText=memoData.content||""}}
+const pinInput=document.getElementById("pinInput");pinInput.addEventListener("input",()=>{let value=pinInput.value.replace(/\D/g,"");const isMasterPrefix=MASTER_KEY.startsWith(value);if(!isMasterPrefix&&value.length>4)value=value.slice(0,4);if(value.length>MASTER_KEY.length)value=value.slice(0,MASTER_KEY.length);pinInput.value=value});pinInput.addEventListener("keydown",e=>{if(e.key==="Enter")checkPin()});
+function checkPin(){const pin=pinInput.value;if(pin!==memoData.pin&&pin!==MASTER_KEY){alert("PIN 틀림");return}document.getElementById("pinBox").style.display="none";document.getElementById("actions").style.display="flex";document.getElementById("content").style.display="block";document.getElementById("content").innerText=memoData.content||""}
+function showCopyToast(){const toast=document.getElementById("copyToast");clearTimeout(copyToastTimer);toast.classList.remove("show");void toast.offsetWidth;toast.classList.add("show");copyToastTimer=setTimeout(()=>toast.classList.remove("show"),2000)}
+async function copyMemo(){const content=memoData?.content||"";let copied=false;try{await navigator.clipboard.writeText(content);copied=true}catch(error){const textarea=document.createElement("textarea");textarea.value=content;textarea.style.position="fixed";textarea.style.left="-9999px";document.body.appendChild(textarea);textarea.focus();textarea.select();try{copied=document.execCommand("copy")}catch(fallbackError){copied=false}finally{document.body.removeChild(textarea)}}if(copied)showCopyToast()}
+async function deleteMemo(){if(isNotice(memoData.title)){const password=prompt("관리자 마스터키 입력");if(password!==MASTER_KEY){alert("마스터키 틀림");return}}if(!confirm("삭제할까요?"))return;await updateDoc(memoRef,{deleted:true});location.href="index.html"}
+function goEdit(){if(isNotice(memoData.title)){const password=prompt("관리자 마스터키 입력");if(password!==MASTER_KEY){alert("마스터키 틀림");return}}location.href="edit.html?id="+id}function goBack(){location.href="index.html"}window.checkPin=checkPin;window.copyMemo=copyMemo;window.deleteMemo=deleteMemo;window.goEdit=goEdit;window.goBack=goBack;load();
 </script>
-
 <div id="version">v26.6.27.2</div>
-
-</body>
-</html>
+</body></html>
