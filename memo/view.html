@@ -15,17 +15,14 @@
       --btn-text: #333333;
       --btn-hover: #e6e6e6;
       --primary-color: #27ae60;
-
       --content-bg: #f8fafc;
       --content-border: #edf2f7;
       --title-color: #2c3e50;
       --info-color: #718096;
       --pin-title-color: #34495e;
-
       --edit-btn-bg: #2c3e50;
       --edit-btn-text: #ffffff;
       --edit-btn-hover: #1a252f;
-
       --delete-btn-bg: #e74c3c;
       --delete-btn-text: #ffffff;
       --delete-btn-hover: #c0392b;
@@ -40,17 +37,14 @@
       --btn-bg: #2C2C2C;
       --btn-text: #FFFFFF;
       --btn-hover: #3A3A3A;
-
       --content-bg: #252525;
       --content-border: #3A3A3A;
       --title-color: #FFFFFF;
       --info-color: #A0AEC0;
       --pin-title-color: #FFFFFF;
-
       --edit-btn-bg: #334155;
       --edit-btn-text: #FFFFFF;
       --edit-btn-hover: #475569;
-
       --delete-btn-bg: #991b1b;
       --delete-btn-text: #FFFFFF;
       --delete-btn-hover: #7f1d1d;
@@ -88,9 +82,7 @@
       font-size: 13px;
     }
 
-    button:hover {
-      background-color: var(--btn-hover);
-    }
+    button:hover { background-color: var(--btn-hover); }
 
     .card {
       background: var(--card-bg);
@@ -127,11 +119,7 @@
       color: var(--text-color);
     }
 
-    .pin-box {
-      text-align: center;
-      margin-top: 60px;
-    }
-
+    .pin-box { text-align: center; margin-top: 60px; }
     .pin-box p {
       font-weight: bold;
       color: var(--pin-title-color);
@@ -168,31 +156,44 @@
       gap: 6px;
     }
 
-    .edit {
-      background: var(--edit-btn-bg);
-      color: var(--edit-btn-text);
-    }
+    .edit { background: var(--edit-btn-bg); color: var(--edit-btn-text); }
+    .edit:hover { background: var(--edit-btn-hover); }
+    .delete { background: var(--delete-btn-bg); color: var(--delete-btn-text); }
+    .delete:hover { background: var(--delete-btn-hover); }
+    .copy { background: var(--primary-color); color: #ffffff; }
+    .copy:hover { filter: brightness(0.92); }
 
-    .edit:hover {
-      background: var(--edit-btn-hover);
-    }
-
-    .delete {
-      background: var(--delete-btn-bg);
-      color: var(--delete-btn-text);
-    }
-
-    .delete:hover {
-      background: var(--delete-btn-hover);
-    }
-
-    .copy {
-      background: var(--primary-color);
+    #copyToast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(39, 174, 96, 0.95);
       color: #ffffff;
+      font-size: 13px;
+      font-weight: bold;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(6px);
+      transition: opacity 0.5s ease, transform 0.5s ease, visibility 0.5s;
+      z-index: 10000;
+      pointer-events: none;
     }
 
-    .copy:hover {
-      filter: brightness(0.92);
+    #copyToast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    #copyToast .check {
+      font-size: 16px;
+      line-height: 1;
     }
 
     #version {
@@ -219,34 +220,27 @@
   <h2 id="title">로딩중...</h2>
   <div class="meta" id="meta"></div>
 
-  <!-- PIN 입력 -->
   <div class="pin-box" id="pinBox">
     <p>PIN 입력</p>
     <input id="pinInput" type="password" maxlength="8" placeholder="PIN 입력">
     <button onclick="checkPin()" style="background: var(--primary-color); color: white;">확인</button>
   </div>
 
-  <!-- 버튼 -->
   <div class="actions" id="actions">
     <button class="copy" onclick="copyMemo()">전체복사</button>
     <button class="edit" onclick="goEdit()">수정</button>
     <button class="delete" onclick="deleteMemo()">삭제</button>
   </div>
 
-  <!-- 내용 -->
   <div class="content" id="content"></div>
 </div>
+
+<div id="copyToast"><span class="check">✓</span><span>복사됨</span></div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
@@ -256,63 +250,42 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 const id = new URLSearchParams(location.search).get("id");
 
 let memoRef;
 let memoData;
+let copyToastTimer;
 const MASTER_KEY = "20262326";
 
-// --- 설정 시스템 모듈화 (localStorage 우선 적용 + Firebase 동기화) ---
 const SETTINGS_KEY = "coding_with_ramen_settings";
-const defaultSettings = {
-  darkMode: false,
-  primaryColor: "#27ae60",
-  keepLogin: true
-};
+const defaultSettings = { darkMode: false, primaryColor: "#27ae60", keepLogin: true };
 
 function getStoredSettings() {
   const saved = localStorage.getItem(SETTINGS_KEY);
   if (saved) {
-    try {
-      return { ...defaultSettings, ...JSON.parse(saved) };
-    } catch (e) {
-      return defaultSettings;
-    }
+    try { return { ...defaultSettings, ...JSON.parse(saved) }; }
+    catch (e) { return defaultSettings; }
   }
   return defaultSettings;
 }
 
-function saveStoredSettings(settings) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-}
+function saveStoredSettings(settings) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
 
 function applySettings(settings) {
-  if (settings.darkMode) {
-    document.body.classList.add("dark-mode");
-  } else {
-    document.body.classList.remove("dark-mode");
-  }
-
-  if (settings.primaryColor) {
-    document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
-  }
+  document.body.classList.toggle("dark-mode", !!settings.darkMode);
+  if (settings.primaryColor) document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
 }
 
-// 1. 페이지 로드 시 localStorage 설정 먼저 즉시 적용 (깜빡임 방지)
 const initialSettings = getStoredSettings();
 applySettings(initialSettings);
 
-// 2. Firebase 설정 체크 및 동기화 함수
 async function checkUserSettings(userId) {
   const userRef = doc(db, "users", userId);
   const snap = await getDoc(userRef);
-
   if (!snap.exists()) return;
 
   const data = snap.data();
   const firebaseSettings = data.settings || {};
-
   const settings = {
     darkMode: firebaseSettings.darkMode ?? defaultSettings.darkMode,
     primaryColor: firebaseSettings.primaryColor ?? defaultSettings.primaryColor,
@@ -323,20 +296,14 @@ async function checkUserSettings(userId) {
   if (firebaseSettings.darkMode === undefined) updateData.darkMode = settings.darkMode;
   if (firebaseSettings.primaryColor === undefined) updateData.primaryColor = settings.primaryColor;
   if (firebaseSettings.keepLogin === undefined) updateData.keepLogin = settings.keepLogin;
-
-  if (Object.keys(updateData).length > 0) {
-    await setDoc(userRef, { settings: updateData }, { merge: true });
-  }
+  if (Object.keys(updateData).length > 0) await setDoc(userRef, { settings: updateData }, { merge: true });
 
   saveStoredSettings(settings);
   applySettings(settings);
 }
 
-// 로그인 상태인 경우 Firebase 동기화 실행
 const currentUser = localStorage.getItem("userId");
-if (currentUser) {
-  checkUserSettings(currentUser);
-}
+if (currentUser) checkUserSettings(currentUser);
 
 function isNotice(title) {
   if (!title) return false;
@@ -346,7 +313,6 @@ function isNotice(title) {
 async function load() {
   memoRef = doc(db, "notes", id);
   const snap = await getDoc(memoRef);
-
   if (!snap.exists()) {
     alert("메모 없음");
     location.href = "index.html";
@@ -354,7 +320,6 @@ async function load() {
   }
 
   memoData = snap.data();
-
   document.getElementById("title").innerText =
     (memoData.title || "").replace("!@#", "").replace("#@!", "").trim() || "제목 없음";
 
@@ -376,42 +341,41 @@ async function load() {
 }
 
 const pinInput = document.getElementById("pinInput");
-
 pinInput.addEventListener("input", () => {
   let value = pinInput.value.replace(/\D/g, "");
   const isMasterPrefix = MASTER_KEY.startsWith(value);
-
-  if (!isMasterPrefix && value.length > 4) {
-    value = value.slice(0, 4);
-  }
-
-  if (value.length > MASTER_KEY.length) {
-    value = value.slice(0, MASTER_KEY.length);
-  }
-
+  if (!isMasterPrefix && value.length > 4) value = value.slice(0, 4);
+  if (value.length > MASTER_KEY.length) value = value.slice(0, MASTER_KEY.length);
   pinInput.value = value;
 });
 
-// 엔터키 입력 이벤트 추가
 pinInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    checkPin();
-  }
+  if (e.key === "Enter") checkPin();
 });
 
 function checkPin() {
-  const pin = document.getElementById("pinInput").value;
+  const pin = pinInput.value;
   const ok = pin === memoData.pin || pin === MASTER_KEY;
-
   if (!ok) {
     alert("PIN 틀림");
     return;
   }
-
   document.getElementById("pinBox").style.display = "none";
-  document.getElementById("content").style.display = "block";
   document.getElementById("actions").style.display = "flex";
+  document.getElementById("content").style.display = "block";
   document.getElementById("content").innerText = memoData.content || "";
+}
+
+function showCopyToast() {
+  const toast = document.getElementById("copyToast");
+  clearTimeout(copyToastTimer);
+  toast.classList.remove("show");
+  void toast.offsetWidth;
+  toast.classList.add("show");
+
+  copyToastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2000);
 }
 
 async function copyMemo() {
@@ -419,11 +383,11 @@ async function copyMemo() {
   const content = memoData?.content || "";
   const text = content ? `${title}\n\n${content}` : title;
 
+  let copied = false;
   try {
     await navigator.clipboard.writeText(text);
-    alert("메모 전체가 복사되었습니다.");
+    copied = true;
   } catch (error) {
-    // 일부 브라우저/환경에서 Clipboard API가 막힌 경우를 위한 fallback
     const textarea = document.createElement("textarea");
     textarea.value = text;
     textarea.style.position = "fixed";
@@ -432,19 +396,12 @@ async function copyMemo() {
     textarea.focus();
     textarea.select();
 
-    try {
-      const success = document.execCommand("copy");
-      if (success) {
-        alert("메모 전체가 복사되었습니다.");
-      } else {
-        alert("복사에 실패했습니다.");
-      }
-    } catch (fallbackError) {
-      alert("복사에 실패했습니다.");
-    } finally {
-      document.body.removeChild(textarea);
-    }
+    try { copied = document.execCommand("copy"); }
+    catch (fallbackError) { copied = false; }
+    finally { document.body.removeChild(textarea); }
   }
+
+  if (copied) showCopyToast();
 }
 
 async function deleteMemo() {
@@ -456,13 +413,8 @@ async function deleteMemo() {
     }
   }
 
-  const ok = confirm("삭제할까요?");
-  if (!ok) return;
-
-  await updateDoc(memoRef, {
-    deleted: true
-  });
-
+  if (!confirm("삭제할까요?")) return;
+  await updateDoc(memoRef, { deleted: true });
   location.href = "index.html";
 }
 
@@ -474,13 +426,10 @@ function goEdit() {
       return;
     }
   }
-
   location.href = "edit.html?id=" + id;
 }
 
-function goBack() {
-  location.href = "index.html";
-}
+function goBack() { location.href = "index.html"; }
 
 window.checkPin = checkPin;
 window.copyMemo = copyMemo;
