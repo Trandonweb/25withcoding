@@ -8,7 +8,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
     body {
-      /* 기존 설정 유지 */
+      background-color: #0f0f13;
       color: #00ff66;
       font-family: 'Press Start 2P', monospace;
       display: flex;
@@ -21,15 +21,8 @@
       box-sizing: border-box;
       gap: 20px;
       overflow-x: auto;
-    
-      /* 🌟 배경 이미지 설정 추가 🌟 */
-      background-color: #0f0f13; /* 이미지 로딩 전이나 실패 시 보일 기본 배경색 */
-      background-image: url('./12.jpg'); /* 깃허브 상대 경로 적용 */
-      background-size: cover; /* 화면 비율을 유지하면서 꽉 채움 (핵심) */
-      background-position: center; /* 이미지를 화면 정중앙에 배치 */
-      background-repeat: no-repeat; /* 이미지 바둑판식 반복 방지 */
-      background-attachment: fixed; /* 스크롤을 내려도 배경 이미지는 고정 */
     }
+
     /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 */
     #howto-container {
       background-color: #050508;
