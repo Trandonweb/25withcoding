@@ -746,25 +746,26 @@
       const btn = document.getElementById("authBtn");
       const adminBtn = document.getElementById("adminBtn");
       const noticeBtn = document.getElementById("noticeBtn");
-
+    
       if (user) {
         await checkUserSettings(user);
-
+    
         try {
           const userSnap = await getDoc(doc(db, "users", user));
+    
           if (userSnap.exists()) {
             const userData = userSnap.data();
+    
             if (userData.role === "president" || userData.role === "vice") {
               adminBtn.style.display = "block";
               noticeBtn.style.display = "block";
-            }
             }
           }
         } catch (e) {
           console.error("권한 확인 실패", e);
         }
       }
-
+    
       syncSettingsUI();
 
       const askedMirror = sessionStorage.getItem("askedMirror");
