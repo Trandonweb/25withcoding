@@ -95,7 +95,10 @@
     }
 
     .header-btn:hover { background: var(--btn-hover); }
-    #adminBtn { display: none; }
+    #adminBtn,
+    #noticeBtn {
+      display: none;
+    }
 
     .auth-btn {
       position: absolute;
@@ -434,9 +437,9 @@
   <header>
     <div class="header-left">
       <button id="adminBtn" class="header-btn" onclick="location.href='/admin'">관리자</button>
+      <button id="noticeBtn" class="header-btn" onclick="location.href='/안내사항/'">공지</button>
       <button id="settingsBtn" class="header-btn" onclick="openSettingsModal()">설정</button>
     </div>
-
     코딩과 함께라면
 
     <button id="authBtn" class="auth-btn">로그인</button>
@@ -742,6 +745,7 @@
       const user = localStorage.getItem("userId");
       const btn = document.getElementById("authBtn");
       const adminBtn = document.getElementById("adminBtn");
+      const noticeBtn = document.getElementById("noticeBtn");
 
       if (user) {
         await checkUserSettings(user);
@@ -752,6 +756,8 @@
             const userData = userSnap.data();
             if (userData.role === "president" || userData.role === "vice") {
               adminBtn.style.display = "block";
+              noticeBtn.style.display = "block";
+            }
             }
           }
         } catch (e) {
