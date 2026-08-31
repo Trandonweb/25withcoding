@@ -132,6 +132,7 @@
       width: 32px;
       height: 32px;
       object-fit: contain;
+      display: block;
     }
 
     .map-cell.active {
@@ -315,11 +316,18 @@
         }
 
         if (i === playerPos) {
-          // 이모지 대신 test.png 이미지 태그 생성하여 주입
+          // 동일 디렉토리 내 상대 경로 지정 및 에러 처리 추가
           const img = document.createElement('img');
-          img.src = 'test.png';
+          img.src = './test.png';
           img.alt = 'Player';
           img.className = 'player-img';
+
+          // 경로 오류로 로드 실패 시 깨진 이미지 아이콘 대신 🧝‍♂️ 표시
+          img.onerror = function() {
+            this.remove();
+            cell.innerText = '🧝‍♂️';
+          };
+
           cell.appendChild(img);
           cell.classList.add('active');
         } else if (i === 24) {
