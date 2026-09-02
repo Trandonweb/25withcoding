@@ -1,128 +1,40 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>코딩과 함께라면 - 버그 소탕 순발력 테스트</title>
 <style>
-    * { box-sizing: border-box; }
-    body {
-        margin: 0; background: #05060a; display: flex; justify-content: center; align-items: center;
-        min-height: 100vh; overflow: hidden; font-family: 'Malgun Gothic','맑은 고딕',sans-serif;
-    }
-    canvas {
-        width: min(96vw, 1000px); height: auto; aspect-ratio: 4 / 3;
-        border: 2px solid #5dffb0; border-radius: 12px;
-        box-shadow: 0 0 30px rgba(0,255,150,.22), inset 0 0 40px rgba(0,0,0,.8);
-        background:#05070c; cursor: crosshair;
-    }
-</style>
-</head>
-<body>
-<canvas id="gameCanvas" width="800" height="600"></canvas>
-<script>
-const canvas=document.getElementById('gameCanvas');
-const ctx=canvas.getContext('2d');
-const W=canvas.width,H=canvas.height;
-const WHITE='#f5f7ff',BLACK='#05070c',RED='#ff3d5a',GREEN='#39ff9a',BLUE='#4d7cff',YELLOW='#ffe45c',GRAY='#263044',DARK='#0d1220',PURPLE='#a855f7',CYAN='#55e7ff';
-let gameState='START_SCREEN';
-const playerPos=[400,300],playerRadius=25;
-let obstacles=[],particles=[],floatTexts=[],rings=[];
-let spawnTimer=0,spawnRate=60,score=0,lives=10,scoreTimer=0,gameTime=0,boss=null,shake=0,flash=0;
-let mouseX=400,mouseY=300;
-let buttonRect={x:290,y:350,width:220,height:60};
-const story1Lines=['평화롭던 코딩 세상에 버그 바이러스가 침공했다...','바이러스들은 메인 서버(중앙 캐릭터)를 노리고 사방에서 몰려온다.','마우스 클릭으로 바이러스들을 소멸시키고 서버를 지켜라!','[스페이스바를 누르면 전투가 시작됩니다]'];
-const story2Lines=['치열한 전투 끝에, 바이러스의 신호가 한곳으로 뭉치기 시작한다...','마침내 버그 바이러스들의 거대한 우두머리, \'디버그 불능 보스\'가 출현했다!','보스는 엄청난 맷집을 자랑하며 부하들을 계속 소환한다.','서버의 운명이 당신의 손가락 끝에 달렸다. 준비하라!','[스페이스바를 누르면 보스전이 시작됩니다]'];
-const mobInfo={1:{color:BLUE,radius:20},2:{color:YELLOW,radius:27},3:{color:RED,radius:35}};
-
-function resetGame(){obstacles=[];particles=[];floatTexts=[];rings=[];score=0;lives=10;scoreTimer=0;gameTime=0;spawnRate=60;spawnTimer=0;boss=null;shake=0;flash=0;}
-function addParticle(x,y,color,count=12,power=3){for(let i=0;i<count;i++){let a=Math.random()*Math.PI*2,s=Math.random()*power+1;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:25+Math.random()*25,max:50,size:2+Math.random()*4,color});}}
-function addRing(x,y,color){rings.push({x,y,r:5,life:22,color});}
-function addText(x,y,text,color=WHITE){floatTexts.push({x,y,text,color,life:45});}
-function drawHeart(x,y,size,active=true){ctx.save();ctx.translate(x,y);ctx.scale(size/30,size/30);ctx.fillStyle=active?RED:'#252b38';ctx.shadowBlur=active?10:0;ctx.shadowColor=RED;ctx.beginPath();ctx.moveTo(0,10);ctx.bezierCurveTo(-22,-4,-13,-18,0,-9);ctx.bezierCurveTo(13,-18,22,-4,0,10);ctx.fill();ctx.restore();}
-function drawBackground(){
-    let g=ctx.createRadialGradient(400,300,20,400,300,520);g.addColorStop(0,'#111a2a');g.addColorStop(1,'#03050a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-    ctx.strokeStyle='rgba(90,150,190,.09)';ctx.lineWidth=1;
-    for(let x=0;x<=W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-    for(let y=0;y<=H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-    let t=performance.now()/1000;ctx.strokeStyle='rgba(57,255,154,.08)';ctx.beginPath();ctx.arc(400,300,100+Math.sin(t)*4,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(400,300,150+Math.sin(t*1.3)*5,0,Math.PI*2);ctx.stroke();
-}
-function spawnObstacle(){
-    const edges=['top','bottom','left','right'],edge=edges[Math.floor(Math.random()*4)],speed=Math.random()*1.5+1.5;
-    let clicks=1,r=Math.random();
-    if(gameTime<600)clicks=1;else if(gameTime<1200)clicks=r>.6?2:1;else clicks=r>.7?3:r>.3?2:1;
-    const radius=mobInfo[clicks].radius;let x,y;
-    if(edge==='top'){x=Math.random()*W;y=-radius;}else if(edge==='bottom'){x=Math.random()*W;y=H+radius;}else if(edge==='left'){x=-radius;y=Math.random()*H;}else{x=W+radius;y=Math.random()*H;}
-    return {pos:[x,y],radius,clicks,maxClicks:clicks,speed,phase:Math.random()*Math.PI*2};
-}
-function spawnBoss(){return {pos:[400,-100],radius:60,clicks:50,maxClicks:50,speed:1,targetY:120,moveDir:1,phase:0};}
-function hitObstacle(obs,index){obs.clicks--;addParticle(obs.pos[0],obs.pos[1],mobInfo[obs.maxClicks].color,8,2.5);addRing(obs.pos[0],obs.pos[1],mobInfo[obs.maxClicks].color);shake=2;score+=obs.clicks<=0?100:10;if(obs.clicks<=0){addText(obs.pos[0],obs.pos[1]-obs.radius-10,'+100',YELLOW);obstacles.splice(index,1);}}
-function updateEffects(){
-    particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=.96;p.vy*=.96;p.life--;});particles=particles.filter(p=>p.life>0);
-    rings.forEach(r=>{r.r+=4;r.life--;});rings=rings.filter(r=>r.life>0);
-    floatTexts.forEach(t=>{t.y-=.7;t.life--;});floatTexts=floatTexts.filter(t=>t.life>0);
-    shake*=.88;if(flash>0)flash--;
-}
-function drawEffects(){
-    particles.forEach(p=>{ctx.globalAlpha=p.life/p.max;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});
-    rings.forEach(r=>{ctx.globalAlpha=r.life/22;ctx.strokeStyle=r.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,Math.PI*2);ctx.stroke();});
-    floatTexts.forEach(t=>{ctx.globalAlpha=t.life/45;ctx.fillStyle=t.color;ctx.font='bold 18px Malgun Gothic';ctx.textAlign='center';ctx.fillText(t.text,t.x,t.y);});ctx.globalAlpha=1;
-}
-function drawPlayer(){
-    let t=performance.now()/1000,glow=18+Math.sin(t*5)*4;
-    ctx.save();ctx.shadowBlur=glow;ctx.shadowColor=GREEN;ctx.fillStyle='#0b251b';ctx.beginPath();ctx.arc(400,300,31,0,Math.PI*2);ctx.fill();
-    ctx.shadowBlur=0;ctx.strokeStyle=GREEN;ctx.lineWidth=3;ctx.beginPath();ctx.arc(400,300,31,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle=GREEN;ctx.beginPath();ctx.arc(400,300,16,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=BLACK;ctx.beginPath();ctx.arc(395,296,3,0,Math.PI*2);ctx.arc(405,296,3,0,Math.PI*2);ctx.fill();ctx.restore();
-}
-function drawMob(obs){
-    const info=mobInfo[obs.maxClicks],t=performance.now()/1000+obs.phase;
-    ctx.save();ctx.translate(obs.pos[0],obs.pos[1]);ctx.rotate(Math.sin(t)*.12);ctx.shadowBlur=18;ctx.shadowColor=info.color;
-    ctx.fillStyle=info.color;ctx.beginPath();ctx.arc(0,0,obs.radius,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle=obs.maxClicks===1?WHITE:BLACK;ctx.font='bold 22px Malgun Gothic';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(obs.clicks,0,1);
-    ctx.restore();
-}
-function drawBoss(){if(!boss)return;let t=performance.now()/1000;ctx.save();ctx.translate(boss.pos[0],boss.pos[1]);ctx.shadowBlur=30;ctx.shadowColor=PURPLE;ctx.fillStyle='#5b1a91';ctx.beginPath();ctx.roundRect(-62,-62,124,124,18);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=PURPLE;ctx.lineWidth=4;ctx.stroke();
-    ctx.fillStyle='#180b25';ctx.beginPath();ctx.arc(0,0,40,0,Math.PI*2);ctx.fill();ctx.strokeStyle=WHITE;ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle=RED;ctx.beginPath();ctx.arc(-15,-5,7+Math.sin(t*5)*2,0,Math.PI*2);ctx.arc(15,-5,7+Math.sin(t*5)*2,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle=PURPLE;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,82+Math.sin(t*2)*5,0,Math.PI*2);ctx.stroke();ctx.restore();
-    const bw=250,bh=18,bx=boss.pos[0]-bw/2,by=boss.pos[1]-92;ctx.fillStyle='#161b29';ctx.fillRect(bx,by,bw,bh);ctx.fillStyle=RED;ctx.fillRect(bx,by,bw*(boss.clicks/boss.maxClicks),bh);ctx.strokeStyle=WHITE;ctx.strokeRect(bx,by,bw,bh);
-    ctx.fillStyle=WHITE;ctx.font='bold 18px Malgun Gothic';ctx.textAlign='center';ctx.fillText(`BOSS HP  ${boss.clicks} / ${boss.maxClicks}`,boss.pos[0],by-9);
-}
-function drawHUD(){
-    ctx.fillStyle='rgba(7,12,22,.86)';ctx.fillRect(14,14,260,92);ctx.strokeStyle='rgba(85,231,255,.35)';ctx.strokeRect(14,14,260,92);
-    ctx.textAlign='left';ctx.fillStyle=WHITE;ctx.font='bold 22px Malgun Gothic';ctx.fillText(`SCORE  ${score}`,28,45);
-    if(gameState==='PLAYING'){ctx.fillStyle=YELLOW;ctx.font='bold 17px Malgun Gothic';ctx.fillText(`BOSS WAVE  ${Math.max(0,Math.ceil(30-gameTime/60))}s`,28,75);}
-    else if(gameState==='BOSS_BATTLE'){ctx.fillStyle=PURPLE;ctx.font='bold 17px Malgun Gothic';ctx.fillText('FINAL BOSS BATTLE',28,75);}
-    // 10칸 체력바
-    const x0=canvas.width-270,y=22,w=22,h=25,gap=4;ctx.fillStyle=WHITE;ctx.font='bold 15px Malgun Gothic';ctx.textAlign='right';ctx.fillText(`SERVER HP  ${lives}/10`,W-20,66);
-    for(let i=0;i<10;i++){let x=x0+i*(w+gap);ctx.fillStyle=i<lives?RED:'#242b39';ctx.fillRect(x,y,w,h);ctx.strokeStyle=i<lives?'#ff7185':'#394153';ctx.strokeRect(x,y,w,h);}
-}
-function drawStart(){drawBackground();ctx.textAlign='center';ctx.shadowBlur=25;ctx.shadowColor=GREEN;ctx.fillStyle=GREEN;ctx.font='bold 48px Malgun Gothic';ctx.fillText('버그 소탕 순발력 테스트',400,210);ctx.shadowBlur=0;ctx.fillStyle=WHITE;ctx.font='23px Malgun Gothic';ctx.fillText('버그를 클릭해서 메인 서버를 지켜라!',400,265);
-    ctx.fillStyle='rgba(57,255,154,.12)';ctx.beginPath();ctx.roundRect(buttonRect.x,buttonRect.y,buttonRect.width,buttonRect.height,14);ctx.fill();ctx.strokeStyle=GREEN;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=GREEN;ctx.font='bold 25px Malgun Gothic';ctx.fillText('GAME START',400,388);
-    ctx.fillStyle='#8993a8';ctx.font='16px Malgun Gothic';ctx.fillText('마우스 클릭으로 공격  •  버그가 서버에 닿으면 HP 감소',400,455);
-}
-function drawStory(lines){drawBackground();ctx.fillStyle='rgba(9,14,25,.94)';ctx.beginPath();ctx.roundRect(45,75,710,450,18);ctx.fill();ctx.strokeStyle='rgba(85,231,255,.55)';ctx.lineWidth=2;ctx.stroke();ctx.textAlign='left';ctx.fillStyle=CYAN;ctx.font='bold 27px Malgun Gothic';ctx.fillText(gameState==='STORY_1'?'SYSTEM ALERT':'WARNING // BOSS SIGNAL',80,125);ctx.font='21px Malgun Gothic';for(let i=0;i<lines.length;i++){ctx.fillStyle=i===lines.length-1?YELLOW:WHITE;ctx.fillText(lines[i],80,185+i*62);} }
-function drawEnd(){ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.shadowBlur=25;ctx.shadowColor=gameState==='VICTORY'?GREEN:RED;ctx.fillStyle=gameState==='VICTORY'?GREEN:RED;ctx.font='bold 58px Malgun Gothic';ctx.fillText(gameState==='VICTORY'?'VICTORY!':'GAME OVER',400,250);ctx.shadowBlur=0;ctx.fillStyle=WHITE;ctx.font='23px Malgun Gothic';ctx.fillText(gameState==='VICTORY'?'버그 원흉을 처단했습니다!':'서버가 파괴되었습니다...',400,305);ctx.font='18px Malgun Gothic';ctx.fillStyle='#aeb7c8';ctx.fillText(`최종 점수  ${score}`,400,350);ctx.fillText("다시 시작: R   |   메인 메뉴: M",400,400);}
-
-canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mouseX=(e.clientX-r.left)*(W/r.width);mouseY=(e.clientY-r.top)*(H/r.height);});
-canvas.addEventListener('mousedown',e=>{if(e.button!==0)return;
-    if(gameState==='START_SCREEN'&&mouseX>=buttonRect.x&&mouseX<=buttonRect.x+buttonRect.width&&mouseY>=buttonRect.y&&mouseY<=buttonRect.y+buttonRect.height){gameState='STORY_1';return;}
-    if(gameState!=='PLAYING'&&gameState!=='BOSS_BATTLE')return;let clicked=false;
-    if(gameState==='BOSS_BATTLE'&&boss){let d=Math.hypot(boss.pos[0]-mouseX,boss.pos[1]-mouseY);if(d<boss.radius){boss.clicks--;score+=50;addParticle(boss.pos[0],boss.pos[1],PURPLE,18,4);addRing(boss.pos[0],boss.pos[1],PURPLE);shake=5;flash=4;if(boss.clicks<=0){addParticle(boss.pos[0],boss.pos[1],GREEN,70,7);gameState='VICTORY';}clicked=true;}}
-    if(!clicked){for(let i=obstacles.length-1;i>=0;i--){let o=obstacles[i],d=Math.hypot(o.pos[0]-mouseX,o.pos[1]-mouseY);if(d<o.radius){hitObstacle(o,i);clicked=true;break;}}}
-});
-window.addEventListener('keydown',e=>{if(e.code==='Space'&&gameState==='STORY_1'){resetGame();gameState='PLAYING';}else if(e.code==='Space'&&gameState==='STORY_2'){boss=spawnBoss();gameState='BOSS_BATTLE';}else if((gameState==='GAME_OVER'||gameState==='VICTORY')&&e.key.toLowerCase()==='r'){resetGame();gameState='PLAYING';}else if((gameState==='GAME_OVER'||gameState==='VICTORY')&&e.key.toLowerCase()==='m'){gameState='START_SCREEN';}});
-
+*{box-sizing:border-box}body{margin:0;background:#05060a;display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden;font-family:'Malgun Gothic','맑은 고딕',sans-serif}canvas{width:min(96vw,1000px);height:auto;aspect-ratio:4/3;border:2px solid #5dffb0;border-radius:12px;box-shadow:0 0 30px rgba(0,255,150,.22),inset 0 0 40px #000;background:#05070c;cursor:crosshair}
+</style></head><body><canvas id="gameCanvas" width="800" height="600"></canvas><script>
+const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d'),W=800,H=600;
+const C={w:'#f5f7ff',b:'#05070c',r:'#ff3d5a',g:'#39ff9a',bl:'#4d7cff',y:'#ffe45c',p:'#a855f7',c:'#55e7ff'};
+let state='START',score=0,lives=10,wave=1,bossNo=0,waveTime=0,spawnTimer=0,spawnRate=55,boss=null,obstacles=[],particles=[],texts=[],rings=[],shake=0,flash=0;
+const player={x:400,y:300,r:25,speed:4};let keys={},mouseX=400,mouseY=300;
+const mobs={1:{color:C.bl,r:20},2:{color:C.y,r:27},3:{color:C.r,r:35}};
+const stories={start:['평화롭던 코딩 세상에 버그 바이러스가 침공했다...','WASD 또는 방향키로 서버를 움직여라!','다가오는 버그를 클릭해서 제거하고 10칸의 체력을 지켜라!','[스페이스바를 누르면 1웨이브 시작]'],boss:[`WAVE ${wave} 클리어!`,`버그의 우두머리 ${bossNo}호가 출현했다!`,'보스를 클릭해 쓰러뜨리고 다음 웨이브로 진입하라.','[스페이스바를 누르면 보스전 시작]']};
+function reset(){score=0;lives=10;wave=1;bossNo=0;waveTime=0;spawnTimer=0;spawnRate=55;boss=null;obstacles=[];particles=[];texts=[];rings=[];player.x=400;player.y=300;}
+function particlesAt(x,y,color,n=15,p=3){for(let i=0;i<n;i++){let a=Math.random()*6.28,s=Math.random()*p+1;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:25+Math.random()*25,max:50,color,size:2+Math.random()*4})}}
+function ring(x,y,color){rings.push({x,y,r:5,life:22,color})}function text(x,y,t,color=C.w){texts.push({x,y,t,color,life:45})}
+function spawn(){let e=['top','bottom','left','right'][Math.floor(Math.random()*4)],r=Math.random(),clicks=wave>=3?(r>.65?3:r>.25?2:1):(r>.65?2:1),rad=mobs[clicks].r,x,y;if(e==='top'){x=Math.random()*W;y=-rad}else if(e==='bottom'){x=Math.random()*W;y=H+rad}else if(e==='left'){x=-rad;y=Math.random()*H}else{x=W+rad;y=Math.random()*H}return{x,y,r:rad,clicks,max:clicks,speed:1.7+Math.random()*1.7,phase:Math.random()*6.28}}
+function makeBoss(){let hp=35+bossNo*15;return{x:400,y:-100,r:bossNo===3?70:60,hp,max:hp,vy:1,dir:1,phase:0}}
+function beginWave(){state='PLAY';waveTime=0;spawnTimer=0;spawnRate=Math.max(28,58-wave*7);obstacles=[];boss=null}
+function beginBoss(){bossNo=wave;boss=makeBoss();state='BOSS';obstacles=[];spawnTimer=0}
 function update(){
-    if(gameState==='PLAYING'){gameTime++;scoreTimer++;if(scoreTimer%30===0)score+=10;if(gameTime>=1800){obstacles=[];gameState='STORY_2';}spawnTimer++;if(spawnTimer>=spawnRate){obstacles.push(spawnObstacle());spawnTimer=0;if(spawnRate>25&&gameTime%300===0)spawnRate-=3;}}
-    else if(gameState==='BOSS_BATTLE'&&boss){boss.phase+=.03;if(boss.pos[1]<boss.targetY)boss.pos[1]+=boss.speed;else{boss.pos[0]+=boss.moveDir*2;if(boss.pos[0]<=100||boss.pos[0]>=W-100)boss.moveDir*=-1;}spawnTimer++;if(spawnTimer>=90){let o=spawnObstacle();o.pos=[boss.pos[0],boss.pos[1]];obstacles.push(o);spawnTimer=0;}}
-    if(gameState==='PLAYING'||gameState==='BOSS_BATTLE'){for(let i=obstacles.length-1;i>=0;i--){let o=obstacles[i],dx=400-o.pos[0],dy=300-o.pos[1],d=Math.hypot(dx,dy);if(d!==0){o.pos[0]+=dx/d*o.speed;o.pos[1]+=dy/d*o.speed;}if(d<playerRadius+o.radius){lives--;addParticle(o.pos[0],o.pos[1],RED,18,3);flash=8;shake=7;obstacles.splice(i,1);if(lives<=0)gameState='GAME_OVER';}}}
-    updateEffects();
+ if(state==='PLAY'){waveTime++;spawnTimer++;if(spawnTimer>=spawnRate){obstacles.push(spawn());spawnTimer=0}if(waveTime>=900){beginBoss();}}
+ if(state==='BOSS'&&boss){boss.phase+=.03;if(boss.y<120)boss.y+=boss.vy;else{boss.x+=boss.dir*(1.5+bossNo*.25);if(boss.x<100||boss.x>700)boss.dir*=-1}spawnTimer++;if(spawnTimer>=Math.max(45,90-bossNo*12)){let o=spawn();o.x=boss.x;o.y=boss.y+50;obstacles.push(o);spawnTimer=0}}
+ if(state==='PLAY'||state==='BOSS'){let dx=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0),dy=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0);if(dx||dy){let len=Math.hypot(dx,dy);player.x+=dx/len*player.speed;player.y+=dy/len*player.speed}player.x=Math.max(35,Math.min(W-35,player.x));player.y=Math.max(125,Math.min(H-35,player.y));for(let i=obstacles.length-1;i>=0;i--){let o=obstacles[i],dx=player.x-o.x,dy=player.y-o.y,d=Math.hypot(dx,dy);if(d){o.x+=dx/d*o.speed;o.y+=dy/d*o.speed}if(d<player.r+o.r){lives--;particlesAt(player.x,player.y,C.r,20,3);flash=8;shake=7;obstacles.splice(i,1);if(lives<=0)state='OVER'}}}
+ particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=.96;p.vy*=.96;p.life--});particles=particles.filter(p=>p.life>0);rings.forEach(r=>{r.r+=4;r.life--});rings=rings.filter(r=>r.life>0);texts.forEach(t=>{t.y-=.7;t.life--});texts=texts.filter(t=>t.life>0);shake*=.88;if(flash)flash--;
 }
-function render(){ctx.save();if(shake>0)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);if(gameState==='START_SCREEN')drawStart();else if(gameState==='STORY_1'||gameState==='STORY_2')drawStory(gameState==='STORY_1'?story1Lines:story2Lines);else{drawBackground();obstacles.forEach(drawMob);if(gameState==='BOSS_BATTLE')drawBoss();drawPlayer();drawHUD();drawEffects();if(gameState==='GAME_OVER'||gameState==='VICTORY')drawEnd();}ctx.restore();if(flash>0){ctx.fillStyle=`rgba(255,70,90,${flash/40})`;ctx.fillRect(0,0,W,H);}requestAnimationFrame(loop);}
-function loop(){update();render();}
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
+function background(){let g=ctx.createRadialGradient(400,300,10,400,300,550);g.addColorStop(0,'#111a2a');g.addColorStop(1,'#03050a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.strokeStyle='rgba(90,150,190,.08)';for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}}
+function playerDraw(){ctx.save();ctx.shadowBlur=20;ctx.shadowColor=C.g;ctx.fillStyle='#0b251b';ctx.beginPath();ctx.arc(player.x,player.y,31,0,6.28);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=C.g;ctx.lineWidth=3;ctx.stroke();ctx.fillStyle=C.g;ctx.beginPath();ctx.arc(player.x,player.y,16,0,6.28);ctx.fill();ctx.fillStyle=C.b;ctx.beginPath();ctx.arc(player.x-5,player.y-4,3,0,6.28);ctx.arc(player.x+5,player.y-4,3,0,6.28);ctx.fill();ctx.restore()}
+function mobDraw(o){let m=mobs[o.max];ctx.save();ctx.translate(o.x,o.y);ctx.rotate(Math.sin(performance.now()/300+o.phase)*.12);ctx.shadowBlur=18;ctx.shadowColor=m.color;ctx.fillStyle=m.color;ctx.beginPath();ctx.arc(0,0,o.r,0,6.28);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=C.w;ctx.stroke();ctx.fillStyle=o.max===1?C.w:C.b;ctx.font='bold 22px Malgun Gothic';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(o.clicks,0,1);ctx.restore()}
+function bossDraw(){if(!boss)return;ctx.save();ctx.translate(boss.x,boss.y);ctx.shadowBlur=30;ctx.shadowColor=C.p;ctx.fillStyle='#5b1a91';ctx.beginPath();ctx.roundRect(-boss.r,-boss.r,boss.r*2,boss.r*2,18);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=C.p;ctx.lineWidth=4;ctx.stroke();ctx.fillStyle='#180b25';ctx.beginPath();ctx.arc(0,0,40,0,6.28);ctx.fill();ctx.fillStyle=C.r;ctx.beginPath();ctx.arc(-15,-5,8,0,6.28);ctx.arc(15,-5,8,0,6.28);ctx.fill();ctx.restore();let bw=280,bh=18,bx=boss.x-bw/2,by=boss.y-boss.r-32;ctx.fillStyle='#161b29';ctx.fillRect(bx,by,bw,bh);ctx.fillStyle=C.r;ctx.fillRect(bx,by,bw*boss.hp/boss.max,bh);ctx.strokeStyle=C.w;ctx.strokeRect(bx,by,bw,bh);ctx.fillStyle=C.w;ctx.font='bold 17px Malgun Gothic';ctx.textAlign='center';ctx.fillText(`BOSS ${bossNo}  HP ${boss.hp}/${boss.max}`,boss.x,by-8)}
+function hud(){ctx.fillStyle='rgba(7,12,22,.88)';ctx.fillRect(14,14,310,92);ctx.strokeStyle='rgba(85,231,255,.35)';ctx.strokeRect(14,14,310,92);ctx.textAlign='left';ctx.fillStyle=C.w;ctx.font='bold 21px Malgun Gothic';ctx.fillText(`SCORE  ${score}`,28,43);ctx.fillStyle=wave>=3?C.r:C.y;ctx.font='bold 18px Malgun Gothic';ctx.fillText(`WAVE ${wave}  ${state==='PLAY'?Math.ceil((900-waveTime)/60)+'s':'BOSS FIGHT'}`,28,75);ctx.fillStyle=C.w;ctx.font='bold 15px Malgun Gothic';ctx.textAlign='right';ctx.fillText(`SERVER HP  ${lives}/10`,W-20,66);for(let i=0;i<10;i++){let x=W-270+i*26;ctx.fillStyle=i<lives?C.r:'#242b39';ctx.fillRect(x,22,22,25);ctx.strokeStyle=i<lives?'#ff7185':'#394153';ctx.strokeRect(x,22,22,25)}}
+function effects(){particles.forEach(p=>{ctx.globalAlpha=p.life/p.max;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,6.28);ctx.fill()});rings.forEach(r=>{ctx.globalAlpha=r.life/22;ctx.strokeStyle=r.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,6.28);ctx.stroke()});texts.forEach(t=>{ctx.globalAlpha=t.life/45;ctx.fillStyle=t.color;ctx.font='bold 18px Malgun Gothic';ctx.textAlign='center';ctx.fillText(t.t,t.x,t.y)});ctx.globalAlpha=1}
+function story(lines,title){background();ctx.fillStyle='rgba(9,14,25,.95)';ctx.beginPath();ctx.roundRect(45,75,710,450,18);ctx.fill();ctx.strokeStyle='rgba(85,231,255,.55)';ctx.stroke();ctx.textAlign='left';ctx.fillStyle=C.c;ctx.font='bold 27px Malgun Gothic';ctx.fillText(title,80,125);ctx.font='20px Malgun Gothic';lines.forEach((s,i)=>{ctx.fillStyle=i===lines.length-1?C.y:C.w;ctx.fillText(s,80,185+i*62)})}
+function end(){ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle=state==='WIN'?C.g:C.r;ctx.font='bold 58px Malgun Gothic';ctx.fillText(state==='WIN'?'VICTORY!':'GAME OVER',400,250);ctx.fillStyle=C.w;ctx.font='23px Malgun Gothic';ctx.fillText(state==='WIN'?'3명의 보스를 모두 쓰러뜨렸습니다!':'서버가 파괴되었습니다...',400,305);ctx.font='18px Malgun Gothic';ctx.fillText(`최종 점수 ${score}  |  R: 다시 시작  M: 메뉴`,400,365)}
+canvas.addEventListener('mousemove',e=>{let r=canvas.getBoundingClientRect();mouseX=(e.clientX-r.left)*W/r.width;mouseY=(e.clientY-r.top)*H/r.height});canvas.addEventListener('mousedown',e=>{if(e.button!==0)return;if(state==='START'&&mouseX>=290&&mouseX<=510&&mouseY>=350&&mouseY<=410){reset();state='STORY';return}if(state!=='PLAY'&&state!=='BOSS')return;if(state==='BOSS'&&boss&&Math.hypot(boss.x-mouseX,boss.y-mouseY)<boss.r){boss.hp--;score+=50;particlesAt(boss.x,boss.y,C.p,18,4);ring(boss.x,boss.y,C.p);shake=5;if(boss.hp<=0){score+=500;particlesAt(boss.x,boss.y,C.g,70,7);if(bossNo>=3)state='WIN';else{wave++;state='BOSS_CLEAR'}}return}for(let i=obstacles.length-1;i>=0;i--){let o=obstacles[i];if(Math.hypot(o.x-mouseX,o.y-mouseY)<o.r){o.clicks--;score+=o.clicks<=0?100:10;particlesAt(o.x,o.y,mobs[o.max].color,8,2.5);ring(o.x,o.y,mobs[o.max].color);if(o.clicks<=0)obstacles.splice(i,1);break}}});
+window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.code==='Space'){if(state==='STORY')beginWave();else if(state==='BOSS_CLEAR')beginBoss()}if((state==='OVER'||state==='WIN')&&e.key.toLowerCase()==='r'){reset();state='STORY'}if((state==='OVER'||state==='WIN')&&e.key.toLowerCase()==='m')state='START'});window.addEventListener('keyup',e=>keys[e.key]=false);
+function render(){ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);if(state==='START'){background();ctx.textAlign='center';ctx.shadowBlur=25;ctx.shadowColor=C.g;ctx.fillStyle=C.g;ctx.font='bold 48px Malgun Gothic';ctx.fillText('버그 소탕 순발력 테스트',400,210);ctx.shadowBlur=0;ctx.fillStyle=C.w;ctx.font='23px Malgun Gothic';ctx.fillText('WASD / 방향키로 서버를 움직이세요!',400,265);ctx.fillStyle='rgba(57,255,154,.12)';ctx.beginPath();ctx.roundRect(290,350,220,60,14);ctx.fill();ctx.strokeStyle=C.g;ctx.stroke();ctx.fillStyle=C.g;ctx.font='bold 25px Malgun Gothic';ctx.fillText('GAME START',400,388)}else if(state==='STORY')story(stories.start,'SYSTEM ALERT');else if(state==='BOSS_CLEAR')story([`WAVE ${wave-1} 보스 격파!`,`다음 목표: WAVE ${wave} → BOSS ${wave}`,'더 빠르고 강한 버그가 등장합니다!','[스페이스바를 눌러 다음 웨이브]'],'WAVE CLEAR');else if(state==='PLAY'||state==='BOSS'){background();obstacles.forEach(mobDraw);if(state==='BOSS')bossDraw();playerDraw();hud();effects()}else{background();playerDraw();hud();effects();end()}ctx.restore();if(flash){ctx.fillStyle=`rgba(255,60,80,${flash/40})`;ctx.fillRect(0,0,W,H)}requestAnimationFrame(loop)}
+function loop(){update();render()}requestAnimationFrame(loop);
+</script></body></html>
