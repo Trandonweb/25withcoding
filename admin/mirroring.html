@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>화면 모니터링</title>
 <style>
 :root{--bg:#f0f0f0;--panel:#fff;--text:#111;--muted:#777;--primary:var(--primary-color,#27ae60)}
 body.dark-mode{--bg:#101010;--panel:#1b1b1b;--text:#fff;--muted:#aaa}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:sans-serif;transition:.2s}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:sans-serif;transition:.2s}
 header{height:70px;padding:0 20px;background:var(--panel);display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--primary);box-shadow:0 2px 10px #0001;position:sticky;top:0;z-index:20}
 .left{display:flex;align-items:center;gap:15px}header h2{margin:0;color:var(--primary);font-size:21px}
-#back{border:0;border-radius:10px;padding:10px 15px;background:var(--primary);color:#fff;font-weight:bold;cursor:pointer}#online{font-weight:bold}
+#back{border:0;border-radius:10px;padding:10px 15px;background:var(--primary);color:#fff;font-weight:bold;cursor:pointer}
+#online{font-weight:bold}
 #grid{padding:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;max-width:1800px;margin:auto}
 .cctv{position:relative;background:#080808;border:2px solid #333;border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:16/10;box-shadow:0 4px 14px #0003;transition:.18s}.cctv:hover{transform:scale(1.015);border-color:var(--primary)}
 .cctv video{width:100%;height:100%;display:block;object-fit:contain;background:#000}.cctv .top{position:absolute;left:0;right:0;top:0;padding:9px 11px;background:linear-gradient(#000b,transparent);color:#fff;display:flex;justify-content:space-between;pointer-events:none;text-shadow:0 1px 3px #000}.name{font-weight:bold;font-size:15px}.status{font-size:12px;font-weight:bold}.status.connecting{color:#ffd166}.status.live{color:#7cff9a}.status.waiting{color:#ddd}.status.error{color:#ff7777}.status::before{content:'●';margin-right:5px}.cctv .bottom{position:absolute;left:0;right:0;bottom:0;padding:8px 11px;background:linear-gradient(transparent,#000c);color:#ddd;font-size:12px;pointer-events:none}
@@ -28,32 +31,195 @@ header{height:70px;padding:0 20px;background:var(--panel);display:flex;align-ite
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import{getFirestore,collection,onSnapshot,doc,getDoc,updateDoc,arrayUnion,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
 const db=getFirestore(initializeApp(firebaseConfig));
-try{const s=JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}");document.body.classList.toggle("dark-mode",!!s.darkMode);if(s.primaryColor)document.documentElement.style.setProperty("--primary-color",s.primaryColor)}catch(e){}
-const adminId=localStorage.getItem("userId");if(!adminId){alert("로그인이 필요합니다.");location.href="/signin?redirect=/admin/mirroring.html";throw new Error("로그인 필요")}
-const rtcConfig={iceServers:[{urls:"stun:stun.relay.metered.ca:80"},{urls:"turn:standard.relay.metered.ca:80",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},{urls:"turn:standard.relay.metered.ca:80?transport=tcp",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},{urls:"turn:standard.relay.metered.ca:443",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},{urls:"turns:standard.relay.metered.ca:443?transport=tcp",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"}]};
-const sessions=new Map();let selectedId=null;const busy=new Set();
-const esc=v=>String(v).replace(/[&<>\'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));
-function cardStatus(c,type,text){const el=c?.querySelector('.status');if(!el)return;el.className='status '+type;el.textContent=text}
-function makeCard(id,d){const c=document.createElement('div');c.className='cctv';c.dataset.id=id;c.innerHTML=`<video autoplay muted playsinline></video><div class="top"><span class="name">${esc(d.name||id)}</span><span class="status connecting">연결 중</span></div><div class="bottom">ID: ${esc(id)} · ${d.mode||'webrtc'}</div>`;c.onclick=()=>openViewer(id);return c}
-function setVideo(id,stream){const c=document.querySelector(`.cctv[data-id="${CSS.escape(id)}"]`);if(c){const v=c.querySelector('video');v.srcObject=stream;v.play().catch(()=>{});cardStatus(c,'waiting','영상 확인 중')}}
-function setCardError(id,text='연결 끊김'){const c=document.querySelector(`.cctv[data-id="${CSS.escape(id)}"]`);if(c)cardStatus(c,'error',text)}
-async function stopSession(id,clear=true){const s=sessions.get(id);if(!s)return;if(s.unsubscribe)s.unsubscribe();if(s.statsTimer)clearInterval(s.statsTimer);try{s.pc.close()}catch(e){}sessions.delete(id);if(selectedId===id)closeViewer();if(clear)try{await updateDoc(doc(db,'users',id),{sharing:false,sharingStartedAt:null,adminAnswer:null,adminCandidates:[]})}catch(e){}}
-async function verifyInbound(id){const s=sessions.get(id);if(!s)return;try{const stats=await s.pc.getStats();let received=false;stats.forEach(r=>{if(r.type==='inbound-rtp'&&r.kind==='video'&&((r.bytesReceived||0)>0||(r.packetsReceived||0)>0))received=true});if(received){s.receiving=true;const c=document.querySelector(`.cctv[data-id="${CSS.escape(id)}"]`);cardStatus(c,'live','LIVE');if(selectedId===id)setViewerStatus('live','● LIVE')}else if(s.pc.connectionState==='connected'){s.receiving=false;setCardError(id,'영상 없음');if(selectedId===id)setViewerStatus('error','● 영상 없음')}}catch(e){}}
-function setViewerStatus(type,text){const el=document.querySelector('#viewerTitle .viewer-status');if(el){el.className='viewer-status '+type;el.textContent=text}}
-async function connectStudent(id,d){if(busy.has(id)||sessions.has(id)||!d.clientOffer)return;busy.add(id);try{const ref=doc(db,'users',id),sid=d.clientOffer.sessionId||d.sessionId;if(!sid)return;const pc=new RTCPeerConnection(rtcConfig);const s={pc,candidates:new Set(),sessionId:sid,unsubscribe:null,stream:null,receiving:false};sessions.set(id,s);cardStatus(document.querySelector(`.cctv[data-id="${CSS.escape(id)}"]`),'connecting','연결 중');
- s.pc.ontrack=e=>{if(e.streams[0]){s.stream=e.streams[0];setVideo(id,s.stream);if(selectedId===id){document.getElementById('bigVideo').srcObject=s.stream;document.getElementById('bigVideo').play().catch(()=>{})}for(const track of e.streams[0].getVideoTracks())track.onended=()=>{s.receiving=false;setCardError(id,'영상 공유 종료');if(selectedId===id)setViewerStatus('error','● 영상 공유 종료')}}};
- s.pc.onicecandidate=async e=>{if(e.candidate)try{await updateDoc(ref,{adminCandidates:arrayUnion(e.candidate.toJSON())})}catch(x){}};
- s.pc.onconnectionstatechange=()=>{const st=s.pc.connectionState;if(st==='connected'){cardStatus(document.querySelector(`.cctv[data-id="${CSS.escape(id)}"]`),'waiting','영상 확인 중');setTimeout(()=>verifyInbound(id),300);if(selectedId===id)setViewerStatus('connecting','● 영상 확인 중')}else if(st==='connecting'||st==='new'){cardStatus(document.querySelector(`.cctv[data-id="${CSS.escape(id)}"]`),'connecting','연결 중');if(selectedId===id)setViewerStatus('connecting','● 연결 중')}else if(st==='disconnected'){setCardError(id,'연결 끊김');if(selectedId===id)setViewerStatus('error','● 연결 끊김')}else if(st==='failed'){setCardError(id,'연결 실패');if(selectedId===id)setViewerStatus('error','● 연결 실패')}else if(st==='closed'){setCardError(id,'연결 종료');if(selectedId===id)setViewerStatus('error','● 연결 종료')}};
- await s.pc.setRemoteDescription(new RTCSessionDescription({type:d.clientOffer.type,sdp:d.clientOffer.sdp}));const a=await s.pc.createAnswer();await s.pc.setLocalDescription(a);await updateDoc(ref,{adminAnswer:{type:a.type,sdp:a.sdp,sessionId:sid},updatedAt:serverTimestamp()});
- s.unsubscribe=onSnapshot(ref,async snap=>{const x=snap.data();if(!x||!x.online||x.sessionId!==sid)return;if(Array.isArray(x.adminCandidates)&&s.pc.currentRemoteDescription)for(const q of x.adminCandidates){const k=JSON.stringify(q);if(s.candidates.has(k))continue;try{await s.pc.addIceCandidate(new RTCIceCandidate(q));s.candidates.add(k)}catch(e){}}});s.statsTimer=setInterval(()=>verifyInbound(id),3000);
- }catch(e){console.error('[ADMIN] 연결 실패',id,e);setCardError(id,'연결 실패');await stopSession(id,false)}finally{busy.delete(id)}}
-function openViewer(id){const s=sessions.get(id);if(!s)return;selectedId=id;const c=document.querySelector(`.cctv[data-id="${CSS.escape(id)}"]`);const n=c?.querySelector('.name')?.textContent||id;document.getElementById('viewerTitle').innerHTML=`${esc(n)} <span class="viewer-status ${s.receiving?'live':'connecting'}">● ${s.receiving?'LIVE':'연결 확인 중'}</span>`;if(s.stream)document.getElementById('bigVideo').srcObject=s.stream;else document.getElementById('bigVideo').srcObject=null;document.getElementById('bigVideo').play().catch(()=>{});document.getElementById('viewer').style.display='flex';verifyInbound(id)}
-function closeViewer(){document.getElementById('viewer').style.display='none';document.getElementById('bigVideo').srcObject=null;selectedId=null}
-document.getElementById('closeViewer').onclick=closeViewer;document.getElementById('viewer').onclick=e=>{if(e.target.id==='viewer')closeViewer()};document.onkeydown=e=>{if(e.key==='Escape')closeViewer()};document.getElementById('back').onclick=()=>location.href='/admin/index.html';
-function renderEmpty(){const g=document.getElementById('grid');if(!g.children.length)g.innerHTML='<div class="empty">현재 접속 중인 학생이 없습니다.</div>'}
-function loadUsers(){onSnapshot(collection(db,'users'),async snap=>{const g=document.getElementById('grid'),seen=new Set();let online=0;for(const u of snap.docs){const id=u.id;if(id===adminId)continue;const d=u.data();if(d.online!==true)continue;online++;seen.add(id);if(!g.querySelector(`.cctv[data-id="${CSS.escape(id)}"]`)){g.querySelector('.empty')?.remove();g.appendChild(makeCard(id,d))}if(!sessions.has(id)&&d.clientOffer)connectStudent(id,d)}for(const id of [...sessions.keys()])if(!seen.has(id))stopSession(id,true);g.querySelectorAll('.cctv').forEach(c=>{if(!seen.has(c.dataset.id))c.remove()});document.getElementById('online').textContent=`🟢 접속 ${online}명`;renderEmpty()})}
-(async()=>{try{const s=await getDoc(doc(db,'users',adminId));if(!s.exists()||!['president','vice'].includes(s.data().role)){alert('관리자만 접근 가능합니다.');location.href='/';return}loadUsers()}catch(e){console.error(e)}})();
+
+try{const s=JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}");document.body.classList.toggle("dark-mode",!!s.darkMode);if(s.primaryColor)document.documentElement.style.setProperty("--primary-color",s.primaryColor)}catch(e){console.warn(e)}
+
+const adminId=localStorage.getItem("userId");
+if(!adminId){alert("로그인이 필요합니다.");location.href="/signin?redirect=/admin/mirroring.html";throw new Error("로그인 필요")}
+
+const rtcConfig={iceServers:[
+ {urls:"stun:stun.relay.metered.ca:80"},
+ {urls:"turn:standard.relay.metered.ca:80",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},
+ {urls:"turn:standard.relay.metered.ca:80?transport=tcp",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},
+ {urls:"turn:standard.relay.metered.ca:443",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},
+ {urls:"turns:standard.relay.metered.ca:443?transport=tcp",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"}
+]};
+
+const sessions=new Map();
+const busy=new Set();
+let selectedId=null;
+
+function findCard(id){for(const c of document.querySelectorAll(".cctv")){if(c.dataset.id===id)return c}return null}
+function setCardStatus(id,type,text){const c=findCard(id);if(!c)return;const el=c.querySelector(".status");if(!el)return;el.className="status "+type;el.textContent=text}
+function setViewerStatus(type,text){const el=document.querySelector("#viewerTitle .viewer-status");if(el){el.className="viewer-status "+type;el.textContent=text}}
+
+function makeCard(id,d){
+ const c=document.createElement("div");
+ c.className="cctv";c.dataset.id=id;
+ const video=document.createElement("video");video.autoplay=true;video.muted=true;video.playsInline=true;
+ const top=document.createElement("div");top.className="top";
+ const name=document.createElement("span");name.className="name";name.textContent=d.name||id;
+ const status=document.createElement("span");status.className="status connecting";status.textContent="연결 중";
+ top.append(name,status);
+ const bottom=document.createElement("div");bottom.className="bottom";bottom.textContent=`ID: ${id} · ${d.mode||"webrtc"}`;
+ c.append(video,top,bottom);
+ c.onclick=()=>openViewer(id);
+ return c;
+}
+
+function setVideo(id,stream){
+ const c=findCard(id);if(!c)return;
+ const v=c.querySelector("video");v.srcObject=stream;v.play().catch(()=>{});
+ setCardStatus(id,"waiting","영상 확인 중");
+}
+
+function markError(id,text){setCardStatus(id,"error",text);if(selectedId===id)setViewerStatus("error","● "+text)}
+
+async function verifyInbound(id){
+ const s=sessions.get(id);if(!s||!s.pc)return;
+ try{
+  const stats=await s.pc.getStats();
+  let received=false;
+  stats.forEach(r=>{
+   if(r.type!=="inbound-rtp")return;
+   if(r.kind!=="video"&&r.mediaType!=="video")return;
+   if(Number(r.bytesReceived||0)>0||Number(r.packetsReceived||0)>0)received=true;
+  });
+  if(received){
+   s.receiving=true;
+   setCardStatus(id,"live","LIVE");
+   if(selectedId===id)setViewerStatus("live","● LIVE");
+  }else if(s.pc.connectionState==="connected"){
+   s.receiving=false;
+   markError(id,"영상 없음");
+  }
+ }catch(e){console.warn("[ADMIN] stats",id,e)}
+}
+
+async function stopSession(id,clear=true){
+ const s=sessions.get(id);if(!s)return;
+ if(s.unsubscribe)try{s.unsubscribe()}catch(e){}
+ if(s.statsTimer)clearInterval(s.statsTimer);
+ try{s.pc.close()}catch(e){}
+ sessions.delete(id);
+ if(selectedId===id)closeViewer();
+ if(clear){try{await updateDoc(doc(db,"users",id),{sharing:false,sharingStartedAt:null,adminAnswer:null,adminCandidates:[]})}catch(e){console.warn("[ADMIN] 상태 정리 실패",id,e)}}
+}
+
+async function connectStudent(id,d){
+ if(busy.has(id)||sessions.has(id)||!d.clientOffer)return;
+ const sid=d.clientOffer.sessionId||d.sessionId;if(!sid)return;
+ busy.add(id);
+ try{
+  const ref=doc(db,"users",id);
+  const pc=new RTCPeerConnection(rtcConfig);
+  const s={pc,sessionId:sid,candidates:new Set(),unsubscribe:null,statsTimer:null,stream:null,receiving:false};
+  sessions.set(id,s);
+  setCardStatus(id,"connecting","연결 중");
+
+  pc.ontrack=e=>{
+   const stream=e.streams&&e.streams[0];
+   if(!stream)return;
+   s.stream=stream;
+   setVideo(id,stream);
+   const tracks=stream.getVideoTracks();
+   for(const track of tracks){track.onended=()=>{s.receiving=false;markError(id,"영상 공유 종료")}}
+   if(selectedId===id){document.getElementById("bigVideo").srcObject=stream;document.getElementById("bigVideo").play().catch(()=>{})}
+   setTimeout(()=>verifyInbound(id),500);
+  };
+
+  pc.onicecandidate=async e=>{
+   if(!e.candidate)return;
+   try{await updateDoc(ref,{adminCandidates:arrayUnion(e.candidate.toJSON()),updatedAt:serverTimestamp()})}catch(x){console.warn("[ADMIN] ICE",x)}
+  };
+
+  pc.onconnectionstatechange=()=>{
+   const state=pc.connectionState;
+   if(state==="connected"){
+    setCardStatus(id,"waiting","영상 확인 중");
+    if(selectedId===id)setViewerStatus("connecting","● 영상 확인 중");
+    setTimeout(()=>verifyInbound(id),500);
+   }else if(state==="connecting"||state==="new"){
+    setCardStatus(id,"connecting","연결 중");
+    if(selectedId===id)setViewerStatus("connecting","● 연결 중");
+   }else if(state==="disconnected"){
+    markError(id,"연결 끊김");
+   }else if(state==="failed"){
+    markError(id,"연결 실패");
+   }else if(state==="closed"){
+    markError(id,"연결 종료");
+   }
+  };
+
+  await pc.setRemoteDescription(new RTCSessionDescription({type:d.clientOffer.type,sdp:d.clientOffer.sdp}));
+  const answer=await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  await updateDoc(ref,{sharing:true,sharingStartedAt:serverTimestamp(),adminAnswer:{type:answer.type,sdp:answer.sdp,sessionId:sid},adminCandidates:[],updatedAt:serverTimestamp()});
+
+  s.unsubscribe=onSnapshot(ref,async snap=>{
+   const x=snap.data();
+   if(!x||!x.online||x.sessionId!==sid)return;
+   if(!Array.isArray(x.adminCandidates)||!pc.currentRemoteDescription)return;
+   for(const q of x.adminCandidates){
+    const key=JSON.stringify(q);if(s.candidates.has(key))continue;
+    try{await pc.addIceCandidate(new RTCIceCandidate(q));s.candidates.add(key)}catch(e){console.warn("[ADMIN] candidate",e)}
+   }
+  });
+  s.statsTimer=setInterval(()=>verifyInbound(id),3000);
+ }catch(e){
+  console.error("[ADMIN] 연결 실패",id,e);
+  markError(id,"연결 실패");
+  await stopSession(id,false);
+ }finally{busy.delete(id)}
+}
+
+function openViewer(id){
+ const s=sessions.get(id);if(!s)return;
+ selectedId=id;
+ const c=findCard(id);const name=c?.querySelector(".name")?.textContent||id;
+ const title=document.getElementById("viewerTitle");title.textContent=name+" ";
+ const badge=document.createElement("span");badge.className="viewer-status "+(s.receiving?"live":"connecting");badge.textContent=s.receiving?"● LIVE":"● 연결 확인 중";title.appendChild(badge);
+ document.getElementById("bigVideo").srcObject=s.stream||null;
+ document.getElementById("bigVideo").play().catch(()=>{});
+ document.getElementById("viewer").style.display="flex";
+ verifyInbound(id);
+}
+function closeViewer(){document.getElementById("viewer").style.display="none";document.getElementById("bigVideo").srcObject=null;selectedId=null}
+
+document.getElementById("closeViewer").onclick=closeViewer;
+document.getElementById("viewer").onclick=e=>{if(e.target.id==="viewer")closeViewer()};
+document.onkeydown=e=>{if(e.key==="Escape")closeViewer()};
+document.getElementById("back").onclick=()=>location.href="/admin/index.html";
+
+function renderEmpty(){const g=document.getElementById("grid");if(!g.children.length)g.innerHTML='<div class="empty">현재 접속 중인 학생이 없습니다.</div>'}
+
+function loadUsers(){
+ onSnapshot(collection(db,"users"),snap=>{
+  const g=document.getElementById("grid");const seen=new Set();let online=0;
+  for(const u of snap.docs){
+   const id=u.id;if(id===adminId)continue;
+   const d=u.data();if(d.online!==true)continue;
+   online++;seen.add(id);
+   if(!findCard(id)){g.querySelector(".empty")?.remove();g.appendChild(makeCard(id,d))}
+   if(!sessions.has(id)&&d.clientOffer)connectStudent(id,d);
+  }
+  for(const id of [...sessions.keys()])if(!seen.has(id))stopSession(id,true);
+  g.querySelectorAll(".cctv").forEach(c=>{if(!seen.has(c.dataset.id))c.remove()});
+  document.getElementById("online").textContent=`🟢 접속 ${online}명`;
+  renderEmpty();
+ },e=>console.error("[ADMIN] users snapshot",e));
+}
+
+(async()=>{
+ try{
+  const s=await getDoc(doc(db,"users",adminId));
+  if(!s.exists()||!["president","vice"].includes(s.data().role)){alert("관리자만 접근 가능합니다.");location.href="/";return}
+  loadUsers();
+ }catch(e){console.error("[ADMIN] 초기화 실패",e);alert("화면 모니터링을 불러오지 못했습니다. 콘솔을 확인해주세요.")}
+})();
 </script>
-</body></html>
+</body>
+</html>
