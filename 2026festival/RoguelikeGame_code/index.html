@@ -3,12 +3,11 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <title>도트 로그라이크 - 가독성 개선 버전</title>
+  <title>도트 로그라이크 - 동적 배경 버전</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
     body {
-      background-color: #0f0f13;
       color: #00ff66;
       font-family: 'Press Start 2P', monospace;
       display: flex;
@@ -21,11 +20,41 @@
       box-sizing: border-box;
       gap: 20px;
       overflow-x: auto;
+      
+      /* 배경 전환을 부드럽게 만드는 애니메이션 */
+      transition: background 0.6s ease;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    /* 🌟 1. 기본 배경 (어두운 던전 느낌) */
+    body.bg-default {
+      background-color: #111118;
+      background-image: radial-gradient(circle, #1a1a24 0%, #050508 90%);
+      /* 진짜 이미지를 쓰려면 위 속성들을 지우고 아래 줄의 주석을 푸세요 */
+      /* background-image: url('./default-bg.jpg'); */
+    }
+
+    /* 🌟 2. 성공/보상 배경 (황금빛, 신비로운 느낌) */
+    body.bg-success {
+      background-color: #262211;
+      background-image: radial-gradient(circle, #3d341d 0%, #0a0803 80%);
+      /* background-image: url('./success-bg.jpg'); */
+    }
+
+    /* 🌟 3. 위험/실패/죽음 배경 (핏빛, 어두운 느낌) */
+    body.bg-danger {
+      background-color: #240b0b;
+      background-image: radial-gradient(circle, #5a1111 0%, #0a0303 80%);
+      /* background-image: url('./danger-bg.jpg'); */
     }
 
     /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 */
     #howto-container {
-      background-color: #050508;
+      background-color: rgba(5, 5, 8, 0.85); /* 배경이 살짝 비치도록 투명도 적용 */
+      backdrop-filter: blur(4px);
       border: 4px solid #00ffff;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
       width: 300px;
@@ -60,32 +89,29 @@
     }
 
     #btn-restart {
+      background-color: rgba(0, 0, 0, 0.5);
       border-color: #00ff66;
       color: #00ff66;
       text-align: center;
       font-size: 12px;
       padding: 12px;
     }
-    #btn-restart:hover:not(:disabled) {
-      background-color: #00ff66;
-      color: #000;
-    }
+    #btn-restart:hover:not(:disabled) { background-color: #00ff66; color: #000; }
 
     #btn-save {
+      background-color: rgba(0, 0, 0, 0.5);
       border-color: #ff3366;
       color: #ff3366;
       text-align: center;
       font-size: 12px;
       padding: 12px;
     }
-    #btn-save:hover:not(:disabled) {
-      background-color: #ff3366;
-      color: #fff;
-    }
+    #btn-save:hover:not(:disabled) { background-color: #ff3366; color: #fff; }
 
     /* 메인 컨테이너 */
     #game-container {
-      background-color: #000;
+      background-color: rgba(0, 0, 0, 0.75); /* 배경이 살짝 비치도록 투명도 적용 */
+      backdrop-filter: blur(4px);
       border: 6px solid #00ff66;
       box-shadow: 0 0 30px rgba(0, 255, 102, 0.6);
       width: 100%;
@@ -110,7 +136,7 @@
       gap: 5px;
       width: 250px;
       margin: 0 auto 15px auto;
-      background-color: #111;
+      background-color: rgba(17, 17, 17, 0.8);
       padding: 8px;
       border: 3px solid #333;
     }
@@ -127,7 +153,6 @@
       transition: all 0.2s ease;
     }
 
-    /* 🖼️ 플레이어 이미지 스타일 */
     .player-img {
       width: 32px;
       height: 32px;
@@ -152,7 +177,6 @@
       50% { opacity: 0.7; }
     }
 
-    /* 📜 상황 설명 텍스트 */
     #situation-text {
       font-size: 14px;
       color: #fff;
@@ -164,7 +188,6 @@
       text-align: left;
     }
 
-    /* 📊 상단 상태바 */
     #status-bar {
       display: flex;
       justify-content: space-between;
@@ -176,9 +199,8 @@
       gap: 8px;
     }
 
-    /* 📝 로그 창 */
     #log-box {
-      background-color: #050505;
+      background-color: rgba(5, 5, 5, 0.9);
       border: 2px solid #222;
       height: 110px;
       overflow-y: auto;
@@ -201,9 +223,8 @@
       gap: 10px;
     }
 
-    /* 🔘 선택지 버튼 */
     button {
-      background-color: #111;
+      background-color: rgba(17, 17, 17, 0.8);
       color: #fff;
       border: 3px solid #fff;
       font-family: 'Press Start 2P', monospace;
@@ -235,9 +256,8 @@
     }
   </style>
 </head>
-<body>
+<body class="bg-default">
 
-  <!-- ℹ️ 게임 방법 가이드 영역 & 사이드 버튼 -->
   <div id="howto-container">
     <h2>HOW TO PLAY</h2>
     <div class="guide-item"><span class="guide-sym">⚔️</span><b>무기 획득 & 교체</b><br>탐색 도중 보물상자, 상점, 고대 대장간(⚒️)에서 더 강력한 신규/전설 무기를 습득할 수 있습니다.</div>
@@ -252,7 +272,6 @@
     </div>
   </div>
 
-  <!-- 메인 게임 영역 -->
   <div id="game-container">
     <h1>DUNGEON CRAWLER</h1>
     
@@ -296,6 +315,7 @@
     const weaponEl = document.getElementById('weapon-display');
     const situationText = document.getElementById('situation-text');
     const logBox = document.getElementById('log-box');
+    const bodyEl = document.body; // 배경 제어용
     
     const c1 = document.getElementById('choice1');
     const c2 = document.getElementById('choice2');
@@ -316,18 +336,14 @@
         }
 
         if (i === playerPos) {
-          // 동일 디렉토리 내 상대 경로 지정 및 에러 처리 추가
           const img = document.createElement('img');
           img.src = './test.png';
           img.alt = 'Player';
           img.className = 'player-img';
-
-          // 경로 오류로 로드 실패 시 깨진 이미지 아이콘 대신 🧝‍♂️ 표시
           img.onerror = function() {
             this.remove();
             cell.innerText = '🧝‍♂️';
           };
-
           cell.appendChild(img);
           cell.classList.add('active');
         } else if (i === 24) {
@@ -350,12 +366,21 @@
       }
     }
 
+    // 🌟 로그를 띄울 때 타입에 따라 배경색을 동적으로 변경합니다!
     function addLog(text, type = '') {
       const entry = document.createElement('div');
       entry.className = `log-entry ${type}`;
       entry.innerText = `> ${text}`;
       logBox.appendChild(entry);
       logBox.scrollTop = logBox.scrollHeight;
+
+      if (type === 'success' || type === 'weapon') {
+        bodyEl.className = 'bg-success'; // 좋은 일 (황금빛)
+      } else if (type === 'danger') {
+        bodyEl.className = 'bg-danger';  // 나쁜 일 (핏빛)
+      } else if (type === 'system') {
+        bodyEl.className = 'bg-default'; // 기본
+      }
     }
 
     function updateWeapon(newWeapon) {
@@ -377,6 +402,8 @@
       c1.disabled = false; c2.disabled = false; c3.disabled = false; c4.disabled = false;
 
       logBox.innerHTML = '';
+      bodyEl.className = 'bg-default'; // 게임 시작 시 기본 배경
+      
       addLog('게임을 다시 시작합니다. 시작 무기를 고르고 가혹한 미궁으로 입장하세요.', 'system');
 
       updateStatus();
@@ -595,6 +622,12 @@
 
       stage++;
       stageEl.innerText = stage;
+      
+      // 다음 방으로 넘어갈 때는 배경을 다시 원래대로 돌려놓습니다.
+      setTimeout(() => {
+        if(hp > 0 && currentEvent !== 'boss_fight') bodyEl.className = 'bg-default';
+      }, 800); 
+
       generateNextRoom();
     }
 
@@ -640,6 +673,7 @@
 
     function setupBossRoom() {
       currentEvent = 'boss_fight';
+      bodyEl.className = 'bg-danger'; // 보스방 진입 시 무조건 위험 배경
       situationText.innerText = `🔥 [마지막 24번 방: BOSS STAGE] 🔥\n'마룡 레비아탄'이 거대한 포효와 함께 모습을 드러냈습니다! 강한 무기가 없이는 도륙당할 것입니다!`;
       
       c1.innerText = "1. [사투] 무기 총동원 일격 (전설 무기 보유 시 성공률 UP)";
@@ -658,6 +692,7 @@
     function checkGameOver() {
       if (hp <= 0) {
         hp = 0; hpEl.innerText = 0;
+        bodyEl.className = 'bg-danger'; // 죽었을 때 핏빛 배경 유지
         situationText.innerText = "💀 HARDCORE GAME OVER 💀";
         addLog(`미궁에서 사망했습니다. 최종 무기: ${selectedWeapon} | 최종 골드: ${gold}`, "danger");
         disableButtons();
@@ -667,6 +702,7 @@
     }
 
     function winGame() {
+      bodyEl.className = 'bg-success'; // 클리어 시 황금빛 배경 유지
       situationText.innerText = "👑 DUNGEON CLEAR!! 👑";
       addLog(`축하합니다! 마룡을 베고 탈출했습니다! 무기: ${selectedWeapon} | 스코어: ${gold}점`, "success");
       disableButtons();
