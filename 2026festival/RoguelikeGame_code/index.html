@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <title>도트 로그라이크 - 동적 배경 버전</title>
+  <title>도트 로그라이크 - 찐 배경 버전</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -21,30 +21,30 @@
       gap: 20px;
       overflow-x: auto;
       
-      /* 배경 설정 */
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      transition: background-image 0.8s ease, background-color 0.8s ease; /* 부드러운 화면 전환 효과 */
+      /* 배경 기본 설정 */
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      background-attachment: fixed !important;
+      transition: background-image 0.8s ease; 
     }
 
-    /* 🌟 1. 기본 배경 (어둡고 차가운 던전/동굴 사진) */
+    /* 🌟 1. 기본 배경 (무조건 인터넷 사진 불러오기) */
     body.bg-default {
       background-color: #111118;
-      background-image: linear-gradient(rgba(17, 17, 24, 0.75), rgba(5, 5, 8, 0.9)), url('https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1920&auto=format&fit=crop');
+      background-image: linear-gradient(rgba(17, 17, 24, 0.7), rgba(5, 5, 8, 0.9)), url('https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1920&auto=format&fit=crop') !important;
     }
 
-    /* 🌟 2. 성공/보상 배경 (황금빛 신비로운 사진) */
+    /* 🌟 2. 성공/보상 배경 */
     body.bg-success {
       background-color: #262211;
-      background-image: linear-gradient(rgba(38, 34, 17, 0.75), rgba(10, 8, 3, 0.9)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1920&auto=format&fit=crop');
+      background-image: linear-gradient(rgba(38, 34, 17, 0.7), rgba(10, 8, 3, 0.9)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1920&auto=format&fit=crop') !important;
     }
 
-    /* 🌟 3. 위험/실패/죽음 배경 (핏빛 불타는 지옥 느낌 사진) */
+    /* 🌟 3. 위험/실패/죽음 배경 */
     body.bg-danger {
       background-color: #240b0b;
-      background-image: linear-gradient(rgba(36, 11, 11, 0.75), rgba(10, 3, 3, 0.9)), url('https://images.unsplash.com/photo-1502758713292-0750ce9a0669?q=80&w=1920&auto=format&fit=crop');
+      background-image: linear-gradient(rgba(36, 11, 11, 0.7), rgba(10, 3, 3, 0.9)), url('https://images.unsplash.com/photo-1502758713292-0750ce9a0669?q=80&w=1920&auto=format&fit=crop') !important;
     }
 
     /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 */
@@ -83,24 +83,15 @@
       gap: 10px;
     }
 
-    #btn-restart {
+    #btn-restart, #btn-save {
       background-color: rgba(0, 0, 0, 0.5);
-      border-color: #00ff66;
-      color: #00ff66;
-      text-align: center;
       font-size: 12px;
       padding: 12px;
+      text-align: center;
     }
+    #btn-restart { border-color: #00ff66; color: #00ff66; }
     #btn-restart:hover:not(:disabled) { background-color: #00ff66; color: #000; }
-
-    #btn-save {
-      background-color: rgba(0, 0, 0, 0.5);
-      border-color: #ff3366;
-      color: #ff3366;
-      text-align: center;
-      font-size: 12px;
-      padding: 12px;
-    }
+    #btn-save { border-color: #ff3366; color: #ff3366; }
     #btn-save:hover:not(:disabled) { background-color: #ff3366; color: #fff; }
 
     /* 메인 컨테이너 */
@@ -237,13 +228,7 @@
       border-color: #00ff66;
       transform: scale(1.01);
     }
-
-    button:disabled {
-      background-color: #1a1a1a;
-      color: #444;
-      border-color: #222;
-      cursor: not-allowed;
-    }
+    button:disabled { background-color: #1a1a1a; color: #444; border-color: #222; cursor: not-allowed; }
 
     @media (max-width: 950px) {
       body { flex-direction: column; align-items: center; }
@@ -255,7 +240,7 @@
 
   <div id="howto-container">
     <h2>HOW TO PLAY</h2>
-    <div class="guide-item"><span class="guide-sym">⚔️</span><b>무기 획득 & 교체</b><br>탐색 도중 보물상자, 상점, 고대 대장간(⚒️)에서 더 강력한 무기를 습득할 수 있습니다.</div>
+    <div class="guide-item"><span class="guide-sym">⚔️</span><b>무기 획득 & 교체</b><br>탐색 도중 보물상자, 상점, 고대 대장간에서 더 강력한 무기를 습득할 수 있습니다.</div>
     <div class="guide-item"><span class="guide-sym">🔥</span><b>하이리스크 선택지</b><br>체력을 바치고 3칸을 가거나 목숨을 건 도박 선택지가 추가되어 난이도가 상향되었습니다!</div>
     <div class="guide-item"><span class="guide-sym">👹</span><b>최종 보스전</b><br>24번 방의 마룡은 강력한 전설 무기가 없으면 도륙당하기 십상입니다.</div>
     <hr style="border: 1px dashed #333; margin: 12px 0;">
@@ -328,17 +313,13 @@
           cell.classList.add(`theme-${mapMemory[i]}`);
         }
 
-        // 🌟 플레이어 위치 표시 로직 복구 (이미지 적용)
+        // 🌟 플레이어 이미지를 무조건 강제로 띄우는 코드입니다!
         if (i === playerPos) {
           const img = document.createElement('img');
-          img.src = './test.png'; // 원래 쓰시던 파일명
-          img.alt = 'Player';
+          img.src = './test.png'; 
           img.className = 'player-img';
-          // 만약 이미지가 깨지면(파일이 없으면) 임시로 이모지로 대체
-          img.onerror = function() {
-            this.remove();
-            cell.innerText = '🧝‍♂️'; 
-          };
+          // 이번에는 이미지 로드 실패 시 이모지로 바꾸는 코드를 없앴습니다. 
+          // 깨진 이미지가 나온다면 index.html과 test.png가 같은 곳에 있는지 꼭 확인해주세요!
           cell.appendChild(img);
           cell.classList.add('active');
         } else if (i === 24) {
@@ -605,7 +586,6 @@
       stage++;
       stageEl.innerText = stage;
       
-      // 다음 방으로 넘어갈 때는 배경을 다시 기본 던전으로 돌려놓습니다.
       setTimeout(() => {
         if(hp > 0 && currentEvent !== 'boss_fight') bodyEl.className = 'bg-default';
       }, 1000); 
