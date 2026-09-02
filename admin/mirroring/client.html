@@ -5,14 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>화면 공유</title>
 <style>
-body{margin:0;font-family:sans-serif;background:#f0f0f0;display:flex;justify-content:center;align-items:center;height:100vh}.box{width:90%;max-width:600px;background:#fff;padding:30px;border-radius:20px;box-shadow:0 0 20px rgba(0,0,0,.1)}h1{margin-top:0;color:#27ae60}.status{margin-top:20px;font-size:18px;font-weight:bold}.warn{margin-top:25px;color:#c0392b;line-height:1.7}.start{margin-top:22px;width:100%;padding:14px;border:0;border-radius:10px;background:#27ae60;color:#fff;font-size:17px;font-weight:bold;cursor:pointer}.start:disabled{opacity:.55;cursor:default}
+body{margin:0;font-family:sans-serif;background:#f0f0f0;display:flex;justify-content:center;align-items:center;height:100vh;cursor:pointer}.box{width:90%;max-width:600px;background:#fff;padding:30px;border-radius:20px;box-shadow:0 0 20px rgba(0,0,0,.1);cursor:default}h1{margin-top:0;color:#27ae60}.status{margin-top:20px;font-size:18px;font-weight:bold}.warn{margin-top:25px;color:#c0392b;line-height:1.7}
 </style>
 </head>
-<body>
+<body id="page">
 <div class="box">
 <h1>화면 공유</h1>
-<p>관리자에게 화면을 공유합니다.<br>아래 버튼을 눌러 공유할 화면을 선택하세요.</p>
-<button class="start" id="startBtn">화면 공유 시작</button>
+<p>관리자에게 화면을 공유합니다.</p>
 <div class="status" id="status">연결 준비중...</div>
 <div class="warn">- 창을 닫으면 화면 공유가 종료됩니다.<br>- 새로고침하지 마세요.<br>- 뒤로가기 하지 마세요.<br>- 공유를 직접 종료하면 관리자에게 즉시 표시됩니다.</div>
 </div>
@@ -23,41 +22,42 @@ const firebaseConfig={apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",authDomai
 const db=getFirestore(initializeApp(firebaseConfig));
 const userId=localStorage.getItem("userId");
 if(!userId){alert("로그인이 필요합니다.");location.href="/";throw new Error("로그인 필요")}
-const userRef=doc(db,"users",userId),statusEl=document.getElementById("status"),startBtn=document.getElementById("startBtn");
+const userRef=doc(db,"users",userId),statusEl=document.getElementById("status"),page=document.getElementById("page");
 const setStatus=t=>statusEl.innerText=t;
 const rtcConfig={iceServers:[{urls:"stun:stun.relay.metered.ca:80"},{urls:"turn:standard.relay.metered.ca:80",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},{urls:"turn:standard.relay.metered.ca:80?transport=tcp",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},{urls:"turn:standard.relay.metered.ca:443",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},{urls:"turns:standard.relay.metered.ca:443?transport=tcp",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"}]};
-let pc=null,stream=null,unsubscribe=null,heartbeatTimer=null,reconnectTimer=null,disconnected=false,reconnecting=false,settingAnswer=false,currentSessionId=null,currentSharingState=false,started=false;
+let pc=null,stream=null,unsubscribe=null,heartbeatTimer=null,reconnectTimer=null,disconnected=false,reconnecting=false,settingAnswer=false,currentSessionId=null,currentSharingState=false,started=false,starting=false;
 const addedAdminCandidates=new Set();
 function cleanupPeerConnection(){if(pc){try{pc.close()}catch(e){}pc=null}}
 async function fullDisconnect(){if(disconnected)return;disconnected=true;if(reconnectTimer)clearTimeout(reconnectTimer);if(heartbeatTimer)clearInterval(heartbeatTimer);if(unsubscribe)unsubscribe();if(stream)stream.getTracks().forEach(t=>t.stop());cleanupPeerConnection();try{await updateDoc(userRef,{online:false,state:"offline",mode:"firebase",sharing:false,sharingStartedAt:null,sessionId:null,clientOffer:null,adminAnswer:null,clientCandidates:[],adminCandidates:[],updatedAt:serverTimestamp()})}catch(e){console.warn(e)}}
 window.addEventListener("pagehide",()=>{fullDisconnect()});
 async function initWebRTC(){
- if(started)return;
+ if(started||starting||disconnected)return;
  if(!window.isSecureContext){setStatus("보안 연결(HTTPS)에서만 화면 공유가 가능합니다.");return}
  if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){setStatus("이 브라우저에서는 화면 공유를 사용할 수 없습니다.");return}
- startBtn.disabled=true;
+ starting=true;setStatus("화면 선택창을 여는 중...");
  try{
-  setStatus("화면 선택창을 열고 있습니다...");
   stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:10},audio:false});
   const track=stream.getVideoTracks()[0];
   if(!track)throw new Error("화면 공유 트랙을 가져오지 못했습니다.");
   started=true;
   track.onended=async()=>{await fullDisconnect();alert("화면 공유가 종료되었습니다.");location.href="/"};
-  startBtn.textContent="화면 공유 중";
   await executeNegotiation();
   watchAdminSignal();
  }catch(e){
   console.error("[CLIENT] 화면 공유 시작 실패:",e);
-  startBtn.disabled=false;
-  setStatus(e.name==="NotAllowedError"?"화면 공유가 취소되었습니다. 버튼을 다시 눌러 선택하세요.":"화면 공유를 시작하지 못했습니다: "+(e.message||e));
- }
+  if(e.name==="NotAllowedError")setStatus("화면 공유를 시작하려면 화면을 한 번 클릭하세요.");
+  else setStatus("화면 공유를 시작하지 못했습니다: "+(e.message||e));
+ }finally{starting=false}
 }
 function triggerRestart(delayMs){if(disconnected||reconnecting||reconnectTimer)return;reconnectTimer=setTimeout(()=>{reconnectTimer=null;executeRestartNegotiation()},delayMs)}
-async function executeNegotiation(isRestart=false){if(disconnected||!stream)return;reconnecting=true;try{cleanupPeerConnection();setStatus(isRestart?"재연결 시도 중...":"WEBRTC 연결 준비중...");pc=new RTCPeerConnection(rtcConfig);stream.getTracks().forEach(track=>pc.addTrack(track,stream));pc.onconnectionstatechange=()=>{const state=pc.connectionState;console.log("[CLIENT] Connection State:",state);if(state==="failed")executeRestartNegotiation();else if(state==="disconnected")triggerRestart(5000);else if(state==="connected"){if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}setStatus(currentSharingState?"관리자에게 화면을 전송 중입니다.":"관리자와 연결됨. 공유 대기 중")}}};pc.onicecandidate=async e=>{if(!e.candidate)return;try{await updateDoc(userRef,{clientCandidates:arrayUnion(e.candidate.toJSON()),updatedAt:serverTimestamp()})}catch(e){console.error(e)}};currentSessionId="sess_"+Math.random().toString(36).substring(2)+Date.now();addedAdminCandidates.clear();await updateDoc(userRef,{online:true,state:"connecting",mode:"webrtc",sharing:false,sessionId:currentSessionId,clientOffer:null,clientCandidates:[],adminAnswer:null,adminCandidates:[],updatedAt:serverTimestamp()});const offer=await pc.createOffer();await pc.setLocalDescription(offer);await updateDoc(userRef,{clientOffer:{type:offer.type,sdp:offer.sdp,sessionId:currentSessionId},updatedAt:serverTimestamp()});setStatus("관리자 연결을 기다리는 중...")}catch(e){console.error("[CLIENT] 협상 에러:",e);setStatus("연결 준비에 실패했습니다. 관리자 페이지와 Firebase 상태를 확인하세요.")}finally{reconnecting=false}}
+async function executeNegotiation(isRestart=false){if(disconnected||!stream)return;reconnecting=true;try{cleanupPeerConnection();setStatus(isRestart?"재연결 시도 중...":"WEBRTC 연결 준비중...");pc=new RTCPeerConnection(rtcConfig);stream.getTracks().forEach(track=>pc.addTrack(track,stream));pc.onconnectionstatechange=()=>{const state=pc.connectionState;console.log("[CLIENT] Connection State:",state);if(state==="failed")executeRestartNegotiation();else if(state==="disconnected")triggerRestart(5000);else if(state==="connected"){if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}setStatus(currentSharingState?"관리자에게 화면을 전송 중입니다.":"관리자와 연결됨. 공유 대기 중")}}};pc.onicecandidate=async e=>{if(!e.candidate)return;try{await updateDoc(userRef,{clientCandidates:arrayUnion(e.candidate.toJSON()),updatedAt:serverTimestamp()})}catch(e){console.error(e)}};currentSessionId="sess_"+Math.random().toString(36).substring(2)+Date.now();addedAdminCandidates.clear();await updateDoc(userRef,{online:true,state:"connecting",mode:"webrtc",sharing:false,sessionId:currentSessionId,clientOffer:null,clientCandidates:[],adminAnswer:null,adminCandidates:[],updatedAt:serverTimestamp()});const offer=await pc.createOffer();await pc.setLocalDescription(offer);await updateDoc(userRef,{clientOffer:{type:offer.type,sdp:offer.sdp,sessionId:currentSessionId},updatedAt:serverTimestamp()});setStatus("관리자 연결을 기다리는 중...");heartbeatTimer=setInterval(async()=>{if(disconnected||!started)return;try{await updateDoc(userRef,{online:true,updatedAt:serverTimestamp()})}catch(e){}},10000)}catch(e){console.error("[CLIENT] 협상 에러:",e);setStatus("연결 준비에 실패했습니다. 관리자 페이지와 Firebase 상태를 확인하세요.")}finally{reconnecting=false}}
 async function executeRestartNegotiation(){await executeNegotiation(true)}
 function watchAdminSignal(){if(unsubscribe)return;unsubscribe=onSnapshot(userRef,async snap=>{if(!snap.exists()||!pc)return;const data=snap.data();if(data.sessionId!==currentSessionId)return;currentSharingState=data.sharing===true;if(currentSharingState&&pc.connectionState==="connected")setStatus("관리자에게 화면을 전송 중입니다.");else setStatus(pc.connectionState==="connected"?"관리자와 연결됨. 공유 대기 중":"관리자 연결 중...");if(data.adminAnswer&&!pc.currentRemoteDescription&&!settingAnswer){if(!data.adminAnswer.sessionId||data.adminAnswer.sessionId!==currentSessionId)return;settingAnswer=true;try{await pc.setRemoteDescription(new RTCSessionDescription({type:data.adminAnswer.type,sdp:data.adminAnswer.sdp}))}catch(e){console.error("[CLIENT] 원격 디스크립션 설정 에러:",e)}finally{settingAnswer=false}}if(Array.isArray(data.adminCandidates)&&pc.currentRemoteDescription)for(const candidate of data.adminCandidates){const key=JSON.stringify(candidate);if(addedAdminCandidates.has(key))continue;try{await pc.addIceCandidate(new RTCIceCandidate(candidate));addedAdminCandidates.add(key)}catch(e){console.warn("[CLIENT] Candidate 추가 실패:",e)}}})}
-(async()=>{const snap=await getDoc(userRef);if(!snap.exists()){alert("계정을 찾을 수 없습니다.");location.href="/";return}setStatus("화면 공유 시작 버튼을 눌러주세요.");})();
-startBtn.addEventListener("click",initWebRTC);
+(async()=>{const snap=await getDoc(userRef);if(!snap.exists()){alert("계정을 찾을 수 없습니다.");location.href="/";return}setStatus("연결 준비중...");
+ // 브라우저 정책상 자동 호출이 차단되는 경우를 대비해 첫 화면 클릭으로 즉시 시작한다.
+ try{await initWebRTC()}catch(e){console.error(e)}
+})();
+page.addEventListener("click",()=>{if(!started&&!starting)initWebRTC()});
 </script>
 </body>
 </html>
