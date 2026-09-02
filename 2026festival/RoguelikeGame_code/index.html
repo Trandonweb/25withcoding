@@ -21,40 +21,39 @@
       gap: 20px;
       overflow-x: auto;
       
-      /* 배경 전환을 부드럽게 만드는 애니메이션 */
-      transition: background 0.6s ease;
+      /* 배경 설정 */
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       background-attachment: fixed;
+      transition: all 0.8s ease; /* 부드러운 화면 전환 효과 */
     }
 
-    /* 🌟 1. 기본 배경 (어두운 던전 느낌) */
+    /* 🌟 1. 기본 배경 (어둡고 차가운 던전 느낌) */
     body.bg-default {
       background-color: #111118;
-      background-image: radial-gradient(circle, #1a1a24 0%, #050508 90%);
-      /* 진짜 이미지를 쓰려면 위 속성들을 지우고 아래 줄의 주석을 푸세요 */
-      /* background-image: url('./default-bg.jpg'); */
+      /* 인터넷에 있는 던전/동굴 배경 이미지 바로 연결 */
+      background-image: linear-gradient(rgba(17, 17, 24, 0.8), rgba(5, 5, 8, 0.9)), url('https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?q=80&w=1920&auto=format&fit=crop');
     }
 
-    /* 🌟 2. 성공/보상 배경 (황금빛, 신비로운 느낌) */
+    /* 🌟 2. 성공/보상 배경 (황금빛, 신비로운 보물방 느낌) */
     body.bg-success {
       background-color: #262211;
-      background-image: radial-gradient(circle, #3d341d 0%, #0a0803 80%);
-      /* background-image: url('./success-bg.jpg'); */
+      /* 신비로운 황금빛 배경 이미지 바로 연결 */
+      background-image: linear-gradient(rgba(38, 34, 17, 0.8), rgba(10, 8, 3, 0.9)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1920&auto=format&fit=crop');
     }
 
-    /* 🌟 3. 위험/실패/죽음 배경 (핏빛, 어두운 느낌) */
+    /* 🌟 3. 위험/실패/죽음 배경 (핏빛, 불타는 지옥 느낌) */
     body.bg-danger {
       background-color: #240b0b;
-      background-image: radial-gradient(circle, #5a1111 0%, #0a0303 80%);
-      /* background-image: url('./danger-bg.jpg'); */
+      /* 어둡고 붉은 용암/지옥 배경 이미지 바로 연결 */
+      background-image: linear-gradient(rgba(36, 11, 11, 0.8), rgba(10, 3, 3, 0.9)), url('https://images.unsplash.com/photo-1502758713292-0750ce9a0669?q=80&w=1920&auto=format&fit=crop');
     }
 
     /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 */
     #howto-container {
-      background-color: rgba(5, 5, 8, 0.85); /* 배경이 살짝 비치도록 투명도 적용 */
-      backdrop-filter: blur(4px);
+      background-color: rgba(5, 5, 8, 0.6); 
+      backdrop-filter: blur(8px);
       border: 4px solid #00ffff;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
       width: 300px;
@@ -80,7 +79,6 @@
     .guide-item { margin-bottom: 12px; }
     .guide-sym { font-size: 15px; margin-right: 6px; }
 
-    /* 사이드 버튼 전용 스타일 */
     .side-btn-container {
       margin-top: 10px;
       display: flex;
@@ -110,8 +108,8 @@
 
     /* 메인 컨테이너 */
     #game-container {
-      background-color: rgba(0, 0, 0, 0.75); /* 배경이 살짝 비치도록 투명도 적용 */
-      backdrop-filter: blur(4px);
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
       border: 6px solid #00ff66;
       box-shadow: 0 0 30px rgba(0, 255, 102, 0.6);
       width: 100%;
@@ -200,7 +198,7 @@
     }
 
     #log-box {
-      background-color: rgba(5, 5, 5, 0.9);
+      background-color: rgba(5, 5, 5, 0.8);
       border: 2px solid #222;
       height: 110px;
       overflow-y: auto;
@@ -260,7 +258,7 @@
 
   <div id="howto-container">
     <h2>HOW TO PLAY</h2>
-    <div class="guide-item"><span class="guide-sym">⚔️</span><b>무기 획득 & 교체</b><br>탐색 도중 보물상자, 상점, 고대 대장간(⚒️)에서 더 강력한 신규/전설 무기를 습득할 수 있습니다.</div>
+    <div class="guide-item"><span class="guide-sym">⚔️</span><b>무기 획득 & 교체</b><br>탐색 도중 보물상자, 상점, 고대 대장간(⚒️)에서 더 강력한 무기를 습득할 수 있습니다.</div>
     <div class="guide-item"><span class="guide-sym">🔥</span><b>하이리스크 선택지</b><br>체력을 바치고 3칸을 가거나 목숨을 건 도박 선택지가 추가되어 난이도가 상향되었습니다!</div>
     <div class="guide-item"><span class="guide-sym">👹</span><b>최종 보스전</b><br>24번 방의 마룡은 강력한 전설 무기가 없으면 도륙당하기 십상입니다.</div>
     <hr style="border: 1px dashed #333; margin: 12px 0;">
@@ -286,9 +284,7 @@
 
     <div id="situation-text">무기를 선택하여 미궁 진입을 시작하십시오.</div>
 
-    <div id="log-box">
-      <div class="log-entry system">> 시작 무기를 고르고 가혹한 미궁으로 입장하세요.</div>
-    </div>
+    <div id="log-box"></div>
 
     <div class="choice-container">
       <button id="choice1" onclick="makeChoice(1)"></button>
@@ -315,7 +311,7 @@
     const weaponEl = document.getElementById('weapon-display');
     const situationText = document.getElementById('situation-text');
     const logBox = document.getElementById('log-box');
-    const bodyEl = document.body; // 배경 제어용
+    const bodyEl = document.body;
     
     const c1 = document.getElementById('choice1');
     const c2 = document.getElementById('choice2');
@@ -336,15 +332,7 @@
         }
 
         if (i === playerPos) {
-          const img = document.createElement('img');
-          img.src = './test.png';
-          img.alt = 'Player';
-          img.className = 'player-img';
-          img.onerror = function() {
-            this.remove();
-            cell.innerText = '🧝‍♂️';
-          };
-          cell.appendChild(img);
+          cell.innerText = '🧝‍♂️'; // 이미지 파일 없이 이모지로 플레이어 표시
           cell.classList.add('active');
         } else if (i === 24) {
           cell.innerText = '👹';
@@ -366,7 +354,6 @@
       }
     }
 
-    // 🌟 로그를 띄울 때 타입에 따라 배경색을 동적으로 변경합니다!
     function addLog(text, type = '') {
       const entry = document.createElement('div');
       entry.className = `log-entry ${type}`;
@@ -374,12 +361,13 @@
       logBox.appendChild(entry);
       logBox.scrollTop = logBox.scrollHeight;
 
+      // 🌟 이벤트에 따라 배경 이미지가 찰떡같이 변경됩니다!
       if (type === 'success' || type === 'weapon') {
-        bodyEl.className = 'bg-success'; // 좋은 일 (황금빛)
+        bodyEl.className = 'bg-success';
       } else if (type === 'danger') {
-        bodyEl.className = 'bg-danger';  // 나쁜 일 (핏빛)
+        bodyEl.className = 'bg-danger';
       } else if (type === 'system') {
-        bodyEl.className = 'bg-default'; // 기본
+        bodyEl.className = 'bg-default';
       }
     }
 
@@ -402,7 +390,7 @@
       c1.disabled = false; c2.disabled = false; c3.disabled = false; c4.disabled = false;
 
       logBox.innerHTML = '';
-      bodyEl.className = 'bg-default'; // 게임 시작 시 기본 배경
+      bodyEl.className = 'bg-default'; 
       
       addLog('게임을 다시 시작합니다. 시작 무기를 고르고 가혹한 미궁으로 입장하세요.', 'system');
 
@@ -431,7 +419,6 @@
     function makeChoice(buttonNum) {
       if (hp <= 0) return;
 
-      // --- 0. WEAPON SELECT ---
       if (currentEvent === 'weapon_select') {
         if (buttonNum === 1) updateWeapon('타이탄 대검 ⚔️');
         if (buttonNum === 2) updateWeapon('암살자 단검 🗡️');
@@ -442,7 +429,6 @@
         return;
       }
 
-      // --- 1. START ROOM ---
       if (currentEvent === 'start') {
         if (buttonNum === 1) { playerPos += 1; gold += 10; addLog("1칸 안전하게 전진했습니다.", "success"); }
         if (buttonNum === 2) { hp -= 25; playerPos += 3; addLog("피의 각성으로 3칸을 한 번에 스킵했습니다! (-25HP)", "danger"); }
@@ -455,8 +441,6 @@
           else { hp -= 30; playerPos += 1; addLog("기도 중 몬스터가 기습하여 가슴을 베였습니다! (-30HP)", "danger"); }
         }
       } 
-      
-      // --- 2. MONSTER ROOM ---
       else if (currentEvent === 'monster') {
         let isSword = selectedWeapon.includes('대검') || selectedWeapon.includes('창') || selectedWeapon.includes('엑스칼리버');
         let isDagger = selectedWeapon.includes('단검');
@@ -493,8 +477,6 @@
           }
         }
       } 
-      
-      // --- 3. TREASURE ROOM ---
       else if (currentEvent === 'treasure') {
         let isStaff = selectedWeapon.includes('지팡이');
         
@@ -526,8 +508,6 @@
           }
         }
       } 
-      
-      // --- 4. MERCHANT ROOM ---
       else if (currentEvent === 'merchant') {
         if (buttonNum === 1) {
           if (gold >= 60) { gold -= 60; hp = Math.min(100, hp + 60); playerPos += 1; addLog("고급 포션을 마셔 체력을 회복합니다. (-60골드, +60HP)", "success"); }
@@ -550,8 +530,6 @@
           }
         }
       }
-
-      // --- 5. ARMORY ROOM ---
       else if (currentEvent === 'armory') {
         if (buttonNum === 1) {
           if (gold >= 50) {
@@ -569,8 +547,6 @@
         }
         if (buttonNum === 4) { playerPos += 1; addLog("대장간을 나옵니다.", "system"); }
       }
-
-      // --- 6. BOSS FIGHT ---
       else if (currentEvent === 'boss_fight') {
         let isLegendary = selectedWeapon.includes('엑스칼리버') || selectedWeapon.includes('용살자') || selectedWeapon.includes('혈염');
         
@@ -623,10 +599,10 @@
       stage++;
       stageEl.innerText = stage;
       
-      // 다음 방으로 넘어갈 때는 배경을 다시 원래대로 돌려놓습니다.
+      // 다음 방으로 넘어갈 때는 배경을 다시 기본 던전으로 돌려놓습니다.
       setTimeout(() => {
         if(hp > 0 && currentEvent !== 'boss_fight') bodyEl.className = 'bg-default';
-      }, 800); 
+      }, 1000); 
 
       generateNextRoom();
     }
@@ -673,7 +649,7 @@
 
     function setupBossRoom() {
       currentEvent = 'boss_fight';
-      bodyEl.className = 'bg-danger'; // 보스방 진입 시 무조건 위험 배경
+      bodyEl.className = 'bg-danger'; 
       situationText.innerText = `🔥 [마지막 24번 방: BOSS STAGE] 🔥\n'마룡 레비아탄'이 거대한 포효와 함께 모습을 드러냈습니다! 강한 무기가 없이는 도륙당할 것입니다!`;
       
       c1.innerText = "1. [사투] 무기 총동원 일격 (전설 무기 보유 시 성공률 UP)";
@@ -692,7 +668,7 @@
     function checkGameOver() {
       if (hp <= 0) {
         hp = 0; hpEl.innerText = 0;
-        bodyEl.className = 'bg-danger'; // 죽었을 때 핏빛 배경 유지
+        bodyEl.className = 'bg-danger';
         situationText.innerText = "💀 HARDCORE GAME OVER 💀";
         addLog(`미궁에서 사망했습니다. 최종 무기: ${selectedWeapon} | 최종 골드: ${gold}`, "danger");
         disableButtons();
@@ -702,7 +678,7 @@
     }
 
     function winGame() {
-      bodyEl.className = 'bg-success'; // 클리어 시 황금빛 배경 유지
+      bodyEl.className = 'bg-success'; 
       situationText.innerText = "👑 DUNGEON CLEAR!! 👑";
       addLog(`축하합니다! 마룡을 베고 탈출했습니다! 무기: ${selectedWeapon} | 스코어: ${gold}점`, "success");
       disableButtons();
