@@ -26,33 +26,30 @@
       background-position: center;
       background-repeat: no-repeat;
       background-attachment: fixed;
-      transition: all 0.8s ease; /* 부드러운 화면 전환 효과 */
+      transition: background-image 0.8s ease, background-color 0.8s ease; /* 부드러운 화면 전환 효과 */
     }
 
-    /* 🌟 1. 기본 배경 (어둡고 차가운 던전 느낌) */
+    /* 🌟 1. 기본 배경 (어둡고 차가운 던전/동굴 사진) */
     body.bg-default {
       background-color: #111118;
-      /* 인터넷에 있는 던전/동굴 배경 이미지 바로 연결 */
-      background-image: linear-gradient(rgba(17, 17, 24, 0.8), rgba(5, 5, 8, 0.9)), url('https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?q=80&w=1920&auto=format&fit=crop');
+      background-image: linear-gradient(rgba(17, 17, 24, 0.75), rgba(5, 5, 8, 0.9)), url('https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1920&auto=format&fit=crop');
     }
 
-    /* 🌟 2. 성공/보상 배경 (황금빛, 신비로운 보물방 느낌) */
+    /* 🌟 2. 성공/보상 배경 (황금빛 신비로운 사진) */
     body.bg-success {
       background-color: #262211;
-      /* 신비로운 황금빛 배경 이미지 바로 연결 */
-      background-image: linear-gradient(rgba(38, 34, 17, 0.8), rgba(10, 8, 3, 0.9)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1920&auto=format&fit=crop');
+      background-image: linear-gradient(rgba(38, 34, 17, 0.75), rgba(10, 8, 3, 0.9)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1920&auto=format&fit=crop');
     }
 
-    /* 🌟 3. 위험/실패/죽음 배경 (핏빛, 불타는 지옥 느낌) */
+    /* 🌟 3. 위험/실패/죽음 배경 (핏빛 불타는 지옥 느낌 사진) */
     body.bg-danger {
       background-color: #240b0b;
-      /* 어둡고 붉은 용암/지옥 배경 이미지 바로 연결 */
-      background-image: linear-gradient(rgba(36, 11, 11, 0.8), rgba(10, 3, 3, 0.9)), url('https://images.unsplash.com/photo-1502758713292-0750ce9a0669?q=80&w=1920&auto=format&fit=crop');
+      background-image: linear-gradient(rgba(36, 11, 11, 0.75), rgba(10, 3, 3, 0.9)), url('https://images.unsplash.com/photo-1502758713292-0750ce9a0669?q=80&w=1920&auto=format&fit=crop');
     }
 
     /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 */
     #howto-container {
-      background-color: rgba(5, 5, 8, 0.6); 
+      background-color: rgba(5, 5, 8, 0.7); 
       backdrop-filter: blur(8px);
       border: 4px solid #00ffff;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
@@ -108,7 +105,7 @@
 
     /* 메인 컨테이너 */
     #game-container {
-      background-color: rgba(0, 0, 0, 0.6);
+      background-color: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(8px);
       border: 6px solid #00ff66;
       box-shadow: 0 0 30px rgba(0, 255, 102, 0.6);
@@ -198,7 +195,7 @@
     }
 
     #log-box {
-      background-color: rgba(5, 5, 5, 0.8);
+      background-color: rgba(5, 5, 5, 0.85);
       border: 2px solid #222;
       height: 110px;
       overflow-y: auto;
@@ -331,8 +328,18 @@
           cell.classList.add(`theme-${mapMemory[i]}`);
         }
 
+        // 🌟 플레이어 위치 표시 로직 복구 (이미지 적용)
         if (i === playerPos) {
-          cell.innerText = '🧝‍♂️'; // 이미지 파일 없이 이모지로 플레이어 표시
+          const img = document.createElement('img');
+          img.src = './test.png'; // 원래 쓰시던 파일명
+          img.alt = 'Player';
+          img.className = 'player-img';
+          // 만약 이미지가 깨지면(파일이 없으면) 임시로 이모지로 대체
+          img.onerror = function() {
+            this.remove();
+            cell.innerText = '🧝‍♂️'; 
+          };
+          cell.appendChild(img);
           cell.classList.add('active');
         } else if (i === 24) {
           cell.innerText = '👹';
@@ -361,7 +368,6 @@
       logBox.appendChild(entry);
       logBox.scrollTop = logBox.scrollHeight;
 
-      // 🌟 이벤트에 따라 배경 이미지가 찰떡같이 변경됩니다!
       if (type === 'success' || type === 'weapon') {
         bodyEl.className = 'bg-success';
       } else if (type === 'danger') {
@@ -618,7 +624,7 @@
       drawMap();
 
       if (currentEvent === 'monster') {
-        situationText.innerText = `[방 ${playerPos}/24 💀] 피에 줄린 오크 정예 장군이 가시 몽둥이를 휘두르며 길목을 막아섰습니다!`;
+        situationText.innerText = `[방 ${playerPos}/24 💀] 피에 굶주린 오크 정예 장군이 가시 몽둥이를 휘두르며 길목을 막아섰습니다!`;
         c1.innerText = "1. [맞대결] 무기로 정면 승부 (실패 시 HP -35~60)";
         c2.innerText = "2. [처절한 돌파] 피해 위험을 안고 2칸 강행 돌파";
         c3.innerText = "3. [뇌물 바치기] 70골드를 바치고 안전 통과";
