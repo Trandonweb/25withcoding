@@ -3,12 +3,12 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <title>도트 로그라이크 - 찐 배경 버전</title>
+  <title>도트 로그라이크 - 밝은 배경 버전</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
     body {
-      color: #00ff66;
+      color: #333; /* 텍스트를 어둡게 변경 */
       font-family: 'Press Start 2P', monospace;
       display: flex;
       flex-direction: row;
@@ -30,52 +30,52 @@
       z-index: 1;
     }
 
-    /* 🌟 글씨가 잘 보이도록 배경 위에 살짝 어두운 막을 씌움 */
+    /* 🌟 배경 이미지가 너무 튀지 않게 밝은 틴트(막)를 씌움 */
     body::before {
       content: "";
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.65);
+      background: rgba(255, 255, 255, 0.4);
       z-index: -1;
     }
 
-    /* 🌟 1. 기본 배경 (어두운 미궁 동굴/석벽) */
+    /* 🌟 1. 기본 배경 (밝은 초원/성 유적) */
     body.bg-default {
-      background-image: url('https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?auto=format&fit=crop&w=1920&q=80') !important;
+      background-image: url('https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?auto=format&fit=crop&w=1920&q=80') !important;
     }
 
-    /* 🌟 2. 성공/보상 배경 (빛나는 황금/보물) */
+    /* 🌟 2. 성공/보상 배경 (빛나는 황금/빛) */
     body.bg-success {
-      background-image: url('https://images.unsplash.com/photo-1617793540026-6a583e782e4e?auto=format&fit=crop&w=1920&q=80') !important;
+      background-image: url('https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=1920&q=80') !important;
     }
 
-    /* 🌟 3. 위험/실패/죽음 배경 (타오르는 지옥불) */
+    /* 🌟 3. 위험/실패/죽음 배경 (밝고 강렬한 화염/오렌지빛) */
     body.bg-danger {
-      background-image: url('https://images.unsplash.com/photo-1504194921103-f8b80cadd5e4?auto=format&fit=crop&w=1920&q=80') !important;
+      background-image: url('https://images.unsplash.com/photo-1560275619-4662e36fa65c?auto=format&fit=crop&w=1920&q=80') !important;
     }
 
-    /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 */
+    /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 (밝은 테마) */
     #howto-container {
-      background-color: rgba(5, 5, 8, 0.85); 
-      border: 4px solid #00ffff;
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+      background-color: rgba(255, 255, 255, 0.9); 
+      border: 4px solid #009688;
+      box-shadow: 0 0 20px rgba(0, 150, 136, 0.3);
       width: 300px;
       padding: 18px;
       text-align: left;
       font-size: 12px;
       line-height: 1.7;
-      color: #fff;
+      color: #333;
       display: flex;
       flex-direction: column;
     }
 
     #howto-container h2 {
       font-size: 15px;
-      color: #00ffff;
+      color: #009688;
       margin-top: 0;
       margin-bottom: 14px;
-      text-shadow: 2px 2px #000;
-      border-bottom: 3px solid #00ffff;
+      text-shadow: 1px 1px #eee;
+      border-bottom: 3px solid #009688;
       padding-bottom: 8px;
     }
 
@@ -90,58 +90,64 @@
     }
 
     #btn-restart, #btn-save {
-      background-color: rgba(0, 0, 0, 0.5);
       font-size: 12px;
       padding: 12px;
       text-align: center;
+      border-width: 3px;
+      border-style: solid;
+      font-family: 'Press Start 2P', monospace;
+      cursor: pointer;
+      transition: 0.1s;
     }
-    #btn-restart { border-color: #00ff66; color: #00ff66; }
-    #btn-restart:hover:not(:disabled) { background-color: #00ff66; color: #000; }
-    #btn-save { border-color: #ff3366; color: #ff3366; }
-    #btn-save:hover:not(:disabled) { background-color: #ff3366; color: #fff; }
+    #btn-restart { background-color: #e0f2f1; border-color: #009688; color: #00796b; }
+    #btn-restart:hover:not(:disabled) { background-color: #009688; color: #fff; }
+    #btn-save { background-color: #fce4ec; border-color: #e91e63; color: #c2185b; }
+    #btn-save:hover:not(:disabled) { background-color: #e91e63; color: #fff; }
 
-    /* 메인 컨테이너 */
+    /* 메인 컨테이너 (밝은 테마) */
     #game-container {
-      background-color: rgba(0, 0, 0, 0.85); 
-      border: 6px solid #00ff66;
-      box-shadow: 0 0 30px rgba(0, 255, 102, 0.6);
+      background-color: rgba(255, 255, 255, 0.9); 
+      border: 6px solid #009688;
+      box-shadow: 0 0 30px rgba(0, 150, 136, 0.4);
       width: 100%;
       max-width: 680px;
       padding: 20px;
       text-align: center;
+      color: #222;
     }
 
     h1 {
       font-size: 22px;
-      color: #ff3366;
+      color: #e91e63;
       margin-top: 0;
       margin-bottom: 15px;
-      text-shadow: 3px 3px #000;
+      text-shadow: 2px 2px #fce4ec;
       letter-spacing: 2px;
     }
 
-    /* 🗺️ 미니맵 */
+    /* 🗺️ 미니맵 (밝은 테마) */
     #map-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 5px;
       width: 250px;
       margin: 0 auto 15px auto;
-      background-color: rgba(17, 17, 17, 0.9);
+      background-color: rgba(240, 240, 240, 0.9);
       padding: 8px;
-      border: 3px solid #333;
+      border: 3px solid #ccc;
     }
 
     .map-cell {
       width: 44px;
       height: 44px;
-      background-color: #1a1a24;
-      border: 1px solid #333;
+      background-color: #fff;
+      border: 1px solid #ddd;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 20px;
       transition: all 0.2s ease;
+      color: #333;
     }
 
     .player-img {
@@ -152,29 +158,29 @@
     }
 
     .map-cell.active {
-      background-color: #22332a !important;
-      border-color: #00ff66 !important;
-      box-shadow: inset 0 0 8px rgba(0, 255, 102, 0.5);
+      background-color: #e0f2f1 !important;
+      border-color: #009688 !important;
+      box-shadow: inset 0 0 8px rgba(0, 150, 136, 0.4);
     }
-    .map-cell.theme-start { background-color: #1b263b; border-color: #415a77; }
-    .map-cell.theme-monster { background-color: #3a1c1c; border-color: #e63946; }
-    .map-cell.theme-treasure { background-color: #3d341d; border-color: #ffb703; }
-    .map-cell.theme-merchant { background-color: #1d3557; border-color: #457b9d; }
-    .map-cell.theme-armory { background-color: #3a1a3a; border-color: #d800d8; }
-    .map-cell.theme-boss { background-color: #5a0000; border-color: #ff0000; animation: blink 1s infinite; }
+    .map-cell.theme-start { background-color: #e3f2fd; border-color: #90caf9; }
+    .map-cell.theme-monster { background-color: #ffebee; border-color: #ef9a9a; }
+    .map-cell.theme-treasure { background-color: #fff8e1; border-color: #ffe082; }
+    .map-cell.theme-merchant { background-color: #e8f5e9; border-color: #a5d6a7; }
+    .map-cell.theme-armory { background-color: #f3e5f5; border-color: #ce93d8; }
+    .map-cell.theme-boss { background-color: #ffcdd2; border-color: #f44336; animation: blink 1s infinite; }
 
     @keyframes blink {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+      50% { opacity: 0.6; }
     }
 
     #situation-text {
       font-size: 14px;
-      color: #fff;
+      color: #111;
       margin-bottom: 15px;
       min-height: 70px;
       line-height: 1.6;
-      border-left: 5px solid #ff3366;
+      border-left: 5px solid #e91e63;
       padding-left: 10px;
       text-align: left;
     }
@@ -184,15 +190,16 @@
       justify-content: space-between;
       font-size: 12px;
       margin-bottom: 15px;
-      border-bottom: 3px solid #333;
+      border-bottom: 3px solid #ccc;
       padding-bottom: 10px;
       flex-wrap: wrap;
       gap: 8px;
     }
 
+    /* 로그 박스 (밝은 테마) */
     #log-box {
-      background-color: rgba(5, 5, 5, 0.9);
-      border: 2px solid #222;
+      background-color: rgba(245, 245, 245, 0.9);
+      border: 2px solid #ccc;
       height: 110px;
       overflow-y: auto;
       font-size: 12px;
@@ -203,10 +210,10 @@
     }
 
     .log-entry { margin-bottom: 6px; }
-    .system { color: #ffff00; }
-    .danger { color: #ff3366; }
-    .success { color: #00ffff; }
-    .weapon { color: #ff00ff; font-weight: bold; }
+    .system { color: #0277bd; }
+    .danger { color: #d32f2f; font-weight: bold; }
+    .success { color: #2e7d32; font-weight: bold; }
+    .weapon { color: #8e24aa; font-weight: bold; }
 
     .choice-container {
       display: flex;
@@ -215,9 +222,9 @@
     }
 
     button {
-      background-color: rgba(17, 17, 17, 0.9);
-      color: #fff;
-      border: 3px solid #fff;
+      background-color: #f9f9f9;
+      color: #333;
+      border: 3px solid #bbb;
       font-family: 'Press Start 2P', monospace;
       font-size: 11px;
       padding: 13px 13px;
@@ -228,12 +235,12 @@
     }
 
     button:hover:not(:disabled) {
-      background-color: #00ff66;
-      color: #000;
-      border-color: #00ff66;
+      background-color: #009688;
+      color: #fff;
+      border-color: #009688;
       transform: scale(1.01);
     }
-    button:disabled { background-color: #1a1a1a; color: #444; border-color: #222; cursor: not-allowed; }
+    button:disabled { background-color: #eee; color: #999; border-color: #ddd; cursor: not-allowed; }
 
     @media (max-width: 950px) {
       body { flex-direction: column; align-items: center; }
@@ -248,7 +255,7 @@
     <div class="guide-item"><span class="guide-sym">⚔️</span><b>무기 획득 & 교체</b><br>탐색 도중 보물상자, 상점, 고대 대장간에서 더 강력 무기를 습득할 수 있습니다.</div>
     <div class="guide-item"><span class="guide-sym">🔥</span><b>하이리스크 선택지</b><br>체력을 바치고 3칸을 가거나 목숨을 건 도박 선택지가 추가되어 난이도가 상향되었습니다!</div>
     <div class="guide-item"><span class="guide-sym">👹</span><b>최종 보스전</b><br>24번 방의 마룡은 강력한 전설 무기가 없으면 도륙당하기 십상입니다.</div>
-    <hr style="border: 1px dashed #333; margin: 12px 0;">
+    <hr style="border: 1px dashed #ccc; margin: 12px 0;">
     <div class="guide-item"><span class="guide-sym">💀</span><b>방 심볼 가이드</b><br>⛺:시작 | 💀:전투 | 🎁:보물<br>🎪:상점 | ⚒️:대장간 | 👹:보스</div>
     
     <div class="side-btn-container">
@@ -266,7 +273,7 @@
       <div>STAGE: <span id="stage">1</span></div>
       <div>HP: <span id="hp">100</span></div>
       <div>GOLD: <span id="gold">0</span></div>
-      <div>WEAPON: <span id="weapon-display" style="color:#ff00ff;">기본 검</span></div>
+      <div>WEAPON: <span id="weapon-display" style="color:#8e24aa; font-weight:bold;">기본 검</span></div>
     </div>
 
     <div id="situation-text">무기를 선택하여 미궁 진입을 시작하십시오.</div>
@@ -320,7 +327,7 @@
 
         if (i === playerPos) {
           const img = document.createElement('img');
-          img.src = './test.png'; /* 플레이어 이미지는 기존 경로 유지 */
+          img.src = './test.png'; 
           img.className = 'player-img';
           cell.appendChild(img);
           cell.classList.add('active');
@@ -351,7 +358,6 @@
       logBox.appendChild(entry);
       logBox.scrollTop = logBox.scrollHeight;
 
-      // 🌟 이벤트에 따른 배경 이미지 변경
       if (type === 'success' || type === 'weapon') {
         bodyEl.className = 'bg-success';
       } else if (type === 'danger') {
@@ -486,7 +492,7 @@
             hp -= 35; updateWeapon('마법 성검 🗡️✨');
             addLog("피 35를 제단에 바치고 [마법 성검 🗡️✨]을 하사받았습니다!", "weapon");
           } else {
-            addLog("체력이 부족하여 제물을 바칠 수 없습니다!", "danger");
+            addLog("체력이 부족하여 제물을 바칠 수 정 없습니다!", "danger");
           }
         }
         if (buttonNum === 4) {
@@ -589,7 +595,6 @@
       stage++;
       stageEl.innerText = stage;
       
-      // 일정 시간 후 기본 배경으로 복귀 (보스전 제외)
       setTimeout(() => {
         if(hp > 0 && currentEvent !== 'boss_fight') bodyEl.className = 'bg-default';
       }, 1000); 
@@ -678,7 +683,6 @@
       c1.disabled = true; c2.disabled = true; c3.disabled = true; c4.disabled = true;
     }
 
-    // 랭킹 저장 (기존 기능 유지)
     function saveToSheet() {
       addLog('구글 시트에 랭킹 저장 중...', 'system');
       if(typeof google !== 'undefined' && google.script) {
