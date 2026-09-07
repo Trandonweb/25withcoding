@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>미니게임</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,'Noto Sans KR',sans-serif;background:linear-gradient(135deg,#071b12,#123b27);color:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}.wrap{width:min(900px,92vw);text-align:center}.logo{font-size:clamp(38px,7vw,72px);font-weight:900;margin-bottom:10px}.sub{opacity:.7;margin-bottom:38px}.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.mode{border:1px solid rgba(255,255,255,.15);border-radius:22px;padding:30px 18px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;transition:.2s;min-height:180px}.mode:hover{transform:translateY(-7px);background:rgba(255,255,255,.14);border-color:#35d27b}.icon{font-size:48px;margin-bottom:15px}.title{font-size:22px;font-weight:800}.desc{font-size:14px;opacity:.65;margin-top:9px;line-height:1.5}.game{display:none}.game h1{font-size:38px}.panel{background:rgba(255,255,255,.08);border-radius:20px;padding:30px;margin:25px 0}.back{border:0;border-radius:12px;padding:12px 20px;background:#1ea857;color:white;font-weight:bold;cursor:pointer}.online-note{opacity:.7;font-size:14px;margin-top:15px}@media(max-width:650px){.modes{grid-template-columns:1fr}.mode{min-height:130px;padding:22px}.icon{font-size:38px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="menu">
+    <div class="logo">🎮 MINI GAME</div>
+    <div class="sub">플레이 방법을 선택하세요</div>
+    <div class="modes">
+      <button class="mode" onclick="startGame('cpu')"><div class="icon">🤖</div><div class="title">컴퓨터와 대전</div><div class="desc">AI 상대와 1:1로 플레이</div></button>
+      <button class="mode" onclick="startGame('local')"><div class="icon">👥</div><div class="title">한 컴퓨터로 2명</div><div class="desc">같은 컴퓨터에서 친구와 대전</div></button>
+      <button class="mode" onclick="startGame('online')"><div class="icon">🌐</div><div class="title">온라인 대전</div><div class="desc">다른 컴퓨터의 플레이어와 대전</div></button>
+    </div>
+  </section>
+  <section id="game" class="game">
+    <h1 id="gameTitle">미니게임</h1>
+    <div class="panel">
+      <div id="gameText"></div>
+      <div class="online-note" id="onlineNote"></div>
+    </div>
+    <button class="back" onclick="backToMenu()">← 모드 선택으로</button>
+  </section>
+</div>
+<script>
+function startGame(mode){
+  document.getElementById('menu').style.display='none';
+  document.getElementById('game').style.display='block';
+  const title=document.getElementById('gameTitle');
+  const text=document.getElementById('gameText');
+  const note=document.getElementById('onlineNote');
+  note.textContent='';
+  if(mode==='cpu'){title.textContent='🤖 컴퓨터와 대전';text.textContent='게임 화면을 여기에 연결합니다.'}
+  if(mode==='local'){title.textContent='👥 2인 대전';text.textContent='P1과 P2가 한 컴퓨터에서 플레이합니다.'}
+  if(mode==='online'){title.textContent='🌐 온라인 대전';text.textContent='온라인 대전 로비를 여기에 연결합니다.';note.textContent='※ 실제 온라인 대전은 서버/WebSocket 연결이 필요합니다.'}
+}
+function backToMenu(){document.getElementById('game').style.display='none';document.getElementById('menu').style.display='block'}
+</script>
+</body>
+</html>
