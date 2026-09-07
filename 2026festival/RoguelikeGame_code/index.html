@@ -30,18 +30,9 @@
       z-index: 1;
     }
 
-    /* 🌟 배경 이미지가 너무 튀지 않게 밝은 틴트(막)를 씌움 */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 255, 255, 0.4);
-      z-index: -1;
-    }
-
-    /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 */
+    /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 (투명도 증가: 0.9 -> 0.5) */
     #howto-container {
-      background-color: rgba(255, 255, 255, 0.9); 
+      background-color: rgba(255, 255, 255, 0.5); 
       border: 4px solid #009688;
       box-shadow: 0 0 20px rgba(0, 150, 136, 0.3);
       width: 300px;
@@ -64,7 +55,7 @@
       padding-bottom: 8px;
     }
 
-    .guide-item { margin-bottom: 12px; }
+    .guide-item { margin-bottom: 12px; font-weight: bold; }
     .guide-sym { font-size: 15px; margin-right: 6px; }
 
     .side-btn-container {
@@ -89,9 +80,9 @@
     #btn-save { background-color: #fce4ec; border-color: #e91e63; color: #c2185b; }
     #btn-save:hover:not(:disabled) { background-color: #e91e63; color: #fff; }
 
-    /* 메인 컨테이너 */
+    /* 메인 컨테이너 (투명도 증가: 0.9 -> 0.5) */
     #game-container {
-      background-color: rgba(255, 255, 255, 0.9); 
+      background-color: rgba(255, 255, 255, 0.5); 
       border: 6px solid #009688;
       box-shadow: 0 0 30px rgba(0, 150, 136, 0.4);
       width: 100%;
@@ -110,14 +101,14 @@
       letter-spacing: 2px;
     }
 
-    /* 🗺️ 미니맵 */
+    /* 🗺️ 미니맵 (투명도 증가: 0.9 -> 0.5) */
     #map-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 5px;
       width: 250px;
       margin: 0 auto 15px auto;
-      background-color: rgba(240, 240, 240, 0.9);
+      background-color: rgba(240, 240, 240, 0.5);
       padding: 8px;
       border: 3px solid #ccc;
     }
@@ -125,7 +116,7 @@
     .map-cell {
       width: 44px;
       height: 44px;
-      background-color: #fff;
+      background-color: rgba(255, 255, 255, 0.8);
       border: 1px solid #ddd;
       display: flex;
       align-items: center;
@@ -168,6 +159,7 @@
       border-left: 5px solid #e91e63;
       padding-left: 10px;
       text-align: left;
+      font-weight: bold;
     }
 
     #status-bar {
@@ -179,11 +171,12 @@
       padding-bottom: 10px;
       flex-wrap: wrap;
       gap: 8px;
+      font-weight: bold;
     }
 
-    /* 로그 박스 */
+    /* 로그 박스 (투명도 증가: 0.9 -> 0.5) */
     #log-box {
-      background-color: rgba(245, 245, 245, 0.9);
+      background-color: rgba(245, 245, 245, 0.5);
       border: 2px solid #ccc;
       height: 110px;
       overflow-y: auto;
@@ -192,6 +185,7 @@
       padding: 10px;
       margin-bottom: 15px;
       line-height: 1.6;
+      font-weight: bold;
     }
 
     .log-entry { margin-bottom: 6px; }
@@ -207,7 +201,7 @@
     }
 
     button {
-      background-color: #f9f9f9;
+      background-color: rgba(249, 249, 249, 0.85);
       color: #333;
       border: 3px solid #bbb;
       font-family: 'Press Start 2P', monospace;
@@ -225,10 +219,4 @@
       border-color: #009688;
       transform: scale(1.01);
     }
-    button:disabled { background-color: #eee; color: #999; border-color: #ddd; cursor: not-allowed; }
-
-    @media (max-width: 950px) {
-      body { flex-direction: column; align-items: center; }
-      #howto-container { width: 100%; max-width: 680px; box-sizing: border-box; }
-    }
-  </style>
+    button:disabled { background-color: rgba(238, 238,
