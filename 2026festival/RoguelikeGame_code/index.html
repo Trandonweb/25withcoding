@@ -26,25 +26,32 @@
       background-position: center !important;
       background-repeat: no-repeat !important;
       background-attachment: fixed !important;
-      transition: background-image 0.8s ease; 
+      transition: background-image 0.5s ease-in-out; 
+      z-index: 1;
     }
 
-    /* 🌟 1. 기본 배경 (어두운 미궁 성벽 이미지) */
+    /* 🌟 글씨가 잘 보이도록 배경 위에 살짝 어두운 막을 씌움 */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: -1;
+    }
+
+    /* 🌟 1. 기본 배경 (어두운 미궁 동굴/석벽) */
     body.bg-default {
-      background-color: #111;
-      background-image: url('https://image.pollinations.ai/prompt/dark_dungeon_stone_wall_rpg_background?width=1920&height=1080&nologo=true') !important;
+      background-image: url('https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?auto=format&fit=crop&w=1920&q=80') !important;
     }
 
-    /* 🌟 2. 성공/보상 배경 (빛나는 황금 보물방 이미지) */
+    /* 🌟 2. 성공/보상 배경 (빛나는 황금/보물) */
     body.bg-success {
-      background-color: #221;
-      background-image: url('https://image.pollinations.ai/prompt/bright_golden_treasure_room_rpg_background?width=1920&height=1080&nologo=true') !important;
+      background-image: url('https://images.unsplash.com/photo-1617793540026-6a583e782e4e?auto=format&fit=crop&w=1920&q=80') !important;
     }
 
-    /* 🌟 3. 위험/실패/죽음 배경 (붉은 지옥불 이미지) */
+    /* 🌟 3. 위험/실패/죽음 배경 (타오르는 지옥불) */
     body.bg-danger {
-      background-color: #311;
-      background-image: url('https://image.pollinations.ai/prompt/dark_red_hell_fire_rpg_background?width=1920&height=1080&nologo=true') !important;
+      background-image: url('https://images.unsplash.com/photo-1504194921103-f8b80cadd5e4?auto=format&fit=crop&w=1920&q=80') !important;
     }
 
     /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 */
@@ -313,7 +320,7 @@
 
         if (i === playerPos) {
           const img = document.createElement('img');
-          img.src = './test.png'; 
+          img.src = './test.png'; /* 플레이어 이미지는 기존 경로 유지 */
           img.className = 'player-img';
           cell.appendChild(img);
           cell.classList.add('active');
@@ -344,6 +351,7 @@
       logBox.appendChild(entry);
       logBox.scrollTop = logBox.scrollHeight;
 
+      // 🌟 이벤트에 따른 배경 이미지 변경
       if (type === 'success' || type === 'weapon') {
         bodyEl.className = 'bg-success';
       } else if (type === 'danger') {
@@ -581,6 +589,7 @@
       stage++;
       stageEl.innerText = stage;
       
+      // 일정 시간 후 기본 배경으로 복귀 (보스전 제외)
       setTimeout(() => {
         if(hp > 0 && currentEvent !== 'boss_fight') bodyEl.className = 'bg-default';
       }, 1000); 
@@ -669,6 +678,7 @@
       c1.disabled = true; c2.disabled = true; c3.disabled = true; c4.disabled = true;
     }
 
+    // 랭킹 저장 (기존 기능 유지)
     function saveToSheet() {
       addLog('구글 시트에 랭킹 저장 중...', 'system');
       if(typeof google !== 'undefined' && google.script) {
