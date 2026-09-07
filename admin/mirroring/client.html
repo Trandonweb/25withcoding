@@ -24,10 +24,27 @@ const userId=localStorage.getItem("userId");
 if(!userId){alert("로그인이 필요합니다.");location.href="/";throw new Error("로그인 필요")}
 const userRef=doc(db,"users",userId),statusEl=document.getElementById("status");
 const setStatus=t=>statusEl.innerText=t;
-const rtcConfig={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
+const TURN_API="https://two5withcoding.onrender.com/turn-credentials";
+let rtcConfig={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
+let iceServersLoaded=false;
 let pc=null,stream=null,unsubscribe=null,heartbeatTimer=null,reconnectTimer=null,disconnected=false,reconnecting=false,settingAnswer=false,currentSessionId=null,currentSharingState=false,starting=false;
 const addedAdminCandidates=new Set();
 function cleanupPeerConnection(){if(pc){try{pc.close()}catch(e){}pc=null}}
+async function loadIceServers(){
+ if(iceServersLoaded)return;
+ try{
+  const response=await fetch(TURN_API,{cache:"no-store"});
+  if(!response.ok)throw new Error("TURN HTTP "+response.status);
+  const servers=await response.json();
+  if(!Array.isArray(servers)||!servers.length)throw new Error("빈 TURN 서버 목록");
+  rtcConfig={iceServers:[{urls:"stun:stun.l.google.com:19302"},...servers]};
+  iceServersLoaded=true;
+  console.log("[CLIENT] TURN 서버 로드 완료");
+ }catch(e){
+  console.warn("[CLIENT] TURN 서버 로드 실패. STUN으로 계속합니다.",e);
+  setStatus("화면 공유는 시작됐습니다. 네트워크 연결을 준비하는 중...");
+ }
+}
 async function fullDisconnect(){if(disconnected)return;disconnected=true;if(reconnectTimer)clearTimeout(reconnectTimer);if(heartbeatTimer)clearInterval(heartbeatTimer);if(unsubscribe)unsubscribe();if(stream)stream.getTracks().forEach(t=>t.stop());cleanupPeerConnection();try{await updateDoc(userRef,{online:false,state:"offline",mode:"firebase",sharing:false,sharingStartedAt:null,sessionId:null,clientOffer:null,adminAnswer:null,clientCandidates:[],adminCandidates:[],updatedAt:serverTimestamp()})}catch(e){console.warn(e)}}
 window.addEventListener("pagehide",()=>{fullDisconnect()});
 async function initWebRTC(){
@@ -42,6 +59,8 @@ async function initWebRTC(){
   stream=captured;
   const track=stream.getVideoTracks()[0];
   track.onended=async()=>{await fullDisconnect();alert("화면 공유가 종료되었습니다.");location.href="/"};
+  setStatus("연결 정보를 준비하는 중...");
+  await loadIceServers();
   await executeNegotiation();
   watchAdminSignal();
  }catch(e){
@@ -54,6 +73,7 @@ async function executeNegotiation(isRestart=false){
  if(disconnected||!stream)return;
  reconnecting=true;
  try{
+  if(!iceServersLoaded)await loadIceServers();
   cleanupPeerConnection();
   setStatus(isRestart?"재연결 시도 중...":"WEBRTC 연결 준비중...");
   pc=new RTCPeerConnection(rtcConfig);
