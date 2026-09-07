@@ -21,16 +21,15 @@
       gap: 20px;
       overflow-x: auto;
       
-      /* 🌟 깃허브 Raw 이미지 경로 적용 */
+      /* 🌟 깃허브 Raw 이미지 경로 적용 - z-index 문제 해결을 위해 body 자체에 배경을 설정 */
       background-image: url('https://raw.githubusercontent.com/Trandonweb/25withcoding/main/25withcoding/2026festival/RoguelikeGame_code/1.png');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       background-attachment: fixed;
-      z-index: 1;
     }
 
-    /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 (투명도 증가: 0.9 -> 0.5) */
+    /* ℹ️ 왼쪽 가이드 & 사이드 메뉴 박스 (투명도 유지: rgba 0.5 적용) */
     #howto-container {
       background-color: rgba(255, 255, 255, 0.5); 
       border: 4px solid #009688;
@@ -40,14 +39,15 @@
       text-align: left;
       font-size: 12px;
       line-height: 1.7;
-      color: #333;
+      color: #111; /* 글씨가 더 잘 보이도록 진하게 변경 */
       display: flex;
       flex-direction: column;
+      backdrop-filter: blur(2px); /* 텍스트 가독성을 위해 살짝 블러 효과 추가 */
     }
 
     #howto-container h2 {
       font-size: 15px;
-      color: #009688;
+      color: #00796b;
       margin-top: 0;
       margin-bottom: 14px;
       text-shadow: 1px 1px #eee;
@@ -75,12 +75,12 @@
       cursor: pointer;
       transition: 0.1s;
     }
-    #btn-restart { background-color: #e0f2f1; border-color: #009688; color: #00796b; }
+    #btn-restart { background-color: rgba(224, 242, 241, 0.9); border-color: #009688; color: #00796b; }
     #btn-restart:hover:not(:disabled) { background-color: #009688; color: #fff; }
-    #btn-save { background-color: #fce4ec; border-color: #e91e63; color: #c2185b; }
+    #btn-save { background-color: rgba(252, 228, 236, 0.9); border-color: #e91e63; color: #c2185b; }
     #btn-save:hover:not(:disabled) { background-color: #e91e63; color: #fff; }
 
-    /* 메인 컨테이너 (투명도 증가: 0.9 -> 0.5) */
+    /* 메인 컨테이너 (투명도 유지: rgba 0.5 적용) */
     #game-container {
       background-color: rgba(255, 255, 255, 0.5); 
       border: 6px solid #009688;
@@ -89,26 +89,27 @@
       max-width: 680px;
       padding: 20px;
       text-align: center;
-      color: #222;
+      color: #111;
+      backdrop-filter: blur(2px);
     }
 
     h1 {
       font-size: 22px;
-      color: #e91e63;
+      color: #c2185b;
       margin-top: 0;
       margin-bottom: 15px;
-      text-shadow: 2px 2px #fce4ec;
+      text-shadow: 2px 2px #fff;
       letter-spacing: 2px;
     }
 
-    /* 🗺️ 미니맵 (투명도 증가: 0.9 -> 0.5) */
+    /* 🗺️ 미니맵 */
     #map-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 5px;
       width: 250px;
       margin: 0 auto 15px auto;
-      background-color: rgba(240, 240, 240, 0.5);
+      background-color: rgba(240, 240, 240, 0.6);
       padding: 8px;
       border: 3px solid #ccc;
     }
@@ -116,7 +117,7 @@
     .map-cell {
       width: 44px;
       height: 44px;
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: rgba(255, 255, 255, 0.9);
       border: 1px solid #ddd;
       display: flex;
       align-items: center;
@@ -152,7 +153,7 @@
 
     #situation-text {
       font-size: 14px;
-      color: #111;
+      color: #000;
       margin-bottom: 15px;
       min-height: 70px;
       line-height: 1.6;
@@ -160,6 +161,7 @@
       padding-left: 10px;
       text-align: left;
       font-weight: bold;
+      background-color: rgba(255, 255, 255, 0.3); /* 텍스트 배경을 살짝 추가하여 가독성 향상 */
     }
 
     #status-bar {
@@ -167,17 +169,17 @@
       justify-content: space-between;
       font-size: 12px;
       margin-bottom: 15px;
-      border-bottom: 3px solid #ccc;
+      border-bottom: 3px solid #666;
       padding-bottom: 10px;
       flex-wrap: wrap;
       gap: 8px;
       font-weight: bold;
     }
 
-    /* 로그 박스 (투명도 증가: 0.9 -> 0.5) */
+    /* 로그 박스 */
     #log-box {
-      background-color: rgba(245, 245, 245, 0.5);
-      border: 2px solid #ccc;
+      background-color: rgba(245, 245, 245, 0.7);
+      border: 2px solid #aaa;
       height: 110px;
       overflow-y: auto;
       font-size: 12px;
@@ -189,10 +191,10 @@
     }
 
     .log-entry { margin-bottom: 6px; }
-    .system { color: #0277bd; }
-    .danger { color: #d32f2f; font-weight: bold; }
-    .success { color: #2e7d32; font-weight: bold; }
-    .weapon { color: #8e24aa; font-weight: bold; }
+    .system { color: #0056b3; }
+    .danger { color: #c62828; font-weight: bold; }
+    .success { color: #1b5e20; font-weight: bold; }
+    .weapon { color: #6a1b9a; font-weight: bold; }
 
     .choice-container {
       display: flex;
@@ -201,9 +203,9 @@
     }
 
     button {
-      background-color: rgba(249, 249, 249, 0.85);
-      color: #333;
-      border: 3px solid #bbb;
+      background-color: rgba(249, 249, 249, 0.9);
+      color: #111;
+      border: 3px solid #888;
       font-family: 'Press Start 2P', monospace;
       font-size: 11px;
       padding: 13px 13px;
@@ -211,6 +213,7 @@
       text-align: left;
       line-height: 1.4;
       transition: 0.1s;
+      font-weight: bold;
     }
 
     button:hover:not(:disabled) {
@@ -219,4 +222,8 @@
       border-color: #009688;
       transform: scale(1.01);
     }
-    button:disabled { background-color: rgba(238, 238,
+    button:disabled { background-color: rgba(238, 238, 238, 0.8); color: #999; border-color: #ddd; cursor: not-allowed; }
+
+    @media (max-width: 950px) {
+      body { flex-direction: column; align-items: center; }
+      #howto-container { width: 10
