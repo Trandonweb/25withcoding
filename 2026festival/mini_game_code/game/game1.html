@@ -1,1 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>줄달이기 | MINI GAME</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,'Noto Sans KR',sans-serif;background:linear-gradient(135deg,#071b12,#123b27);color:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wrap{width:min(1000px,94vw);text-align:center;padding:24px}
+.hidden{display:none!important}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px;color:#b8d8c5}
+.title{font-size:clamp(30px,6vw,52px);font-weight:900;margin:4px 0}
+.info{font-size:14px;opacity:.75;margin-bottom:18px}
+.score{font-size:20px;font-weight:800}
+.round{font-size:14px;opacity:.7}
+.arena{position:relative;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:42px 28px 34px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:25px;margin-bottom:28px}
+.player{font-size:18px;font-weight:800}.player.right{text-align:right}.key{display:inline-flex;align-items:center;justify-content:center;width:45px;height:45px;border-radius:12px;background:#1ea857;margin-left:8px;font-size:22px}.right .key{margin-left:0;margin-right:8px}
+.rope-area{position:relative;height:110px;margin:15px 0 25px}
+.rope{position:absolute;left:5%;right:5%;top:53px;height:12px;border-radius:99px;background:#c99b55;box-shadow:0 3px 0 #8c642f}
+.center-line{position:absolute;left:50%;top:20px;bottom:5px;width:3px;background:rgba(255,255,255,.25);transform:translateX(-50%)}
+.flag{position:absolute;left:50%;top:3px;transform:translateX(-50%);font-size:25px}
+.marker{position:absolute;left:50%;top:36px;width:42px;height:42px;border-radius:50%;background:#fff;color:#123b27;font-size:23px;font-weight:900;display:flex;align-items:center;justify-content:center;transform:translateX(-50%);transition:left .08s linear;box-shadow:0 5px 15px rgba(0,0,0,.3);z-index:2}
+.hint{font-size:15px;color:#a9d8ba;margin-bottom:15px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.control{border:0;border-radius:18px;padding:21px;background:rgba(255,255,255,.09);color:#fff;font-size:20px;font-weight:900;cursor:pointer;user-select:none;touch-action:manipulation;transition:.08s}.control:active{transform:scale(.97);background:#1ea857}.control small{display:block;font-size:12px;opacity:.55;margin-top:5px;font-weight:400}
+.result{margin-top:20px;font-size:27px;font-weight:900;min-height:38px}.result small{display:block;font-size:14px;font-weight:400;opacity:.65;margin-top:7px}
+.action{border:0;border-radius:13px;padding:13px 28px;background:#1ea857;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-top:14px}
+.back{border:0;background:transparent;color:#aaa;cursor:pointer;margin-top:12px}
+.online-note{font-size:13px;color:#ffd98a;margin-top:10px}
+@media(max-width:650px){.arena{padding:28px 16px}.players{gap:10px}.control{padding:18px 10px}.key{width:40px;height:40px}.rope{left:3%;right:3%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="round" id="roundText"></div><div class="score" id="scoreText">0 : 0</div></div>
+  <div class="title">🪢 줄달이기</div>
+  <div class="info" id="modeText"></div>
 
+  <div class="arena">
+    <div class="players">
+      <div class="player" id="leftPlayer">나 <span class="key">A</span></div>
+      <div class="player right" id="rightPlayer"><span class="key">L</span> 상대</div>
+    </div>
+
+    <div class="rope-area">
+      <div class="center-line"></div>
+      <div class="flag">⚑</div>
+      <div class="rope"></div>
+      <div class="marker" id="marker">●</div>
+    </div>
+
+    <div class="hint" id="hint">A를 빠르게 연타해서 줄을 당기세요!</div>
+
+    <div class="controls">
+      <button class="control" id="leftBtn">A　당기기<small>키보드 A / 클릭</small></button>
+      <button class="control" id="rightBtn">당기기　L<small>키보드 L / 클릭</small></button>
+    </div>
+
+    <div class="online-note hidden" id="onlineNote">온라인 대전에서는 내 입력은 A입니다. 상대 입력은 온라인 연결 후 반영됩니다.</div>
+    <div class="result" id="result"></div>
+    <button class="action hidden" id="nextRound">다음 판 ▶</button>
+  </div>
+  <button class="back" onclick="location.href='../index.html'">← 설정 화면으로</button>
+</div>
+
+<script>
+const saved=JSON.parse(localStorage.getItem('miniGameSettings')||'null')||{mode:'cpu',modeName:'컴퓨터와 대전',rounds:1};
+const mode=saved.mode||'cpu';
+const totalRounds=Number(saved.rounds)||1;
+const need=Math.floor(totalRounds/2)+1;
+let currentRound=1,leftWins=0,rightWins=0;
+let position=50;
+let playing=true;
+let cpuTimer=null;
+
+const marker=document.getElementById('marker');
+const result=document.getElementById('result');
+const nextRound=document.getElementById('nextRound');
+const leftBtn=document.getElementById('leftBtn');
+const rightBtn=document.getElementById('rightBtn');
+const scoreText=document.getElementById('scoreText');
+const roundText=document.getElementById('roundText');
+const modeText=document.getElementById('modeText');
+const hint=document.getElementById('hint');
+const rightPlayer=document.getElementById('rightPlayer');
+const onlineNote=document.getElementById('onlineNote');
+
+modeText.textContent=saved.modeName||'컴퓨터와 대전';
+roundText.textContent=totalRounds===1?'단판':`${totalRounds}판 ${need}선승`;
+
+if(mode==='cpu'){
+  rightPlayer.innerHTML='<span class="key">🤖</span> 컴퓨터';
+  rightBtn.innerHTML='컴퓨터<small>AI가 자동으로 당깁니다</small>';
+  rightBtn.disabled=true;
+  hint.textContent='A를 빠르게 연타해서 컴퓨터보다 먼저 줄을 당기세요!';
+  startCPU();
+}else if(mode==='online'){
+  rightPlayer.innerHTML='<span class="key">?</span> 온라인 상대';
+  rightBtn.innerHTML='상대<small>온라인 입력 대기</small>';
+  rightBtn.disabled=true;
+  onlineNote.classList.remove('hidden');
+  hint.textContent='내 키는 A입니다. 온라인 상대의 입력은 연결되면 반영됩니다.';
+}else{
+  hint.textContent='왼쪽은 A, 오른쪽은 L! 먼저 줄을 끝까지 당기세요!';
+}
+
+function update(){
+  marker.style.left=position+'%';
+  scoreText.textContent=`${leftWins} : ${rightWins}`;
+}
+
+function pull(side){
+  if(!playing)return;
+  const amount=side==='left'?1.75:-1.75;
+  position=Math.max(5,Math.min(95,position+amount));
+  update();
+  if(position<=5)finishRound('left');
+  else if(position>=95)finishRound('right');
+}
+
+function startCPU(){
+  clearInterval(cpuTimer);
+  cpuTimer=setInterval(()=>{
+    if(!playing)return;
+    // 컴퓨터는 약간의 랜덤성을 갖고 당김
+    if(Math.random()<.62)pull('right');
+  },105);
+}
+
+function finishRound(winner){
+  if(!playing)return;
+  playing=false;
+  clearInterval(cpuTimer);
+  if(winner==='left')leftWins++; else rightWins++;
+  update();
+  const winnerName=winner==='left'?'🎉 나의 승리!':'🤖 상대 승리!';
+  result.innerHTML=`${winnerName}<small>이번 판에서 ${winner==='left'?'내가':'상대가'} 줄을 끝까지 당겼습니다.</small>`;
+  if(leftWins>=need || rightWins>=need || currentRound>=totalRounds){
+    const finalWinner=leftWins>rightWins?'🏆 최종 승리!':'😮 최종 패배!';
+    result.innerHTML=`${finalWinner}<small>최종 스코어 ${leftWins} : ${rightWins}</small>`;
+    nextRound.textContent='다시 하기 ↻';
+  }else{
+    nextRound.textContent='다음 판 ▶';
+  }
+  nextRound.classList.remove('hidden');
+}
+
+function next(){
+  if(leftWins>=need || rightWins>=need || currentRound>=totalRounds){
+    currentRound=1;leftWins=0;rightWins=0;
+  }else currentRound++;
+  position=50;playing=true;result.innerHTML='';nextRound.classList.add('hidden');update();
+  if(mode==='cpu')startCPU();
+}
+
+leftBtn.addEventListener('click',()=>pull('left'));
+rightBtn.addEventListener('click',()=>{if(mode==='local')pull('right')});
+nextRound.addEventListener('click',next);
+
+document.addEventListener('keydown',e=>{
+  if(e.repeat)return;
+  const key=e.key.toLowerCase();
+  if(key==='a')pull('left');
+  if(key==='l' && mode==='local')pull('right');
+});
+
+update();
+</script>
+</body>
+</html>
