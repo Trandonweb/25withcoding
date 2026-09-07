@@ -32,7 +32,7 @@
 <button id="startBtn" class="next" disabled onclick="startGame()">게임 시작 →</button><br><button class="back" onclick="backToMode()">← 이전</button>
 </section>
 
-<section id="readyScreen" class="screen hidden"><div class="step">READY</div><h1>게임 준비 완료!</h1><div class="summary" id="summary"></div><button class="next" onclick="alert('이제 실제 게임 화면을 연결하면 됩니다!')">플레이 시작 ▶</button><br><button class="back" onclick="backToSettings()">← 설정 변경</button></section>
+<section id="readyScreen" class="screen hidden"><div class="step">READY</div><h1>게임 준비 완료!</h1><div class="summary" id="summary"></div><button class="next" onclick="startActualGame()">플레이 시작 ▶</button><br><button class="back" onclick="backToSettings()">← 설정 변경</button></section>
 </div>
 <script>
 let mode=null,modeName='',rounds=1,game=null,gameName='';
@@ -40,7 +40,23 @@ function chooseMode(el,v,n){document.querySelectorAll('#modeScreen .card').forEa
 function showSettings(){document.getElementById('modeScreen').classList.add('hidden');document.getElementById('settingsScreen').classList.remove('hidden');document.getElementById('modeLabel').textContent=modeName}
 function chooseRounds(el,v){document.querySelectorAll('.setbtn').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');rounds=v}
 function chooseGame(el,v,n){document.querySelectorAll('.gamecard').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');game=v;gameName=n;document.getElementById('startBtn').disabled=false}
-function startGame(){document.getElementById('settingsScreen').classList.add('hidden');document.getElementById('readyScreen').classList.remove('hidden');let win=Math.floor(rounds/2)+1;let g=game==='random'?'🎲 랜덤':gameName;document.getElementById('summary').innerHTML=`<span class="tag">${modeName}</span><br><b>${rounds===1?'단판':rounds+'판 '+win+'선승'}</b><br>${g}`}
+function startGame(){
+  const settings={mode,modeName,rounds,game,gameName,savedAt:Date.now()};
+  localStorage.setItem('miniGameSettings',JSON.stringify(settings));
+  document.getElementById('settingsScreen').classList.add('hidden');document.getElementById('readyScreen').classList.remove('hidden');
+  let win=Math.floor(rounds/2)+1;let g=game==='random'?'🎲 랜덤':gameName;
+  document.getElementById('summary').innerHTML=`<span class="tag">${modeName}</span><br><b>${rounds===1?'단판':rounds+'판 '+win+'선승'}</b><br>${g}`;
+}
+function startActualGame(){
+  if(game==='random'){
+    // 현재 게임 목록: 1번 게임(줄달이기). 게임이 추가되면 이 배열에 넣으면 됨.
+    localStorage.setItem('miniGameSelected','game1');
+  }else{
+    // 게임 선택 화면에서 실제 게임을 추가할 때 game 값을 game1 등으로 사용.
+    localStorage.setItem('miniGameSelected',game==='select'?'game1':game);
+  }
+  location.href='game/game1.html';
+}
 function backToMode(){document.getElementById('settingsScreen').classList.add('hidden');document.getElementById('modeScreen').classList.remove('hidden')}
 function backToSettings(){document.getElementById('readyScreen').classList.add('hidden');document.getElementById('settingsScreen').classList.remove('hidden')}
 </script></body></html>
