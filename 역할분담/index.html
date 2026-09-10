@@ -9,7 +9,8 @@
     body { margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center; padding:24px; background:#f5f7f8; font-family:Arial,"Noto Sans KR",sans-serif; color:#222; }
     .container { width:min(900px,100%); background:#fff; border-radius:20px; padding:32px; box-shadow:0 10px 35px rgba(0,0,0,.08); }
     h1 { margin:0 0 8px; text-align:center; font-size:clamp(26px,5vw,40px); }
-    .description { margin:0 0 28px; text-align:center; color:#666; }
+    .description { margin:0 0 24px; text-align:center; color:#666; }
+    .outside-balls { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:14px; min-height:72px; margin-bottom:28px; }
     table { width:100%; border-collapse:collapse; table-layout:fixed; overflow:hidden; border-radius:14px; }
     th,td { border:2px solid #222; height:120px; text-align:center; vertical-align:middle; }
     th { height:64px; background:#27ae60; color:white; font-size:20px; }
@@ -19,25 +20,25 @@
     .ball { width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:3px solid #222; font-size:24px; font-weight:800; box-shadow:0 4px 8px rgba(0,0,0,.12); }
     .ball.a { background:#3498db; color:white; border-color:#21618c; }
     .ball.b { background:#f39c12; color:white; border-color:#b9770e; }
-    .overlay { position:fixed; inset:0; background:rgba(255,255,255,.97); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:10; }
-    .overlay.hidden { display:none; }
-    .overlay-text { font-size:clamp(24px,5vw,38px); font-weight:800; margin-bottom:20px; }
     button { display:block; margin:24px auto 0; padding:12px 24px; border:0; border-radius:10px; background:#27ae60; color:white; font-size:16px; font-weight:700; cursor:pointer; }
     button:hover { background:#219653; }
-    button:disabled { background:#aaa; cursor:not-allowed; }
-    #rerandomize { display:none; }
-    @media (max-width:600px) { .container{padding:18px;} th,td{height:95px;} th{font-size:16px;} th:first-child{width:62px;} .ball{width:46px;height:46px;font-size:19px;} .balls{gap:7px;} }
+    @media (max-width:600px) {
+      .container{padding:18px;}
+      th,td{height:95px;}
+      th{font-size:16px;}
+      th:first-child{width:62px;}
+      .ball{width:46px;height:46px;font-size:19px;}
+      .balls,.outside-balls{gap:7px;}
+    }
   </style>
 </head>
 <body>
-  <div class="overlay" id="overlay">
-    <div class="overlay-text">랜덤 배치를 시작하세요</div>
-    <button type="button" id="startButton">랜덤 배치</button>
-  </div>
-
   <main class="container">
     <h1>역할분담</h1>
-    <p class="description">A색 공 1~5번과 B색 공 1~3번을 무작위로 배치합니다.</p>
+    <p class="description">배치 시작 전 공을 순서대로 보여줍니다.</p>
+
+    <div class="outside-balls" id="outsideBalls"></div>
+
     <table>
       <thead><tr><th></th><th>코딩과 함께라면</th><th>싼 카페</th></tr></thead>
       <tbody>
@@ -45,7 +46,8 @@
         <tr><td>2팀</td><td><div class="balls" id="team2-coding"></div></td><td><div class="balls" id="team2-cafe"></div></td></tr>
       </tbody>
     </table>
-    <button type="button" id="rerandomize">재배치</button>
+
+    <button type="button" id="randomize">랜덤 배치</button>
   </main>
 
   <script>
@@ -55,9 +57,8 @@
       document.getElementById('team2-coding'),
       document.getElementById('team2-cafe')
     ];
-    const overlay = document.getElementById('overlay');
-    const startButton = document.getElementById('startButton');
-    const rerandomizeButton = document.getElementById('rerandomize');
+    const outsideBalls = document.getElementById('outsideBalls');
+    const randomizeButton = document.getElementById('randomize');
 
     function shuffle(array) {
       for (let i=array.length-1;i>0;i--) {
@@ -72,6 +73,16 @@
       ball.className=`ball ${type.toLowerCase()}`;
       ball.textContent=number;
       return ball;
+    }
+
+    function showOutsideBalls() {
+      outsideBalls.innerHTML='';
+      for (let number=1; number<=5; number++) {
+        outsideBalls.appendChild(createBall('A', number));
+      }
+      for (let number=1; number<=3; number++) {
+        outsideBalls.appendChild(createBall('B', number));
+      }
     }
 
     function makeArrangement() {
@@ -94,23 +105,15 @@
       });
     }
 
-    function firstRandomize() {
-      startButton.disabled=true;
-      overlay.querySelector('.overlay-text').textContent='배치 중...';
+    function randomize() {
       makeArrangement();
-      setTimeout(()=>{
-        overlay.classList.add('hidden');
-        rerandomizeButton.style.display='block';
-      },1000);
+      outsideBalls.innerHTML='';
+      randomizeButton.textContent='재배치';
     }
 
-    function rerandomize() {
-      // 재배치는 애니메이션 없이 즉시 변경
-      makeArrangement();
-    }
-
-    startButton.addEventListener('click',firstRandomize);
-    rerandomizeButton.addEventListener('click',rerandomize);
+    // 처음에는 모든 공을 순서대로 표 밖에 표시
+    showOutsideBalls();
+    randomizeButton.addEventListener('click', randomize);
   </script>
 </body>
 </html>
