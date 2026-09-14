@@ -12,7 +12,7 @@
 <div class="wrap">
 <div class="tag" id="modeTag">게임 2</div>
 <h1>🟩 영역 채우기</h1>
-<div class="sub" id="sub">격자의 칸을 클릭해서 내 영역을 최대한 많이 차지하세요!</div>
+<div class="sub" id="sub">A 또는 L을 누르면 빈 칸 하나가 내 영역으로 채워집니다.</div>
 <div class="score"><div>나 <span id="myScore">0</span></div><div id="oppText">상대 <span id="oppScore">0</span></div></div>
 <div class="board" id="board"></div>
 <div class="info" id="info"></div>
@@ -26,30 +26,55 @@ const board=document.getElementById('board'),myScoreEl=document.getElementById('
 function setup(){
  finished=false;clearInterval(computerTimer);cells=Array(size*size).fill(0);
  board.innerHTML='';board.style.gridTemplateColumns=`repeat(${size},1fr)`;
- for(let i=0;i<cells.length;i++){const b=document.createElement('button');b.className='cell';b.type='button';b.onclick=()=>claim(i,1);board.appendChild(b)}
- document.getElementById('modeTag').textContent=mode==='cpu'?'컴퓨터 대전':mode==='local'?'한 컴퓨터 1대1': '온라인 대전';
- info.textContent=`${size}×${size} 격자 · 빈 칸을 클릭하세요!`;
+ for(let i=0;i<cells.length;i++){const b=document.createElement('button');b.className='cell';b.type='button';b.tabIndex=-1;b.onclick=()=>{};board.appendChild(b)}
+ document.getElementById('modeTag').textContent=mode==='cpu'?'컴퓨터 대전':mode==='local'?'한 컴퓨터 1대1':'온라인 대전';
+ info.textContent=`${size}×${size} 격자 · A / L로 칸을 채우세요!`;
  if(mode==='cpu')computerTimer=setInterval(computerClaim,2000);
 }
+
+// A 또는 L을 누르면 빈 칸 중 랜덤으로 하나를 내 영역으로 채운다.
+function playerClaim(){
+ if(finished)return;
+ const empty=cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0);
+ if(!empty.length)return;
+ claim(empty[Math.floor(Math.random()*empty.length)],1);
+}
+
+function computerClaim(){
+ if(finished)return;
+ const empty=cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0);
+ if(!empty.length)return;
+ claim(empty[Math.floor(Math.random()*empty.length)],2);
+}
+
 function claim(i,who){
  if(finished||cells[i]!==0)return;
  cells[i]=who;render();
  if(cells.every(x=>x!==0))finish();
 }
-function computerClaim(){
- if(finished)return;
- const empty=cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0);
- if(!empty.length)return;
- // 컴퓨터도 2초에 한 번, 비어 있는 칸 하나만 차지
- claim(empty[Math.floor(Math.random()*empty.length)],2);
-}
+
 function render(){
  myScore=cells.filter(x=>x===1).length;oppScore=cells.filter(x=>x===2).length;
  myScoreEl.textContent=myScore;oppScoreEl.textContent=oppScore;
  [...board.children].forEach((b,i)=>{b.className='cell'+(cells[i]===1?' me':cells[i]===2?' opp':'')});
 }
-function finish(){finished=true;clearInterval(computerTimer);if(mode==='local'){info.textContent=`완료! 나 ${myScore}칸 · 상대 ${oppScore}칸`;}else if(mode==='cpu'){info.textContent=myScore>oppScore?'🎉 승리!':myScore<oppScore?'😵 패배!':'🤝 무승부!';}else{info.textContent=`완료! 나 ${myScore}칸 · 상대 ${oppScore}칸`}}
-function newRound(){size=5+Math.floor(Math.random()*3);myScore=oppScore=0;myScoreEl.textContent=oppScoreEl.textContent=0;setup()}
+
+function finish(){
+ finished=true;clearInterval(computerTimer);
+ info.textContent=myScore>oppScore?'🎉 승리!':myScore<oppScore?'😵 패배!':'🤝 무승부!';
+}
+
+function newRound(){
+ size=5+Math.floor(Math.random()*3);myScore=oppScore=0;myScoreEl.textContent=oppScoreEl.textContent=0;setup();
+}
+
+// 게임은 클릭 없이 A/L 키 입력으로만 진행한다.
+document.addEventListener('keydown',e=>{
+ if(e.repeat)return;
+ const key=e.key.toLowerCase();
+ if(key==='a'||key==='l')playerClaim();
+});
+
 setup();
 </script>
 </body>
