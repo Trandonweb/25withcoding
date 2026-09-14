@@ -33,45 +33,57 @@ function setup(){
  }
  document.getElementById('modeTag').textContent=mode==='cpu'?'컴퓨터 대전':mode==='local'?'한 컴퓨터 1대1':'온라인 대전';
  document.getElementById('onlineNote').classList.toggle('hidden',mode!=='online');
- info.textContent=`${size}×${size} · 클릭 또는 A / L`;
+ info.textContent=`${size}×${size} · 클릭 또는 A / L · 상대 영역도 뺏을 수 있음`;
  render();timerEl.textContent=timeLeft;
  timerId=setInterval(()=>{if(finished)return;timeLeft--;timerEl.textContent=timeLeft;if(timeLeft<=0)finish();},1000);
  if(mode==='cpu')computerTimer=setInterval(computerClaim,700);
 }
 
+// 클릭한 칸은 빈 칸이든 상대 칸이든 내 영역으로 만든다.
 function playerClaim(i){claim(i,1);}
+
+// A / L을 누르면 빈 칸 또는 상대 영역 중 랜덤으로 하나를 내 영역으로 만든다.
 function keyClaim(){
  if(finished)return;
- const empty=cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0);
- if(!empty.length)return;
- claim(empty[Math.floor(Math.random()*empty.length)],1);
+ const targets=cells.map((v,i)=>v!==1?i:-1).filter(i=>i>=0);
+ if(!targets.length)return;
+ claim(targets[Math.floor(Math.random()*targets.length)],1);
 }
+
+// CPU도 빈 칸뿐 아니라 플레이어 영역을 뺏을 수 있다.
 function computerClaim(){
  if(finished)return;
- const empty=cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0);
- if(!empty.length)return;
- claim(empty[Math.floor(Math.random()*empty.length)],2);
+ const targets=cells.map((v,i)=>v!==2?i:-1).filter(i=>i>=0);
+ if(!targets.length)return;
+ claim(targets[Math.floor(Math.random()*targets.length)],2);
 }
+
 function claim(i,who){
- if(finished||cells[i]!==0)return;
+ if(finished)return;
+ // 같은 사람의 영역을 누른 것은 아무 변화 없음. 빈 칸/상대 칸은 즉시 빼앗는다.
+ if(cells[i]===who)return;
  cells[i]=who;render();
- if(cells.every(x=>x!==0))finish();
 }
+
 function render(){
  myScore=cells.filter(x=>x===1).length;oppScore=cells.filter(x=>x===2).length;
  myScoreEl.textContent=myScore;oppScoreEl.textContent=oppScore;
  [...board.children].forEach((b,i)=>b.className='cell'+(cells[i]===1?' me':cells[i]===2?' opp':''));
 }
+
 function finish(){
- if(finished)return;finished=true;clearInterval(timerId);clearInterval(computerTimer);timerEl.textContent=Math.max(0,timeLeft);
+ if(finished)return;finished=true;clearInterval(timerId);clearInterval(computerTimer);timerEl.textContent=0;
  info.textContent=myScore>oppScore?'🎉 승리!':myScore<oppScore?'😮 패배!':'🤝 무승부!';
 }
+
 function newRound(){size=5+Math.floor(Math.random()*3);setup();}
+
 document.addEventListener('keydown',e=>{
  if(e.repeat)return;
  const key=e.key.toLowerCase();
  if(key==='a'||key==='l')keyClaim();
 });
+
 setup();
 </script>
 </body>
