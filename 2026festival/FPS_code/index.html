@@ -1,1 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D FPS Prototype</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071018;font-family:Arial,sans-serif;color:#fff}canvas{display:block}#start{position:fixed;inset:0;display:grid;place-items:center;background:rgba(3,8,14,.82);z-index:5;text-align:center}#start .panel{max-width:520px;padding:32px;border:1px solid #587080;background:rgba(10,20,28,.94);box-shadow:0 18px 60px #0008}h1{margin:0 0 12px;font-size:38px}p{line-height:1.6;color:#c9d7df}button{padding:13px 26px;border:0;border-radius:4px;background:#e7edf0;color:#071018;font-weight:700;cursor:pointer;font-size:16px}#hud{position:fixed;inset:0;pointer-events:none;z-index:3}#cross{position:absolute;left:50%;top:50%;width:20px;height:20px;transform:translate(-50%,-50%)}#cross:before,#cross:after{content:"";position:absolute;background:#fff;box-shadow:0 0 3px #000}#cross:before{left:9px;top:0;width:2px;height:20px}#cross:after{left:0;top:9px;width:20px;height:2px}#stats{position:absolute;left:18px;top:16px;font-weight:700;text-shadow:0 2px 4px #000;font-size:16px;line-height:1.5}#hint{position:absolute;right:18px;top:16px;text-align:right;color:#cbd7de;text-shadow:0 2px 4px #000}#message{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-size:30px;font-weight:800;text-shadow:0 2px 7px #000;opacity:0;transition:opacity .15s}.hit{color:#fff}.damage{color:#ff8d8d}
+</style>
+</head>
+<body>
+<div id="start"><div class="panel"><h1>NEON OUTPOST</h1><p>간단한 3D FPS 프로토타입입니다.<br>WASD로 이동하고 마우스로 조준하세요.<br>클릭하면 레이캐스팅으로 적을 공격합니다.</p><button id="play">게임 시작</button></div></div>
+<div id="hud"><div id="cross"></div><div id="stats">HP <span id="hp">100</span> &nbsp; | &nbsp; KILLS <span id="kills">0</span></div><div id="hint">WASD 이동 · 마우스 조준 · 클릭 발사<br>ESC: 마우스 해제</div><div id="message"></div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import {PointerLockControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/PointerLockControls.js';
 
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x071018); scene.fog=new THREE.Fog(0x071018,22,85);
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,120); camera.position.set(0,1.7,10);
+const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap; document.body.appendChild(renderer.domElement);
+const controls=new PointerLockControls(camera,document.body); scene.add(controls.object);
+scene.add(new THREE.HemisphereLight(0xb9d7e8,0x182028,1.7));
+const sun=new THREE.DirectionalLight(0xffffff,2.2); sun.position.set(12,22,8); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); scene.add(sun);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(70,70),new THREE.MeshStandardMaterial({color:0x26323a,roughness:.92})); floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+const grid=new THREE.GridHelper(70,35,0x60737d,0x3c4b53); grid.position.y=.01; scene.add(grid);
+const wallMat=new THREE.MeshStandardMaterial({color:0x3b4b54,roughness:.8});
+function box(x,y,z,sx,sy,sz,mat=wallMat){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);return m}
+box(0,2,-28,56,4,1);box(0,2,28,56,4,1);box(-28,2,0,1,4,56);box(28,2,0,1,4,56);
+for(let i=0;i<12;i++){const x=(i%4)*10-15,z=Math.floor(i/4)*9-13; box(x,1.5,z,2.5,3,2.5,new THREE.MeshStandardMaterial({color:0x465963,roughness:.75}));}
+for(let i=0;i<8;i++){const a=i*Math.PI/4; const light=new THREE.PointLight(i%2?0xff5b5b:0x5bd8ff,9,9);light.position.set(Math.cos(a)*19,3,Math.sin(a)*19);scene.add(light); box(light.position.x,1.1,light.position.z,.35,2.2,.35,new THREE.MeshStandardMaterial({color:i%2?0x7c3030:0x287080,emissive:i%2?0x3c0808:0x07333c,emissiveIntensity:1.5}));}
+const gun=new THREE.Group(); const gunBody=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.7),new THREE.MeshStandardMaterial({color:0x20262b,metalness:.6,roughness:.3}));gunBody.position.set(.24,-.22,-.55);gunBody.rotation.x=-.08;gun.add(gunBody);const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.045,.055,.35,12),new THREE.MeshStandardMaterial({color:0x111416,metalness:.8}));barrel.rotation.x=Math.PI/2;barrel.position.set(.24,-.17,-.94);gun.add(barrel);camera.add(gun);
+const enemies=[]; let hp=100,kills=0,spawnTimer=0,gameOver=false; const enemyMat=new THREE.MeshStandardMaterial({color:0xb73545,roughness:.55,emissive:0x28060a,emissiveIntensity:.4});
+function spawnEnemy(){let x,z; do{x=THREE.MathUtils.randFloat(-22,22);z=THREE.MathUtils.randFloat(-22,22)}while(Math.hypot(x-camera.position.x,z-camera.position.z)<10); const g=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.55,1.25,5,10),enemyMat.clone());body.position.y=1.05;body.castShadow=true;g.add(body);const eye=new THREE.Mesh(new THREE.BoxGeometry(.45,.14,.12),new THREE.MeshBasicMaterial({color:0xffe6e6}));eye.position.set(0,1.45,.48);g.add(eye);g.position.set(x,0,z);g.userData={hp:100,cool:0,body};scene.add(g);enemies.push(g)}
+for(let i=0;i<5;i++)spawnEnemy();
+const raycaster=new THREE.Raycaster(); const keys={}; addEventListener('keydown',e=>keys[e.code]=true); addEventListener('keyup',e=>keys[e.code]=false);
+function shoot(){if(gameOver)return;raycaster.setFromCamera(new THREE.Vector2(0,0),camera);const targets=[];for(const e of enemies)targets.push(...e.children);const hit=raycaster.intersectObjects(targets,false)[0];if(hit){const e=hit.object.parent;e.userData.hp-=50;e.userData.body.material.emissive.setHex(0xffffff);setTimeout(()=>{if(e.parent)e.userData.body.material.emissive.setHex(0x28060a)},70);show('HIT','hit');if(e.userData.hp<=0){scene.remove(e);enemies.splice(enemies.indexOf(e),1);kills++;document.querySelector('#kills').textContent=kills;show('ELIMINATED','hit');}}else show('MISS','');gun.rotation.x=-.06;setTimeout(()=>gun.rotation.x=0,70)}
+document.body.addEventListener('click',()=>{if(controls.isLocked)shoot()});
+const start=document.querySelector('#start');document.querySelector('#play').onclick=()=>{start.style.display='none';controls.lock()};
+function show(t,c){const m=document.querySelector('#message');m.textContent=t;m.className=c;m.style.opacity=1;clearTimeout(show.t);show.t=setTimeout(()=>m.style.opacity=0,250)}
+function damage(n){hp=Math.max(0,hp-n);document.querySelector('#hp').textContent=hp;show('-'+n,'damage');if(hp<=0){gameOver=true;start.style.display='grid';start.querySelector('h1').textContent='MISSION FAILED';start.querySelector('p').innerHTML='적에게 제압되었습니다.<br>새로고침하면 다시 시작할 수 있습니다.';document.querySelector('#play').style.display='none';controls.unlock()}}
+let last=performance.now();
+function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000,.05);last=now;if(controls.isLocked&&!gameOver){const dir=new THREE.Vector3((keys.KeyD?1:0)-(keys.KeyA?1:0),0,(keys.KeyS?1:0)-(keys.KeyW?1:0));if(dir.lengthSq())dir.normalize();const speed=7;controls.moveRight(dir.x*speed*dt);controls.moveForward(dir.z*speed*dt);camera.position.x=THREE.MathUtils.clamp(camera.position.x,-25.5,25.5);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-25.5,25.5);
+for(const e of enemies){const dx=camera.position.x-e.position.x,dz=camera.position.z-e.position.z,dist=Math.hypot(dx,dz);e.userData.cool-=dt;if(dist>2.4){e.position.x+=dx/dist*1.25*dt;e.position.z+=dz/dist*1.25*dt}else if(e.userData.cool<=0){damage(8);e.userData.cool=1.0}e.lookAt(camera.position.x,1.1,camera.position.z)}spawnTimer-=dt;if(spawnTimer<=0&&enemies.length<9){spawnEnemy();spawnTimer=3.5}}
+renderer.render(scene,camera)}requestAnimationFrame(loop);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});requestAnimationFrame(loop);
+</script>
+</body></html>
