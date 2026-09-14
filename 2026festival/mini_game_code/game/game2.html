@@ -3,85 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>영역 채우기</title>
+<title>영역 채우기 | MINI GAME</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,'Noto Sans KR',sans-serif;background:linear-gradient(135deg,#071b12,#123b27);color:#fff;display:flex;align-items:center;justify-content:center}.wrap{width:min(760px,94vw);text-align:center}.tag{display:inline-block;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.1);font-size:13px}h1{font-size:clamp(34px,6vw,54px);margin:12px 0 6px}.sub{opacity:.7;margin-bottom:18px}.score{display:flex;justify-content:center;gap:45px;font-size:19px;font-weight:800;margin:14px 0}.score span{font-size:35px}.board{margin:20px auto;display:grid;gap:4px;width:min(78vw,560px);aspect-ratio:1;background:rgba(255,255,255,.08);padding:6px;border-radius:14px}.cell{border:1px solid rgba(255,255,255,.12);border-radius:5px;background:rgba(255,255,255,.08);cursor:pointer;transition:.08s}.cell:hover{background:rgba(255,255,255,.18)}.cell.me{background:#27ae60}.cell.opp{background:#e74c3c}.info{min-height:28px;font-size:18px}.restart{margin-top:16px;padding:11px 22px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}.hidden{display:none!important}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,'Noto Sans KR',sans-serif;background:linear-gradient(135deg,#071b12,#123b27);color:#fff;display:flex;align-items:center;justify-content:center}.wrap{width:min(760px,94vw);text-align:center}.tag{display:inline-block;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.1);font-size:13px}h1{font-size:clamp(34px,6vw,54px);margin:12px 0 6px}.sub{opacity:.7;margin-bottom:8px}.timer{font-size:30px;font-weight:900;margin:5px 0}.score{display:flex;justify-content:center;gap:45px;font-size:19px;font-weight:800;margin:6px 0}.score span{font-size:35px}.board{margin:16px auto;display:grid;gap:4px;width:min(78vw,560px);aspect-ratio:1;background:rgba(255,255,255,.08);padding:6px;border-radius:14px}.cell{border:1px solid rgba(255,255,255,.12);border-radius:5px;background:rgba(255,255,255,.08);cursor:pointer;transition:.08s}.cell:hover{background:rgba(255,255,255,.18)}.cell.me{background:#27ae60}.cell.opp{background:#e74c3c}.info{min-height:28px;font-size:18px}.restart{margin-top:12px;padding:11px 22px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}.online-note{font-size:13px;color:#ffd98a;margin-top:8px}.hidden{display:none!important}
 </style>
 </head>
 <body>
 <div class="wrap">
 <div class="tag" id="modeTag">게임 2</div>
 <h1>🟩 영역 채우기</h1>
-<div class="sub">칸을 클릭하거나 A / L을 눌러 빈 칸 하나를 내 영역으로 만드세요.</div>
+<div class="sub">30초 동안 최대한 많은 칸을 차지하세요!</div>
+<div class="timer" id="timer">30</div>
 <div class="score"><div>나 <span id="myScore">0</span></div><div>상대 <span id="oppScore">0</span></div></div>
 <div class="board" id="board"></div>
 <div class="info" id="info"></div>
+<div class="online-note hidden" id="onlineNote">온라인 대전은 상대 입력 연결 후 실시간으로 반영됩니다.</div>
 <button class="restart" onclick="newRound()">새 게임</button>
 </div>
 <script>
 const mode=localStorage.getItem('miniGameMode')||'cpu';
-let size=5+Math.floor(Math.random()*3),cells=[],myScore=0,oppScore=0,finished=false,computerTimer=null;
-const board=document.getElementById('board'),myScoreEl=document.getElementById('myScore'),oppScoreEl=document.getElementById('oppScore'),info=document.getElementById('info');
+let size=5+Math.floor(Math.random()*3),cells=[],myScore=0,oppScore=0,finished=false,timeLeft=30,timerId=null,computerTimer=null;
+const board=document.getElementById('board'),myScoreEl=document.getElementById('myScore'),oppScoreEl=document.getElementById('oppScore'),info=document.getElementById('info'),timerEl=document.getElementById('timer');
 
 function setup(){
- finished=false;clearInterval(computerTimer);cells=Array(size*size).fill(0);
- board.innerHTML='';board.style.gridTemplateColumns=`repeat(${size},1fr)`;
+ clearInterval(timerId);clearInterval(computerTimer);finished=false;timeLeft=30;
+ cells=Array(size*size).fill(0);board.innerHTML='';board.style.gridTemplateColumns=`repeat(${size},1fr)`;
  for(let i=0;i<cells.length;i++){
-   const b=document.createElement('button');
-   b.className='cell';b.type='button';
-   b.onclick=()=>playerClaim(i);
-   board.appendChild(b);
+   const b=document.createElement('button');b.className='cell';b.type='button';b.onclick=()=>playerClaim(i);board.appendChild(b);
  }
  document.getElementById('modeTag').textContent=mode==='cpu'?'컴퓨터 대전':mode==='local'?'한 컴퓨터 1대1':'온라인 대전';
- info.textContent=`${size}×${size} 격자 · 클릭 또는 A / L`;
- if(mode==='cpu')computerTimer=setInterval(computerClaim,2000);
+ document.getElementById('onlineNote').classList.toggle('hidden',mode!=='online');
+ info.textContent=`${size}×${size} · 클릭 또는 A / L`;
+ render();timerEl.textContent=timeLeft;
+ timerId=setInterval(()=>{if(finished)return;timeLeft--;timerEl.textContent=timeLeft;if(timeLeft<=0)finish();},1000);
+ if(mode==='cpu')computerTimer=setInterval(computerClaim,700);
 }
 
-// 클릭한 칸을 바로 내 영역으로 채운다.
 function playerClaim(i){claim(i,1);}
-
-// A 또는 L을 누르면 빈 칸 중 랜덤으로 하나를 내 영역으로 채운다.
 function keyClaim(){
  if(finished)return;
  const empty=cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0);
  if(!empty.length)return;
  claim(empty[Math.floor(Math.random()*empty.length)],1);
 }
-
 function computerClaim(){
  if(finished)return;
  const empty=cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0);
  if(!empty.length)return;
  claim(empty[Math.floor(Math.random()*empty.length)],2);
 }
-
 function claim(i,who){
  if(finished||cells[i]!==0)return;
  cells[i]=who;render();
  if(cells.every(x=>x!==0))finish();
 }
-
 function render(){
  myScore=cells.filter(x=>x===1).length;oppScore=cells.filter(x=>x===2).length;
  myScoreEl.textContent=myScore;oppScoreEl.textContent=oppScore;
- [...board.children].forEach((b,i)=>{b.className='cell'+(cells[i]===1?' me':cells[i]===2?' opp':'')});
+ [...board.children].forEach((b,i)=>b.className='cell'+(cells[i]===1?' me':cells[i]===2?' opp':''));
 }
-
 function finish(){
- finished=true;clearInterval(computerTimer);
- info.textContent=myScore>oppScore?'🎉 승리!':myScore<oppScore?'😵 패배!':'🤝 무승부!';
+ if(finished)return;finished=true;clearInterval(timerId);clearInterval(computerTimer);timerEl.textContent=Math.max(0,timeLeft);
+ info.textContent=myScore>oppScore?'🎉 승리!':myScore<oppScore?'😮 패배!':'🤝 무승부!';
 }
-
-function newRound(){
- size=5+Math.floor(Math.random()*3);myScore=oppScore=0;myScoreEl.textContent=oppScoreEl.textContent=0;setup();
-}
-
+function newRound(){size=5+Math.floor(Math.random()*3);setup();}
 document.addEventListener('keydown',e=>{
  if(e.repeat)return;
  const key=e.key.toLowerCase();
  if(key==='a'||key==='l')keyClaim();
 });
-
 setup();
 </script>
 </body>
