@@ -12,8 +12,8 @@
 <div class="wrap">
 <div class="tag" id="modeTag">게임 2</div>
 <h1>🟩 영역 채우기</h1>
-<div class="sub" id="sub">A 또는 L을 누르면 빈 칸 하나가 내 영역으로 채워집니다.</div>
-<div class="score"><div>나 <span id="myScore">0</span></div><div id="oppText">상대 <span id="oppScore">0</span></div></div>
+<div class="sub">칸을 클릭하거나 A / L을 눌러 빈 칸 하나를 내 영역으로 만드세요.</div>
+<div class="score"><div>나 <span id="myScore">0</span></div><div>상대 <span id="oppScore">0</span></div></div>
 <div class="board" id="board"></div>
 <div class="info" id="info"></div>
 <button class="restart" onclick="newRound()">새 게임</button>
@@ -26,14 +26,22 @@ const board=document.getElementById('board'),myScoreEl=document.getElementById('
 function setup(){
  finished=false;clearInterval(computerTimer);cells=Array(size*size).fill(0);
  board.innerHTML='';board.style.gridTemplateColumns=`repeat(${size},1fr)`;
- for(let i=0;i<cells.length;i++){const b=document.createElement('button');b.className='cell';b.type='button';b.tabIndex=-1;b.onclick=()=>{};board.appendChild(b)}
+ for(let i=0;i<cells.length;i++){
+   const b=document.createElement('button');
+   b.className='cell';b.type='button';
+   b.onclick=()=>playerClaim(i);
+   board.appendChild(b);
+ }
  document.getElementById('modeTag').textContent=mode==='cpu'?'컴퓨터 대전':mode==='local'?'한 컴퓨터 1대1':'온라인 대전';
- info.textContent=`${size}×${size} 격자 · A / L로 칸을 채우세요!`;
+ info.textContent=`${size}×${size} 격자 · 클릭 또는 A / L`;
  if(mode==='cpu')computerTimer=setInterval(computerClaim,2000);
 }
 
+// 클릭한 칸을 바로 내 영역으로 채운다.
+function playerClaim(i){claim(i,1);}
+
 // A 또는 L을 누르면 빈 칸 중 랜덤으로 하나를 내 영역으로 채운다.
-function playerClaim(){
+function keyClaim(){
  if(finished)return;
  const empty=cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0);
  if(!empty.length)return;
@@ -68,11 +76,10 @@ function newRound(){
  size=5+Math.floor(Math.random()*3);myScore=oppScore=0;myScoreEl.textContent=oppScoreEl.textContent=0;setup();
 }
 
-// 게임은 클릭 없이 A/L 키 입력으로만 진행한다.
 document.addEventListener('keydown',e=>{
  if(e.repeat)return;
  const key=e.key.toLowerCase();
- if(key==='a'||key==='l')playerClaim();
+ if(key==='a'||key==='l')keyClaim();
 });
 
 setup();
