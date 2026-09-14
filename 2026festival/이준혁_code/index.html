@@ -1,438 +1,1008 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>학교 축제: 무한의 계단 (우주 정복)</title>
-    <style>
-        body {
-            margin: 0;
-            background-color: #0b0e14;
-            color: white;
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        #ui {
-            text-align: center;
-            margin-bottom: 10px;
-            z-index: 5;
-        }
-        #score-board {
-            font-size: 26px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-        #timer-bar-container {
-            width: 360px;
-            height: 16px;
-            background-color: #222;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 10px;
-            border: 2px solid #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-        #timer-bar {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #00d2ff, #0066ff);
-        }
-        #canvas-container {
-            position: relative;
-            width: 360px;
-            height: 540px;
-        }
-        canvas {
-            background-color: #0f172a;
-            border: 4px solid #fff;
-            border-radius: 12px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
-        }
-        .overlay {
-            position: absolute;
-            top: 4px; left: 4px; right: 4px; bottom: 4px;
-            background-color: rgba(0, 0, 0, 0.75);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-        .overlay h1 {
-            color: #ffd32a;
-            font-size: 34px;
-            margin-bottom: 10px;
-            text-shadow: 3px 3px 0px #000;
-            text-align: center;
-        }
-        .overlay p {
-            font-size: 14px;
-            color: #aaa;
-            margin-bottom: 25px;
-            text-align: center;
-            line-height: 1.4;
-        }
-        .start-btn {
-            padding: 12px 40px;
-            font-size: 20px;
-            font-weight: bold;
-            background-color: #00ea90;
-            color: #111;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            box-shadow: 0 5px 0px #00a868;
-            transition: 0.1s;
-        }
-        .start-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 1px 0px #00a868;
-        }
-        #controls {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #bbb;
-            text-align: center;
-            line-height: 1.6;
-            z-index: 5;
-        }
-        .btn-hint {
-            display: inline-block;
-            padding: 2px 6px;
-            background: #333;
-            color: #fff;
-            border-radius: 5px;
-            font-weight: bold;
-            border: 1px solid #555;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>무한의 계단 - 확장 모드</title>
+<style>
+body {
+    margin: 0;
+    background-color: #111;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+}
+#ui {
+    text-align: center;
+    margin-bottom: 10px;
+}
+#score-board {
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+#timer-bar-container {
+    width: 360px;
+    height: 16px;
+    background-color: #222;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+    border: 2px solid #fff;
+}
+#timer-bar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff4757, #ff6b81);
+    transition: width 0.1s linear;
+}
+#canvas-container {
+    position: relative;
+    width: 360px;
+    height: 540px;
+}
+canvas {
+    border: 4px solid #fff;
+    border-radius: 12px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.8);
+}
+.overlay {
+    position: absolute;
+    top: 4px; left: 4px; right: 4px; bottom: 4px;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+.overlay h1 {
+    color: #ffd32a;
+    font-size: 30px;
+    margin-bottom: 15px;
+    text-shadow: 3px 3px 0px #000;
+}
+.menu-btn {
+    padding: 10px 20px;
+    font-size: 15px;
+    font-weight: bold;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 0px #27ae60;
+    transition: 0.1s;
+    margin: 6px;
+    width: 210px;
+}
+.menu-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0px #27ae60;
+}
+.shop-btn {
+    background-color: #e67e22;
+    box-shadow: 0 4px 0px #d35400;
+}
+.map-btn {
+    background-color: #1abc9c;
+    box-shadow: 0 4px 0px #16a085;
+}
+.mode-btn {
+    background-color: #9b59b6;
+    box-shadow: 0 4px 0px #8e44ad;
+}
+.fever-btn {
+    background-color: #e74c3c;
+    box-shadow: 0 4px 0px #c0392b;
+}
+.skin-card, .map-card {
+    background: #222;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 4px;
+    width: 240px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.skin-card.selected, .map-card.selected {
+    border-color: #2ecc71;
+    background: #1b3322;
+}
+.action-select-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#controls {
+    margin-top: 15px;
+    font-size: 12px;
+    color: #aaa;
+    text-align: center;
+    line-height: 1.4;
+}
+.btn-hint {
+    display: inline-block;
+    padding: 2px 5px;
+    background: #444;
+    color: #fff;
+    border-radius: 4px;
+    font-weight: bold;
+    border: 1px solid #666;
+}
+</style>
 </head>
 <body>
 
-    <div id="ui">
-        <div id="score-board">SCORE: <span id="current-score">0</span> | BEST: <span id="best-score">0</span></div>
-        <div id="timer-bar-container">
-            <div id="timer-bar"></div>
-        </div>
+<div id="ui">
+    <div id="score-board">
+        MAX: <span id="max-score" style="color:#ffd32a;">0</span> | SCORE: <span id="current-score">0</span> | GEM: <span id="current-gems" style="color:#00e8ff;">0</span>
+    </div>
+    <div id="timer-bar-container">
+        <div id="timer-bar"></div>
+    </div>
+</div>
+
+<div id="canvas-container">
+    <!-- 홈 화면 -->
+    <div id="startScreen" class="overlay">
+        <h1>무한의 계단</h1>
+        <button class="menu-btn" onclick="startGame(0)">일반 모드 시작</button>
+        <button class="menu-btn mode-btn" onclick="openModeSelect()">모드 선택</button>
+        <button class="menu-btn shop-btn" onclick="openShop()">캐릭터 상점</button>
+        <button class="menu-btn map-btn" onclick="openMapSelect()">맵 변경 (무료)</button>
     </div>
 
-    <div id="canvas-container">
-        <!-- 시작 화면 -->
-        <div id="startScreen" class="overlay">
-            <h1>무한의 계단<br><span style="font-size: 20px; color:#00ea90;">- 우주를 향해서 -</span></h1>
-            <p>점수가 올라갈수록 배경이 우주로 바뀝니다!<br>목표는 1000점 돌파!</p>
-            <button class="start-btn" onclick="startGame()">게임 시작</button>
+    <!-- 모드 선택 화면 -->
+    <div id="modeScreen" class="overlay" style="display: none;">
+        <h1 style="color: #9b59b6;">모드 선택</h1>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+            <button class="menu-btn mode-btn" style="width: 240px;" onclick="startGame(1)">유리계단 모드<br><span style="font-size:10px; color:#ddd;">(150계단 달성시 '유리인간' 해금)</span></button>
+            <button class="menu-btn fever-btn" style="width: 240px;" onclick="startGame(2)">피버 모드<br><span style="font-size:10px; color:#ddd;">(직진 전용 / 50계단마다 방향 전환)</span></button>
         </div>
-
-        <!-- 게임오버 화면 -->
-        <div id="gameOverScreen" class="overlay" style="display: none;">
-            <h1 style="color: #ff4757;">MISSION FAILED</h1>
-            <p style="font-size: 18px; margin-bottom: 20px; color: #fff;">최종 도달 높이: <span id="final-score" style="color:#ffd32a; font-weight:bold;">0</span>m</p>
-            <button class="start-btn" style="background-color:#3498db; box-shadow:0 5px 0px #2980b9; color: white;" onclick="startGame()">다시 도전</button>
-        </div>
-
-        <canvas id="gameCanvas" width="360" height="540"></canvas>
+        <button class="menu-btn" style="background-color: #7f8c8d; box-shadow: 0 4px 0px #7f8c8d;" onclick="closeModeSelect()">돌아가기</button>
     </div>
 
-    <div id="controls">
-        [방향 전환] : <span class="btn-hint">A</span> 또는 <span class="btn-hint">←</span> (왼쪽)<br>
-        [그대로 오르기] : <span class="btn-hint">D</span> 또는 <span class="btn-hint">→</span> (오른쪽)
+    <!-- 상점 화면 -->
+    <div id="shopScreen" class="overlay" style="display: none;">
+        <h1 style="color: #e67e22;">캐릭터 상점</h1>
+        <div id="skin-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+        <button class="menu-btn" style="background-color: #7f8c8d; box-shadow: 0 4px 0px #7f8c8d;" onclick="closeShop()">돌아가기</button>
     </div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreEl = document.getElementById('current-score');
-        const bestEl = document.getElementById('best-score');
-        const finalScoreEl = document.getElementById('final-score');
-        const timerBar = document.getElementById('timer-bar');
-        
-        const startScreen = document.getElementById('startScreen');
-        const gameOverScreen = document.getElementById('gameOverScreen');
+    <!-- 맵 선택 화면 -->
+    <div id="mapScreen" class="overlay" style="display: none;">
+        <h1 style="color: #1abc9c;">맵 변경 (무료)</h1>
+        <div id="map-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+        <button class="menu-btn" style="background-color: #7f8c8d; box-shadow: 0 4px 0px #7f8c8d;" onclick="closeMapSelect()">돌아가기</button>
+    </div>
 
-        // [최적의 규격] 자연스럽고 촘촘하게 맞물리는 큼직한 계단 간격
-        const STEP_X = 32;       
-        const STEP_Y = 22;       
-        const STAIR_WIDTH = 66;  
-        const STAIR_HEIGHT = 14;
+    <!-- 게임 오버 화면 -->
+    <div id="gameOverScreen" class="overlay" style="display: none;">
+        <h1 style="color: #ff4757;">GAME OVER</h1>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <p style="font-size: 16px; margin-bottom: 6px;">최종 점수: <span id="final-score" style="color:#ffd32a; font-weight:bold;">0</span>점</p>
+            <p style="font-size: 16px; margin-bottom: 6px;">획득 보석: <span id="earned-gems" style="color:#00e8ff; font-weight:bold;">0</span>개</p>
+            <p id="unlock-notice" style="font-size: 14px; color: #2ecc71; margin-top: 8px; font-weight: bold; display: none;"></p>
+        </div>
+        <button class="menu-btn" style="background-color:#3498db; box-shadow:0 4px 0px #2980b9;" onclick="restartGame()">다시 도전 (Space)</button>
+        <button class="menu-btn" style="background-color:#7f8c8d; box-shadow:0 4px 0px #7f8c8d;" onclick="goHome()">홈으로</button>
+    </div>
 
-        let score = 0;
-        let bestScore = localStorage.getItem('infinite_space_best') || 0;
-        bestEl.textContent = bestScore;
+    <canvas id="gameCanvas" width="360" height="540"></canvas>
+</div>
 
-        let isPlaying = false;
-        let timeLimit = 100;
-        let timeDecreaseRate = 0.12; 
+<div id="controls">
+    [방향 전환] : <span class="btn-hint">A</span> / <span class="btn-hint">←</span> |
+    [그대로 오르기] : <span class="btn-hint">D</span> / <span class="btn-hint">→</span>
+</div>
 
-        // [위치 조정] 플레이어와 시작 계단의 고정 Y 위치를 화면 위(뒤)쪽으로 올려 시야 공간 확보
-        const PLAYER_FIXED_X = canvas.width / 2;
-        const PLAYER_FIXED_Y = canvas.height - 180; 
-        
-        let player = {
-            direction: 1, // 1: 우측, -1: 좌측
-            walkFrame: 0,
-            bounceY: 0
-        };
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('current-score');
+const maxScoreEl = document.getElementById('max-score');
+const gemsEl = document.getElementById('current-gems');
+const finalScoreEl = document.getElementById('final-score');
+const earnedGemsEl = document.getElementById('earned-gems');
+const timerBar = document.getElementById('timer-bar');
+const unlockNoticeEl = document.getElementById('unlock-notice');
 
-        let stairs = [];
-        let scrollY = 0; 
+const startScreen = document.getElementById('startScreen');
+const modeScreen = document.getElementById('modeScreen');
+const shopScreen = document.getElementById('shopScreen');
+const mapScreen = document.getElementById('mapScreen');
+const gameOverScreen = document.getElementById('gameOverScreen');
 
-        function startGame() {
-            startScreen.style.display = 'none';
-            gameOverScreen.style.display = 'none';
-            
-            score = 0;
-            scoreEl.textContent = score;
-            timeLimit = 100;
-            timeDecreaseRate = 0.12;
-            player.direction = 1;
-            player.walkFrame = 0;
-            player.bounceY = 0;
-            scrollY = 0;
+const STAIR_WIDTH = 42;
+const STAIR_HEIGHT = 12;
+const STEP_X = 35;
+const STEP_Y = 16;
 
-            // 플레이어 발밑에 맞춘 깔끔한 위치 정렬
-            stairs = [{ x: PLAYER_FIXED_X, y: PLAYER_FIXED_Y + 12 }];
-            
-            // 촘촘한 배치에 맞춰 화면 전체를 덮을 만큼 생성
-            for (let i = 0; i < 30; i++) {
-                generateNextStair(i);
-            }
+const CENTER_X = canvas.width / 2;
+const CENTER_Y = canvas.height - 180;
 
-            if (!isPlaying) {
-                isPlaying = true;
-                update();
-            }
+let score = 0;
+let gameGems = 0;
+let totalGems = 0;
+let gameMode = 0;
+
+let maxScore = 0;
+maxScoreEl.textContent = maxScore;
+
+let savedSkinsState = JSON.parse(localStorage.getItem('infiniteStairs_skins')) || {};
+let skins = [
+    { id: 0, name: "기본이", price: 0, unlocked: true, bodyColor: "#9b59b6", faceColor: "#fdb45c", hairColor: "#4a2306", hairType: "short", deathType: "fall" },
+    { id: 1, name: "유리인간", price: 0, unlocked: savedSkinsState[1] || false, specialUnlock: "유리계단 150계단", bodyColor: "rgba(255,255,255,0.25)", faceColor: "rgba(255,255,255,0.25)", hairColor: "rgba(255,255,255,0.4)", hairType: "none", deathType: "shatter", isGlass: true },
+    { id: 2, name: "파이어맨", price: 0, unlocked: savedSkinsState[2] || false, specialUnlock: "피버모드 클리어", bodyColor: "#e74c3c", faceColor: "#fffa65", hairColor: "#c0392b", hairType: "ninja", deathType: "burnUp" },
+    { id: 3, name: "사이버 닌자", price: 150, unlocked: savedSkinsState[3] !== undefined ? savedSkinsState[3] : false, bodyColor: "#111111", faceColor: "#111111", hairColor: "#111111", hairType: "ninja", deathType: "shadowDash" },
+    { id: 4, name: "황금 로봇", price: 150, unlocked: savedSkinsState[4] !== undefined ? savedSkinsState[4] : false, bodyColor: "#f1c40f", faceColor: "#f1c40f", hairColor: "#f1c40f", hairType: "robot", deathType: "explode" },
+    { id: 5, name: "긴머리 소녀", price: 150, unlocked: savedSkinsState[5] !== undefined ? savedSkinsState[5] : false, bodyColor: "#e91e63", faceColor: "#ffcc80", hairColor: "#3e2723", hairType: "long", deathType: "dizzySpin" },
+    { id: 6, name: "스페이스 파일럿", price: 150, unlocked: savedSkinsState[6] !== undefined ? savedSkinsState[6] : false, bodyColor: "#3498db", faceColor: "#ffffff", hairColor: "#bdc3c7", hairType: "propeller", deathType: "flyAway" },
+    { id: 7, name: "꼬마 마법사", price: 150, unlocked: savedSkinsState[7] !== undefined ? savedSkinsState[7] : false, bodyColor: "#8e44ad", faceColor: "#ffd32a", hairColor: "#e67e22", hairType: "long", deathType: "broomFly" },
+    { id: 8, name: "제트 슬라이더", price: 150, unlocked: savedSkinsState[8] !== undefined ? savedSkinsState[8] : false, bodyColor: "#e74c3c", faceColor: "#fffa65", hairColor: "#2c3e50", hairType: "ninja", deathType: "spinDrop" }
+];
+let currentSkinId = 0;
+
+let maps = [
+    { id: 0, name: "밝은 도시", theme: "city" },
+    { id: 1, name: "초록 정글", theme: "jungle" },
+    { id: 2, name: "고대 피라미드", theme: "pyramid" },
+    { id: 3, name: "푸른 바다", theme: "ocean" }
+];
+let currentMapId = 0;
+
+let isPlaying = false;
+let deathTimer = 0;
+let activeDeathType = "fall";
+
+let timeLimit = 100;
+let timeDecreaseRate = 0.18;
+
+let player = {
+    direction: 1,
+    walkFrame: 0,
+    currentIndex: 0
+};
+
+let stairs = [];
+let cameraX = 0;
+let cameraY = 0;
+let targetCameraX = 0;
+let targetCameraY = 0;
+
+let turnConsecutiveCount = 0;
+let lastTurnDirectionChange = 0;
+
+// 배경 오브젝트 초기화
+let cityBuildings = [];
+for(let i = 0; i < 6; i++) {
+    cityBuildings.push({
+        x: i * 65 + 10,
+        height: 180 + (i * 30) % 150,
+        color: i % 2 === 0 ? '#34495e' : '#2c3e50'
+    });
+}
+
+let glassDecorations = [];
+for(let i = 0; i < 15; i++) {
+    glassDecorations.push({
+        x: Math.random() * 360,
+        y: Math.random() * 540,
+        size: 15 + Math.random() * 25,
+        angle: Math.random() * Math.PI
+    });
+}
+
+let hellFlames = [];
+for(let i = 0; i < 12; i++) {
+    hellFlames.push({
+        x: Math.random() * 360,
+        y: 400 + Math.random() * 140,
+        size: 20 + Math.random() * 30
+    });
+}
+
+let fishes = [];
+for(let i = 0; i < 8; i++) {
+    fishes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        speed: 0.5 + Math.random() * 1.5,
+        size: 10 + Math.random() * 15,
+        color: ['#ff7675', '#ffeaa7', '#55efc4', '#74b9ff', '#fdcb6e'][Math.floor(Math.random()*5)],
+        dir: Math.random() > 0.5 ? 1 : -1
+    });
+}
+
+let jungleTrees = [];
+for(let i = 0; i < 12; i++) {
+    jungleTrees.push({
+        x: (i * 45) - 30 + Math.random() * 20,
+        yOffset: i * 70,
+        width: 16 + Math.random() * 14,
+        height: 140 + Math.random() * 70,
+        color: i % 2 === 0 ? '#055c58' : '#044440',
+        leafColor: i % 2 === 0 ? '#10ac84' : '#009432'
+    });
+}
+
+updateGemsDisplay();
+
+function updateGemsDisplay() {
+    gemsEl.textContent = totalGems;
+}
+
+function saveSkinsData() {
+    let state = {};
+    skins.forEach(s => { state[s.id] = s.unlocked; });
+    localStorage.setItem('infiniteStairs_skins', JSON.stringify(state));
+}
+
+function goHome() {
+    gameOverScreen.style.display = 'none';
+    shopScreen.style.display = 'none';
+    mapScreen.style.display = 'none';
+    modeScreen.style.display = 'none';
+    startScreen.style.display = 'flex';
+    isPlaying = false;
+    deathTimer = 0;
+}
+
+function openModeSelect() {
+    startScreen.style.display = 'none';
+    modeScreen.style.display = 'flex';
+}
+function closeModeSelect() {
+    modeScreen.style.display = 'none';
+    startScreen.style.display = 'flex';
+}
+
+function openShop() {
+    startScreen.style.display = 'none';
+    shopScreen.style.display = 'flex';
+    renderShopList();
+}
+function closeShop() {
+    shopScreen.style.display = 'none';
+    startScreen.style.display = 'flex';
+}
+
+function renderShopList() {
+    const listContainer = document.getElementById('skin-list');
+    listContainer.innerHTML = '';
+    skins.forEach(skin => {
+        const card = document.createElement('div');
+        card.className = `skin-card ${skin.id === currentSkinId ? 'selected' : ''}`;
+        let btnHTML = "";
+
+        if (skin.id === currentSkinId) {
+            btnHTML = `<span style="color:#2ecc71; font-weight:bold; font-size:11px;">사용 중</span>`;
+        } else if (skin.unlocked) {
+            btnHTML = `<button class="action-select-btn" style="background:#2ecc71; color:white;" onclick="selectSkin(${skin.id})">선택</button>`;
+        } else if (skin.specialUnlock) {
+            btnHTML = `<span style="color:#e74c3c; font-size:10px; font-weight:bold;">잠김(${skin.specialUnlock})</span>`;
+        } else {
+            btnHTML = `<button class="action-select-btn" style="background:#e67e22; color:white;" onclick="buySkin(${skin.id})">${skin.price} 보석</button>`;
         }
 
-        // 초반 5개는 무조건 오른쪽으로 직진
-        function generateNextStair(index) {
-            const lastStair = stairs[stairs.length - 1];
-            let rand;
-            
-            if (index !== undefined && index < 5) {
-                rand = 1;
+        card.innerHTML = `<div style="text-align:left;"><div style="font-weight:bold; font-size:13px;">${skin.name}</div></div><div>${btnHTML}</div>`;
+        listContainer.appendChild(card);
+    });
+}
+
+function selectSkin(id) {
+    currentSkinId = id;
+    renderShopList();
+}
+
+function buySkin(id) {
+    const skin = skins.find(s => s.id === id);
+    if (totalGems >= skin.price) {
+        totalGems -= skin.price;
+        skin.unlocked = true;
+        currentSkinId = id;
+        updateGemsDisplay();
+        saveSkinsData();
+        renderShopList();
+    } else {
+        alert("보석이 부족합니다!");
+    }
+}
+
+function openMapSelect() {
+    startScreen.style.display = 'none';
+    mapScreen.style.display = 'flex';
+    renderMapList();
+}
+function closeMapSelect() {
+    mapScreen.style.display = 'none';
+    startScreen.style.display = 'flex';
+}
+
+function renderMapList() {
+    const listContainer = document.getElementById('map-list');
+    listContainer.innerHTML = '';
+    maps.forEach(map => {
+        const card = document.createElement('div');
+        card.className = `map-card ${map.id === currentMapId ? 'selected' : ''}`;
+        let btnHTML = map.id === currentMapId ? 
+            `<span style="color:#2ecc71; font-weight:bold; font-size:11px;">사용 중</span>` : 
+            `<button class="action-select-btn" style="background:#1abc9c; color:white;" onclick="selectMap(${map.id})">선택</button>`;
+        card.innerHTML = `<div style="text-align:left;"><div style="font-weight:bold; font-size:13px;">${map.name} <span style="font-size:10px; color:#2ecc71;">(무료)</span></div></div><div>${btnHTML}</div>`;
+        listContainer.appendChild(card);
+    });
+}
+
+function selectMap(id) {
+    currentMapId = id;
+    renderMapList();
+}
+
+function startGame(mode) {
+    gameMode = mode;
+    startScreen.style.display = 'none';
+    modeScreen.style.display = 'none';
+    shopScreen.style.display = 'none';
+    mapScreen.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+
+    score = 0;
+    gameGems = 0;
+    scoreEl.textContent = '0';
+
+    timeLimit = 100;
+    if (gameMode === 2) {
+        timeDecreaseRate = 0.40;
+    } else {
+        timeDecreaseRate = 0.18;
+    }
+    timerBar.style.width = '100%';
+
+    player.direction = 1;
+    player.walkFrame = 0;
+    player.currentIndex = 0;
+
+    cameraX = 0;
+    cameraY = 0;
+    targetCameraX = 0;
+    targetCameraY = 0;
+
+    turnConsecutiveCount = 0;
+    lastTurnDirectionChange = 1;
+    stairs = [];
+    deathTimer = 0;
+
+    stairs.push({ x: 0, y: 0, hasItem: false });
+    stairs.push({ x: STEP_X, y: -STEP_Y, hasItem: false });
+    lastTurnDirectionChange = 1;
+
+    for (let i = 0; i < 80; i++) {
+        generateNextStair();
+    }
+
+    isPlaying = true;
+    requestAnimationFrame(gameLoop);
+}
+
+function restartGame() {
+    startGame(gameMode);
+}
+
+function generateNextStair() {
+    const lastStair = stairs[stairs.length - 1];
+    const prevLastStair = stairs[stairs.length - 2];
+    
+    let lastDiff = lastStair.x - prevLastStair.x;
+
+    let rand;
+    if (gameMode === 2) {
+        // 피버 모드: 50계단마다 방향이 꺾임 (그 전까지는 일직선)
+        let totalStairsCount = stairs.length;
+        if (totalStairsCount % 50 === 0) {
+            rand = (lastDiff > 0 ? -1 : 1);
+        } else {
+            rand = (lastDiff > 0 ? 1 : -1);
+        }
+    } else {
+        if (turnConsecutiveCount >= 3) {
+            rand = lastDiff > 0 ? 1 : -1;
+            turnConsecutiveCount = 0;
+            lastTurnDirectionChange = rand;
+        } else {
+            rand = Math.random() > 0.5 ? 1 : -1;
+            if (rand !== (lastDiff > 0 ? 1 : -1)) {
+                turnConsecutiveCount++;
             } else {
-                rand = Math.random() > 0.5 ? 1 : -1;
+                turnConsecutiveCount = 0;
             }
-            
-            stairs.push({
-                x: lastStair.x + (rand * STEP_X),
-                y: lastStair.y - STEP_Y
-            });
+        }
+    }
+
+    let hasItem = Math.random() < 0.25;
+    stairs.push({
+        x: lastStair.x + (rand * STEP_X),
+        y: lastStair.y - STEP_Y,
+        hasItem: hasItem
+    });
+}
+
+window.addEventListener('keydown', (e) => {
+    if (gameOverScreen.style.display === 'flex') {
+        if (e.key === ' ' || e.code === 'Space') {
+            e.preventDefault();
+            restartGame();
+        }
+        return;
+    }
+
+    if (!isPlaying || deathTimer > 0) return;
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "].includes(e.key)) e.preventDefault();
+
+    let inputType = "";
+    if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') inputType = "turn";
+    else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') inputType = "straight";
+
+    if (inputType === "") return;
+
+    const currentStair = stairs[player.currentIndex];
+    const nextStair = stairs[player.currentIndex + 1];
+    if (!nextStair) return;
+
+    const targetDirection = nextStair.x > currentStair.x ? 1 : -1;
+    if (inputType === "turn") player.direction *= -1;
+
+    if (player.direction === targetDirection) {
+        score++;
+
+        if (nextStair.hasItem) {
+            gameGems++;
+            totalGems++;
+            updateGemsDisplay();
+            nextStair.hasItem = false;
         }
 
-        // 키 입력 처리
-        window.addEventListener('keydown', (e) => {
-            if (!isPlaying) return;
+        scoreEl.textContent = score;
+        player.walkFrame = (player.walkFrame + 1) % 2;
+        player.currentIndex++;
 
-            if(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                e.preventDefault();
-            }
+        if (gameMode === 2) {
+            timeLimit = Math.min(100, timeLimit + 4.0);
+            timeDecreaseRate = 0.40 + (score * 0.001);
+        } else {
+            timeLimit = Math.min(100, timeLimit + 5);
+            let hundredMultiplier = Math.floor(score / 100);
+            timeDecreaseRate = 0.18 + (score * 0.0006) + (hundredMultiplier * 0.05);
+        }
 
-            let inputType = ""; 
-            
-            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
-                inputType = "turn";
-            } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
-                inputType = "straight";
-            }
+        const targetStair = stairs[player.currentIndex];
+        targetCameraX = -targetStair.x;
+        targetCameraY = -targetStair.y;
 
-            if (inputType === "") return; 
+        if (stairs.length - player.currentIndex < 30) {
+            generateNextStair();
+        }
+    } else {
+        triggerDeath();
+    }
+});
 
-            const currentStair = stairs[0];
-            const nextStair = stairs[1];
-            const targetDirection = nextStair.x > currentStair.x ? 1 : -1;
+function triggerDeath() {
+    isPlaying = false;
 
-            if (inputType === "turn") {
-                player.direction *= -1;
-            }
+    if (score > maxScore) {
+        maxScore = score;
+        maxScoreEl.textContent = maxScore;
+        
+        totalGems += 10;
+        gameGems += 10;
+        updateGemsDisplay();
+    }
 
-            if (player.direction === targetDirection) {
-                score++;
-                scoreEl.textContent = score;
-                
-                // 자연스러운 걷기 프레임 연출
-                player.walkFrame = player.walkFrame === 0 ? 1 : 0;
-                player.bounceY = -8; 
+    const activeSkin = skins.find(s => s.id === currentSkinId) || skins[0];
+    activeDeathType = activeSkin.deathType || "fall";
 
-                timeLimit = Math.min(100, timeLimit + 6);
-                timeDecreaseRate = 0.12 + (score * 0.0035); 
+    deathTimer = 1;
 
-                const offsetX = targetDirection * STEP_X;
-                const offsetY = STEP_Y;
+    setTimeout(() => {
+        endGame();
+    }, 850);
+}
 
-                stairs.forEach(stair => {
-                    stair.x -= offsetX;
-                    stair.y += offsetY;
-                });
+function endGame() {
+    deathTimer = 0;
+    finalScoreEl.textContent = score;
+    earnedGemsEl.textContent = gameGems;
 
-                scrollY += offsetY;
+    let unlockedMsg = "";
+    if (gameMode === 1 && score >= 150) {
+        const glassHuman = skins.find(s => s.id === 1);
+        if (!glassHuman.unlocked) {
+            glassHuman.unlocked = true;
+            saveSkinsData();
+            unlockedMsg = "🎉 유리계단 150계단 달성! '유리인간' 캐릭터 해금!";
+        }
+    } else if (gameMode === 2 && score >= 100) {
+        const fireMan = skins.find(s => s.id === 2);
+        if (!fireMan.unlocked) {
+            fireMan.unlocked = true;
+            saveSkinsData();
+            unlockedMsg = "🎉 피버모드 달성! '파이어맨' 캐릭터 해금!";
+        }
+    }
 
-                stairs.shift(); 
-                generateNextStair(); 
-            } else {
-                endGame();
-            }
+    if (unlockedMsg !== "") {
+        unlockNoticeEl.textContent = unlockedMsg;
+        unlockNoticeEl.style.display = "block";
+    } else {
+        unlockNoticeEl.style.display = "none";
+    }
+
+    gameOverScreen.style.display = 'flex';
+}
+
+function gameLoop() {
+    if (!isPlaying && deathTimer === 0) return;
+
+    if (isPlaying) {
+        timeLimit -= timeDecreaseRate;
+        if (timeLimit <= 0) {
+            timeLimit = 0;
+            timerBar.style.width = '0%';
+            triggerDeath();
+            return;
+        }
+        timerBar.style.width = timeLimit + '%';
+
+        cameraX += (targetCameraX - cameraX) * 0.35;
+        cameraY += (targetCameraY - cameraY) * 0.35;
+    } else if (deathTimer > 0) {
+        deathTimer += 1;
+    }
+
+    draw();
+
+    if (isPlaying || deathTimer > 0) {
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (gameMode === 1) {
+        let bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        bgGrad.addColorStop(0, '#192a56');
+        bgGrad.addColorStop(1, '#273c75');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.lineWidth = 1.5;
+        glassDecorations.forEach(g => {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.save();
+            ctx.translate(g.x, g.y);
+            ctx.rotate(g.angle);
+            ctx.fillRect(-g.size/2, -g.size/2, g.size, g.size);
+            ctx.strokeRect(-g.size/2, -g.size/2, g.size, g.size);
+            ctx.restore();
         });
+    } else if (gameMode === 2) {
+        let hellGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        hellGrad.addColorStop(0, '#2c0b0e');
+        hellGrad.addColorStop(0.7, '#4a0e17');
+        hellGrad.addColorStop(1, '#8b0000');
+        ctx.fillStyle = hellGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        function endGame() {
-            isPlaying = false;
-            finalScoreEl.textContent = score;
-            gameOverScreen.style.display = 'flex';
+        hellFlames.forEach(f => {
+            ctx.fillStyle = 'rgba(255, 69, 0, 0.25)';
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    } else {
+        const mapTheme = maps[currentMapId].theme;
 
-            if (score > bestScore) {
-                bestScore = score;
-                localStorage.setItem('infinite_space_best', bestScore);
-                bestEl.textContent = bestScore;
-            }
-        }
-
-        function update() {
-            if (!isPlaying) return;
-
-            player.bounceY += 1.0;
-            if (player.bounceY > 0) player.bounceY = 0;
-
-            timeLimit -= timeDecreaseRate;
-            if (timeLimit <= 0) {
-                timeLimit = 0;
-                endGame();
-                return;
-            }
-            timerBar.style.width = timeLimit + '%';
-
-            draw();
-            requestAnimationFrame(update);
-        }
-
-        // 고도별 배경 생성
-        function getBackgroundGradient() {
-            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            if (score < 300) {
-                grad.addColorStop(0, '#1a82e2');
-                grad.addColorStop(1, '#a1dbff');
-            } else if (score < 600) {
-                grad.addColorStop(0, '#2c1654');
-                grad.addColorStop(1, '#ff7e5f');
-            } else if (score < 900) {
-                grad.addColorStop(0, '#0b091a');
-                grad.addColorStop(1, '#3b2d54');
-            } else {
-                grad.addColorStop(0, '#020208');
-                grad.addColorStop(1, '#0c102b');
-            }
-            return grad;
-        }
-
-        function draw() {
-            // 1. 테마 배경 그리기
-            ctx.fillStyle = getBackgroundGradient();
+        if (mapTheme === "city") {
+            ctx.fillStyle = '#6897f5';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // [패럴랙스 오브젝트]
-            if (score < 300) {
-                ctx.fillStyle = 'rgba(25, 42, 86, 0.25)';
-                const cityY = (scrollY * 0.15) % 150;
-                for(let i = -1; i < 3; i++) {
-                    ctx.fillRect(i * 120 + 10, canvas.height - 180 + cityY, 80, 200);
-                    ctx.fillRect(i * 120 + 60, canvas.height - 130 + cityY, 50, 150);
-                }
-            } else if (score < 600) {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-                const cloudY = (scrollY * 0.2) % 300;
-                ctx.beginPath();
-                ctx.arc(80, 100 + cloudY, 35, 0, Math.PI * 2);
-                ctx.arc(130, 90 + cloudY, 50, 0, Math.PI * 2);
-                ctx.arc(180, 100 + cloudY, 35, 0, Math.PI * 2);
-                ctx.arc(280, 240 + cloudY, 45, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                for (let i = 0; i < 25; i++) {
-                    let starX = (Math.sin(i * 452) * 0.5 + 0.5) * canvas.width;
-                    let starY = ((Math.cos(i * 854) * 0.5 + 0.5) * canvas.height + (scrollY * 0.3)) % canvas.height;
-                    let size = (i % 3 === 0) ? 3 : 1.5;
-                    ctx.fillRect(starX, starY, size, size);
-                }
-                if (score >= 950) {
-                    const saturnY = Math.max(80, 400 - (score - 950) * 1.5);
-                    ctx.fillStyle = '#ebd59b';
-                    ctx.beginPath();
-                    ctx.arc(270, saturnY, 25, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = 'rgba(214, 187, 137, 0.5)';
-                    ctx.lineWidth = 5;
-                    ctx.beginPath();
-                    ctx.ellipse(270, saturnY, 42, 9, Math.PI / 6, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-            }
+            cityBuildings.forEach(b => {
+                let by = canvas.height - b.height;
+                ctx.fillStyle = b.color;
+                ctx.fillRect(b.x * 1.2, by, 55, b.height + 100);
 
-            // 2. 단정하고 통일감 있게 연속적으로 맞물린 계단 그리기 (개별 색상 표시 제거)
-            stairs.forEach((stair, index) => {
-                if (stair.y > canvas.height + 80 || stair.y < -80) return;
-
-                // 다음 계단 표시 없이 전체적으로 매끄럽고 정돈된 블록 테마 적용
-                ctx.fillStyle = score >= 600 ? '#20324a' : '#4b6584'; 
-                
-                // 계단 상단 플레이트
-                ctx.fillRect(stair.x - STAIR_WIDTH/2, stair.y - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
-                
-                // 계단 밑면 입체 섀도우
-                ctx.fillStyle = score >= 600 ? '#131e2e' : '#2f3640';
-                ctx.fillRect(stair.x - STAIR_WIDTH/2, stair.y, STAIR_WIDTH, 5);
-
-                // 계단 테두리 선
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(stair.x - STAIR_WIDTH/2, stair.y - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT + 5);
+                ctx.fillStyle = '#fffa65';
+                for (let wx = b.x * 1.2 + 8; wx < b.x * 1.2 + 45; wx += 12) {
+                    for (let wy = by + 15; wy < canvas.height; wy += 24) {
+                        ctx.fillRect(wx, wy, 5, 10);
+                    }
+                }
             });
+        } else if (mapTheme === "jungle") {
+            ctx.fillStyle = '#079992';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 3. 자이언트 플레이어 렌더링 (동일 크기 유지)
-            ctx.save();
-            ctx.translate(PLAYER_FIXED_X, PLAYER_FIXED_Y + player.bounceY);
-            ctx.scale(player.direction, 1);
+            jungleTrees.forEach((tree) => {
+                let tx = tree.x % canvas.width;
+                let ty = canvas.height - 180;
 
-            ctx.rotate(0.06); 
+                ctx.fillStyle = tree.color;
+                ctx.fillRect(tx, ty, tree.width, tree.height);
 
-            // [몸통]
-            ctx.fillStyle = '#9b59b6';
-            ctx.fillRect(-11, -30, 22, 23);
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2.5;
-            ctx.strokeRect(-11, -30, 22, 23);
+                ctx.fillStyle = tree.leafColor;
+                ctx.beginPath();
+                ctx.arc(tx + tree.width / 2, ty - 10, tree.width * 1.3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        } else if (mapTheme === "pyramid") {
+            // 고대 피라미드 배경 (스핑크스, 미라, 피라미드 그래픽 추가)
+            let pyrGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            pyrGrad.addColorStop(0, '#e67e22');
+            pyrGrad.addColorStop(1, '#d35400');
+            ctx.fillStyle = pyrGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // [얼굴]
-            ctx.fillStyle = '#fdb45c';
-            ctx.fillRect(-9, -48, 18, 18);
-            ctx.strokeRect(-9, -48, 18, 18);
-            // 눈
+            // 거대한 피라미드 배경 실루엣
+            ctx.fillStyle = 'rgba(180, 80, 0, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(180, 80);
+            ctx.lineTo(330, 320);
+            ctx.lineTo(30, 320);
+            ctx.closePath();
+            ctx.fill();
+
+            // 스핑크스 조각상 실루엣 표현
+            ctx.fillStyle = 'rgba(150, 60, 0, 0.5)';
+            ctx.fillRect(40, 260, 70, 40); // 몸체
+            ctx.beginPath();
+            ctx.arc(45, 245, 18, 0, Math.PI * 2); // 머리
+            ctx.fill();
+
+            // 미라 관 (석관) 장식 표현
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(270, 220, 25, 70);
+            ctx.strokeStyle = '#78281f';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(270, 220, 25, 70);
+            // 미라 눈 모양 장식
             ctx.fillStyle = '#000';
-            ctx.fillRect(3, -42, 3.5, 4.5);
+            ctx.fillRect(277, 235, 4, 4);
+            ctx.fillRect(288, 235, 4, 4);
 
-            // [걷기 애니메이션 다리]
-            ctx.fillStyle = '#2c3e50';
-            if (player.walkFrame === 0) {
-                ctx.fillRect(-9, -7, 7, 9);
-                ctx.strokeRect(-9, -7, 7, 9);
-                
-                ctx.fillRect(2, -7, 7, 5);
-                ctx.strokeRect(2, -7, 7, 5);
-            } else {
-                ctx.fillRect(-9, -7, 7, 5);
-                ctx.strokeRect(-9, -7, 7, 5);
-                
-                ctx.fillRect(2, -7, 7, 9);
-                ctx.strokeRect(2, -7, 7, 9);
+            // 바닥 모래 결무늬
+            ctx.strokeStyle = 'rgba(255, 200, 100, 0.2)';
+            ctx.lineWidth = 1;
+            for(let x = 0; x < canvas.width; x += 40) {
+                for(let y = 0; y < canvas.height; y += 30) {
+                    ctx.strokeRect(x, y, 40, 30);
+                }
             }
+        } else if (mapTheme === "ocean") {
+            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#00d2d3');
+            gradient.addColorStop(1, '#01a3a4');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.restore();
+            fishes.forEach(fish => {
+                fish.x += fish.speed * fish.dir;
+                if (fish.x > canvas.width + 30) fish.x = -30;
+                if (fish.x < -30) fish.x = canvas.width + 30;
+
+                ctx.save();
+                ctx.translate(fish.x, fish.y);
+                if (fish.dir === -1) ctx.scale(-1, 1);
+
+                ctx.fillStyle = fish.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, fish.size, fish.size / 2, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(-fish.size, 0);
+                ctx.lineTo(-fish.size - 8, -6);
+                ctx.lineTo(-fish.size - 8, 6);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(fish.size / 2 - 3, -2, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            });
         }
-    </script>
+    }
+
+    stairs.forEach((stair, index) => {
+        let drawX = CENTER_X + stair.x + cameraX;
+        let drawY = CENTER_Y + stair.y + cameraY;
+        if (drawY > canvas.height + 60 || drawY < -60) return;
+
+        let isCurrent = (index === player.currentIndex);
+
+        if (gameMode === 1) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.fillRect(drawX - STAIR_WIDTH/2, drawY - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
+            
+            ctx.strokeStyle = isCurrent ? '#f1c40f' : 'rgba(255, 255, 255, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(drawX - STAIR_WIDTH/2, drawY - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
+        } else {
+            ctx.fillStyle = isCurrent ? '#f1c40f' : '#e74c3c';
+            ctx.fillRect(drawX - STAIR_WIDTH/2, drawY - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
+            ctx.fillStyle = isCurrent ? '#d4ac0d' : '#c0392b';
+            ctx.fillRect(drawX - STAIR_WIDTH/2, drawY, STAIR_WIDTH, 4);
+        }
+
+        if (stair.hasItem) {
+            ctx.fillStyle = '#00e8ff';
+            ctx.beginPath();
+            ctx.arc(drawX, drawY - STAIR_HEIGHT - 12, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    });
+
+    const activeSkin = skins.find(s => s.id === currentSkinId) || skins[0];
+    ctx.save();
+    ctx.translate(CENTER_X, CENTER_Y);
+
+    if (deathTimer > 0) {
+        if (activeDeathType === "flyAway") {
+            ctx.translate(deathTimer * 8, -deathTimer * 18);
+            ctx.rotate(deathTimer * 0.15);
+        } else if (activeDeathType === "shatter") {
+            // 유리인간 전용 박살나는 연출 강화
+            ctx.save();
+            for(let i = 0; i < 10; i++) {
+                let angle = (i * Math.PI / 5) + (deathTimer * 0.3);
+                let dist = deathTimer * 7;
+                ctx.fillStyle = "rgba(255,255,255,0.85)";
+                ctx.fillRect(Math.cos(angle)*dist, Math.sin(angle)*dist, 7, 7);
+            }
+            ctx.restore();
+            ctx.globalAlpha = 0;
+        } else if (activeDeathType === "explode") {
+            ctx.save();
+            ctx.fillStyle = "#ff4757";
+            ctx.beginPath();
+            ctx.arc(0, -25, deathTimer * 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#ffd32a";
+            ctx.beginPath();
+            ctx.arc(0, -25, deathTimer * 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            if (deathTimer > 15) ctx.globalAlpha = 0;
+        } else if (activeDeathType === "burnUp") {
+            // 파이어맨 전용 타오르며 소멸하는 연출 강화
+            ctx.translate(0, -deathTimer * 6);
+            ctx.fillStyle = "#ff4500";
+            ctx.beginPath();
+            ctx.arc(0, -20, deathTimer * 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#ffeb3b";
+            ctx.beginPath();
+            ctx.arc(0, -20, deathTimer * 1.2, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (activeDeathType === "shadowDash") {
+            ctx.translate(deathTimer * 15, 0);
+            ctx.globalAlpha = Math.max(0, 1 - deathTimer / 20);
+        } else if (activeDeathType === "dizzySpin") {
+            ctx.rotate(deathTimer * 0.5);
+            ctx.translate(0, deathTimer * 8);
+        } else if (activeDeathType === "broomFly") {
+            ctx.translate(deathTimer * 10, -deathTimer * 12);
+            ctx.rotate(-0.3);
+        } else if (activeDeathType === "spinDrop") {
+            ctx.translate(-deathTimer * 6, deathTimer * 12);
+            ctx.rotate(deathTimer * 0.3);
+        } else {
+            ctx.translate(0, deathTimer * 14);
+        }
+    }
+
+    ctx.scale(player.direction, 1);
+
+    if (activeSkin.isGlass) {
+        // 유리인간: 눈, 코, 입을 완전히 없애고 투명한 유리 질감 형태로만 표현
+        ctx.fillStyle = activeSkin.bodyColor;
+        ctx.fillRect(-10, -36, 20, 20);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(-10, -36, 20, 20);
+
+        ctx.fillRect(-8, -50, 16, 16);
+        ctx.strokeRect(-8, -50, 16, 16);
+
+        // 하이라이트 반사 광채 효과 (유리 느낌 강조)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillRect(-5, -46, 3, 8);
+
+        ctx.fillStyle = activeSkin.bodyColor;
+        if (player.walkFrame === 0) {
+            ctx.fillRect(-8, -16, 6, 9);
+            ctx.strokeRect(-8, -16, 6, 9);
+            ctx.fillRect(2, -16, 6, 6);
+            ctx.strokeRect(2, -16, 6, 6);
+        } else {
+            ctx.fillRect(-8, -16, 6, 6);
+            ctx.strokeRect(-8, -16, 6, 6);
+            ctx.fillRect(2, -16, 6, 9);
+            ctx.strokeRect(2, -16, 6, 9);
+        }
+    } else {
+        ctx.fillStyle = activeSkin.bodyColor;
+        ctx.fillRect(-10, -36, 20, 20);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-10, -36, 20, 20);
+
+        ctx.fillStyle = activeSkin.faceColor;
+        ctx.fillRect(-8, -50, 16, 16);
+        ctx.strokeRect(-8, -50, 16, 16);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(2, -45, 3, 4);
+
+        if (activeSkin.hairType === "long") {
+            ctx.fillStyle = activeSkin.hairColor;
+            ctx.fillRect(-10, -50, 6, 18);
+        } else if (activeSkin.hairType === "ninja") {
+            ctx.fillStyle = '#111111';
+            ctx.fillRect(-8, -50, 16, 6);
+        } else if (activeSkin.hairType === "robot") {
+            ctx.fillStyle = activeSkin.hairColor;
+            ctx.fillRect(-2, -56, 4, 6);
+        } else if (activeSkin.hairType === "propeller") {
+            ctx.fillStyle = activeSkin.hairColor;
+            ctx.fillRect(-2, -58, 4, 8);
+            ctx.fillStyle = '#ff4757';
+            let propWidth = 16 + Math.sin(Date.now() * 0.05) * 8;
+            ctx.fillRect(-propWidth / 2, -61, propWidth, 3);
+        }
+
+        ctx.fillStyle = activeSkin.bodyColor;
+        if (player.walkFrame === 0) {
+            ctx.fillRect(-8, -16, 6, 9);
+            ctx.strokeRect(-8, -16, 6, 9);
+            ctx.fillRect(2, -16, 6, 6);
+            ctx.strokeRect(2, -16, 6, 6);
+        } else {
+            ctx.fillRect(-8, -16, 6, 6);
+            ctx.strokeRect(-8, -16, 6, 6);
+            ctx.fillRect(2, -16, 6, 9);
+            ctx.strokeRect(2, -16, 6, 9);
+        }
+    }
+
+    ctx.restore();
+
+    if (isPlaying && gameMode === 1) {
+        ctx.font = "bold 14px Arial";
+        ctx.fillStyle = "#00e8ff";
+        ctx.textAlign = "center";
+        ctx.fillText("💎 유리계단 모드", canvas.width / 2, 35);
+    } else if (isPlaying && gameMode === 2) {
+        ctx.font = "bold 14px Arial";
+        ctx.fillStyle = "#ff4757";
+        ctx.textAlign = "center";
+        ctx.fillText("🔥 피버 모드 (직진 전용)", canvas.width / 2, 35);
+    }
+}
+</script>
 </body>
 </html>
