@@ -1,62 +1,29 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MINI GAME</title>
-<style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,'Noto Sans KR',sans-serif;background:linear-gradient(135deg,#071b12,#123b27);color:#fff;display:flex;align-items:center;justify-content:center}.wrap{width:min(920px,92vw);padding:30px 0}.screen{text-align:center}.hidden{display:none!important}.logo{font-size:clamp(42px,7vw,70px);font-weight:900;margin-bottom:8px}.sub{opacity:.7;margin-bottom:35px}.modes,.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{border:1px solid rgba(255,255,255,.15);border-radius:22px;padding:27px 16px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;transition:.2s;min-height:170px}.card:hover,.card.selected{transform:translateY(-4px);background:rgba(30,168,87,.2);border-color:#35d27b}.icon{font-size:44px;margin-bottom:13px}.title{font-size:21px;font-weight:800}.desc{font-size:14px;opacity:.65;margin-top:8px}.step{font-size:13px;letter-spacing:2px;color:#5ee18e;margin-bottom:10px}.setting{background:rgba(255,255,255,.07);border-radius:22px;padding:28px;margin:15px 0}.setting h2{margin:0 0 20px}.sets{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}.setbtn{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;padding:13px 20px;border-radius:12px;cursor:pointer;font-size:15px}.setbtn.selected{background:#1ea857;border-color:#55e68d;font-weight:bold}.games{grid-template-columns:1fr 1fr}.gamecard{min-height:145px}.next{margin-top:20px;border:0;border-radius:14px;padding:15px 38px;background:#1ea857;color:#fff;font-size:17px;font-weight:800;cursor:pointer}.next:disabled{opacity:.35;cursor:not-allowed}.summary{background:rgba(255,255,255,.08);border-radius:20px;padding:28px;margin:20px 0;font-size:18px;line-height:2}.back{border:0;background:transparent;color:#aaa;cursor:pointer;margin-top:15px}.tag{display:inline-block;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.1);font-size:12px;margin:3px}
-@media(max-width:650px){.modes{grid-template-columns:1fr}.choices{grid-template-columns:1fr 1fr}.card{min-height:125px;padding:20px 10px}}
-</style></head>
-<body><div class="wrap">
-<section id="modeScreen" class="screen">
-<div class="logo">🎮 MINI GAME</div><div class="sub">누구와 플레이할까요?</div>
-<div class="modes">
-<button class="card" onclick="chooseMode(this,'cpu','컴퓨터와 대전')"><div class="icon">🤖</div><div class="title">컴퓨터와 대전</div><div class="desc">AI와 1대1</div></button>
-<button class="card" onclick="chooseMode(this,'local','한 컴퓨터로 1대1')"><div class="icon">👥</div><div class="title">한 컴퓨터로 1대1</div><div class="desc">친구와 같은 컴퓨터</div></button>
-<button class="card" onclick="chooseMode(this,'online','온라인 대전')"><div class="icon">🌐</div><div class="title">온라인 대전</div><div class="desc">다른 컴퓨터의 플레이어</div></button>
-</div><button id="modeNext" class="next" disabled onclick="showSettings()">다음 →</button>
-</section>
-
-<section id="settingsScreen" class="screen hidden">
-<div class="step">STEP 2</div><h1>게임 설정</h1><div class="sub" id="modeLabel"></div>
-<div class="setting"><h2>🏆 몇 판으로 승부할까요?</h2><div class="sets">
-<button class="setbtn selected" onclick="chooseRounds(this,1)">단판</button>
-<button class="setbtn" onclick="chooseRounds(this,3)">3판 2선승</button>
-<button class="setbtn" onclick="chooseRounds(this,5)">5판 3선승</button>
-<button class="setbtn" onclick="chooseRounds(this,7)">7판 4선승</button>
-</div></div>
-<div class="setting"><h2>🎮 게임</h2><div class="choices games">
-<button class="card gamecard" onclick="chooseGame(this,'select','게임 선택')"><div class="icon">🎮</div><div class="title">게임 선택</div><div class="desc">플레이할 게임을 직접 선택</div></button>
-<button class="card gamecard" onclick="chooseGame(this,'random','랜덤')"><div class="icon">🎲</div><div class="title">랜덤</div><div class="desc">게임을 무작위로 결정</div></button>
-</div></div>
-<button id="startBtn" class="next" disabled onclick="startGame()">게임 시작 →</button><br><button class="back" onclick="backToMode()">← 이전</button>
-</section>
-
-<section id="readyScreen" class="screen hidden"><div class="step">READY</div><h1>게임 준비 완료!</h1><div class="summary" id="summary"></div><button class="next" onclick="startActualGame()">플레이 시작 ▶</button><br><button class="back" onclick="backToSettings()">← 설정 변경</button></section>
-</div>
-<script>
-let mode=null,modeName='',rounds=1,game=null,gameName='';
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>MINI GAME</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,'Noto Sans KR',sans-serif;background:linear-gradient(135deg,#071b12,#123b27);color:#fff;display:flex;align-items:center;justify-content:center}.wrap{width:min(920px,92vw);padding:30px 0}.screen{text-align:center}.hidden{display:none!important}.logo{font-size:clamp(42px,7vw,70px);font-weight:900;margin-bottom:8px}.sub{opacity:.7;margin-bottom:28px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{border:1px solid rgba(255,255,255,.15);border-radius:22px;padding:27px 16px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;transition:.2s;min-height:160px}.card:hover,.card.selected{transform:translateY(-4px);background:rgba(30,168,87,.2);border-color:#35d27b}.icon{font-size:44px;margin-bottom:13px}.title{font-size:21px;font-weight:800}.desc{font-size:14px;opacity:.65;margin-top:8px}.setting{background:rgba(255,255,255,.07);border-radius:22px;padding:26px;margin:15px 0}.setting h2{margin:0 0 18px}.sets{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}.setbtn{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;padding:13px 20px;border-radius:12px;cursor:pointer}.setbtn.selected{background:#1ea857;border-color:#55e68d;font-weight:bold}.next{margin-top:20px;border:0;border-radius:14px;padding:15px 38px;background:#1ea857;color:#fff;font-size:17px;font-weight:800;cursor:pointer}.next:disabled{opacity:.35;cursor:not-allowed}.summary{background:rgba(255,255,255,.08);border-radius:20px;padding:28px;margin:20px 0;font-size:18px;line-height:2}.score{font-size:38px;font-weight:900;margin:15px}.round{opacity:.7}.history{margin:20px 0;text-align:left;background:rgba(255,255,255,.06);padding:18px;border-radius:16px;line-height:1.8}.back{border:0;background:transparent;color:#aaa;cursor:pointer;margin-top:15px}@media(max-width:650px){.cards{grid-template-columns:1fr}.wrap{padding:20px}.card{min-height:120px}}</style></head><body><div class="wrap">
+<section id="modeScreen" class="screen"><div class="logo">🎮 MINI GAME</div><div class="sub">누구와 플레이할까요?</div><div class="cards"><button class="card" onclick="chooseMode(this,'cpu','컴퓨터와 대전')"><div class="icon">🤖</div><div class="title">컴퓨터와 대전</div><div class="desc">AI와 1대1</div></button><button class="card" onclick="chooseMode(this,'local','한 컴퓨터로 1대1')"><div class="icon">👥</div><div class="title">한 컴퓨터로 1대1</div><div class="desc">친구와 같은 컴퓨터</div></button><button class="card" onclick="chooseMode(this,'online','온라인 대전')"><div class="icon">🌐</div><div class="title">온라인 대전</div><div class="desc">다른 컴퓨터의 플레이어</div></button></div><button id="modeNext" class="next" disabled onclick="showSettings()">다음 →</button></section>
+<section id="settingsScreen" class="screen hidden"><div class="round">STEP 2</div><h1>게임 설정</h1><div class="sub" id="modeLabel"></div><div class="setting"><h2>몇 판으로 승부할까요?</h2><div class="sets"><button class="setbtn selected" onclick="chooseRounds(this,1)">단판</button><button class="setbtn" onclick="chooseRounds(this,3)">3판 2선승</button><button class="setbtn" onclick="chooseRounds(this,5)">5판 3선승</button><button class="setbtn" onclick="chooseRounds(this,7)">7판 4선승</button></div></div><div class="setting"><h2>게임</h2><div class="cards"><button class="card" onclick="chooseGame(this,'select','게임 선택')"><div class="icon">🎮</div><div class="title">게임 선택</div><div class="desc">플레이할 게임을 직접 선택</div></button><button class="card" onclick="chooseGame(this,'random','랜덤')"><div class="icon">🎲</div><div class="title">랜덤</div><div class="desc">게임을 무작위로 결정</div></button></div></div><button id="startBtn" class="next" disabled onclick="startSetup()">게임 시작 →</button><br><button class="back" onclick="backToMode()">← 이전</button></section>
+<section id="gameSelectScreen" class="screen hidden"><div class="round">STEP 3</div><h1>게임 선택</h1><div class="sub">이번 매치에서 플레이할 게임을 골라주세요.</div><div class="cards"><button class="card" onclick="pickActualGame('game1','🪢 줄달이기')"><div class="icon">🪢</div><div class="title">줄달이기</div><div class="desc">A vs 상대</div></button><button class="card" onclick="pickActualGame('game2','🟩 영역 채우기')"><div class="icon">🟩</div><div class="title">영역 채우기</div><div class="desc">30초 영역 싸움</div></button><button class="card" onclick="pickActualGame('game3','⚡ 키 반응 대결')"><div class="icon">⚡</div><div class="title">키 반응 대결</div><div class="desc">WASD vs 방향키</div></button></div><button class="back" onclick="backToSettings()">← 설정 변경</button></section>
+<section id="readyScreen" class="screen hidden"><div class="round">READY</div><h1>게임 준비 완료!</h1><div class="summary" id="summary"></div><button class="next" onclick="startMatch()">플레이 시작 ▶</button><br><button class="back" onclick="backToSetup()">← 설정 변경</button></section>
+<section id="resultScreen" class="screen hidden"><div class="round">RESULT</div><h1 id="resultTitle">이번 게임 결과</h1><div class="score" id="resultScore">0 : 0</div><div id="resultGame"></div><button class="next" id="continueBtn" onclick="continueMatch()">다음 게임 →</button></section>
+<section id="finalScreen" class="screen hidden"><div class="round">MATCH COMPLETE</div><h1>매치 종료</h1><div class="score" id="finalScore">0 : 0</div><div id="finalText"></div><div class="history" id="history"></div><button class="next" onclick="location.href=location.pathname">새 매치</button></section>
+</div><script>
+let mode=null,modeName='',rounds=1,gameChoice=null,gameName='';let match=null;const games=['game1','game2','game3'];
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}
 function chooseMode(el,v,n){document.querySelectorAll('#modeScreen .card').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');mode=v;modeName=n;document.getElementById('modeNext').disabled=false}
-function showSettings(){document.getElementById('modeScreen').classList.add('hidden');document.getElementById('settingsScreen').classList.remove('hidden');document.getElementById('modeLabel').textContent=modeName}
+function showSettings(){document.getElementById('modeLabel').textContent=modeName;show('settingsScreen')}
 function chooseRounds(el,v){document.querySelectorAll('.setbtn').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');rounds=v}
-function chooseGame(el,v,n){document.querySelectorAll('.gamecard').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');game=v;gameName=n;document.getElementById('startBtn').disabled=false}
-function startGame(){
-  const settings={mode,modeName,rounds,game,gameName,savedAt:Date.now()};
-  localStorage.setItem('miniGameSettings',JSON.stringify(settings));
-  document.getElementById('settingsScreen').classList.add('hidden');document.getElementById('readyScreen').classList.remove('hidden');
-  let win=Math.floor(rounds/2)+1;let g=game==='random'?'🎲 랜덤':gameName;
-  document.getElementById('summary').innerHTML=`<span class="tag">${modeName}</span><br><b>${rounds===1?'단판':rounds+'판 '+win+'선승'}</b><br>${g}`;
-}
-function startActualGame(){
-  if(game==='random'){
-    // 현재 게임 목록: 1번 게임(줄달이기). 게임이 추가되면 이 배열에 넣으면 됨.
-    localStorage.setItem('miniGameSelected','game1');
-  }else{
-    // 게임 선택 화면에서 실제 게임을 추가할 때 game 값을 game1 등으로 사용.
-    localStorage.setItem('miniGameSelected',game==='select'?'game1':game);
-  }
-  location.href='game/game1.html';
-}
-function backToMode(){document.getElementById('settingsScreen').classList.add('hidden');document.getElementById('modeScreen').classList.remove('hidden')}
-function backToSettings(){document.getElementById('readyScreen').classList.add('hidden');document.getElementById('settingsScreen').classList.remove('hidden')}
+function chooseGame(el,v,n){document.querySelectorAll('#settingsScreen .card').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');gameChoice=v;gameName=n;document.getElementById('startBtn').disabled=false}
+function startSetup(){if(gameChoice==='select')show('gameSelectScreen');else prepareMatch('random')}
+function pickActualGame(id,n){prepareMatch(id,n)}
+function prepareMatch(choice,n){match={mode,modeName,rounds,need:Math.floor(rounds/2)+1,choice,scoreMe:0,scoreOpp:0,round:1,history:[]};if(choice!=='random'){match.game=choice;match.gameName=n}localStorage.setItem('miniGameSettings',JSON.stringify(match));show('readyScreen');document.getElementById('summary').innerHTML=`<span>${modeName}</span><br><b>${rounds===1?'단판':rounds+'판 '+match.need+'선승'}</b><br>${choice==='random'?'🎲 매 판 랜덤 게임':n}`}
+function startMatch(){launchGame()}
+function launchGame(){if(!match)return;let id=match.choice==='random'?games[Math.floor(Math.random()*games.length)]:match.game;match.currentGame=id;localStorage.setItem('miniGameSettings',JSON.stringify(match));localStorage.setItem('miniGameSelected',id);location.href='game/'+id+'.html'}
+function consumeResult(){const r=JSON.parse(localStorage.getItem('miniGameResult')||'null');if(!r)return false;localStorage.removeItem('miniGameResult');if(!match)return false;match.scoreMe+=r.winner==='me'?1:0;match.scoreOpp+=r.winner==='opp'?1:0;match.history.push({game:r.game||match.currentGame,winner:r.winner,me:r.me,opp:r.opp});return true}
+window.addEventListener('pageshow',()=>{const saved=JSON.parse(localStorage.getItem('miniGameSettings')||'null');if(!saved||!saved.mode)return;if(!match&&localStorage.getItem('miniGameResult')){match=saved;consumeResult();show('resultScreen');renderResult()}})
+function renderResult(){const last=match.history[match.history.length-1];document.getElementById('resultTitle').textContent=last.winner==='me'?'🎉 승리!':last.winner==='opp'?'😮 패배!':'🤝 무승부!';document.getElementById('resultScore').textContent=`${last.me} : ${last.opp}`;document.getElementById('resultGame').textContent=last.game;const done=match.scoreMe>=match.need||match.scoreOpp>=match.need||match.round>=match.rounds;document.getElementById('continueBtn').textContent=done?'최종 결과 보기':'다음 게임 →'}
+function continueMatch(){if(match.scoreMe>=match.need||match.scoreOpp>=match.need||match.round>=match.rounds){showFinal();return}match.round++;localStorage.setItem('miniGameSettings',JSON.stringify(match));show('readyScreen');const g=match.choice==='random'?'🎲 랜덤으로 결정':match.gameName;document.getElementById('summary').innerHTML=`<span>${match.modeName}</span><br><b>${match.round}번째 게임</b><br>${g}`;}
+function showFinal(){document.getElementById('finalScore').textContent=`${match.scoreMe} : ${match.scoreOpp}`;document.getElementById('finalText').textContent=match.scoreMe>match.scoreOpp?'최종 승리!':match.scoreMe<match.scoreOpp?'최종 패배!':'무승부!';document.getElementById('history').innerHTML=match.history.map((x,i)=>`${i+1}. ${x.game} — ${x.winner==='me'?'승리':x.winner==='opp'?'패배':'무승부'} (${x.me}:${x.opp})`).join('<br>');localStorage.removeItem('miniGameSettings');show('finalScreen')}
+function backToMode(){show('modeScreen')}
+function backToSettings(){show('settingsScreen')}
+function backToSetup(){show('settingsScreen')}
+if(localStorage.getItem('miniGameResult')){const s=JSON.parse(localStorage.getItem('miniGameSettings')||'null');if(s){match=s;consumeResult();show('resultScreen');renderResult()}}
 </script></body></html>
