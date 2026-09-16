@@ -19,6 +19,7 @@ body {
 #ui {
     text-align: center;
     margin-bottom: 10px;
+    width: min(60vh, calc(100vw - 40px));
 }
 #score-board {
     font-size: 18px;
@@ -26,7 +27,8 @@ body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 #timer-bar-container {
-    width: 360px;
+    width: 100%;
+    box-sizing: border-box;
     height: 16px;
     background-color: #222;
     border-radius: 8px;
@@ -42,11 +44,17 @@ body {
 }
 #canvas-container {
     position: relative;
-    width: 360px;
-    height: 540px;
-    zoom: 1.2;
+    width: auto;
+    height: min(calc(100vh - 100px), 90vh);
+    aspect-ratio: 2 / 3;
+    max-width: calc(100vw - 40px);
+    flex-shrink: 1;
 }
 canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
     border: 4px solid #fff;
     border-radius: 12px;
     box-shadow: 0 15px 30px rgba(0,0,0,0.8);
@@ -291,287 +299,347 @@ for(let i = 0; i < 6; i++) {
     cityBuildings.push({
         x: i * 65 + 10,
         height: 180 + (i * 30) % 150,
-        color: i % 2 === 0 ? '#34495e' : '#2c3e50'
-    });
-}
-
-let glassDecorations = [];
-for(let i = 0; i < 15; i++) {
-    glassDecorations.push({
-        x: Math.random() * 360,
-        y: Math.random() * 540,
-        size: 15 + Math.random() * 25,
-        angle: Math.random() * Math.PI
-    });
-}
-
-let hellFlames = [];
-for(let i = 0; i < 12; i++) {
-    hellFlames.push({
-        x: Math.random() * 360,
-        y: 400 + Math.random() * 140,
-        size: 20 + Math.random() * 30
-    });
-}
-
-let fishes = [];
-for(let i = 0; i < 8; i++) {
-    fishes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        speed: 0.5 + Math.random() * 1.5,
-        size: 10 + Math.random() * 15,
-        color: ['#ff7675', '#ffeaa7', '#55efc4', '#74b9ff', '#fdcb6e'][Math.floor(Math.random()*5)],
-        dir: Math.random() > 0.5 ? 1 : -1
+        width: 45,
+        color: ['#34495e', '#2c3e50', '#3d566e', '#253746'][i % 4]
     });
 }
 
 let jungleTrees = [];
 for(let i = 0; i < 12; i++) {
     jungleTrees.push({
-        x: (i * 45) - 30 + Math.random() * 20,
-        yOffset: i * 70,
-        width: 16 + Math.random() * 14,
-        height: 140 + Math.random() * 70,
-        color: i % 2 === 0 ? '#055c58' : '#044440',
-        leafColor: i % 2 === 0 ? '#10ac84' : '#009432'
+        x: i * 40 + Math.random() * 20,
+        y: 300 + Math.random() * 80,
+        size: 30 + Math.random() * 20
     });
 }
 
-updateGemsDisplay();
+let pyramidStars = [];
+for(let i = 0; i < 40; i++) {
+    pyramidStars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height * 0.6,
+        size: Math.random() * 2 + 0.5,
+        alpha: Math.random() * 0.8 + 0.2
+    });
+}
 
-function updateGemsDisplay() {
-    gemsEl.textContent = totalGems;
+let oceanBubbles = [];
+for(let i = 0; i < 25; i++) {
+    oceanBubbles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 4 + 2,
+        speed: Math.random() * 0.5 + 0.2
+    });
+}
+
+let glassDecorations = [];
+for(let i = 0; i < 20; i++) {
+    glassDecorations.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 30 + 10,
+        angle: Math.random() * Math.PI
+    });
+}
+
+let fireParticles = [];
+for(let i = 0; i < 30; i++) {
+    fireParticles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 4 + 2,
+        speed: Math.random() * 2 + 1
+    });
 }
 
 function saveSkinsData() {
-    let state = {};
-    skins.forEach(s => { state[s.id] = s.unlocked; });
-    localStorage.setItem('infiniteStairs_skins', JSON.stringify(state));
+    let data = {};
+    skins.forEach(s => {
+        if (s.id !== 0) data[s.id] = s.unlocked;
+    });
+    localStorage.setItem('infiniteStairs_skins', JSON.stringify(data));
 }
 
-function goHome() {
-    gameOverScreen.style.display = 'none';
+function updateGemsDisplay() {
+    gemsEl.textContent = totalGems;
+    localStorage.setItem('infiniteStairs_gems', totalGems);
+}
+
+function loadGems() {
+    totalGems = parseInt(localStorage.getItem('infiniteStairs_gems')) || 0;
+    updateGemsDisplay();
+}
+
+function openShop() {
+    startScreen.style.display = 'none';
+    shopScreen.style.display = 'flex';
+    renderShop();
+}
+
+function closeShop() {
     shopScreen.style.display = 'none';
-    mapScreen.style.display = 'none';
-    modeScreen.style.display = 'none';
     startScreen.style.display = 'flex';
-    isPlaying = false;
-    deathTimer = 0;
+}
+
+function renderShop() {
+    let list = document.getElementById('skin-list');
+    list.innerHTML = '';
+
+    skins.forEach(skin => {
+        let div = document.createElement('div');
+        div.className = 'skin-card' + (skin.id === currentSkinId ? ' selected' : '');
+
+        let info = document.createElement('div');
+        info.style.fontSize = '12px';
+        let nameSpan = document.createElement('span');
+        nameSpan.textContent = skin.name;
+        nameSpan.style.fontWeight = 'bold';
+        info.appendChild(nameSpan);
+
+        if (skin.specialUnlock) {
+            let unlockSpan = document.createElement('div');
+            unlockSpan.textContent = skin.specialUnlock;
+            unlockSpan.style.fontSize = '9px';
+            unlockSpan.style.color = '#aaa';
+            info.appendChild(unlockSpan);
+        }
+
+        if (skin.price > 0) {
+            let priceSpan = document.createElement('div');
+            priceSpan.textContent = skin.price + ' GEM';
+            priceSpan.style.fontSize = '9px';
+            priceSpan.style.color = '#00e8ff';
+            info.appendChild(priceSpan);
+        }
+
+        div.appendChild(info);
+
+        let btn = document.createElement('button');
+        btn.className = 'action-select-btn';
+        if (skin.unlocked) {
+            if (skin.id === currentSkinId) {
+                btn.textContent = '사용 중';
+                btn.style.backgroundColor = '#2ecc71';
+                btn.style.color = 'white';
+            } else {
+                btn.textContent = '선택';
+                btn.style.backgroundColor = '#3498db';
+                btn.style.color = 'white';
+                btn.onclick = () => selectSkin(skin.id);
+            }
+        } else if (skin.price > 0) {
+            btn.textContent = '구매';
+            btn.style.backgroundColor = '#e67e22';
+            btn.style.color = 'white';
+            btn.onclick = () => buySkin(skin.id);
+        } else {
+            btn.textContent = '잠김';
+            btn.style.backgroundColor = '#555';
+            btn.style.color = '#aaa';
+            btn.disabled = true;
+        }
+
+        div.appendChild(btn);
+        list.appendChild(div);
+    });
+}
+
+function buySkin(id) {
+    let skin = skins.find(s => s.id === id);
+    if (!skin || skin.unlocked) return;
+
+    if (totalGems >= skin.price) {
+        totalGems -= skin.price;
+        skin.unlocked = true;
+        saveSkinsData();
+        updateGemsDisplay();
+        renderShop();
+    } else {
+        alert('보석이 부족합니다! 게임을 플레이해서 보석을 모아주세요.');
+    }
+}
+
+function selectSkin(id) {
+    let skin = skins.find(s => s.id === id);
+    if (skin && skin.unlocked) {
+        currentSkinId = id;
+        renderShop();
+    }
 }
 
 function openModeSelect() {
     startScreen.style.display = 'none';
     modeScreen.style.display = 'flex';
 }
+
 function closeModeSelect() {
     modeScreen.style.display = 'none';
     startScreen.style.display = 'flex';
 }
 
-function openShop() {
-    startScreen.style.display = 'none';
-    shopScreen.style.display = 'flex';
-    renderShopList();
-}
-function closeShop() {
-    shopScreen.style.display = 'none';
-    startScreen.style.display = 'flex';
-}
-
-function renderShopList() {
-    const listContainer = document.getElementById('skin-list');
-    listContainer.innerHTML = '';
-    skins.forEach(skin => {
-        const card = document.createElement('div');
-        card.className = `skin-card ${skin.id === currentSkinId ? 'selected' : ''}`;
-        let btnHTML = "";
-
-        if (skin.id === currentSkinId) {
-            btnHTML = `<span style="color:#2ecc71; font-weight:bold; font-size:11px;">사용 중</span>`;
-        } else if (skin.unlocked) {
-            btnHTML = `<button class="action-select-btn" style="background:#2ecc71; color:white;" onclick="selectSkin(${skin.id})">선택</button>`;
-        } else if (skin.specialUnlock) {
-            btnHTML = `<span style="color:#e74c3c; font-size:10px; font-weight:bold;">잠김(${skin.specialUnlock})</span>`;
-        } else {
-            btnHTML = `<button class="action-select-btn" style="background:#e67e22; color:white;" onclick="buySkin(${skin.id})">${skin.price} 보석</button>`;
-        }
-
-        card.innerHTML = `<div style="text-align:left;"><div style="font-weight:bold; font-size:13px;">${skin.name}</div></div><div>${btnHTML}</div>`;
-        listContainer.appendChild(card);
-    });
-}
-
-function selectSkin(id) {
-    currentSkinId = id;
-    renderShopList();
-}
-
-function buySkin(id) {
-    const skin = skins.find(s => s.id === id);
-    if (totalGems >= skin.price) {
-        totalGems -= skin.price;
-        skin.unlocked = true;
-        currentSkinId = id;
-        updateGemsDisplay();
-        saveSkinsData();
-        renderShopList();
-    } else {
-        alert("보석이 부족합니다!");
-    }
-}
-
 function openMapSelect() {
     startScreen.style.display = 'none';
     mapScreen.style.display = 'flex';
-    renderMapList();
+    renderMapSelect();
 }
+
 function closeMapSelect() {
     mapScreen.style.display = 'none';
     startScreen.style.display = 'flex';
 }
 
-function renderMapList() {
-    const listContainer = document.getElementById('map-list');
-    listContainer.innerHTML = '';
+function renderMapSelect() {
+    let list = document.getElementById('map-list');
+    list.innerHTML = '';
+
     maps.forEach(map => {
-        const card = document.createElement('div');
-        card.className = `map-card ${map.id === currentMapId ? 'selected' : ''}`;
-        let btnHTML = map.id === currentMapId ? 
-            `<span style="color:#2ecc71; font-weight:bold; font-size:11px;">사용 중</span>` : 
-            `<button class="action-select-btn" style="background:#1abc9c; color:white;" onclick="selectMap(${map.id})">선택</button>`;
-        card.innerHTML = `<div style="text-align:left;"><div style="font-weight:bold; font-size:13px;">${map.name} <span style="font-size:10px; color:#2ecc71;">(무료)</span></div></div><div>${btnHTML}</div>`;
-        listContainer.appendChild(card);
+        let div = document.createElement('div');
+        div.className = 'map-card' + (map.id === currentMapId ? ' selected' : '');
+
+        let info = document.createElement('div');
+        info.style.fontSize = '12px';
+        let nameSpan = document.createElement('span');
+        nameSpan.textContent = map.name;
+        nameSpan.style.fontWeight = 'bold';
+        info.appendChild(nameSpan);
+
+        div.appendChild(info);
+
+        let btn = document.createElement('button');
+        btn.className = 'action-select-btn';
+
+        if (map.id === currentMapId) {
+            btn.textContent = '사용 중';
+            btn.style.backgroundColor = '#2ecc71';
+            btn.style.color = 'white';
+        } else {
+            btn.textContent = '선택';
+            btn.style.backgroundColor = '#3498db';
+            btn.style.color = 'white';
+            btn.onclick = () => selectMap(map.id);
+        }
+
+        div.appendChild(btn);
+        list.appendChild(div);
     });
 }
 
 function selectMap(id) {
-    currentMapId = id;
-    renderMapList();
+    if (maps.find(m => m.id === id)) {
+        currentMapId = id;
+        renderMapSelect();
+    }
 }
 
-function startGame(mode) {
-    gameMode = mode;
+function initializeGame() {
+    stairs = [];
+    score = 0;
+    gameGems = 0;
+    scoreEl.textContent = score;
+    timeLimit = 100;
+    timeDecreaseRate = 0.18;
+    player.currentIndex = 0;
+    player.direction = 1;
+    player.walkFrame = 0;
+    turnConsecutiveCount = 0;
+    lastTurnDirectionChange = 0;
+    cameraX = 0;
+    cameraY = 0;
+    targetCameraX = 0;
+    targetCameraY = 0;
+
+    let startX = CENTER_X - STAIR_WIDTH / 2;
+    let startY = canvas.height - 40;
+
+    stairs.push({ x: startX, y: startY, dir: 1, color: '#f1c40f' });
+
+    for(let i = 0; i < 100; i++) {
+        generateNextStair();
+    }
+
+    isPlaying = true;
     startScreen.style.display = 'none';
     modeScreen.style.display = 'none';
     shopScreen.style.display = 'none';
     mapScreen.style.display = 'none';
     gameOverScreen.style.display = 'none';
 
-    score = 0;
-    gameGems = 0;
-    scoreEl.textContent = '0';
-
-    timeLimit = 100;
-    if (gameMode === 2) {
-        timeDecreaseRate = 0.40;
-    } else {
-        timeDecreaseRate = 0.18;
-    }
     timerBar.style.width = '100%';
-
-    player.direction = 1;
-    player.walkFrame = 0;
-    player.currentIndex = 0;
-
-    cameraX = 0;
-    cameraY = 0;
-    targetCameraX = 0;
-    targetCameraY = 0;
-
-    turnConsecutiveCount = 0;
-    lastTurnDirectionChange = 1;
-    stairs = [];
-    deathTimer = 0;
-
-    stairs.push({ x: 0, y: 0, hasItem: false });
-    stairs.push({ x: STEP_X, y: -STEP_Y, hasItem: false });
-    lastTurnDirectionChange = 1;
-
-    for (let i = 0; i < 80; i++) {
-        generateNextStair();
-    }
-
-    isPlaying = true;
     requestAnimationFrame(gameLoop);
 }
 
-function restartGame() {
-    startGame(gameMode);
-}
-
 function generateNextStair() {
-    const lastStair = stairs[stairs.length - 1];
-    const prevLastStair = stairs[stairs.length - 2];
-    
-    let lastDiff = lastStair.x - prevLastStair.x;
+    let last = stairs[stairs.length - 1];
+    let newDir;
 
-    let rand;
     if (gameMode === 2) {
-        // 피버 모드: 50계단마다 방향이 꺾임 (그 전까지는 일직선)
-        let totalStairsCount = stairs.length;
-        if (totalStairsCount % 50 === 0) {
-            rand = (lastDiff > 0 ? -1 : 1);
+        if (stairs.length % 50 === 0) {
+            newDir = -last.dir;
         } else {
-            rand = (lastDiff > 0 ? 1 : -1);
+            newDir = last.dir;
         }
     } else {
-        if (turnConsecutiveCount >= 3) {
-            rand = lastDiff > 0 ? 1 : -1;
-            turnConsecutiveCount = 0;
-            lastTurnDirectionChange = rand;
+        if (Math.random() < 0.5) {
+            newDir = -1;
         } else {
-            rand = Math.random() > 0.5 ? 1 : -1;
-            if (rand !== (lastDiff > 0 ? 1 : -1)) {
-                turnConsecutiveCount++;
-            } else {
-                turnConsecutiveCount = 0;
-            }
+            newDir = 1;
         }
     }
 
-    let hasItem = Math.random() < 0.25;
+    let newX = last.x + newDir * STEP_X;
+    let newY = last.y - STEP_Y;
+
+    if (newX < 40) {
+        newX = 40;
+        newDir = 1;
+    }
+    if (newX > canvas.width - 40 - STAIR_WIDTH) {
+        newX = canvas.width - 40 - STAIR_WIDTH;
+        newDir = -1;
+    }
+
+    let colors = ['#f1c40f', '#e67e22', '#2ecc71', '#3498db', '#9b59b6'];
     stairs.push({
-        x: lastStair.x + (rand * STEP_X),
-        y: lastStair.y - STEP_Y,
-        hasItem: hasItem
+        x: newX,
+        y: newY,
+        dir: newDir,
+        color: colors[stairs.length % colors.length]
     });
 }
 
-window.addEventListener('keydown', (e) => {
-    if (gameOverScreen.style.display === 'flex') {
-        if (e.key === ' ' || e.code === 'Space') {
-            e.preventDefault();
-            restartGame();
-        }
-        return;
-    }
+function startGame(mode) {
+    gameMode = mode;
+    initializeGame();
+}
 
-    if (!isPlaying || deathTimer > 0) return;
-    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "].includes(e.key)) e.preventDefault();
+function restartGame() {
+    initializeGame();
+}
 
-    let inputType = "";
-    if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') inputType = "turn";
-    else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') inputType = "straight";
+function goHome() {
+    isPlaying = false;
+    deathTimer = 0;
+    gameOverScreen.style.display = 'none';
+    startScreen.style.display = 'flex';
+    score = 0;
+    scoreEl.textContent = 0;
+    timerBar.style.width = '100%';
+}
 
-    if (inputType === "") return;
+function checkStep(direction) {
+    if (!isPlaying) return;
 
-    const currentStair = stairs[player.currentIndex];
-    const nextStair = stairs[player.currentIndex + 1];
-    if (!nextStair) return;
+    let current = stairs[player.currentIndex];
+    let next = stairs[player.currentIndex + 1];
 
-    const targetDirection = nextStair.x > currentStair.x ? 1 : -1;
-    if (inputType === "turn") player.direction *= -1;
+    if (!next) return;
 
-    if (player.direction === targetDirection) {
+    if (direction === next.dir) {
         score++;
-
-        if (nextStair.hasItem) {
-            gameGems++;
-            totalGems++;
-            updateGemsDisplay();
-            nextStair.hasItem = false;
-        }
+        gameGems++;
+        totalGems++;
+        updateGemsDisplay();
 
         scoreEl.textContent = score;
         player.walkFrame = (player.walkFrame + 1) % 2;
@@ -596,7 +664,7 @@ window.addEventListener('keydown', (e) => {
     } else {
         triggerDeath();
     }
-});
+}
 
 function triggerDeath() {
     isPlaying = false;
@@ -702,308 +770,358 @@ function draw() {
     } else if (gameMode === 2) {
         let hellGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
         hellGrad.addColorStop(0, '#2c0b0e');
-        hellGrad.addColorStop(0.7, '#4a0e17');
-        hellGrad.addColorStop(1, '#8b0000');
+        hellGrad.addColorStop(1, '#8e2a2a');
         ctx.fillStyle = hellGrad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        hellFlames.forEach(f => {
-            ctx.fillStyle = 'rgba(255, 69, 0, 0.25)';
-            ctx.beginPath();
-            ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
-            ctx.fill();
+        fireParticles.forEach(p => {
+            p.y -= p.speed;
+            if (p.y < 0) p.y = canvas.height;
+            ctx.fillStyle = `rgba(255, 193, 7, ${Math.random() * 0.6 + 0.2})`;
+            ctx.fillRect(p.x, p.y, p.size, p.size);
         });
     } else {
-        const mapTheme = maps[currentMapId].theme;
-
-        if (mapTheme === "city") {
-            ctx.fillStyle = '#6897f5';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            cityBuildings.forEach(b => {
-                let by = canvas.height - b.height;
-                ctx.fillStyle = b.color;
-                ctx.fillRect(b.x * 1.2, by, 55, b.height + 100);
-
-                ctx.fillStyle = '#fffa65';
-                for (let wx = b.x * 1.2 + 8; wx < b.x * 1.2 + 45; wx += 12) {
-                    for (let wy = by + 15; wy < canvas.height; wy += 24) {
-                        ctx.fillRect(wx, wy, 5, 10);
-                    }
-                }
-            });
-        } else if (mapTheme === "jungle") {
-            ctx.fillStyle = '#079992';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            jungleTrees.forEach((tree) => {
-                let tx = tree.x % canvas.width;
-                let ty = canvas.height - 180;
-
-                ctx.fillStyle = tree.color;
-                ctx.fillRect(tx, ty, tree.width, tree.height);
-
-                ctx.fillStyle = tree.leafColor;
-                ctx.beginPath();
-                ctx.arc(tx + tree.width / 2, ty - 10, tree.width * 1.3, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        } else if (mapTheme === "pyramid") {
-            // 고대 피라미드 배경 (스핑크스, 미라, 피라미드 그래픽 추가)
-            let pyrGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            pyrGrad.addColorStop(0, '#e67e22');
-            pyrGrad.addColorStop(1, '#d35400');
-            ctx.fillStyle = pyrGrad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 거대한 피라미드 배경 실루엣
-            ctx.fillStyle = 'rgba(180, 80, 0, 0.4)';
-            ctx.beginPath();
-            ctx.moveTo(180, 80);
-            ctx.lineTo(330, 320);
-            ctx.lineTo(30, 320);
-            ctx.closePath();
-            ctx.fill();
-
-            // 스핑크스 조각상 실루엣 표현
-            ctx.fillStyle = 'rgba(150, 60, 0, 0.5)';
-            ctx.fillRect(40, 260, 70, 40); // 몸체
-            ctx.beginPath();
-            ctx.arc(45, 245, 18, 0, Math.PI * 2); // 머리
-            ctx.fill();
-
-            // 미라 관 (석관) 장식 표현
-            ctx.fillStyle = '#f1c40f';
-            ctx.fillRect(270, 220, 25, 70);
-            ctx.strokeStyle = '#78281f';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(270, 220, 25, 70);
-            // 미라 눈 모양 장식
-            ctx.fillStyle = '#000';
-            ctx.fillRect(277, 235, 4, 4);
-            ctx.fillRect(288, 235, 4, 4);
-
-            // 바닥 모래 결무늬
-            ctx.strokeStyle = 'rgba(255, 200, 100, 0.2)';
-            ctx.lineWidth = 1;
-            for(let x = 0; x < canvas.width; x += 40) {
-                for(let y = 0; y < canvas.height; y += 30) {
-                    ctx.strokeRect(x, y, 40, 30);
-                }
-            }
-        } else if (mapTheme === "ocean") {
-            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#00d2d3');
-            gradient.addColorStop(1, '#01a3a4');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            fishes.forEach(fish => {
-                fish.x += fish.speed * fish.dir;
-                if (fish.x > canvas.width + 30) fish.x = -30;
-                if (fish.x < -30) fish.x = canvas.width + 30;
-
-                ctx.save();
-                ctx.translate(fish.x, fish.y);
-                if (fish.dir === -1) ctx.scale(-1, 1);
-
-                ctx.fillStyle = fish.color;
-                ctx.beginPath();
-                ctx.ellipse(0, 0, fish.size, fish.size / 2, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.moveTo(-fish.size, 0);
-                ctx.lineTo(-fish.size - 8, -6);
-                ctx.lineTo(-fish.size - 8, 6);
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(fish.size / 2 - 3, -2, 2, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.restore();
-            });
-        }
+        drawBackground();
     }
+
+    ctx.save();
+    ctx.translate(canvas.width / 2 + cameraX, canvas.height - 160 + cameraY);
 
     stairs.forEach((stair, index) => {
-        let drawX = CENTER_X + stair.x + cameraX;
-        let drawY = CENTER_Y + stair.y + cameraY;
-        if (drawY > canvas.height + 60 || drawY < -60) return;
+        if (index < player.currentIndex - 8 || index > player.currentIndex + 30) return;
 
-        let isCurrent = (index === player.currentIndex);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fillRect(stair.x + 3, stair.y + 4, STAIR_WIDTH, STAIR_HEIGHT);
 
-        if (gameMode === 1) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-            ctx.fillRect(drawX - STAIR_WIDTH/2, drawY - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
-            
-            ctx.strokeStyle = isCurrent ? '#f1c40f' : 'rgba(255, 255, 255, 0.7)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(drawX - STAIR_WIDTH/2, drawY - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
-        } else {
-            ctx.fillStyle = isCurrent ? '#f1c40f' : '#e74c3c';
-            ctx.fillRect(drawX - STAIR_WIDTH/2, drawY - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
-            ctx.fillStyle = isCurrent ? '#d4ac0d' : '#c0392b';
-            ctx.fillRect(drawX - STAIR_WIDTH/2, drawY, STAIR_WIDTH, 4);
-        }
+        ctx.fillStyle = stair.color;
+        ctx.fillRect(stair.x, stair.y, STAIR_WIDTH, STAIR_HEIGHT);
 
-        if (stair.hasItem) {
-            ctx.fillStyle = '#00e8ff';
-            ctx.beginPath();
-            ctx.arc(drawX, drawY - STAIR_HEIGHT - 12, 5, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(stair.x, stair.y, STAIR_WIDTH, STAIR_HEIGHT);
     });
 
-    const activeSkin = skins.find(s => s.id === currentSkinId) || skins[0];
-    ctx.save();
-    ctx.translate(CENTER_X, CENTER_Y);
+    let currentStair = stairs[player.currentIndex];
+    let px = currentStair.x + STAIR_WIDTH / 2;
+    let py = currentStair.y - 25;
 
-    if (deathTimer > 0) {
-        if (activeDeathType === "flyAway") {
-            ctx.translate(deathTimer * 8, -deathTimer * 18);
-            ctx.rotate(deathTimer * 0.15);
-        } else if (activeDeathType === "shatter") {
-            // 유리인간 전용 박살나는 연출 강화
-            ctx.save();
-            for(let i = 0; i < 10; i++) {
-                let angle = (i * Math.PI / 5) + (deathTimer * 0.3);
-                let dist = deathTimer * 7;
-                ctx.fillStyle = "rgba(255,255,255,0.85)";
-                ctx.fillRect(Math.cos(angle)*dist, Math.sin(angle)*dist, 7, 7);
-            }
-            ctx.restore();
-            ctx.globalAlpha = 0;
-        } else if (activeDeathType === "explode") {
-            ctx.save();
-            ctx.fillStyle = "#ff4757";
-            ctx.beginPath();
-            ctx.arc(0, -25, deathTimer * 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#ffd32a";
-            ctx.beginPath();
-            ctx.arc(0, -25, deathTimer * 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            if (deathTimer > 15) ctx.globalAlpha = 0;
-        } else if (activeDeathType === "burnUp") {
-            // 파이어맨 전용 타오르며 소멸하는 연출 강화
-            ctx.translate(0, -deathTimer * 6);
-            ctx.fillStyle = "#ff4500";
-            ctx.beginPath();
-            ctx.arc(0, -20, deathTimer * 2.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#ffeb3b";
-            ctx.beginPath();
-            ctx.arc(0, -20, deathTimer * 1.2, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (activeDeathType === "shadowDash") {
-            ctx.translate(deathTimer * 15, 0);
-            ctx.globalAlpha = Math.max(0, 1 - deathTimer / 20);
-        } else if (activeDeathType === "dizzySpin") {
-            ctx.rotate(deathTimer * 0.5);
-            ctx.translate(0, deathTimer * 8);
-        } else if (activeDeathType === "broomFly") {
-            ctx.translate(deathTimer * 10, -deathTimer * 12);
-            ctx.rotate(-0.3);
-        } else if (activeDeathType === "spinDrop") {
-            ctx.translate(-deathTimer * 6, deathTimer * 12);
-            ctx.rotate(deathTimer * 0.3);
-        } else {
-            ctx.translate(0, deathTimer * 14);
-        }
-    }
-
-    ctx.scale(player.direction, 1);
-
-    if (activeSkin.isGlass) {
-        // 유리인간: 눈, 코, 입을 완전히 없애고 투명한 유리 질감 형태로만 표현
-        ctx.fillStyle = activeSkin.bodyColor;
-        ctx.fillRect(-10, -36, 20, 20);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(-10, -36, 20, 20);
-
-        ctx.fillRect(-8, -50, 16, 16);
-        ctx.strokeRect(-8, -50, 16, 16);
-
-        // 하이라이트 반사 광채 효과 (유리 느낌 강조)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.fillRect(-5, -46, 3, 8);
-
-        ctx.fillStyle = activeSkin.bodyColor;
-        if (player.walkFrame === 0) {
-            ctx.fillRect(-8, -16, 6, 9);
-            ctx.strokeRect(-8, -16, 6, 9);
-            ctx.fillRect(2, -16, 6, 6);
-            ctx.strokeRect(2, -16, 6, 6);
-        } else {
-            ctx.fillRect(-8, -16, 6, 6);
-            ctx.strokeRect(-8, -16, 6, 6);
-            ctx.fillRect(2, -16, 6, 9);
-            ctx.strokeRect(2, -16, 6, 9);
-        }
-    } else {
-        ctx.fillStyle = activeSkin.bodyColor;
-        ctx.fillRect(-10, -36, 20, 20);
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(-10, -36, 20, 20);
-
-        ctx.fillStyle = activeSkin.faceColor;
-        ctx.fillRect(-8, -50, 16, 16);
-        ctx.strokeRect(-8, -50, 16, 16);
-        ctx.fillStyle = '#000';
-        ctx.fillRect(2, -45, 3, 4);
-
-        if (activeSkin.hairType === "long") {
-            ctx.fillStyle = activeSkin.hairColor;
-            ctx.fillRect(-10, -50, 6, 18);
-        } else if (activeSkin.hairType === "ninja") {
-            ctx.fillStyle = '#111111';
-            ctx.fillRect(-8, -50, 16, 6);
-        } else if (activeSkin.hairType === "robot") {
-            ctx.fillStyle = activeSkin.hairColor;
-            ctx.fillRect(-2, -56, 4, 6);
-        } else if (activeSkin.hairType === "propeller") {
-            ctx.fillStyle = activeSkin.hairColor;
-            ctx.fillRect(-2, -58, 4, 8);
-            ctx.fillStyle = '#ff4757';
-            let propWidth = 16 + Math.sin(Date.now() * 0.05) * 8;
-            ctx.fillRect(-propWidth / 2, -61, propWidth, 3);
-        }
-
-        ctx.fillStyle = activeSkin.bodyColor;
-        if (player.walkFrame === 0) {
-            ctx.fillRect(-8, -16, 6, 9);
-            ctx.strokeRect(-8, -16, 6, 9);
-            ctx.fillRect(2, -16, 6, 6);
-            ctx.strokeRect(2, -16, 6, 6);
-        } else {
-            ctx.fillRect(-8, -16, 6, 6);
-            ctx.strokeRect(-8, -16, 6, 6);
-            ctx.fillRect(2, -16, 6, 9);
-            ctx.strokeRect(2, -16, 6, 9);
-        }
-    }
+    drawPlayer(px, py);
 
     ctx.restore();
 
-    if (isPlaying && gameMode === 1) {
-        ctx.font = "bold 14px Arial";
-        ctx.fillStyle = "#00e8ff";
-        ctx.textAlign = "center";
-        ctx.fillText("💎 유리계단 모드", canvas.width / 2, 35);
-    } else if (isPlaying && gameMode === 2) {
-        ctx.font = "bold 14px Arial";
-        ctx.fillStyle = "#ff4757";
-        ctx.textAlign = "center";
-        ctx.fillText("🔥 피버 모드 (직진 전용)", canvas.width / 2, 35);
+    if (!isPlaying && deathTimer > 0) {
+        drawDeathAnimation();
     }
 }
+
+function drawBackground() {
+    let map = maps.find(m => m.id === currentMapId) || maps[0];
+
+    if (map.theme === 'city') {
+        let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, '#74b9ff');
+        grad.addColorStop(1, '#dfe6e9');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(320, 80, 35, 0, Math.PI * 2);
+        ctx.fill();
+
+        cityBuildings.forEach(b => {
+            ctx.fillStyle = b.color;
+            ctx.fillRect(b.x, canvas.height - 100 - b.height, b.width, b.height);
+            ctx.fillStyle = '#f5f6fa';
+            for(let row = 0; row < 5; row++) {
+                for(let col = 0; col < 3; col++) {
+                    ctx.fillRect(b.x + 5 + col * 12, canvas.height - 90 - b.height + row * 35, 7, 10);
+                }
+            }
+        });
+
+        ctx.fillStyle = '#2d3436';
+        ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+        ctx.fillStyle = '#636e72';
+        ctx.fillRect(0, canvas.height - 70, canvas.width, 5);
+
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 3;
+        for(let x = 0; x < canvas.width; x += 50) {
+            ctx.beginPath();
+            ctx.moveTo(x, canvas.height - 40);
+            ctx.lineTo(x + 25, canvas.height - 40);
+            ctx.stroke();
+        }
+    } else if (map.theme === 'jungle') {
+        let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, '#55efc4');
+        grad.addColorStop(1, '#2ecc71');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        jungleTrees.forEach(t => {
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(t.x - 5, t.y, 10, canvas.height - t.y);
+            ctx.fillStyle = '#145a32';
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#1e8449';
+            ctx.beginPath();
+            ctx.arc(t.x + 15, t.y + 5, t.size * 0.7, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        ctx.fillStyle = '#27ae60';
+        ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
+    } else if (map.theme === 'pyramid') {
+        let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, '#2c3e50');
+        grad.addColorStop(1, '#8e44ad');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        pyramidStars.forEach(s => {
+            ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
+            ctx.fillRect(s.x, s.y, s.size, s.size);
+        });
+
+        ctx.fillStyle = '#d35400';
+        ctx.beginPath();
+        ctx.moveTo(80, canvas.height - 120);
+        ctx.lineTo(180, canvas.height - 250);
+        ctx.lineTo(280, canvas.height - 120);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#e67e22';
+        ctx.fillRect(0, canvas.height - 110, canvas.width, 110);
+    } else if (map.theme === 'ocean') {
+        let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, '#0984e3');
+        grad.addColorStop(1, '#00cec9');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        oceanBubbles.forEach(b => {
+            b.y -= b.speed;
+            if (b.y < 0) b.y = canvas.height;
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+            ctx.stroke();
+        });
+
+        ctx.fillStyle = 'rgba(0, 105, 92, 0.5)';
+        for(let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * 70, canvas.height);
+            ctx.lineTo(i * 70 + 20, canvas.height - 100);
+            ctx.lineTo(i * 70 + 35, canvas.height - 80);
+            ctx.lineTo(i * 70 + 50, canvas.height - 130);
+            ctx.lineTo(i * 70 + 65, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+}
+
+function drawPlayer(x, y) {
+    let skin = skins.find(s => s.id === currentSkinId) || skins[0];
+
+    ctx.save();
+    if (player.direction === -1) {
+        ctx.scale(-1, 1);
+        x = -x;
+    }
+
+    let bob = player.walkFrame === 0 ? 0 : -2;
+
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 22, 14, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (skin.isGlass) {
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = 2;
+        ctx.fillRect(x - 12, y + bob - 20, 24, 20);
+        ctx.strokeRect(x - 12, y + bob - 20, 24, 20);
+        ctx.beginPath();
+        ctx.arc(x, y + bob - 28, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+    } else if (skin.hairType === 'robot') {
+        ctx.fillStyle = skin.bodyColor;
+        ctx.fillRect(x - 12, y + bob - 20, 24, 20);
+        ctx.fillStyle = skin.faceColor;
+        ctx.fillRect(x - 9, y + bob - 33, 18, 13);
+        ctx.fillStyle = '#111';
+        ctx.fillRect(x - 6, y + bob - 29, 4, 3);
+        ctx.fillRect(x + 2, y + bob - 29, 4, 3);
+        ctx.fillStyle = skin.hairColor;
+        ctx.fillRect(x - 3, y + bob - 39, 6, 6);
+    } else {
+        // body
+        ctx.fillStyle = skin.bodyColor;
+        ctx.fillRect(x - 12, y + bob - 20, 24, 20);
+
+        // face
+        ctx.fillStyle = skin.faceColor;
+        ctx.beginPath();
+        ctx.arc(x, y + bob - 28, 9, 0, Math.PI * 2);
+        ctx.fill();
+
+        // hair
+        ctx.fillStyle = skin.hairColor;
+        if (skin.hairType === 'long') {
+            ctx.beginPath();
+            ctx.arc(x, y + bob - 33, 10, Math.PI, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(x - 10, y + bob - 33, 4, 14);
+            ctx.fillRect(x + 6, y + bob - 33, 4, 14);
+        } else if (skin.hairType === 'ninja') {
+            ctx.fillRect(x - 10, y + bob - 36, 20, 6);
+        } else if (skin.hairType === 'propeller') {
+            ctx.fillStyle = '#bdc3c7';
+            ctx.fillRect(x - 8, y + bob - 37, 16, 5);
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(x - 2, y + bob - 42, 4, 6);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(x - 12, y + bob - 44, 24, 2);
+        } else {
+            ctx.beginPath();
+            ctx.arc(x, y + bob - 33, 10, Math.PI, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // face details
+        ctx.fillStyle = '#111';
+        ctx.fillRect(x - 4, y + bob - 29, 2, 2);
+        ctx.fillRect(x + 2, y + bob - 29, 2, 2);
+    }
+
+    // legs
+    ctx.strokeStyle = skin.bodyColor;
+    ctx.lineWidth = 4;
+    if (player.walkFrame === 0) {
+        ctx.beginPath();
+        ctx.moveTo(x - 5, y + bob);
+        ctx.lineTo(x - 8, y + bob + 12);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x + 5, y + bob);
+        ctx.lineTo(x + 8, y + bob + 12);
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(x - 5, y + bob);
+        ctx.lineTo(x - 10, y + bob + 10);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x + 5, y + bob);
+        ctx.lineTo(x + 10, y + bob + 10);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+function drawDeathAnimation() {
+    let progress = deathTimer / 50;
+    if (progress > 1) progress = 1;
+
+    let currentStair = stairs[player.currentIndex];
+    let px = currentStair.x + STAIR_WIDTH / 2 + cameraX;
+    let py = currentStair.y - 25 + cameraY;
+
+    ctx.save();
+
+    if (activeDeathType === 'shatter') {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        for(let i = 0; i < 12; i++) {
+            let angle = (Math.PI * 2 / 12) * i;
+            let dist = progress * 100;
+            ctx.fillRect(px + Math.cos(angle) * dist, py + Math.sin(angle) * dist, 5, 5);
+        }
+    } else if (activeDeathType === 'burnUp') {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.fillStyle = '#ff6b00';
+        ctx.beginPath();
+        ctx.arc(px, py, 10 + progress * 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffd32a';
+        ctx.beginPath();
+        ctx.arc(px, py - progress * 30, 5 + progress * 10, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (activeDeathType === 'shadowDash') {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.fillStyle = '#111';
+        ctx.fillRect(px - progress * 80, py - 20, 24, 20);
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(px - progress * 160, py - 15, 100, 5);
+    } else if (activeDeathType === 'explode') {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        for(let i = 0; i < 16; i++) {
+            let angle = (Math.PI * 2 / 16) * i;
+            let dist = progress * 90;
+            ctx.fillStyle = i % 2 === 0 ? '#f1c40f' : '#e67e22';
+            ctx.fillRect(px + Math.cos(angle) * dist, py + Math.sin(angle) * dist, 6, 6);
+        }
+    } else if (activeDeathType === 'dizzySpin') {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.translate(px, py);
+        ctx.rotate(progress * Math.PI * 4);
+        drawPlayer(0, 0);
+    } else if (activeDeathType === 'flyAway') {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.translate(px + progress * 80, py - progress * 120, 0);
+        drawPlayer(0, 0);
+    } else if (activeDeathType === 'broomFly') {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.translate(px + progress * 80, py - progress * 80, 0);
+        ctx.rotate(progress * Math.PI);
+        ctx.fillStyle = '#8e44ad';
+        ctx.fillRect(-20, 5, 40, 4);
+        drawPlayer(0, 0);
+    } else if (activeDeathType === 'spinDrop') {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.translate(px, py + progress * 150);
+        ctx.rotate(progress * Math.PI * 6);
+        drawPlayer(0, 0);
+    } else {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.translate(px + progress * 30, py + progress * 50);
+        ctx.rotate(progress * Math.PI * 2);
+        drawPlayer(0, 0);
+    }
+
+    ctx.restore();
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+        e.preventDefault();
+        checkStep(-1);
+    }
+    if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+        e.preventDefault();
+        checkStep(1);
+    }
+    if (e.code === 'Space') {
+        if (gameOverScreen.style.display === 'flex') {
+            e.preventDefault();
+            restartGame();
+        }
+    }
+});
+
+loadGems();
 </script>
 </body>
 </html>
