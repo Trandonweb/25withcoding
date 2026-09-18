@@ -38,7 +38,7 @@ body.dark-mode{--bg:#121212;--card:#1e1e1e;--text:#fff;--border:#333;--muted:#aa
 <div id="detailList" class="list"></div>
 </div>
 
-<div class="card"><h2>추가 휴무일</h2><div id="closedList" class="list"><div class="empty">불러오는 중...</div></div></div>
+<div class="card"><h2>출석 예외 대상자</h2><p class="muted">선택한 회원은 출석·미출석 처리와 점수 변동 대상에서 제외됩니다. 현재 손승현은 기존 설정을 유지하기 위해 처음 한 번 자동으로 선택됩니다.</p><div id="excludedUsers" class="list"><div class="empty">불러오는 중...</div></div><div class="row" style="margin-top:12px"><button class="save" id="saveExcludedBtn">예외 대상 적용</button></div></div>\n\n<div class="card"><h2>추가 휴무일</h2><div id="closedList" class="list"><div class="empty">불러오는 중...</div></div></div>
 </div>
 
 <script type="module">
@@ -49,7 +49,7 @@ import{finalizePastAttendance}from"/attendance.js";
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
 const app=getApps().length?getApp():initializeApp(firebaseConfig);const db=getFirestore(app);
 const SETTINGS_KEY="coding_with_ramen_settings",ATTENDANCE_START_DATE="2026-09-16",KST="Asia/Seoul",START_MINUTES=12*60+20,END_MINUTES=13*60+25;
-const EXCLUDED_ATTENDANCE_NAMES=new Set(["손승현"]);
+let excludedUserIds=[];
 const HOLIDAYS_2026=new Set(["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-03-02","2026-05-05","2026-05-24","2026-05-25","2026-06-03","2026-06-06","2026-08-15","2026-08-17","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-05","2026-10-09","2026-12-25"]);
 const settingsRef=doc(db,"attendanceSettings","main");
 const pad=n=>String(n).padStart(2,"0");
@@ -67,14 +67,14 @@ view=currentMonth();
 
 async function loadData(){
  await finalizePastAttendance(true);
- const settings=await getDoc(settingsRef);closedDates=settings.exists()&&Array.isArray(settings.data().closedDates)?[...new Set(settings.data().closedDates)]:[];
+ const settings=await getDoc(settingsRef);closedDates=settings.exists()&&Array.isArray(settings.data().closedDates)?[...new Set(settings.data().closedDates)]:[];excludedUserIds=settings.exists()&&Array.isArray(settings.data().excludedUserIds)?[...new Set(settings.data().excludedUserIds)]:[];
  const [uSnap,aSnap]=await Promise.all([getDocs(collection(db,"users")),getDocs(collection(db,"attendance"))]);
- users=uSnap.docs.map(s=>({id:s.id,name:s.data().name||s.id,student:s.data().student||s.id,role:s.data().role||"student",excluded:EXCLUDED_ATTENDANCE_NAMES.has(String(s.data().name||"").trim())}));
- users.sort((a,b)=>String(a.student).localeCompare(String(b.student),"ko",{numeric:true}));
+ users=uSnap.docs.map(s=>({id:s.id,name:s.data().name||s.id,student:s.data().student||s.id,role:s.data().role||"student",excluded:excludedUserIds.includes(s.id)}));
+ users.sort((a,b)=>String(a.student).localeCompare(String(b.student),"ko",{numeric:true}));\n if(!settings.exists()||!Array.isArray(settings.data().excludedUserIds)){const legacy=users.find(u=>u.name==="손승현");if(legacy){excludedUserIds=[legacy.id];await setDoc(settingsRef,{excludedUserIds,updatedAt:new Date().toISOString()},{merge:true});users=users.map(u=>({...u,excluded:excludedUserIds.includes(u.id)}))}}
  attendanceMap=new Map();
  aSnap.forEach(s=>{const d=s.data();if(d.date&&d.userId)attendanceMap.set(`${d.date}_${d.userId}`,d)});
  if(selectedDate&&!scheduled(selectedDate))selectedDate="";
- renderCalendar();if(selectedDate)renderDetail(selectedDate);renderClosed();
+ renderCalendar();if(selectedDate)renderDetail(selectedDate);renderExcluded();renderClosed();
 }
 function renderCalendar(){
  const y=view.getFullYear(),m=view.getMonth()+1;document.getElementById("monthTitle").textContent=`${y}년 ${m}월`;
@@ -109,7 +109,9 @@ function renderDetail(date){
  card.scrollIntoView({behavior:"smooth",block:"start"});
 }
 function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
+function renderExcluded(){const el=document.getElementById("excludedUsers");if(!users.length){el.innerHTML="<div class=\"empty\">회원 정보가 없습니다.</div>";return}el.innerHTML=users.map(u=>`<label class="item" style="cursor:pointer"><div><div class="name">${escapeHtml(u.name)}</div><div class="sub">${escapeHtml(String(u.student))}</div></div><input type="checkbox" class="exclude-check" data-id="${escapeHtml(u.id)}" ${excludedUserIds.includes(u.id)?"checked":""} style="width:18px;height:18px"></label>`).join("")}
 function renderClosed(){const el=document.getElementById("closedList");if(!closedDates.length){el.innerHTML='<div class="empty">추가로 지정된 휴무일이 없습니다.</div>';return}el.innerHTML=[...closedDates].sort().map(d=>`<div class="item"><span>${d}</span><button class="remove" data-date="${d}">삭제</button></div>`).join("");el.querySelectorAll(".remove").forEach(b=>b.onclick=async()=>{b.disabled=true;try{closedDates=closedDates.filter(d=>d!==b.dataset.date);await setDoc(settingsRef,{closedDates,updatedAt:new Date().toISOString()},{merge:true});await loadData()}catch(e){console.error("[ATTENDANCE ADMIN] 휴무일 삭제 실패",e);alert("휴무일 삭제에 실패했습니다.");b.disabled=false}})}
+document.getElementById("saveExcludedBtn").onclick=async()=>{const checks=[...document.querySelectorAll(".exclude-check")];const next=checks.filter(c=>c.checked).map(c=>c.dataset.id);const btn=document.getElementById("saveExcludedBtn");btn.disabled=true;try{excludedUserIds=next;await setDoc(settingsRef,{excludedUserIds,updatedAt:new Date().toISOString()},{merge:true});await loadData();alert("출석 예외 대상자를 적용했습니다.");}catch(e){console.error("[ATTENDANCE ADMIN] 예외 대상 적용 실패",e);alert("예외 대상 적용에 실패했습니다.");}finally{btn.disabled=false}};
 document.getElementById("addBtn").onclick=async()=>{const d=document.getElementById("dateInput").value;if(!d)return alert("날짜를 선택하세요.");if(d<ATTENDANCE_START_DATE)return alert("출석 운영 시작일 이전 날짜는 휴무일로 등록할 필요가 없습니다.");if(closedDates.includes(d))return alert("이미 등록된 날짜입니다.");try{closedDates=[...closedDates,d].sort();await setDoc(settingsRef,{closedDates,updatedAt:new Date().toISOString()},{merge:true});document.getElementById("dateInput").value="";await loadData()}catch(e){console.error("[ATTENDANCE ADMIN] 휴무일 추가 실패",e);alert("휴무일 추가에 실패했습니다.")}};
 document.getElementById("prevBtn").onclick=()=>{view.setMonth(view.getMonth()-1);renderCalendar()};
 document.getElementById("nextBtn").onclick=()=>{view.setMonth(view.getMonth()+1);renderCalendar()};
