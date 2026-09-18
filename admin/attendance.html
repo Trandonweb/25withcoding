@@ -56,7 +56,8 @@ const key=(y,m,d)=>`${y}-${pad(m)}-${pad(d)}`;
 function nowParts(){const p=new Intl.DateTimeFormat("en-CA",{timeZone:KST,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date());return Object.fromEntries(p.map(x=>[x.type,x.value]))}
 function todayKey(){const p=nowParts();return`${p.year}-${p.month}-${p.day}`}
 function nowMinutes(){const p=nowParts();return Number(p.hour)*60+Number(p.minute)+Number(p.second)/60}
-function weekdayFrom2026(date){const [y,m,d]=date.split("-").map(Number);const start=Date.UTC(2026,0,1),target=Date.UTC(y,m-1,d);const days=Math.round((target-start)/86400000);const w=(4+days)%7;return w<0?w+7:w}\nfunction scheduled(date){if(date<ATTENDANCE_START_DATE)return false;const d=weekdayFrom2026(date);return[1,3,5].includes(d)&&!HOLIDAYS_2026.has(date)&&!closedDates.includes(date)}
+function weekdayFrom2026(date){const [y,m,d]=date.split("-").map(Number);const start=Date.UTC(2026,0,1),target=Date.UTC(y,m-1,d);const days=Math.round((target-start)/86400000);const w=(4+days)%7;return w<0?w+7:w}
+function scheduled(date){if(date<ATTENDANCE_START_DATE)return false;const d=weekdayFrom2026(date);return[1,3,5].includes(d)&&!HOLIDAYS_2026.has(date)&&!closedDates.includes(date)}
 function expired(date){const t=todayKey();return date<t||(date===t&&nowMinutes()>=END_MINUTES)}
 function active(date){return date===todayKey()&&scheduled(date)&&nowMinutes()>=START_MINUTES&&nowMinutes()<END_MINUTES}
 let closedDates=[],attendanceMap=new Map(),users=[],selectedDate="",view;

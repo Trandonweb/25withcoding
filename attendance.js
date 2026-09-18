@@ -1,13 +1,15 @@
 import{initializeApp,getApps,getApp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import{getFirestore,doc,getDoc,getDocs,collection,runTransaction,increment,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
-const app=getApps().some(x=>x.name==="attendanceApp")?getApp("attendanceApp"):initializeApp(firebaseConfig,"attendanceApp");\nconst db=getFirestore(app);
+const app=getApps().some(x=>x.name==="attendanceApp")?getApp("attendanceApp"):initializeApp(firebaseConfig,"attendanceApp");
+const db=getFirestore(app);
 const ATTENDANCE_POINT=2,ABSENT_POINT=-5,KST="Asia/Seoul",ATTENDANCE_START_DATE="2026-09-16",ATTENDANCE_END_MINUTES=13*60+25;
 const HOLIDAYS_2026=new Set(["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-03-02","2026-05-05","2026-05-24","2026-05-25","2026-06-03","2026-06-06","2026-08-15","2026-08-17","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-05","2026-10-09","2026-12-25"]);
 function nowParts(){const p=new Intl.DateTimeFormat("en-CA",{timeZone:KST,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date());return Object.fromEntries(p.map(x=>[x.type,x.value]))}
 function dateKey(){const p=nowParts();return `${p.year}-${p.month}-${p.day}`}
 function currentMinutes(){const p=nowParts();return Number(p.hour)*60+Number(p.minute)+Number(p.second)/60}
-function weekdayFrom2026(date){const [y,m,d]=date.split("-").map(Number);const start=Date.UTC(2026,0,1),target=Date.UTC(y,m-1,d);const days=Math.round((target-start)/86400000);return (4+days)%7<0?(4+days)%7+7:(4+days)%7}\nfunction isScheduledDate(date,closed){if(date<ATTENDANCE_START_DATE)return false;const day=weekdayFrom2026(date);return[1,3,5].includes(day)&&!HOLIDAYS_2026.has(date)&&!closed.has(date)}
+function weekdayFrom2026(date){const [y,m,d]=date.split("-").map(Number);const start=Date.UTC(2026,0,1),target=Date.UTC(y,m-1,d);const days=Math.round((target-start)/86400000);return (4+days)%7<0?(4+days)%7+7:(4+days)%7}
+function isScheduledDate(date,closed){if(date<ATTENDANCE_START_DATE)return false;const day=weekdayFrom2026(date);return[1,3,5].includes(day)&&!HOLIDAYS_2026.has(date)&&!closed.has(date)}
 function dateRange(start,end){const out=[];const d=new Date(`${start}T12:00:00+09:00`);const last=new Date(`${end}T12:00:00+09:00`);while(d<=last){out.push(new Intl.DateTimeFormat("en-CA",{timeZone:KST}).format(d));d.setUTCDate(d.getUTCDate()+1)}return out}
 async function getClosedDates(){try{const s=await getDoc(doc(db,"attendanceSettings","main"));return s.exists()?new Set(Array.isArray(s.data().closedDates)?s.data().closedDates:[]):new Set()}catch(e){console.error("[ATTENDANCE] 설정 조회 실패",e);return new Set()}}
 let finalizedKey="";
