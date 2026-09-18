@@ -521,6 +521,13 @@ async function init() {
 
   myData = mySnap.data();
 
+  // 상벌관리위원회장은 일반 상벌점 입력 화면을 사용할 수 없고
+  // 전용 화면에서 사유 입력 + COBY 타당성 검사를 거쳐 벌점만 부여한다.
+  if (myData.role === "committee_chair") {
+    location.replace("committee.html");
+    return;
+  }
+
   if (myData.role === "president" || myData.role === "vice") {
     document.getElementById("adminBtn").style.display = "inline-block";
   }
