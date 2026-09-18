@@ -38,7 +38,9 @@ body.dark-mode{--bg:#121212;--card:#1e1e1e;--text:#fff;--border:#333;--muted:#aa
 <div id="detailList" class="list"></div>
 </div>
 
-<div class="card"><h2>출석 예외 대상자</h2><p class="muted">선택한 회원은 출석·미출석 처리와 점수 변동 대상에서 제외됩니다. 현재 손승현은 기존 설정을 유지하기 위해 처음 한 번 자동으로 선택됩니다.</p><div id="excludedUsers" class="list"><div class="empty">불러오는 중...</div></div><div class="row" style="margin-top:12px"><button class="save" id="saveExcludedBtn">예외 대상 적용</button></div></div>\n\n<div class="card"><h2>추가 휴무일</h2><div id="closedList" class="list"><div class="empty">불러오는 중...</div></div></div>
+<div class="card"><h2>출석 예외 대상자</h2><p class="muted">선택한 회원은 출석·미출석 처리와 점수 변동 대상에서 제외됩니다. 현재 손승현은 기존 설정을 유지하기 위해 처음 한 번 자동으로 선택됩니다.</p><div id="excludedUsers" class="list"><div class="empty">불러오는 중...</div></div><div class="row" style="margin-top:12px"><button class="save" id="saveExcludedBtn">예외 대상 적용</button></div></div>
+
+<div class="card"><h2>추가 휴무일</h2><div id="closedList" class="list"><div class="empty">불러오는 중...</div></div></div>
 </div>
 
 <script type="module">
@@ -70,7 +72,8 @@ async function loadData(){
  const settings=await getDoc(settingsRef);closedDates=settings.exists()&&Array.isArray(settings.data().closedDates)?[...new Set(settings.data().closedDates)]:[];excludedUserIds=settings.exists()&&Array.isArray(settings.data().excludedUserIds)?[...new Set(settings.data().excludedUserIds)]:[];
  const [uSnap,aSnap]=await Promise.all([getDocs(collection(db,"users")),getDocs(collection(db,"attendance"))]);
  users=uSnap.docs.map(s=>({id:s.id,name:s.data().name||s.id,student:s.data().student||s.id,role:s.data().role||"student",excluded:excludedUserIds.includes(s.id)}));
- users.sort((a,b)=>String(a.student).localeCompare(String(b.student),"ko",{numeric:true}));\n if(!settings.exists()||!Array.isArray(settings.data().excludedUserIds)){const legacy=users.find(u=>u.name==="손승현");if(legacy){excludedUserIds=[legacy.id];await setDoc(settingsRef,{excludedUserIds,updatedAt:new Date().toISOString()},{merge:true});users=users.map(u=>({...u,excluded:excludedUserIds.includes(u.id)}))}}
+ users.sort((a,b)=>String(a.student).localeCompare(String(b.student),"ko",{numeric:true}));
+ if(!settings.exists()||!Array.isArray(settings.data().excludedUserIds)){const legacy=users.find(u=>u.name==="손승현");if(legacy){excludedUserIds=[legacy.id];await setDoc(settingsRef,{excludedUserIds,updatedAt:new Date().toISOString()},{merge:true});users=users.map(u=>({...u,excluded:excludedUserIds.includes(u.id)}))}}
  attendanceMap=new Map();
  aSnap.forEach(s=>{const d=s.data();if(d.date&&d.userId)attendanceMap.set(`${d.date}_${d.userId}`,d)});
  if(selectedDate&&!scheduled(selectedDate))selectedDate="";
