@@ -2388,6 +2388,16 @@ const grid=
   );
 
 
+function normalizeProjectUrl(p){
+  const id=String(p?.id||"");
+  const raw=String(p?.url||"");
+  const hay=(id+" "+raw+" "+String(p?.detail||"")+" "+String(p?.howto||"")).toLowerCase();
+  if(id.includes("FPS")||hay.includes("fps_code")||hay.includes("황혼의 균열")||hay.includes("twilight rift")){
+    return "/2026festival/FPS_code/index.html?v=4d8b747096848e23b65899d929b3c0b6a8b6a5f0";
+  }
+  return raw;
+}
+
 function loadProjects(){
 
   onSnapshot(
@@ -2478,7 +2488,7 @@ function loadProjects(){
 
           card.onclick=()=>{
             location.href=
-              p.url;
+              normalizeProjectUrl(p);
           };
 
 
