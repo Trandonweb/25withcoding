@@ -8,11 +8,11 @@
 :root{--bg:#f0f0f0;--card:#fff;--text:#111;--primary:#27ae60;--muted:#777;--border:#e5e7eb;--present:#27ae60;--absent:#e74c3c;--pending:#f39c12}
 body.dark-mode{--bg:#121212;--card:#1e1e1e;--text:#fff;--border:#333;--muted:#aaa}
 *{box-sizing:border-box}body{margin:0;padding:24px;font-family:Arial,'Malgun Gothic',sans-serif;background:var(--bg);color:var(--text)}
-.wrap{max-width:900px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}.back,.save,.remove,.navbtn{border:0;border-radius:10px;padding:10px 14px;font-weight:bold;cursor:pointer}.back,.navbtn{background:var(--card);color:var(--text);border:1px solid var(--border)}.save{background:var(--primary);color:#fff}.remove{background:#eee;color:#333}.dark-mode .remove{background:#333;color:#fff}h1{font-size:24px;margin:0;text-align:center;flex:1}h2{font-size:18px;margin:0 0 8px}.muted{color:var(--muted);font-size:13px}
+.wrap{max-width:1100px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}.back,.save,.remove,.navbtn,.todaybtn{border:0;border-radius:10px;padding:10px 14px;font-weight:bold;cursor:pointer}.back,.navbtn,.todaybtn{background:var(--card);color:var(--text);border:1px solid var(--border)}.save{background:var(--primary);color:#fff}.remove{background:#eee;color:#333}.dark-mode .remove{background:#333;color:#fff}h1{font-size:24px;margin:0;text-align:center;flex:1}h2{font-size:18px;margin:0 0 8px}.muted{color:var(--muted);font-size:13px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:16px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.date{padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text)}
-.calendar-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.month-title{font-size:21px;font-weight:800}.weekdays,.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.weekday{text-align:center;font-size:13px;font-weight:bold;color:var(--muted);padding:6px 0}.day{min-height:92px;border:1px solid var(--border);border-radius:12px;padding:8px;background:var(--card);cursor:pointer;transition:.15s}.day:hover{transform:translateY(-1px);border-color:var(--primary)}.day.other{opacity:.38}.day.scheduled{background:color-mix(in srgb,var(--primary) 6%,var(--card))}.day.closed{opacity:.5}.num{font-weight:bold;font-size:14px;margin-bottom:7px}.summary{font-size:11px;line-height:1.55}.p{color:var(--present);font-weight:bold}.a{color:var(--absent);font-weight:bold}.q{color:var(--pending);font-weight:bold}.selected{outline:2px solid var(--primary)}
-.detail-title{display:flex;justify-content:space-between;align-items:center;gap:10px}.badge{padding:5px 9px;border-radius:999px;font-size:12px;font-weight:bold;background:#eee;color:#555}.dark-mode .badge{background:#333;color:#ddd}.list{margin-top:14px;display:flex;flex-direction:column;gap:8px}.item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:12px}.name{font-weight:bold}.sub{font-size:12px;color:var(--muted);margin-top:3px}.status{font-weight:bold;font-size:13px}.status.present{color:var(--present)}.status.absent{color:var(--absent)}.status.pending{color:var(--pending)}.empty{color:var(--muted);padding:8px 0}.legend{display:flex;gap:15px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--muted)}
-@media(max-width:650px){body{padding:12px}.card{padding:14px}.day{min-height:72px;padding:6px}.summary{font-size:10px}.weekday{font-size:11px}h1{font-size:19px}.top .back{padding:8px 10px}.navbtn{padding:8px 11px}}
+.calendar-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px}.month-title{font-size:21px;font-weight:800}.month-actions{display:flex;gap:8px}.weekdays,.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.weekday{text-align:center;font-size:13px;font-weight:bold;color:var(--muted);padding:6px 0}.day{min-height:105px;border:1px solid var(--border);border-radius:12px;padding:8px;background:var(--card);transition:.15s;position:relative}.day.clickable{cursor:pointer}.day.clickable:hover{transform:translateY(-1px);border-color:var(--primary)}.day.other{opacity:.35}.day.scheduled{background:color-mix(in srgb,var(--primary) 6%,var(--card))}.day.closed{opacity:.65}.day.today{box-shadow:inset 0 0 0 2px var(--primary)}.num{font-weight:bold;font-size:14px;margin-bottom:7px}.today-label{font-size:9px;color:var(--primary);margin-left:4px}.summary{font-size:11px;line-height:1.55}.p{color:var(--present);font-weight:bold}.a{color:var(--absent);font-weight:bold}.q{color:var(--pending);font-weight:bold}.selected{outline:2px solid var(--primary);outline-offset:1px}
+.detail-title{display:flex;justify-content:space-between;align-items:center;gap:10px}.badge{padding:5px 9px;border-radius:999px;font-size:12px;font-weight:bold;background:#eee;color:#555}.dark-mode .badge{background:#333;color:#ddd}.list{margin-top:14px;display:flex;flex-direction:column;gap:8px}.item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:12px}.name{font-weight:bold}.sub{font-size:12px;color:var(--muted);margin-top:3px}.status{font-weight:bold;font-size:13px;text-align:right}.status.present{color:var(--present)}.status.absent{color:var(--absent)}.status.pending{color:var(--pending)}.empty{color:var(--muted);padding:8px 0}.legend{display:flex;gap:15px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--muted)}.notice{padding:11px 13px;border-radius:10px;background:color-mix(in srgb,var(--primary) 8%,var(--card));font-size:13px;margin-top:12px}
+@media(max-width:650px){body{padding:12px}.card{padding:14px}.day{min-height:76px;padding:6px}.summary{font-size:9px}.weekday{font-size:11px}h1{font-size:19px}.top .back{padding:8px 10px}.navbtn,.todaybtn{padding:8px 10px}.month-title{font-size:18px}.item{gap:8px}.status{font-size:12px}}
 </style>
 </head>
 <body>
@@ -20,96 +20,99 @@ body.dark-mode{--bg:#121212;--card:#1e1e1e;--text:#fff;--border:#333;--muted:#aa
 <div class="top"><button class="back" onclick="location.href='/admin/'">← 관리자</button><h1>출석체크 관리</h1><span style="width:58px"></span></div>
 
 <div class="card">
-  <h2>출석체크 운영</h2>
-  <p class="muted">매주 월·수·금 12:20~13:25에 열립니다. 공휴일과 추가 휴무일은 출석일에서 제외됩니다.</p>
-  <div class="row"><input class="date" id="dateInput" type="date"><button class="save" id="addBtn">휴무일 추가</button></div>
+<h2>출석체크 운영</h2>
+<p class="muted">출석 시작일은 2026년 9월 16일입니다. 이후 매주 월·수·금 12:20~13:25에 진행되며, 공휴일과 추가 휴무일은 출석일에서 제외됩니다.</p>
+<div class="row"><input class="date" id="dateInput" type="date" min="2026-09-16"><button class="save" id="addBtn">휴무일 추가</button></div>
+<div class="notice">지난 출석일의 미처리는 이 관리 페이지를 열 때 자동으로 미출석(-5점) 처리합니다. 같은 학생·같은 날짜가 두 번 차감되지 않도록 기록을 먼저 확인합니다.</div>
 </div>
 
 <div class="card">
-  <div class="calendar-head"><button class="navbtn" id="prevBtn">← 이전</button><div class="month-title" id="monthTitle"></div><button class="navbtn" id="nextBtn">다음 →</button></div>
-  <div class="weekdays"><div class="weekday">일</div><div class="weekday">월</div><div class="weekday">화</div><div class="weekday">수</div><div class="weekday">목</div><div class="weekday">금</div><div class="weekday">토</div></div>
-  <div class="calendar" id="calendar"></div>
-  <div class="legend"><span><b class="p">● 출석</b></span><span><b class="a">● 미출석</b></span><span><b class="q">● 미처리</b></span><span>날짜를 클릭하면 학생별 기록을 볼 수 있습니다.</span></div>
+<div class="calendar-head"><button class="navbtn" id="prevBtn">← 이전</button><div class="month-title" id="monthTitle"></div><div class="month-actions"><button class="todaybtn" id="todayBtn">이번 달</button><button class="navbtn" id="nextBtn">다음 →</button></div></div>
+<div class="weekdays"><div class="weekday">일</div><div class="weekday">월</div><div class="weekday">화</div><div class="weekday">수</div><div class="weekday">목</div><div class="weekday">금</div><div class="weekday">토</div></div>
+<div class="calendar" id="calendar"></div>
+<div class="legend"><span><b class="p">● 출석</b></span><span><b class="a">● 미출석</b></span><span><b class="q">● 미처리/예정</b></span><span>출석일을 클릭하면 학생별 기록을 확인할 수 있습니다.</span></div>
 </div>
 
 <div class="card" id="detailCard" style="display:none">
-  <div class="detail-title"><h2 id="detailTitle">출석 상세</h2><span class="badge" id="detailBadge"></span></div>
-  <div id="detailList" class="list"></div>
+<div class="detail-title"><h2 id="detailTitle">출석 상세</h2><span class="badge" id="detailBadge"></span></div>
+<div id="detailList" class="list"></div>
 </div>
 
 <div class="card"><h2>추가 휴무일</h2><div id="closedList" class="list"><div class="empty">불러오는 중...</div></div></div>
 </div>
 
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import{initializeApp,getApps,getApp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import{getFirestore,doc,getDoc,setDoc,collection,getDocs}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 import{requireAdmin}from"./js/auth.js";
+import{finalizePastAttendance}from"/attendance.js";
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
-const db=getFirestore(initializeApp(firebaseConfig));
-const SETTINGS_KEY="coding_with_ramen_settings";
-try{const s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");document.body.classList.toggle("dark-mode",!!s.darkMode);if(s.primaryColor)document.documentElement.style.setProperty("--primary",s.primaryColor)}catch(e){}
-await requireAdmin();
-
-const settingsRef=doc(db,"attendanceSettings","main");
+const app=getApps().length?getApp():initializeApp(firebaseConfig);const db=getFirestore(app);
+const SETTINGS_KEY="coding_with_ramen_settings",ATTENDANCE_START_DATE="2026-09-16",KST="Asia/Seoul",START_MINUTES=12*60+20,END_MINUTES=13*60+25;
 const HOLIDAYS_2026=new Set(["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-03-02","2026-05-05","2026-05-24","2026-05-25","2026-06-03","2026-06-06","2026-08-15","2026-08-17","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-05","2026-10-09","2026-12-25"]);
+const settingsRef=doc(db,"attendanceSettings","main");
 const pad=n=>String(n).padStart(2,"0");
 const key=(y,m,d)=>`${y}-${pad(m)}-${pad(d)}`;
-let closedDates=[];let attendanceMap=new Map();let users=[];let view=new Date();view.setDate(1);let selectedDate="";
-
-function scheduled(date){const d=new Date(`${date}T12:00:00+09:00`);return[1,3,5].includes(d.getDay())&&!HOLIDAYS_2026.has(date)&&!closedDates.includes(date)}
-function todayKey(){const f=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const x=Object.fromEntries(f.map(v=>[v.type,v.value]));return`${x.year}-${x.month}-${x.day}`}
-function isPast(date){return date<todayKey()}
+function nowParts(){const p=new Intl.DateTimeFormat("en-CA",{timeZone:KST,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date());return Object.fromEntries(p.map(x=>[x.type,x.value]))}
+function todayKey(){const p=nowParts();return`${p.year}-${p.month}-${p.day}`}
+function nowMinutes(){const p=nowParts();return Number(p.hour)*60+Number(p.minute)+Number(p.second)/60}
+function scheduled(date){if(date<ATTENDANCE_START_DATE)return false;const d=new Date(`${date}T12:00:00+09:00`);return[1,3,5].includes(d.getDay())&&!HOLIDAYS_2026.has(date)&&!closedDates.includes(date)}
+function expired(date){const t=todayKey();return date<t||(date===t&&nowMinutes()>=END_MINUTES)}
+function active(date){return date===todayKey()&&scheduled(date)&&nowMinutes()>=START_MINUTES&&nowMinutes()<END_MINUTES}
+let closedDates=[],attendanceMap=new Map(),users=[],selectedDate="",view;
+function currentMonth(){const p=nowParts();return new Date(Number(p.year),Number(p.month)-1,1)}
+view=currentMonth();
 
 async function loadData(){
-  const settings=await getDoc(settingsRef);closedDates=settings.exists()?(settings.data().closedDates||[]):[];
-  const [uSnap,aSnap]=await Promise.all([getDocs(collection(db,"users")),getDocs(collection(db,"attendance"))]);
-  users=[];uSnap.forEach(s=>{const d=s.data();if(d.role==="student")users.push({id:s.id,name:d.name||s.id,student:d.student||s.id})});
-  users.sort((a,b)=>String(a.student).localeCompare(String(b.student),"ko",{numeric:true}));
-  attendanceMap=new Map();aSnap.forEach(s=>{const d=s.data();if(d.date&&d.userId)attendanceMap.set(`${d.date}_${d.userId}`,d)});
-  renderCalendar();if(selectedDate)renderDetail(selectedDate);renderClosed();
+ await finalizePastAttendance(true);
+ const settings=await getDoc(settingsRef);closedDates=settings.exists()&&Array.isArray(settings.data().closedDates)?[...new Set(settings.data().closedDates)]:[];
+ const [uSnap,aSnap]=await Promise.all([getDocs(collection(db,"users")),getDocs(collection(db,"attendance"))]);
+ users=uSnap.docs.filter(s=>s.data().role==="student").map(s=>({id:s.id,name:s.data().name||s.id,student:s.data().student||s.id}));
+ users.sort((a,b)=>String(a.student).localeCompare(String(b.student),"ko",{numeric:true}));
+ attendanceMap=new Map();
+ aSnap.forEach(s=>{const d=s.data();if(d.date&&d.userId)attendanceMap.set(`${d.date}_${d.userId}`,d)});
+ if(selectedDate&&!scheduled(selectedDate))selectedDate="";
+ renderCalendar();if(selectedDate)renderDetail(selectedDate);renderClosed();
 }
-
 function renderCalendar(){
-  const y=view.getFullYear(),m=view.getMonth()+1;document.getElementById("monthTitle").textContent=`${y}년 ${m}월`;
-  const cal=document.getElementById("calendar");cal.innerHTML="";
-  const first=new Date(y,m-1,1).getDay(),last=new Date(y,m,0).getDate();
-  for(let i=0;i<first;i++){const e=document.createElement("div");e.className="day other";cal.appendChild(e)}
-  for(let d=1;d<=last;d++){
-    const date=key(y,m,d),e=document.createElement("div");e.className="day";if(scheduled(date))e.classList.add("scheduled");if(!scheduled(date))e.classList.add("closed");if(date===selectedDate)e.classList.add("selected");
-    const title=document.createElement("div");title.className="num";title.textContent=d;e.appendChild(title);
-    if(scheduled(date)){
-      let present=0,absent=0,pending=0;users.forEach(u=>{const a=attendanceMap.get(`${date}_${u.id}`);if(a?.status==="present")present++;else if(a?.status==="absent")absent++;else pending++});
-      const completed=present+absent;
-      e.innerHTML+=`<div class="summary"><div class="p">출석 ${present}명</div><div class="a">미출석 ${absent}명</div><div class="q">${isPast(date)?"미처리":"예정"} ${isPast(date)?pending+"명":""}</div></div>`;
-    }else if(HOLIDAYS_2026.has(date))e.innerHTML+=`<div class="summary">공휴일</div>`;
-    else if(closedDates.includes(date))e.innerHTML+=`<div class="summary">추가 휴무</div>`;
-    else e.innerHTML+=`<div class="summary">출석 없음</div>`;
-    e.onclick=()=>{if(scheduled(date)){selectedDate=date;renderCalendar();renderDetail(date)}};cal.appendChild(e);
-  }
-  const total=first+last;for(let i=total;i<42;i++){const e=document.createElement("div");e.className="day other";cal.appendChild(e)}
+ const y=view.getFullYear(),m=view.getMonth()+1;document.getElementById("monthTitle").textContent=`${y}년 ${m}월`;
+ const cal=document.getElementById("calendar");cal.innerHTML="";
+ const first=new Date(y,m-1,1).getDay(),last=new Date(y,m,0).getDate();
+ for(let i=0;i<first;i++){const e=document.createElement("div");e.className="day other";cal.appendChild(e)}
+ for(let d=1;d<=last;d++){
+  const date=key(y,m,d),e=document.createElement("div");e.className="day";
+  const isSch=scheduled(date),isToday=date===todayKey();
+  if(isSch)e.classList.add("scheduled","clickable");else e.classList.add("closed");
+  if(isToday)e.classList.add("today");if(date===selectedDate)e.classList.add("selected");
+  e.innerHTML=`<div class="num">${d}${isToday?'<span class="today-label">오늘</span>':""}</div>`;
+  if(isSch){
+   let present=0,absent=0,pending=0;users.forEach(u=>{const a=attendanceMap.get(`${date}_${u.id}`);if(a?.status==="present")present++;else if(a?.status==="absent")absent++;else pending++});
+   const pendingLabel=expired(date)?"미처리":"예정";
+   e.innerHTML+=`<div class="summary"><div class="p">출석 ${present}명</div><div class="a">미출석 ${absent}명</div><div class="q">${pendingLabel} ${pending}명</div></div>`;
+   if(active(date))e.innerHTML+=`<div class="summary" style="margin-top:5px;color:var(--primary);font-weight:bold">● 진행 중</div>`;
+  }else if(date<ATTENDANCE_START_DATE)e.innerHTML+=`<div class="summary">운영 전</div>`;
+  else if(HOLIDAYS_2026.has(date))e.innerHTML+=`<div class="summary">공휴일</div>`;
+  else if(closedDates.includes(date))e.innerHTML+=`<div class="summary">추가 휴무</div>`;
+  else e.innerHTML+=`<div class="summary">출석 없음</div>`;
+  if(isSch)e.onclick=()=>{selectedDate=date;renderCalendar();renderDetail(date)};cal.appendChild(e);
+ }
+ const cells=Math.ceil((first+last)/7)*7;for(let i=first+last;i<cells;i++){const e=document.createElement("div");e.className="day other";cal.appendChild(e)}
 }
-
 function renderDetail(date){
-  const card=document.getElementById("detailCard"),list=document.getElementById("detailList");card.style.display="block";document.getElementById("detailTitle").textContent=`${date} 출석 상세`;
-  const rows=users.map(u=>({u,a:attendanceMap.get(`${date}_${u.id}`)}));const p=rows.filter(x=>x.a?.status==="present").length;const a=rows.filter(x=>x.a?.status==="absent").length;const pending=rows.length-p-a;
-  document.getElementById("detailBadge").textContent=`출석 ${p} · 미출석 ${a} · 미처리 ${pending}`;
-  list.innerHTML=rows.length?rows.map(({u,a})=>{
-    let cls="pending",text=isPast(date)?"미처리":"예정",sub="아직 출석 기록이 없습니다.";
-    if(a?.status==="present"){cls="present";text="출석 +2";sub=a.checkedAt?.toDate?`체크 완료 · ${a.checkedAt.toDate().toLocaleTimeString("ko-KR")}`:"출석 처리 완료"}
-    if(a?.status==="absent"){cls="absent";text="미출석 -5";sub="출석 기록 없음으로 자동 처리됨"}
-    return `<div class="item"><div><div class="name">${escapeHtml(u.name)}</div><div class="sub">${escapeHtml(String(u.student))}</div></div><div class="status ${cls}">${text}<br><span style="font-size:11px;font-weight:normal">${sub}</span></div></div>`
-  }).join(""):"<div class='empty'>학생 정보가 없습니다.</div>";
-  card.scrollIntoView({behavior:"smooth",block:"start"});
+ const card=document.getElementById("detailCard"),list=document.getElementById("detailList");card.style.display="block";
+ const rows=users.map(u=>({u,a:attendanceMap.get(`${date}_${u.id}`)}));const p=rows.filter(x=>x.a?.status==="present").length,a=rows.filter(x=>x.a?.status==="absent").length,pending=rows.length-p-a;
+ document.getElementById("detailTitle").textContent=`${date} 출석 상세`;
+ document.getElementById("detailBadge").textContent=`출석 ${p} · 미출석 ${a} · ${expired(date)?"미처리":"예정"} ${pending}`;
+ list.innerHTML=rows.length?rows.map(({u,a})=>{let cls="pending",text=expired(date)?"미처리":"예정",sub="아직 출석 기록이 없습니다.";if(a?.status==="present"){cls="present";text="출석 +2";sub=a.checkedAt?.toDate?`체크 완료 · ${a.checkedAt.toDate().toLocaleString("ko-KR")}`:"출석 처리 완료"}else if(a?.status==="absent"){cls="absent";text="미출석 -5";sub="출석 기록 없음으로 자동 처리됨"}return`<div class="item"><div><div class="name">${escapeHtml(u.name)}</div><div class="sub">${escapeHtml(String(u.student))}</div></div><div class="status ${cls}">${text}<br><span style="font-size:11px;font-weight:normal">${escapeHtml(sub)}</span></div></div>`}).join(""):"<div class='empty'>학생 정보가 없습니다.</div>";
+ card.scrollIntoView({behavior:"smooth",block:"start"});
 }
 function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
-
-function renderClosed(){const el=document.getElementById("closedList");if(!closedDates.length){el.innerHTML='<div class="empty">추가로 지정된 휴무일이 없습니다.</div>';return}el.innerHTML=closedDates.sort().map(d=>`<div class="item"><span>${d}</span><button class="remove" data-date="${d}">삭제</button></div>`).join("");el.querySelectorAll(".remove").forEach(b=>b.onclick=async()=>{closedDates=closedDates.filter(d=>d!==b.dataset.date);await setDoc(settingsRef,{closedDates,updatedAt:new Date().toISOString()},{merge:true});renderClosed();renderCalendar()})}
-
-document.getElementById("addBtn").onclick=async()=>{const d=document.getElementById("dateInput").value;if(!d)return alert("날짜를 선택하세요.");if(closedDates.includes(d))return alert("이미 등록된 날짜입니다.");closedDates.push(d);closedDates.sort();await setDoc(settingsRef,{closedDates,updatedAt:new Date().toISOString()},{merge:true});document.getElementById("dateInput").value="";renderClosed();renderCalendar()};
+function renderClosed(){const el=document.getElementById("closedList");if(!closedDates.length){el.innerHTML='<div class="empty">추가로 지정된 휴무일이 없습니다.</div>';return}el.innerHTML=[...closedDates].sort().map(d=>`<div class="item"><span>${d}</span><button class="remove" data-date="${d}">삭제</button></div>`).join("");el.querySelectorAll(".remove").forEach(b=>b.onclick=async()=>{b.disabled=true;try{closedDates=closedDates.filter(d=>d!==b.dataset.date);await setDoc(settingsRef,{closedDates,updatedAt:new Date().toISOString()},{merge:true});await loadData()}catch(e){console.error("[ATTENDANCE ADMIN] 휴무일 삭제 실패",e);alert("휴무일 삭제에 실패했습니다.");b.disabled=false}})}
+document.getElementById("addBtn").onclick=async()=>{const d=document.getElementById("dateInput").value;if(!d)return alert("날짜를 선택하세요.");if(d<ATTENDANCE_START_DATE)return alert("출석 운영 시작일 이전 날짜는 휴무일로 등록할 필요가 없습니다.");if(closedDates.includes(d))return alert("이미 등록된 날짜입니다.");try{closedDates=[...closedDates,d].sort();await setDoc(settingsRef,{closedDates,updatedAt:new Date().toISOString()},{merge:true});document.getElementById("dateInput").value="";await loadData()}catch(e){console.error("[ATTENDANCE ADMIN] 휴무일 추가 실패",e);alert("휴무일 추가에 실패했습니다.")}};
 document.getElementById("prevBtn").onclick=()=>{view.setMonth(view.getMonth()-1);renderCalendar()};
 document.getElementById("nextBtn").onclick=()=>{view.setMonth(view.getMonth()+1);renderCalendar()};
-
-loadData().catch(e=>{console.error("[ATTENDANCE ADMIN] 로드 실패",e);document.getElementById("calendar").innerHTML='<div class="empty" style="grid-column:1/-1">출석 데이터를 불러오지 못했습니다. 콘솔의 [ATTENDANCE ADMIN] 로그를 확인하세요.</div>'});
+document.getElementById("todayBtn").onclick=()=>{view=currentMonth();renderCalendar()};
+try{await requireAdmin();await loadData()}catch(e){console.error("[ATTENDANCE ADMIN] 초기화 실패",e);document.getElementById("calendar").innerHTML='<div class="empty" style="grid-column:1/-1">출석 데이터를 불러오지 못했습니다. 콘솔의 [ATTENDANCE ADMIN] 로그를 확인하세요.</div>'}
 </script>
 </body>
 </html>
