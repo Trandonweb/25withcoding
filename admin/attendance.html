@@ -49,6 +49,7 @@ import{finalizePastAttendance}from"/attendance.js";
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
 const app=getApps().length?getApp():initializeApp(firebaseConfig);const db=getFirestore(app);
 const SETTINGS_KEY="coding_with_ramen_settings",ATTENDANCE_START_DATE="2026-09-16",KST="Asia/Seoul",START_MINUTES=12*60+20,END_MINUTES=13*60+25;
+const EXCLUDED_ATTENDANCE_NAMES=new Set(["손승현"]);
 const HOLIDAYS_2026=new Set(["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-03-02","2026-05-05","2026-05-24","2026-05-25","2026-06-03","2026-06-06","2026-08-15","2026-08-17","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-05","2026-10-09","2026-12-25"]);
 const settingsRef=doc(db,"attendanceSettings","main");
 const pad=n=>String(n).padStart(2,"0");
@@ -68,7 +69,7 @@ async function loadData(){
  await finalizePastAttendance(true);
  const settings=await getDoc(settingsRef);closedDates=settings.exists()&&Array.isArray(settings.data().closedDates)?[...new Set(settings.data().closedDates)]:[];
  const [uSnap,aSnap]=await Promise.all([getDocs(collection(db,"users")),getDocs(collection(db,"attendance"))]);
- users=uSnap.docs.filter(s=>s.data().role==="student").map(s=>({id:s.id,name:s.data().name||s.id,student:s.data().student||s.id}));
+ users=uSnap.docs.map(s=>({id:s.id,name:s.data().name||s.id,student:s.data().student||s.id,role:s.data().role||"student",excluded:EXCLUDED_ATTENDANCE_NAMES.has(String(s.data().name||"").trim())}));
  users.sort((a,b)=>String(a.student).localeCompare(String(b.student),"ko",{numeric:true}));
  attendanceMap=new Map();
  aSnap.forEach(s=>{const d=s.data();if(d.date&&d.userId)attendanceMap.set(`${d.date}_${d.userId}`,d)});
@@ -101,10 +102,10 @@ function renderCalendar(){
 }
 function renderDetail(date){
  const card=document.getElementById("detailCard"),list=document.getElementById("detailList");card.style.display="block";
- const rows=users.map(u=>({u,a:attendanceMap.get(`${date}_${u.id}`)}));const p=rows.filter(x=>x.a?.status==="present").length,a=rows.filter(x=>x.a?.status==="absent").length,pending=rows.length-p-a;
+ const rows=users.map(u=>({u,a:attendanceMap.get(`${date}_${u.id}`)}));const eligibleRows=rows.filter(x=>!x.u.excluded);const p=eligibleRows.filter(x=>x.a?.status==="present").length,a=eligibleRows.filter(x=>x.a?.status==="absent").length,pending=eligibleRows.length-p-a;
  document.getElementById("detailTitle").textContent=`${date} 출석 상세`;
  document.getElementById("detailBadge").textContent=`출석 ${p} · 미출석 ${a} · ${expired(date)?"미처리":"예정"} ${pending}`;
- list.innerHTML=rows.length?rows.map(({u,a})=>{let cls="pending",text=expired(date)?"미처리":"예정",sub="아직 출석 기록이 없습니다.";if(a?.status==="present"){cls="present";text="출석 +2";sub=a.checkedAt?.toDate?`체크 완료 · ${a.checkedAt.toDate().toLocaleString("ko-KR")}`:"출석 처리 완료"}else if(a?.status==="absent"){cls="absent";text="미출석 -5";sub="출석 기록 없음으로 자동 처리됨"}return`<div class="item"><div><div class="name">${escapeHtml(u.name)}</div><div class="sub">${escapeHtml(String(u.student))}</div></div><div class="status ${cls}">${text}<br><span style="font-size:11px;font-weight:normal">${escapeHtml(sub)}</span></div></div>`}).join(""):"<div class='empty'>학생 정보가 없습니다.</div>";
+ list.innerHTML=rows.length?rows.map(({u,a})=>{if(u.excluded)return`<div class="item"><div><div class="name">${escapeHtml(u.name)}</div><div class="sub">${escapeHtml(String(u.student))}</div></div><div class="status">출석 제외<br><span style="font-size:11px;font-weight:normal">출석 처리 대상이 아닙니다.</span></div></div>`;let cls="pending",text=expired(date)?"미처리":"예정",sub="아직 출석 기록이 없습니다.";if(a?.status==="present"){cls="present";text="출석 +2";sub=a.checkedAt?.toDate?`체크 완료 · ${a.checkedAt.toDate().toLocaleString("ko-KR")}`:"출석 처리 완료"}else if(a?.status==="absent"){cls="absent";text="미출석 -5";sub="출석 기록 없음으로 자동 처리됨"}return`<div class="item"><div><div class="name">${escapeHtml(u.name)}</div><div class="sub">${escapeHtml(String(u.student))}</div></div><div class="status ${cls}">${text}<br><span style="font-size:11px;font-weight:normal">${escapeHtml(sub)}</span></div></div>`}).join(""):"<div class='empty'>학생 정보가 없습니다.</div>";
  card.scrollIntoView({behavior:"smooth",block:"start"});
 }
 function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
