@@ -19,6 +19,9 @@
     .header-btn,.auth-btn { border:none; border-radius:10px; padding:10px 15px; cursor:pointer; font-size:14px; font-weight:bold; }
     .header-btn { background:var(--btn-bg); color:var(--btn-text); transition:background .2s; }
     .header-btn:hover { background:var(--btn-hover); }
+    .attendance-btn { background:var(--primary-color); color:#fff; transition:filter .2s,opacity .2s; }
+    .attendance-btn:hover { background:var(--primary-color); filter:brightness(.92); }
+    .attendance-btn:disabled { background:var(--primary-color); color:#fff; opacity:.65; cursor:default; }
     #adminBtn,#noticeBtn,#mirrorBtn { display:none; }
     .auth-btn { position:absolute; right:20px; top:16px; background:var(--primary-color); color:white; transition:filter .2s; }
     .auth-btn:hover { filter:brightness(.9); }
@@ -72,7 +75,7 @@
       <button id="adminBtn" class="header-btn" onclick="location.href='/admin'">관리자</button>
       <button id="noticeBtn" class="header-btn" onclick="location.href='/안내사항/'">공지</button>
       <button id="mirrorBtn" class="header-btn" onclick="location.href='/admin/mirroring/client.html'">화면공유</button>
-      <button id="attendanceBtn" class="header-btn" style="display:none">출석체크</button>
+      <button id="attendanceBtn" class="header-btn attendance-btn" style="display:none">출석하기</button>
       <button id="settingsBtn" class="header-btn" onclick="openSettingsModal()">설정</button>
     </div>
     코딩과 함께라면
