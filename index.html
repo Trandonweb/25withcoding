@@ -98,11 +98,11 @@
     </div>
   </div>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
     import { renderAttendanceButton } from "/attendance.js";
     const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
-    const app=initializeApp(firebaseConfig); const db=getFirestore(app);
+    const app=getApps().length ? getApp() : initializeApp(firebaseConfig); const db=getFirestore(app);
     const SETTINGS_KEY="coding_with_ramen_settings"; const COBY_LIGHT_LOGO="/AI/COBY_AI_logo.png"; const COBY_DARK_LOGO="/AI/COBY_AI_logo_dark_mode.png";
     const defaultSettings={darkMode:false,primaryColor:"#27ae60",keepLogin:true};
     function getStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{return {...defaultSettings,...JSON.parse(saved)}}catch(e){return {...defaultSettings}}}return {...defaultSettings}}
