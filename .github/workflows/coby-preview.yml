@@ -25,7 +25,9 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Include 2026 Festival pages
-        run: cp -R 2026festival AI/2026festival
+        run: |
+          mkdir -p AI/2026festival
+          cp -R 2026festival/. AI/2026festival/
 
       - name: Upload COBY site
         uses: actions/upload-pages-artifact@v3
