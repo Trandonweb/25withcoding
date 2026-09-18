@@ -1,7 +1,7 @@
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import{initializeApp,getApps,getApp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import{getFirestore,doc,getDoc,getDocs,collection,runTransaction,increment,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
-const db=getFirestore(initializeApp(firebaseConfig));
+const app=getApps().length?getApp():initializeApp(firebaseConfig);\nconst db=getFirestore(app);
 const ATTENDANCE_POINT=2,ABSENT_POINT=-5,KST="Asia/Seoul",ATTENDANCE_START_DATE="2026-09-16",ATTENDANCE_END_MINUTES=13*60+25;
 const HOLIDAYS_2026=new Set(["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-03-02","2026-05-05","2026-05-24","2026-05-25","2026-06-03","2026-06-06","2026-08-15","2026-08-17","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-05","2026-10-09","2026-12-25"]);
 function nowParts(){const p=new Intl.DateTimeFormat("en-CA",{timeZone:KST,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date());return Object.fromEntries(p.map(x=>[x.type,x.value]))}
