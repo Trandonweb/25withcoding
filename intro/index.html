@@ -16,8 +16,8 @@
 #logo{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
 .fallback{font-weight:800;font-size:clamp(30px,7vw,70px);letter-spacing:.08em;white-space:nowrap}.sub{margin-top:14px;font-size:11px;letter-spacing:.55em;color:rgba(255,255,255,.55)}
 #caption{position:absolute;z-index:7;left:50%;top:calc(50% + min(25vw,190px));transform:translateX(-50%);font-size:9px;letter-spacing:.42em;color:rgba(255,255,255,.32);opacity:0;white-space:nowrap}
-#start{position:absolute;z-index:10;left:50%;bottom:6vh;transform:translate(-50%,14px);opacity:0;visibility:hidden;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:12px 23px;background:rgba(255,255,255,.035);backdrop-filter:blur(12px);color:rgba(255,255,255,.8);cursor:pointer;transition:.7s}
-#start.ready{opacity:1;visibility:visible;transform:translate(-50%,0);animation:pulse 2.4s infinite}
+#start{position:absolute;z-index:10;left:50%;bottom:6vh;transform:translate(-50%,0);opacity:1;visibility:visible;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:12px 23px;background:rgba(255,255,255,.035);backdrop-filter:blur(12px);color:rgba(255,255,255,.8);cursor:pointer;transition:.7s}
+#start.ready{animation:pulse 2.4s infinite}
 #start:hover{border-color:rgba(39,174,96,.55);background:rgba(39,174,96,.09);transform:translate(-50%,-2px) scale(1.03)}
 #blackout{position:absolute;inset:0;z-index:20;background:#000;opacity:0;pointer-events:none;transition:opacity .65s}
 #blackout.active{opacity:1}
@@ -39,7 +39,7 @@
 <div class="fallback" style="display:none">코딩과 함께라면<div class="sub">WITH CODING</div></div>
 </div>
 <div id="caption">ENTER THE WORLD OF CODING</div>
-<button id="start" type="button">클릭하여 시작하기</button>
+<button id="start" type="button">재생하기</button>
 <div id="blackout"></div>
 </section>
 <main id="main"><div class="placeholder"><h1>MAIN SCENE</h1><p>실제 작품에서는 인트로 후 다음 페이지로 이동합니다.</p></div></main>
@@ -180,7 +180,7 @@ function revealLogo(){
  flash.animate([{opacity:0},{opacity:.88},{opacity:0}],{duration:500,easing:"cubic-bezier(.2,.8,.2,1)"});
  logoWrap.style.animation="logoIn 1.05s cubic-bezier(.16,1,.3,1) forwards";
  caption.style.animation="captionIn .9s .7s forwards";
- setTimeout(()=>start.classList.add("ready"),2100);
+ setTimeout(()=>{start.disabled=false;start.textContent="작품으로 들어가기";start.style.opacity="1";start.style.visibility="visible";start.classList.add("ready")},2100);
 }
 logo.onerror=()=>{logo.style.display="none";logo.nextElementSibling.style.display="block"};
 function nextUrl(){const n=new URLSearchParams(location.search).get("next");if(!n)return null;try{const u=new URL(n,location.origin);return u.origin===location.origin?u.pathname+u.search+u.hash:null}catch{return null}}
@@ -241,8 +241,8 @@ function startMusic(){
  musicTimer=setTimeout(()=>{musicStarted=false;startMusic()},11000);
 }
 
-startMusic(); document.addEventListener("pointerdown",()=>{if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();if(!musicStarted)startMusic()}); document.addEventListener("keydown",()=>{if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();if(!musicStarted)startMusic()}); start.addEventListener("click",enter);document.addEventListener("keydown",e=>{if(e.key==="Enter"&&start.classList.contains("ready"))enter()});const typed=document.getElementById("typed");let typedText="";document.addEventListener("keydown",ev=>{if(ev.key.length===1&&typedText.length<32){typedText+=ev.key;typed.textContent=typedText}else if(ev.key==="Backspace"){typedText=typedText.slice(0,-1);typed.textContent=typedText}});addEventListener("resize",resize);
-resize();startTime=performance.now();raf=requestAnimationFrame(drawScene);
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&!startTime)beginIntro();else if(e.key==="Enter"&&start.classList.contains("ready"))enter()});const typed=document.getElementById("typed");let typedText="";document.addEventListener("keydown",ev=>{if(ev.key.length===1&&typedText.length<32){typedText+=ev.key;typed.textContent=typedText}else if(ev.key==="Backspace"){typedText=typedText.slice(0,-1);typed.textContent=typedText}});addEventListener("resize",resize);
+resize();startTime=0;function beginIntro(){if(startTime)return;start.disabled=true;start.classList.remove("ready");start.style.opacity="0";start.style.visibility="hidden";startMusic();if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();startTime=performance.now();raf=requestAnimationFrame(drawScene)}start.addEventListener("click",beginIntro);
 </script>
 </body>
 </html>
