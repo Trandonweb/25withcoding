@@ -6,17 +6,15 @@
 <meta name="theme-color" content="#020403">
 <title>코딩과 함께라면 — Intro</title>
 <style>
-:root{--bg:#020403;--green:#27ae60;--white:#f4f7f5}
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020403;color:var(--white);font-family:"Segoe UI","Noto Sans KR",system-ui,sans-serif}
-#intro{position:fixed;inset:0;background:#020403;overflow:hidden}
+:root{--bg:#020304;--green:#27ae60;--white:#f7fbf9}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020304;color:var(--white);font-family:"Segoe UI","Noto Sans KR",system-ui,sans-serif}
+#intro{position:fixed;inset:0;background:#020304;overflow:hidden}
 #scene{position:absolute;inset:0;width:100%;height:100%}
-.vignette{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.2) 62%,rgba(0,0,0,.9) 100%)}
-.flash{position:absolute;inset:-20%;z-index:5;background:#fff;opacity:0;pointer-events:none}
-#logoWrap{position:absolute;z-index:6;left:50%;top:50%;width:min(560px,78vw);transform:translate(-50%,-50%) scale(.72);opacity:0;filter:blur(18px) brightness(.7);text-align:center;pointer-events:none}
+.vignette{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.18) 65%,rgba(0,0,0,.88) 100%)}
+.flash{position:absolute;inset:0;z-index:5;background:#fff;opacity:0;pointer-events:none}
+#logoWrap{position:absolute;z-index:6;left:50%;top:50%;width:min(560px,78vw);transform:translate(-50%,-50%) scale(.78);opacity:0;filter:blur(15px) brightness(.7);text-align:center;pointer-events:none}
 #logo{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
-.fallback{font-weight:800;font-size:clamp(30px,7vw,70px);letter-spacing:.08em;white-space:nowrap}
-.sub{margin-top:14px;font-size:11px;letter-spacing:.55em;color:rgba(255,255,255,.55)}
+.fallback{font-weight:800;font-size:clamp(30px,7vw,70px);letter-spacing:.08em;white-space:nowrap}.sub{margin-top:14px;font-size:11px;letter-spacing:.55em;color:rgba(255,255,255,.55)}
 #caption{position:absolute;z-index:7;left:50%;top:calc(50% + min(25vw,190px));transform:translateX(-50%);font-size:9px;letter-spacing:.42em;color:rgba(255,255,255,.32);opacity:0;white-space:nowrap}
 #start{position:absolute;z-index:10;left:50%;bottom:6vh;transform:translate(-50%,14px);opacity:0;visibility:hidden;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:12px 23px;background:rgba(255,255,255,.035);backdrop-filter:blur(12px);color:rgba(255,255,255,.8);cursor:pointer;transition:.7s}
 #start.ready{opacity:1;visibility:visible;transform:translate(-50%,0);animation:pulse 2.4s infinite}
@@ -25,11 +23,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020403;col
 #blackout.active{opacity:1}
 #intro.leave{opacity:0;visibility:hidden;transition:opacity .8s}
 #main{position:fixed;inset:0;display:grid;place-items:center;background:#080a09;opacity:0;visibility:hidden;transition:.8s}
-#main.visible{opacity:1;visibility:visible}
-.placeholder{padding:30px;text-align:center;border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(255,255,255,.025)}
-@keyframes logoIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.72);filter:blur(18px) brightness(.7)}60%{opacity:1;filter:blur(0) brightness(1.45)}100%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0) brightness(1)}}
-@keyframes captionIn{to{opacity:1}}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(39,174,96,0)}50%{box-shadow:0 0 30px rgba(39,174,96,.1)}}
+#main.visible{opacity:1;visibility:visible}.placeholder{padding:30px;text-align:center;border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(255,255,255,.025)}
+@keyframes logoIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.78);filter:blur(15px) brightness(.7)}55%{opacity:1;filter:blur(0) brightness(1.55)}100%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0) brightness(1)}}
+@keyframes captionIn{to{opacity:1}}@keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(39,174,96,0)}50%{box-shadow:0 0 30px rgba(39,174,96,.1)}}
 @media(prefers-reduced-motion:reduce){#logoWrap{animation:none!important;opacity:1!important;transform:translate(-50%,-50%)!important;filter:none!important}.flash{display:none}}
 </style>
 </head>
@@ -49,82 +45,89 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020403;col
 <main id="main"><div class="placeholder"><h1>MAIN SCENE</h1><p>실제 작품에서는 인트로 후 다음 페이지로 이동합니다.</p></div></main>
 <script>
 const intro=document.getElementById("intro"),canvas=document.getElementById("scene"),ctx=canvas.getContext("2d"),logoWrap=document.getElementById("logoWrap"),logo=document.getElementById("logo"),caption=document.getElementById("caption"),start=document.getElementById("start"),blackout=document.getElementById("blackout"),main=document.getElementById("main"),flash=document.querySelector(".flash");
-let W=innerWidth,H=innerHeight,dpr=1,raf,startTime=0,done=false,paths=[];
-const rand=(a,b)=>a+Math.random()*(b-a);
-function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+"px";canvas.style.height=H+"px";ctx.setTransform(dpr,0,0,dpr,0,0);makePaths()}
-function makePaths(){
-paths=[];
-const count=Math.max(13,Math.min(25,Math.floor(W/42)));
-for(let i=0;i<count;i++){
- const side=rand(0,1)>0.5?-1:1;
- paths.push({x:rand(-W*.15,W*1.15),y:rand(-H*.15,H*1.15),z:rand(.15,1),speed:rand(.002,.005)*side,width:rand(.7,2.2),phase:rand(0,6.28),len:rand(.55,1.35)});
-}}
-function pointOnPath(p,t){
- const horizon=.48;
- const depth=(p.z+t*p.speed)%1;
- const z=depth<0?depth+1:depth;
- const perspective=.04+z*z*1.5;
- const cx=W/2+Math.sin(p.phase+t*.00045)*W*.12;
- const cy=H*horizon;
- const x=cx+(p.x-W/2)*perspective;
- const y=cy+(p.y-H*horizon)*perspective;
- return{x,y,z};
+let W=innerWidth,H=innerHeight,dpr=1,raf,startTime=0,done=false;
+const lights=[
+ {color:[70,220,255],x:.10,y:.28,angle:.08,size:1.0},
+ {color:[100,115,255],x:.82,y:.34,angle:2.85,size:.82},
+ {color:[190,90,255],x:.22,y:.70,angle:-.14,size:.72},
+ {color:[65,255,205],x:.77,y:.68,angle:3.20,size:.58}
+];
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+"px";canvas.style.height=H+"px";ctx.setTransform(dpr,0,0,dpr,0,0)}
+function glowLine(x1,y1,x2,y2,color,width,alpha){
+ const g=ctx.createLinearGradient(x1,y1,x2,y2);
+ g.addColorStop(0,"rgba("+color[0]+","+color[1]+","+color[2]+",0)");
+ g.addColorStop(.35,"rgba("+color[0]+","+color[1]+","+color[2]+","+alpha+")");
+ g.addColorStop(.7,"rgba("+color[0]+","+color[1]+","+color[2]+","+alpha+")");
+ g.addColorStop(1,"rgba("+color[0]+","+color[1]+","+color[2]+",0)");
+ ctx.save();ctx.lineCap="round";ctx.strokeStyle=g;ctx.lineWidth=width;ctx.shadowBlur=24;ctx.shadowColor="rgba("+color[0]+","+color[1]+","+color[2]+","+alpha+")";ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore()
 }
-function line(p,t){
- const a=pointOnPath(p,t), oldz=Math.max(.02,a.z-p.len*.24);
- const q={...p,z:oldz};const b=pointOnPath(q,t);
- return[a,b];
-}
-function drawGlowLine(a,b,w,alpha){
- ctx.save();ctx.lineCap="round";ctx.shadowBlur=18;ctx.shadowColor="rgba(39,174,96,"+alpha+")";ctx.strokeStyle="rgba(80,255,151,"+alpha+")";ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();
-}
-function render(t){
- const elapsed=t-startTime;
- ctx.clearRect(0,0,W,H);
- ctx.fillStyle="#020403";ctx.fillRect(0,0,W,H);
- const progress=Math.min(1,elapsed/7600);
- const speedBoost=1+Math.max(0,progress-.28)*4.5;
+function drawScene(t){
+ const e=t-startTime,p=Math.min(1,e/7200);
+ ctx.fillStyle="#020304";ctx.fillRect(0,0,W,H);
  ctx.globalCompositeOperation="lighter";
- for(const p of paths){
-   const old=p.speed;p.speed=old*speedBoost;
-   const [a,b]=line(p,t);
-   const alpha=.12+.62*Math.pow(a.z,2);
-   drawGlowLine(a,b,p.width*(.45+a.z*2.4),alpha);
-   p.speed=old;
+ // 초반: 화면 가까이 있는 '하나의 선'
+ const first=Math.min(1,e/1800);
+ const sx=-W*.12+first*W*.32, sy=H*.62-first*H*.10;
+ const ex=W*.42+first*W*.18, ey=H*.60-first*H*.16;
+ glowLine(sx,sy,ex,ey,[65,220,255],1.4+first*1.8,.5+.2*first);
+ // 선의 끝에 카메라가 접근
+ const cx=W*(.5+.05*Math.sin(e*.0005)),cy=H*(.50+.035*Math.cos(e*.0006));
+ ctx.beginPath();ctx.arc(cx,cy,3+first*4,0,Math.PI*2);ctx.fillStyle="rgba(180,250,255,.8)";ctx.shadowBlur=28;ctx.shadowColor="rgba(70,220,255,.9)";ctx.fill();
+ // 중반: 멀리 있는 빛 구조물이 하나씩 등장
+ if(e>1500){
+   const q=Math.min(1,(e-1500)/3000);
+   for(let i=0;i<lights.length;i++){
+     const l=lights[i], delay=i*.34, a=Math.max(0,Math.min(1,(q-delay)*2.2));
+     if(!a)continue;
+     const drift=Math.sin(e*.00025+i*1.7)*18;
+     const x=W*l.x+drift,y=H*l.y+Math.cos(e*.00023+i)*14;
+     const len=(70+90*l.size)*a;
+     glowLine(x-len*Math.cos(l.angle),y-len*Math.sin(l.angle),x+len*.25*Math.cos(l.angle),y+len*.25*Math.sin(l.angle),l.color,.8+1.4*l.size,a*.52);
+     ctx.beginPath();ctx.arc(x,y,2.2+3*l.size,0,Math.PI*2);ctx.fillStyle="rgba("+l.color[0]+","+l.color[1]+","+l.color[2]+","+a*.75+")";ctx.shadowBlur=25;ctx.shadowColor="rgba("+l.color[0]+","+l.color[1]+","+l.color[2]+",.8)";ctx.fill();
+   }
  }
- // 중심을 향해 빠르게 스쳐가는 짧은 빛
- const streaks=Math.floor(10+progress*18);
- for(let i=0;i<streaks;i++){
-   const ang=i*2.399+(t*.00015);
-   const dist=rand(70,Math.max(120,W*.75))*Math.pow(1-progress*.55,1);
-   const x=W/2+Math.cos(ang)*dist,y=H/2+Math.sin(ang)*dist*.7;
-   const len=25+progress*180;
-   const x2=W/2+Math.cos(ang)*(dist+len),y2=H/2+Math.sin(ang)*(dist+len)*.7;
-   drawGlowLine({x,y},{x:x2,y:y2},.6+progress*1.8,.08+progress*.14);
+ // 후반: 빛들이 화면 가장자리로 흘러가고 중앙만 깨끗하게 남음
+ if(e>4000){
+   const q=Math.min(1,(e-4000)/2600),ease=q*q;
+   const beams=[
+     [[-.05,.25],[.34,.43],[70,220,255]],
+     [[1.05,.28],[.67,.45],[110,120,255]],
+     [[.08,1.05],[.40,.66],[190,90,255]],
+     [[.94,1.04],[.61,.65],[65,255,205]]
+   ];
+   for(const b of beams){
+     const a=b[0],c=b[1],col=b[2];
+     glowLine(W*(a[0]+(c[0]-a[0])*ease),H*(a[1]+(c[1]-a[1])*ease),W*(c[0]+(a[0]-c[0])*.18*ease),H*(c[1]+(a[1]-c[1])*.18*ease),col,.7+2.8*ease,.18+.22*ease);
+   }
+ }
+ // 5.6~7.2초: 모든 빛이 중앙으로 수렴
+ if(e>5500){
+   const q=Math.min(1,(e-5500)/1700),ease=q*q*(3-2*q);
+   const cols=[[70,220,255],[110,120,255],[190,90,255],[65,255,205]];
+   for(let i=0;i<4;i++){
+     const ang=i*Math.PI/2+.4, r=Math.max(15,W*.42*(1-ease));
+     const x1=cx+Math.cos(ang)*r,y1=cy+Math.sin(ang)*r*.65;
+     const x2=cx+Math.cos(ang)*Math.max(0,r*.12),y2=cy+Math.sin(ang)*Math.max(0,r*.12)*.65;
+     glowLine(x1,y1,x2,y2,cols[i],1+3*ease,.18+.35*ease);
+   }
+   ctx.beginPath();ctx.arc(cx,cy,10+24*ease,0,Math.PI*2);ctx.fillStyle="rgba(245,255,255,"+(.06+.28*ease)+")";ctx.shadowBlur=60;ctx.shadowColor="rgba(170,240,255,.8)";ctx.fill();
  }
  ctx.globalCompositeOperation="source-over";
- if(elapsed<1500){ctx.fillStyle="rgba(2,4,3,"+Math.max(0,1-elapsed/1500)+")";ctx.fillRect(0,0,W,H)}
- if(elapsed>6100&&!done){done=true;revealLogo()}
- if(elapsed<9000)raf=requestAnimationFrame(render);
+ if(e<1300){ctx.fillStyle="rgba(2,3,4,"+Math.max(0,1-e/1300)+")";ctx.fillRect(0,0,W,H)}
+ if(e>6500&&!done){done=true;revealLogo()}
+ if(e<8500)raf=requestAnimationFrame(drawScene);
 }
 function revealLogo(){
- flash.animate([{opacity:0},{opacity:.92},{opacity:0}],{duration:500,easing:"cubic-bezier(.2,.8,.2,1)"});
+ flash.animate([{opacity:0},{opacity:.88},{opacity:0}],{duration:430,easing:"cubic-bezier(.2,.8,.2,1)"});
  logoWrap.style.animation="logoIn 1.05s cubic-bezier(.16,1,.3,1) forwards";
- caption.style.animation="captionIn .9s .75s forwards";
- setTimeout(()=>start.classList.add("ready"),1750);
+ caption.style.animation="captionIn .9s .7s forwards";
+ setTimeout(()=>start.classList.add("ready"),1850);
 }
 logo.onerror=()=>{logo.style.display="none";logo.nextElementSibling.style.display="block"};
-function startIntro(){resize();startTime=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(render)}
 function nextUrl(){const n=new URLSearchParams(location.search).get("next");if(!n)return null;try{const u=new URL(n,location.origin);return u.origin===location.origin?u.pathname+u.search+u.hash:null}catch{return null}}
-async function enter(){
- start.disabled=true;start.classList.remove("ready");blackout.classList.add("active");await new Promise(r=>setTimeout(r,620));
- const n=nextUrl();if(n){location.href=n;return}
- intro.classList.add("leave");main.classList.add("visible");cancelAnimationFrame(raf);
-}
-start.addEventListener("click",enter);
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&start.classList.contains("ready"))enter()});
-addEventListener("resize",resize);
-startIntro();
+async function enter(){start.disabled=true;start.classList.remove("ready");blackout.classList.add("active");await new Promise(r=>setTimeout(r,620));const n=nextUrl();if(n){location.href=n;return}intro.classList.add("leave");main.classList.add("visible");cancelAnimationFrame(raf)}
+start.addEventListener("click",enter);document.addEventListener("keydown",e=>{if(e.key==="Enter"&&start.classList.contains("ready"))enter()});addEventListener("resize",resize);
+resize();startTime=performance.now();raf=requestAnimationFrame(drawScene);
 </script>
 </body>
 </html>
