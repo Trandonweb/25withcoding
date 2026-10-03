@@ -241,7 +241,7 @@ function startMusic(){
  musicTimer=setTimeout(()=>{musicStarted=false;startMusic()},11000);
 }
 
-document.addEventListener("pointerdown",startMusic,{once:true});start.addEventListener("click",enter);document.addEventListener("keydown",e=>{if(e.key==="Enter"&&start.classList.contains("ready"))enter()});const typed=document.getElementById("typed");let typedText="";document.addEventListener("keydown",ev=>{if(ev.key.length===1&&typedText.length<32){typedText+=ev.key;typed.textContent=typedText}else if(ev.key==="Backspace"){typedText=typedText.slice(0,-1);typed.textContent=typedText}});addEventListener("resize",resize);
+startMusic(); document.addEventListener("pointerdown",()=>{if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();if(!musicStarted)startMusic()}); document.addEventListener("keydown",()=>{if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();if(!musicStarted)startMusic()}); start.addEventListener("click",enter);document.addEventListener("keydown",e=>{if(e.key==="Enter"&&start.classList.contains("ready"))enter()});const typed=document.getElementById("typed");let typedText="";document.addEventListener("keydown",ev=>{if(ev.key.length===1&&typedText.length<32){typedText+=ev.key;typed.textContent=typedText}else if(ev.key==="Backspace"){typedText=typedText.slice(0,-1);typed.textContent=typedText}});addEventListener("resize",resize);
 resize();startTime=performance.now();raf=requestAnimationFrame(drawScene);
 </script>
 </body>
