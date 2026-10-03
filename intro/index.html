@@ -32,13 +32,13 @@
 <body>
 <section id="intro" aria-label="코딩과 함께라면 인트로">
 <canvas id="scene" aria-hidden="true"></canvas>
-<div class="vignette"></div><div class="codePanel" id="codePanel">const world = await coding();<br>light.create();<br>scene.enter();<br><span class="cursor"></span></div><div class="keyPanel" id="keyPanel">KEYBOARD INPUT<br>&gt; <span id="typed"></span><span class="cursor"></span></div>
+<div class="vignette"></div><div class="codePanel" id="codePanel">const world = await coding();<br>light.create();<br>scene.enter();<br><span class="cursor"></span></div><div class="keyPanel" id="keyPanel">KEYBOARD INPUT<br><span style="opacity:.55">user@coby:~$</span> <span id="typed"></span><span class="cursor"></span></div>
 <div class="flash"></div>
 <div id="logoWrap">
 <img id="logo" src="../logo_dark_mode_remove_bg.png" alt="코딩과 함께라면 로고">
 <div class="fallback" style="display:none">코딩과 함께라면<div class="sub">WITH CODING</div></div>
 </div>
-<div id="caption">WELCOME TO THE WORLD</div>
+<div id="caption">ENTER THE WORLD OF CODING</div>
 <button id="start" type="button">클릭하여 시작하기</button>
 <div id="blackout"></div>
 </section>
@@ -66,11 +66,21 @@ function drawScene(t){
  ctx.fillStyle="#020304";ctx.fillRect(0,0,W,H);
  ctx.globalCompositeOperation="lighter";
  const cx=W*(.5+.035*Math.sin(e*.00042)),cy=H*(.5+.028*Math.cos(e*.00055));
- // 0~1.6s: 가까운 하나의 빛이 화면을 가르며 등장
+ // 0~1.6s: 아주 가까운 빛이 카메라 앞에서 깨어난다.
  const first=Math.min(1,e/1600);
- const sx=-W*.18+first*W*.28,sy=H*.70-first*H*.16;
- const ex=W*.34+first*W*.22,ey=H*.63-first*H*.18;
- glowLine(sx,sy,ex,ey,[65,220,255],1.5+first*2.2,.48+.22*first);
+ const pulse=Math.sin(first*Math.PI);
+ const nearR=Math.min(W,H)*(.035+.055*first);
+ const nearG=ctx.createRadialGradient(W*.5,H*.52,0,W*.5,H*.52,nearR*4.5);
+ nearG.addColorStop(0,"rgba(190,250,255,"+(.10+.12*pulse)+")");
+ nearG.addColorStop(.18,"rgba(65,220,255,"+(.07+.08*pulse)+")");
+ nearG.addColorStop(1,"rgba(65,220,255,0)");
+ ctx.fillStyle=nearG;ctx.beginPath();ctx.arc(W*.5,H*.52,nearR*4.5,0,Math.PI*2);ctx.fill();
+ if(first>.22){
+   const q=Math.min(1,(first-.22)/.78);
+   const edge=W*(.05+.10*q);
+   glowLine(W*.5-edge,H*.52-edge*.18,W*.5-edge*.34,H*.52-edge*.06,[65,220,255],1.1+1.1*q,.16+.16*q);
+   glowLine(W*.5+edge,H*.52+edge*.18,W*.5+edge*.34,H*.52+edge*.06,[65,220,255],1.1+1.1*q,.16+.16*q);
+ }
  // 0.7~3.8s: 카메라가 지나가는 작은 빛의 구조물들
  const structures=[
   [.08,.25,.18,.10,[65,220,255],1.0],
@@ -80,8 +90,8 @@ function drawScene(t){
   [.48,.12,.14,.06,[90,160,255],.62],
   [.57,.88,-.12,.05,[175,105,255],.58]
  ];
- if(e>650){
-   const q=Math.min(1,(e-650)/3000);
+ if(e>520){
+   const q=Math.min(1,(e-520)/3000);
    for(let i=0;i<structures.length;i++){
      const s=structures[i],delay=i*.16,a=Math.max(0,Math.min(1,(q-delay)*2.0));
      if(!a)continue;
