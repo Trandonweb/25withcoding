@@ -116,7 +116,7 @@ async function connectStudent(id,d){
  try{
   const ref=doc(db,"users",id);
   const pc=new RTCPeerConnection(rtcConfig);
-  const s={pc,sessionId:sid,candidates:new Set(),unsubscribe:null,statsTimer:null,stream:null,receiving:false};
+  const s={pc,sessionId:sid,candidates:new Set(),remoteClientCandidates:new Set(),unsubscribe:null,statsTimer:null,stream:null,receiving:false};
   sessions.set(id,s);
   setCardStatus(id,"connecting","연결 중");
 
@@ -162,10 +162,11 @@ async function connectStudent(id,d){
   s.unsubscribe=onSnapshot(ref,async snap=>{
    const x=snap.data();
    if(!x||!x.online||x.sessionId!==sid)return;
-   if(!Array.isArray(x.adminCandidates)||!pc.currentRemoteDescription)return;
-   for(const q of x.adminCandidates){
-    const key=JSON.stringify(q);if(s.candidates.has(key))continue;
-    try{await pc.addIceCandidate(new RTCIceCandidate(q));s.candidates.add(key)}catch(e){console.warn("[ADMIN] candidate",e)}
+   if(!pc.currentRemoteDescription)return;
+   const remoteCandidates = Array.isArray(x.clientCandidates) ? x.clientCandidates : [];
+   for(const q of remoteCandidates){
+    const key=JSON.stringify(q);if(s.remoteClientCandidates.has(key))continue;
+    try{await pc.addIceCandidate(new RTCIceCandidate(q));s.remoteClientCandidates.add(key)}catch(e){console.warn("[ADMIN] candidate",e)}
    }
   });
   s.statsTimer=setInterval(()=>verifyInbound(id),3000);
