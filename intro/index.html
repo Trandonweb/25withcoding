@@ -1,234 +1,27 @@
 <!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#020403">
-<title>코딩과 함께라면 — Intro</title>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#020403"><title>코딩과 함께라면 — 빛의 여정</title>
 <style>
-:root{--bg:#020304;--green:#27ae60;--white:#f7fbf9}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020304;color:var(--white);font-family:"Segoe UI","Noto Sans KR",system-ui,sans-serif}
-#intro{position:fixed;inset:0;background:#020304;overflow:hidden}
-#scene{position:absolute;inset:0;width:100%;height:100%}
-.vignette{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.18) 65%,rgba(0,0,0,.88) 100%)}
-.flash{position:absolute;inset:0;z-index:5;background:#fff;opacity:0;pointer-events:none}
-#logoWrap{position:absolute;z-index:6;left:50%;top:50%;width:min(560px,78vw);transform:translate(-50%,-50%) scale(.78);opacity:0;filter:blur(15px) brightness(.7);text-align:center;pointer-events:none}
-#logo{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
-.fallback{font-weight:800;font-size:clamp(30px,7vw,70px);letter-spacing:.08em;white-space:nowrap}.sub{margin-top:14px;font-size:11px;letter-spacing:.55em;color:rgba(255,255,255,.55)}
-#caption{position:absolute;z-index:7;left:50%;top:calc(50% + min(25vw,190px));transform:translateX(-50%);font-size:9px;letter-spacing:.42em;color:rgba(255,255,255,.32);opacity:0;white-space:nowrap}
-#start{position:absolute;z-index:10;left:50%;top:50%;width:86px;height:86px;transform:translate(-50%,-50%);opacity:1;visibility:visible;border:1px solid rgba(255,255,255,.25);border-radius:50%;padding:0;background:rgba(255,255,255,.055);backdrop-filter:blur(12px);color:#fff;cursor:pointer;transition:.5s;display:grid;place-items:center;font-size:0;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:12px 23px;background:rgba(255,255,255,.035);backdrop-filter:blur(12px);color:rgba(255,255,255,.8);cursor:pointer;transition:.7s}
-#start.ready{animation:pulse 2.4s infinite}
-#start:hover{border-color:rgba(100,220,255,.65);background:rgba(100,220,255,.08);transform:translate(-50%,-50%) scale(1.06)}#start::after{content:"";width:0;height:0;border-top:13px solid transparent;border-bottom:13px solid transparent;border-left:19px solid rgba(255,255,255,.88);margin-left:5px}
-#blackout{position:absolute;inset:0;z-index:20;background:#000;opacity:0;pointer-events:none;transition:opacity .65s}
-#blackout.active{opacity:1}
-#intro.leave{opacity:0;visibility:hidden;transition:opacity .8s}
-#main{position:fixed;inset:0;display:grid;place-items:center;background:#080a09;opacity:0;visibility:hidden;transition:.8s}
-#main.visible{opacity:1;visibility:visible}.placeholder{padding:30px;text-align:center;border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(255,255,255,.025)}
-@keyframes logoIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.78);filter:blur(15px) brightness(.7)}55%{opacity:1;filter:blur(0) brightness(1.55)}100%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0) brightness(1)}}
-@keyframes captionIn{to{opacity:1}}@keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(39,174,96,0)}50%{box-shadow:0 0 30px rgba(39,174,96,.1)}}
-@media(prefers-reduced-motion:reduce){#logoWrap{animation:none!important;opacity:1!important;transform:translate(-50%,-50%)!important;filter:none!important}.flash{display:none}}
-.codePanel,.keyPanel{position:absolute;z-index:4;opacity:0;pointer-events:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em}.codePanel{left:6%;top:13%;width:min(330px,40vw);padding:13px 15px;border:1px solid rgba(80,210,255,.18);background:rgba(3,8,12,.24);box-shadow:0 0 28px rgba(60,180,255,.06),inset 0 0 20px rgba(80,170,255,.025);color:rgba(160,230,255,.72);font-size:11px;line-height:1.6}.keyPanel{right:6%;bottom:13%;width:min(255px,34vw);height:82px;padding:11px 13px;border:1px solid rgba(185,110,255,.18);background:rgba(10,5,18,.23);box-shadow:0 0 30px rgba(150,80,255,.06);color:rgba(220,185,255,.68);font-size:10px;line-height:1.55}.cursor{display:inline-block;width:6px;height:11px;background:currentColor;vertical-align:-2px;animation:blink .7s steps(1) infinite}@keyframes blink{50%{opacity:0}}</style>
-</head>
-<body>
-<section id="intro" aria-label="코딩과 함께라면 인트로">
-<canvas id="scene" aria-hidden="true"></canvas>
-<div class="vignette"></div><div class="codePanel" id="codePanel">const world = await coding();<br>light.create();<br>scene.enter();<br><span class="cursor"></span></div><div class="keyPanel" id="keyPanel">KEYBOARD INPUT<br><span style="opacity:.55">user@coby:~$</span> <span id="typed"></span><span class="cursor"></span></div>
-<div class="flash"></div>
-<div id="logoWrap">
-<img id="logo" src="../logo_dark_mode_remove_bg.png" alt="코딩과 함께라면 로고">
-<div class="fallback" style="display:none">코딩과 함께라면<div class="sub">WITH CODING</div></div>
-</div>
-<div id="caption">ENTER THE WORLD OF CODING</div>
-<button id="start" type="button" aria-label="재생하기"></button>
-<div id="blackout"></div>
-</section>
-<main id="main"><div class="placeholder"><h1>MAIN SCENE</h1><p>실제 작품에서는 인트로 후 다음 페이지로 이동합니다.</p></div></main>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020403;color:#f4fff9;font-family:"Segoe UI","Noto Sans KR",system-ui,sans-serif}#intro,#scene{position:fixed;inset:0;width:100%;height:100%}#scene{display:block}.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 22%,rgba(0,0,0,.86) 100%)}#startScreen{position:fixed;inset:0;display:grid;place-items:center;text-align:center;background:radial-gradient(ellipse at center,rgba(6,24,17,.2),#020403 80%);transition:opacity 1s}#startScreen.hide{opacity:0;pointer-events:none}.eyebrow{font-size:10px;letter-spacing:.42em;color:#78e8a8;margin-bottom:24px}h1{font-size:clamp(22px,4vw,36px);font-weight:400;letter-spacing:.12em;margin:0 0 14px}.hint{font-size:12px;color:#81988b;letter-spacing:.1em;margin-bottom:32px}button{font:inherit;cursor:pointer}#start,#continue{border:1px solid rgba(105,255,176,.45);border-radius:999px;background:rgba(105,255,176,.035);color:#dffff0;padding:13px 26px;font-size:11px;letter-spacing:.2em}#start:hover,#continue:hover{background:rgba(105,255,176,.12)}#logoReveal{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(10,42,27,.18),transparent 65%);opacity:0;visibility:hidden;transition:opacity 1.5s}#logoReveal.show{opacity:1;visibility:visible}#logo{width:min(560px,80vw);max-height:54vh;object-fit:contain;filter:brightness(1.25) drop-shadow(0 0 9px #69ffb0) drop-shadow(0 0 30px rgba(52,255,151,.4));transform:scale(.94);transition:transform 1.4s,opacity 1.2s;opacity:0}#logoReveal.show #logo{opacity:1;transform:scale(1)}#fallback{display:none;font-size:clamp(30px,7vw,68px);font-weight:800;color:#a7ffd0;text-shadow:0 0 8px #39ff9a,0 0 32px #39ff9a}#caption{margin-top:28px;font-size:10px;letter-spacing:.42em;color:#8aa995;opacity:0;transition:opacity 1s .8s}#logoReveal.show #caption{opacity:1}#continue{margin-top:38px;opacity:0;transition:opacity .8s 1.2s}#logoReveal.show #continue{opacity:1}#flash{position:fixed;inset:0;background:#eafff2;opacity:0;pointer-events:none}#skip{position:fixed;right:22px;bottom:20px;border:0;background:none;color:rgba(225,255,239,.45);font-size:10px;letter-spacing:.15em;padding:10px}#skip.hide{opacity:0;pointer-events:none}@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+</style></head><body>
+<main id="intro"><canvas id="scene"></canvas><div class="vignette"></div>
+<div id="startScreen"><div><div class="eyebrow">25 WITH CODING</div><h1>아직 보이지 않는 길</h1><div class="hint">빛을 따라, 앞으로.</div><button id="start">여정 시작하기</button></div></div>
+<div id="logoReveal"><img id="logo" src="../logo_dark_mode_remove_bg.png" alt="코딩과 함께라면 로고"><div id="fallback">코딩과 함께라면</div><div id="caption">SINCE 2025</div><button id="continue">계속하기 ↗</button></div><div id="flash"></div><button id="skip">건너뛰기</button></main>
 <script>
-const intro=document.getElementById("intro"),canvas=document.getElementById("scene"),ctx=canvas.getContext("2d"),logoWrap=document.getElementById("logoWrap"),logo=document.getElementById("logo"),caption=document.getElementById("caption"),start=document.getElementById("start"),blackout=document.getElementById("blackout"),main=document.getElementById("main"),flash=document.querySelector(".flash");
-let W=innerWidth,H=innerHeight,dpr=1,raf,startTime=0,done=false;
-const lights=[
- {color:[70,220,255],x:.10,y:.28,angle:.08,size:1.0},
- {color:[100,115,255],x:.82,y:.34,angle:2.85,size:.82},
- {color:[190,90,255],x:.22,y:.70,angle:-.14,size:.72},
- {color:[65,255,205],x:.77,y:.68,angle:3.20,size:.58}
-];
-function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+"px";canvas.style.height=H+"px";ctx.setTransform(dpr,0,0,dpr,0,0)}
-function glowLine(x1,y1,x2,y2,color,width,alpha){
- const g=ctx.createLinearGradient(x1,y1,x2,y2);
- g.addColorStop(0,"rgba("+color[0]+","+color[1]+","+color[2]+",0)");
- g.addColorStop(.35,"rgba("+color[0]+","+color[1]+","+color[2]+","+alpha+")");
- g.addColorStop(.7,"rgba("+color[0]+","+color[1]+","+color[2]+","+alpha+")");
- g.addColorStop(1,"rgba("+color[0]+","+color[1]+","+color[2]+",0)");
- ctx.save();ctx.lineCap="round";ctx.strokeStyle=g;ctx.lineWidth=width;ctx.shadowBlur=24;ctx.shadowColor="rgba("+color[0]+","+color[1]+","+color[2]+","+alpha+")";ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore()
-}
-function drawScene(t){
- const e=t-startTime;
- ctx.fillStyle="#020304";ctx.fillRect(0,0,W,H);
- ctx.globalCompositeOperation="lighter";
- const cx=W*(.5+.035*Math.sin(e*.00042)),cy=H*(.5+.028*Math.cos(e*.00055));
- // 0~1.6s: 아주 가까운 빛이 카메라 앞에서 깨어난다.
- const first=Math.min(1,e/1600);
- const pulse=Math.sin(first*Math.PI);
- const nearR=Math.min(W,H)*(.035+.055*first);
- const nearG=ctx.createRadialGradient(W*.5,H*.52,0,W*.5,H*.52,nearR*4.5);
- nearG.addColorStop(0,"rgba(190,250,255,"+(.10+.12*pulse)+")");
- nearG.addColorStop(.18,"rgba(65,220,255,"+(.07+.08*pulse)+")");
- nearG.addColorStop(1,"rgba(65,220,255,0)");
- ctx.fillStyle=nearG;ctx.beginPath();ctx.arc(W*.5,H*.52,nearR*4.5,0,Math.PI*2);ctx.fill();
- if(first>.22){
-   const q=Math.min(1,(first-.22)/.78);
-   const edge=W*(.05+.10*q);
-   glowLine(W*.5-edge,H*.52-edge*.18,W*.5-edge*.34,H*.52-edge*.06,[65,220,255],1.1+1.1*q,.16+.16*q);
-   glowLine(W*.5+edge,H*.52+edge*.18,W*.5+edge*.34,H*.52+edge*.06,[65,220,255],1.1+1.1*q,.16+.16*q);
- }
- // 0.7~3.8s: 카메라가 지나가는 작은 빛의 구조물들
- const structures=[
-  [.08,.25,.18,.10,[65,220,255],1.0],
-  [.88,.22,-.16,.13,[105,125,255],.85],
-  [.18,.76,.20,-.10,[190,90,255],.75],
-  [.83,.72,-.20,-.08,[65,255,205],.72],
-  [.48,.12,.14,.06,[90,160,255],.62],
-  [.57,.88,-.12,.05,[175,105,255],.58]
- ];
- if(e>520){
-   const q=Math.min(1,(e-520)/3000);
-   for(let i=0;i<structures.length;i++){
-     const s=structures[i],delay=i*.16,a=Math.max(0,Math.min(1,(q-delay)*2.0));
-     if(!a)continue;
-     const pulse=1+.12*Math.sin(e*.003+i);
-     const x=W*(s[0]+Math.sin(e*.00034+i*1.7)*.018),y=H*(s[1]+Math.cos(e*.00031+i)*.018);
-     const len=(48+70*s[5])*a*pulse;
-     glowLine(x-len*s[2],y-len*s[3],x+len*.52*s[2],y+len*.52*s[3],s[4],.75+1.25*s[5],a*.58);
-     ctx.beginPath();ctx.arc(x,y,1.8+3*s[5],0,Math.PI*2);
-     ctx.fillStyle="rgba("+s[4][0]+","+s[4][1]+","+s[4][2]+","+a*.78+")";
-     ctx.shadowBlur=22;ctx.shadowColor="rgba("+s[4][0]+","+s[4][1]+","+s[4][2]+",.8)";ctx.fill();
-   }
- }
- // 1.8~4.8s: 웅장함을 만드는 깊은 공간 프레임 — 많지만 길지 않게
- if(e>1800){
-   const q=Math.min(1,(e-1800)/3000);
-   const frames=[
-    {x:.12,y:.40,w:.18,h:.22,c:[55,205,255],d:.0},
-    {x:.86,y:.43,w:.20,h:.24,c:[105,110,255],d:.6},
-    {x:.25,y:.18,w:.15,h:.14,c:[180,90,255],d:1.1},
-    {x:.74,y:.80,w:.16,h:.13,c:[65,240,205],d:1.7}
-   ];
-   for(const f of frames){
-     const a=Math.max(0,Math.min(1,(q-f.d*.12)*1.8));
-     if(!a)continue;
-     const drift=Math.sin(e*.0003+f.d)*22;
-     const x=W*f.x+drift,y=H*f.y;
-     const w=W*f.w*a,h=H*f.h*a;
-     glowLine(x-w/2,y-h/2,x+w/2,y-h/2,f.c,1.18, a*.34);
-     glowLine(x+w/2,y-h/2,x+w/2,y+h/2,f.c,1.18,a*.30);
-     glowLine(x+w/2,y+h/2,x-w/2,y+h/2,f.c,1.18,a*.27);
-     glowLine(x-w/2,y+h/2,x-w/2,y-h/2,f.c,1.0,a*.30);
-   }
- }
- // 3.0~5.5s: 카메라가 구조물을 통과하는 순간, 짧은 주변 광선
- if(e>3000){
-   const q=Math.min(1,(e-3000)/2500),speed=q*q;
-   const cols=[[70,220,255],[105,120,255],[190,90,255],[65,255,205]];
-   for(let i=0;i<10;i++){
-     const ang=i*Math.PI*.2+.32;
-     const side=(i%2?1:-1),r1=W*(.20+.035*i)*speed;
-     const r2=r1+W*(.055+.018*Math.sin(i+e*.001));
-     const x1=cx+Math.cos(ang)*r1,y1=cy+Math.sin(ang)*r1*.62;
-     const x2=cx+Math.cos(ang)*r2,y2=cy+Math.sin(ang)*r2*.62;
-     glowLine(x1,y1,x2,y2,cols[i%4],.55+speed*.9,.10+speed*.16);
-   }
- }
- // 4.8~6.6s: 장면이 열리면서 모든 색이 중앙으로 연결
- if(e>4800){
-   const q=Math.min(1,(e-4800)/1800),ease=q*q*(3-2*q);
-   const beams=[
-    [[-.05,.24],[.40,.45],[70,220,255]],
-    [[1.05,.24],[.60,.45],[105,120,255]],
-    [[.08,1.06],[.42,.64],[190,90,255]],
-    [[.94,1.05],[.58,.64],[65,255,205]]
-   ];
-   for(const b of beams){
-     const a=b[0],c=b[1],col=b[2];
-     const ax=a[0]+(c[0]-a[0])*ease,ay=a[1]+(c[1]-a[1])*ease;
-     glowLine(W*ax,H*ay,W*(c[0]+(a[0]-c[0])*.12*ease),H*(c[1]+(a[1]-c[1])*.12*ease),col,.8+2.5*ease,.17+.24*ease);
-   }
- }
- // 6.0~7.7s: 중앙 수렴
- if(e>6000){
-   const q=Math.min(1,(e-6000)/1700),ease=q*q*(3-2*q);
-   const cols=[[70,220,255],[105,120,255],[190,90,255],[65,255,205]];
-   for(let i=0;i<4;i++){
-     const ang=i*Math.PI/2+.4,r=Math.max(12,W*.46*(1-ease));
-     glowLine(cx+Math.cos(ang)*r,cy+Math.sin(ang)*r*.65,cx+Math.cos(ang)*r*.10,cy+Math.sin(ang)*r*.065,cols[i],1.1+3.1*ease,.20+.32*ease);
-   }
-   ctx.beginPath();ctx.arc(cx,cy,8+28*ease,0,Math.PI*2);
-   ctx.fillStyle="rgba(245,255,255,"+(.05+.31*ease)+")";ctx.shadowBlur=70;ctx.shadowColor="rgba(170,240,255,.9)";ctx.fill();
- }
- ctx.globalCompositeOperation="source-over";
- // 깊이감을 위한 아주 약한 중앙 비네트
- const vg=ctx.createRadialGradient(cx,cy,Math.min(W,H)*.08,cx,cy,Math.max(W,H)*.75);
- vg.addColorStop(0,"rgba(255,255,255,.018)");vg.addColorStop(1,"rgba(0,0,0,.20)");
- ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
- if(e<1150){ctx.fillStyle="rgba(2,3,4,"+Math.max(0,1-e/1150)+")";ctx.fillRect(0,0,W,H)}
- if(e>7600&&!done){done=true;revealLogo()}
- if(e<12000)raf=requestAnimationFrame(drawScene);
-}
-function revealLogo(){
- const codePanel=document.getElementById("codePanel"),keyPanel=document.getElementById("keyPanel");
- codePanel.animate([{opacity:0,transform:"translateY(10px)"},{opacity:.78,transform:"translateY(0)"}],{duration:700,fill:"forwards"});
- keyPanel.animate([{opacity:0,transform:"translateY(10px)"},{opacity:.68,transform:"translateY(0)"}],{duration:700,delay:350,fill:"forwards"});
- flash.animate([{opacity:0},{opacity:.88},{opacity:0}],{duration:500,easing:"cubic-bezier(.2,.8,.2,1)"});
- logoWrap.style.animation="logoIn 1.05s cubic-bezier(.16,1,.3,1) forwards";
- caption.style.animation="captionIn .9s .7s forwards";
- 
-}
-logo.onerror=()=>{logo.style.display="none";logo.nextElementSibling.style.display="block"};
-function nextUrl(){const n=new URLSearchParams(location.search).get("next");if(!n)return null;try{const u=new URL(n,location.origin);return u.origin===location.origin?u.pathname+u.search+u.hash:null}catch{return null}}
-async function enter(){start.disabled=true;start.classList.remove("ready");blackout.classList.add("active");await new Promise(r=>setTimeout(r,620));const n=nextUrl();if(n){location.href=n;return}intro.classList.add("leave");main.classList.add("visible");cancelAnimationFrame(raf)}
-
-// ── Original cinematic soundtrack ─────────────────────────────
-let audioCtx=null,musicStarted=false,musicGain=null;
-function note(freq,when,dur,type="sine",gain=.028){
- if(!audioCtx)return;
- const o=audioCtx.createOscillator(),g=audioCtx.createGain(),f=audioCtx.createBiquadFilter();
- o.type=type;o.frequency.setValueAtTime(freq,when);
- f.type="lowpass";f.frequency.setValueAtTime(1400,when);f.Q.value=.35;
- g.gain.setValueAtTime(.0001,when);
- g.gain.exponentialRampToValueAtTime(gain,when+.08);
- g.gain.exponentialRampToValueAtTime(.0001,when+dur);
- o.connect(f);f.connect(g);g.connect(musicGain);o.start(when);o.stop(when+dur+.05);
-}
-function riser(when,dur=1.7){
- if(!audioCtx)return;
- const o=audioCtx.createOscillator(),g=audioCtx.createGain(),f=audioCtx.createBiquadFilter();
- o.type="sine";o.frequency.setValueAtTime(55,when);o.frequency.exponentialRampToValueAtTime(440,when+dur);
- f.type="lowpass";f.frequency.setValueAtTime(700,when);f.frequency.linearRampToValueAtTime(2400,when+dur);
- g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(.026,when+dur*.65);g.gain.exponentialRampToValueAtTime(.0001,when+dur);
- o.connect(f);f.connect(g);g.connect(musicGain);o.start(when);o.stop(when+dur+.05);
-}
-function startMusic(){
- if(musicStarted)return;
- musicStarted=true;
- audioCtx=new(window.AudioContext||window.webkitAudioContext)();
- audioCtx.resume();
- musicGain=audioCtx.createGain();musicGain.gain.value=.58;musicGain.connect(audioCtx.destination);
- const t=audioCtx.currentTime+.05;
- // Sparse cinematic harmony: low D → Bb → F → C, no repetitive arpeggio.
- [[50,53,57],[46,50,53],[41,45,48],[48,52,55]].forEach((ch,i)=>{
-   const at=t+i*2.0;
-   ch.forEach((n,j)=>note(440*Math.pow(2,(n-69)/12),at,2.25,"sine",.018-j*.002));
- });
- // A few deliberate high notes, synchronized with the visual opening.
- [74,77,81,79,84].forEach((n,i)=>note(440*Math.pow(2,(n-69)/12),t+1.15+i*.78,.62,"triangle",.016));
- riser(t+3.7,1.55);
- riser(t+5.45,1.35);
- // Logo reveal: one clean suspended chord.
- [62,69,74,81].forEach(n=>note(440*Math.pow(2,(n-69)/12),t+6.75,2.8,"sine",.026));
- // Soft final tail.
- [81,77,74].forEach((n,i)=>note(440*Math.pow(2,(n-69)/12),t+8.2+i*.55,1.0,"sine",.014));
-}
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&!startTime)beginIntro();else if(e.key==="Enter"&&start.classList.contains("ready"))enter()});const typed=document.getElementById("typed");let typedText="";document.addEventListener("keydown",ev=>{if(ev.key.length===1&&typedText.length<32){typedText+=ev.key;typed.textContent=typedText}else if(ev.key==="Backspace"){typedText=typedText.slice(0,-1);typed.textContent=typedText}});addEventListener("resize",resize);
-resize();startTime=0;function beginIntro(){if(startTime)return;start.disabled=true;start.classList.remove("ready");start.style.opacity="0";start.style.visibility="hidden";start.style.pointerEvents="none";startMusic();if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();startTime=performance.now();raf=requestAnimationFrame(drawScene)}start.addEventListener("click",beginIntro);
-</script>
-</body>
-</html>
+(function(){
+const c=document.getElementById("scene"),x=c.getContext("2d"),startScreen=document.getElementById("startScreen"),start=document.getElementById("start"),reveal=document.getElementById("logoReveal"),logo=document.getElementById("logo"),fallback=document.getElementById("fallback"),flash=document.getElementById("flash"),skip=document.getElementById("skip");
+let W=innerWidth,H=innerHeight,dpr=1,began=0,raf=0,finished=false,trail=[],sampleAt=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>t*t*(3-2*t);
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*dpr;c.height=H*dpr;c.style.width=W+"px";c.style.height=H+"px";x.setTransform(dpr,0,0,dpr,0,0);if(!began)idle()}
+function idle(){x.fillStyle="#020403";x.fillRect(0,0,W,H);const g=x.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.min(W,H)*.18);g.addColorStop(0,"rgba(105,255,176,.05)");g.addColorStop(1,"rgba(105,255,176,0)");x.fillStyle=g;x.fillRect(0,0,W,H);x.strokeStyle="#69ffb0";x.shadowColor="#69ffb0";x.shadowBlur=14;x.beginPath();x.moveTo(W/2,H*.53);x.lineTo(W/2,H*.525);x.stroke()}
+function position(t){return{x:W*(.5+.26*Math.sin(t*1.12)+.105*Math.sin(t*2.31+.4)),y:H*(.5+.24*Math.sin(t*.78+1.05)+.085*Math.sin(t*1.93))}}
+function stroke(points,alpha,width){if(points.length<2)return;x.save();x.globalAlpha=alpha;x.lineCap="round";x.lineJoin="round";x.beginPath();x.moveTo(points[0].x,points[0].y);for(let i=1;i<points.length;i++)x.lineTo(points[i].x,points[i].y);x.strokeStyle="#69ffb0";x.lineWidth=width;x.shadowColor="rgba(75,255,165,.95)";x.shadowBlur=20;x.stroke();x.shadowBlur=4;x.strokeStyle="rgba(230,255,240,.95)";x.lineWidth=.55;x.stroke();x.restore()}
+function draw(elapsed){x.fillStyle="#020403";x.fillRect(0,0,W,H);const sec=elapsed/1000,p=position(sec*.8);if(elapsed-sampleAt>20){trail.push({x:p.x,y:p.y});sampleAt=elapsed}if(trail.length>900)trail.shift();const points=trail.map((v,i)=>{const depth=trail.length<2?0:i/(trail.length-1),s=.12+.88*Math.pow(1-depth,1.55);return{x:W/2+(v.x-W/2)*s*1.65,y:H*.52+(v.y-H*.52)*s*1.5}});stroke(points,.9,1.5);const tip=points[points.length-1]||{x:W/2,y:H/2},r=Math.min(W,H)*.09,g=x.createRadialGradient(tip.x,tip.y,0,tip.x,tip.y,r);g.addColorStop(0,"rgba(220,255,237,.32)");g.addColorStop(.14,"rgba(105,255,176,.2)");g.addColorStop(1,"rgba(105,255,176,0)");x.fillStyle=g;x.beginPath();x.arc(tip.x,tip.y,r,0,Math.PI*2);x.fill();const edge=x.createRadialGradient(W/2,H/2,Math.min(W,H)*.12,W/2,H/2,Math.max(W,H)*.75);edge.addColorStop(0,"rgba(0,0,0,0)");edge.addColorStop(1,"rgba(0,0,0,.68)");x.fillStyle=edge;x.fillRect(0,0,W,H);
+if(elapsed>6900){const q=ease(clamp((elapsed-6900)/1900,0,1));x.fillStyle="rgba(2,4,3,"+(q*.18)+")";x.fillRect(0,0,W,H);x.save();x.globalAlpha=.14+.76*q;x.strokeStyle="#69ffb0";x.shadowColor="#69ffb0";x.shadowBlur=22;x.lineWidth=1.2;x.beginPath();for(let i=0;i<=180;i++){const a=i/180*Math.PI*2,rr=Math.min(W,H)*(.02+.48*q)*(1+.12*Math.sin(a*3+sec)*q+.06*Math.sin(a*7)),xx=W/2+Math.cos(a)*rr,yy=H/2+Math.sin(a)*rr*.52;if(i===0)x.moveTo(xx,yy);else x.lineTo(xx,yy)}x.stroke();x.restore();if(q>.72&&!finished){finished=true;showLogo();return}}
+raf=requestAnimationFrame(tick)}
+function tick(now){if(began&&!finished)draw(now-began)}
+function showLogo(){cancelAnimationFrame(raf);flash.animate([{opacity:0},{opacity:.8},{opacity:0}],{duration:700,easing:"ease-out"});setTimeout(()=>reveal.classList.add("show"),250);skip.classList.add("hide")}
+function begin(){if(began)return;began=performance.now();startScreen.classList.add("hide");if(matchMedia("(prefers-reduced-motion: reduce)").matches){for(let i=0;i<180;i++)trail.push(position(i/180*7));finished=true;showLogo();return}raf=requestAnimationFrame(tick)}
+function skipToLogo(){if(!began)began=performance.now();finished=true;cancelAnimationFrame(raf);x.fillStyle="#020403";x.fillRect(0,0,W,H);startScreen.classList.add("hide");reveal.classList.add("show");skip.classList.add("hide")}
+start.addEventListener("click",begin);skip.addEventListener("click",skipToLogo);logo.addEventListener("error",()=>{logo.style.display="none";fallback.style.display="block"});document.getElementById("continue").addEventListener("click",()=>{const next=new URLSearchParams(location.search).get("next");if(next){try{const u=new URL(next,location.origin);if(u.origin===location.origin)location.href=u.pathname+u.search+u.hash}catch(e){}}});addEventListener("resize",resize);addEventListener("keydown",e=>{if(e.key==="Enter"&&!began)begin();if(e.key==="Escape"&&began&&!finished)skipToLogo()});resize();
+})();
+</script></body></html>
