@@ -160,7 +160,6 @@ function showEnd(){
   $("startScreen").classList.add("hide"); $("skip").classList.add("hide");
   $("logo").style.opacity=1; $("since").style.opacity=1;
   if(glReady){ renderer.setClearColor(0,1); renderer.clear(); }
-  if(reduce) $("replay").style.display="none";
 }
 
 /* ---------- WebGL 준비 ---------- */
@@ -399,7 +398,6 @@ function begin(){
   cancelAnimationFrame(raf); resize(); resetAll();
   state="run"; running=true; last=performance.now();
   $("startScreen").classList.add("hide"); $("skip").classList.remove("hide");
-  $("actions").classList.remove("on");
   renderer.setClearColor(0,1); renderer.clear();
   raf=requestAnimationFrame(frame);
 }
