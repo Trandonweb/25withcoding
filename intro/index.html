@@ -166,14 +166,16 @@ fadeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),fadeMat));
 /* ---------- 단 하나의 경로 (미리 계산하되 지나간 부분만 그린다) ---------- */
 const STEP=.22, S_END=190, TRAIL0=1.5, NS=Math.ceil((S_END+25)/STEP)+2;
 const P=[];
-/* 3차원 롤러코스터형 궤적: 멀리서 보면 분명한 ∞, 이동 중에는 좌우 회전과 고저차가 느껴진다. */
+/* 실제 ∞ 궤적: 수평면에서 lemniscate를 따라가며, 깊이 방향으로 밀어버리지 않는다.
+   그래야 전체 경로를 멀리서 봤을 때 일자가 아니라 좌우 두 고리의 무한대가 보인다. */
 (()=>{
   for(let i=0;i<NS;i++){
     const s=i*STEP, u=Math.min(s/S_END,1), a=u*Math.PI*4.0;
     const den=1+Math.cos(a)*Math.cos(a);
-    const x=18*Math.sin(a)/den;
-    const z=-s*.38 + 18*Math.sin(a)*Math.cos(a)/den;
-    const y=5.5*Math.sin(a*.5)+2.4*Math.sin(a*1.5+.35);
+    const x=20*Math.sin(a)/den;
+    const z=13*Math.sin(a)*Math.cos(a)/den;
+    // 고도 변화는 작고 매끄럽게: 경로 모양을 망가뜨리지 않으면서 3D임을 느끼게 한다.
+    const y=1.25*Math.sin(a*2.0)+.35*Math.sin(a*3.0+.25);
     P.push(new V3(x,y,z));
   }
 })();
@@ -267,12 +269,12 @@ function runCamera(dt,snap){
   // turns are communicated by the world/track moving sideways above it, not by rolling the camera.
   posAt(camS+4.2,tmp).sub(cpos).normalize();
   look.lerp(tmp,snap?1:1-Math.exp(-dt*5)).normalize();
-  const zoomPulse=1.0 + .22*Math.sin(camS*.055) + .10*Math.sin(camS*.14);
+  const zoomPulse=1.0 + .28*Math.sin(camS*.075) + .12*Math.sin(camS*.19);
   camera.up.set(0,1,0);
-  camera.position.copy(cpos).add(new V3(0,2.1*zoomPulse,0));
+  camera.position.copy(cpos).add(new V3(0,2.65*zoomPulse,0));
   const target=camera.position.clone().addScaledVector(look,12);
-  target.y += .35;
-  camera.fov=baseFov + 4*Math.sin(camS*.045); camera.updateProjectionMatrix();
+  target.y += .85;
+  camera.fov=baseFov + 5*Math.sin(camS*.06); camera.updateProjectionMatrix();
   camera.lookAt(target);
 }
 
