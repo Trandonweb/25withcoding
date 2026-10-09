@@ -94,10 +94,23 @@ function extractEdges(cv){
 }
 async function prepareLogo(){
   const img = $("logo");
-  await new Promise((resolve,reject)=>{
-    if(img.complete && img.naturalWidth) return resolve();
-    img.onload=resolve; img.onerror=reject;
+  const loaded = await new Promise(resolve=>{
+    if(img.complete && img.naturalWidth) return resolve(true);
+    img.onload=()=>resolve(true);
+    img.onerror=()=>resolve(false);
   });
+  if(!loaded || !img.naturalWidth){
+    // logo.png를 아직 추가하지 않았어도 시작 화면이 멈추지 않도록 임시 윤곽만 준비한다.
+    const edges=[];
+    for(let i=0;i<500;i++){
+      const t=i/500, side=Math.floor(t*4), q=(t*4)%1;
+      if(side===0) edges.push([-.48+q*.96,-.46]);
+      else if(side===1) edges.push([.48,-.46+q*.92]);
+      else if(side===2) edges.push([.48-q*.96,.46]);
+      else edges.push([-.48,-.46+q*.92]);
+    }
+    return {aspect:2.06,edges};
+  }
   const LW=img.naturalWidth, LH=img.naturalHeight;
   const cv=document.createElement("canvas");
   cv.width=LW; cv.height=LH;
