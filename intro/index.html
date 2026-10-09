@@ -264,20 +264,15 @@ const qEnd=new THREE.Quaternion(),mt=new THREE.Matrix4(),dirBase=new V3(.3,.3,1)
 function overviewPos(a,o){return o.copy(dirBase).applyAxisAngle(new V3(0,1,0),a).multiplyScalar(ov.dist).add(ov.c);}
 
 function runCamera(dt,snap){
+  // 1인칭 카메라: 경로 위에서 진행 방향을 직접 바라본다.
   posAt(camS,cpos);
-  // Keep the horizon upright. The track stays in the lower part of the view;
-  // turns are communicated by the world/track moving sideways above it, not by rolling the camera.
-  posAt(camS+4.2,tmp).sub(cpos).normalize();
-  look.lerp(tmp,snap?1:1-Math.exp(-dt*5)).normalize();
-  const zoomPulse=1.0 + .28*Math.sin(camS*.075) + .12*Math.sin(camS*.19);
+  posAt(camS+4.2,tmp);
   camera.up.set(0,1,0);
-  camera.position.copy(cpos).add(new V3(0,2.65*zoomPulse,0));
-  const target=camera.position.clone().addScaledVector(look,12);
-  target.y += .85;
-  camera.fov=baseFov + 5*Math.sin(camS*.06); camera.updateProjectionMatrix();
-  camera.lookAt(target);
+  camera.position.copy(cpos);
+  camera.lookAt(tmp);
+  camera.fov=baseFov;
+  camera.updateProjectionMatrix();
 }
-
 function prepOverview(){
   const bb=new THREE.Box3(); for(let i=i0;i<=i1;i+=4)bb.expandByPoint(P[i]);
   bb.getCenter(ov.c); let r=0; for(let i=i0;i<=i1;i+=4)r=Math.max(r,P[i].distanceTo(ov.c));
