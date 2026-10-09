@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>코딩과 함께라면</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#bfffe6;
+    font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+  canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000}
+  #flash{position:fixed;inset:0;background:#d8fff0;opacity:0;pointer-events:none}
+  .fade{transition:opacity .9s ease}
+  .hide{opacity:0;pointer-events:none}
+  #startScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
+  button,a.btn{font:inherit;color:#9dffd4;background:transparent;border:1px solid rgba(80,255,180,.55);
+    padding:.8em 2.2em;border-radius:2px;letter-spacing:.3em;text-decoration:none;cursor:pointer;
+    transition:background .25s,border-color .25s}
+  button:hover,a.btn:hover{background:rgba(80,255,180,.12);border-color:#5dffb8}
+  button:focus-visible,a.btn:focus-visible{outline:2px solid #19e6ff;outline-offset:3px}
+  button:disabled{opacity:.3;cursor:default}
+  #skip{position:fixed;top:max(18px,env(safe-area-inset-top));right:max(18px,env(safe-area-inset-right));
+    padding:.5em 1.2em;font-size:13px;letter-spacing:.15em;border-color:rgba(80,255,180,.25);color:rgba(157,255,212,.6)}
+  #end{position:fixed;inset:0;pointer-events:none}
+  #logo{position:absolute;opacity:0;mix-blend-mode:screen;display:block;height:auto}
+  #since{position:absolute;left:0;right:0;text-align:center;font-size:13px;letter-spacing:.6em;
+    padding-left:.6em;color:rgba(157,255,212,.75);opacity:0}
+  #actions{position:absolute;left:0;right:0;bottom:max(9vh,env(safe-area-inset-bottom));display:flex;
+    gap:14px;justify-content:center;flex-wrap:wrap;opacity:0;transition:opacity .9s}
+  #actions.on{opacity:1;pointer-events:auto}
+  #actions>*{pointer-events:auto}
+  #err{position:fixed;left:0;right:0;bottom:3vh;text-align:center;font-size:12px;color:rgba(157,255,212,.4)}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="flash"></div>
+
+<div id="startScreen" class="fade"><button id="startBtn" disabled>START</button></div>
+<button id="skip" class="hide fade">건너뛰기</button>
+
+<div id="end">
+  <canvas id="logo" aria-label="코딩과 함께라면" role="img"></canvas>
+  <div id="since">SINCE 2025</div>
+  <div id="actions">
+    <a class="btn" id="home" href="../">홈페이지로</a>
+    <button id="replay">다시 보기</button>
+  </div>
+</div>
+<div id="err"></div>
+
+<script>
+/* ============ 설정 (저장소 확인 후 필요 시 수정) ============ */
+const HOME_URL = "../";                // ← 실제 홈페이지 경로로 교체
+const THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+/* ============================================================ */
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(async () => {
+const $ = id => document.getElementById(id);
+const clamp = (x,a=0,b=1) => Math.min(b,Math.max(a,x));
+const sm  = (a,b,x) => { x = clamp((x-a)/(b-a)); return x*x*(3-2*x); };
+const eio = x => x<.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
+const eis = x => -(Math.cos(Math.PI*x)-1)/2;
+const HUE=`vec3 hue(float k){
+  // 로고의 네온 색 순서: 초록 → 노랑 → 민트 → 빨강 → 보라 → 분홍 → 민트
+  vec3 c0=vec3(.20,1.00,.18), c1=vec3(1.00,.91,.08), c2=vec3(.15,.95,.88);
+  vec3 c3=vec3(1.00,.12,.16), c4=vec3(.66,.18,1.00), c5=vec3(1.00,.25,.70), c6=vec3(.20,.95,.88);
+  float x=clamp(k,0.,.9999)*6.;
+  float i=floor(x), f=fract(x);
+  f=f*f*(3.-2.*f);
+  if(i<1.) return mix(c0,c1,f);
+  if(i<2.) return mix(c1,c2,f);
+  if(i<3.) return mix(c2,c3,f);
+  if(i<4.) return mix(c3,c4,f);
+  if(i<5.) return mix(c4,c5,f);
+  return mix(c5,c6,f);
+}`;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+$("home").href = HOME_URL;
+
+/* ---------- 로고 로드 + 윤곽점 추출 ---------- */
+const C = 3600;                       // 수렴에 쓰이는 점 개수
+let logo;
+
+function extractEdges(cv){
+  const w=cv.width,h=cv.height, d=cv.getContext("2d").getImageData(0,0,w,h).data;
+  let transparent=false;
+  for(let i=3;i<d.length;i+=4) if(d[i]<250){transparent=true;break;}
+  const m=new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++){
+    const r=d[i*4],g=d[i*4+1],b=d[i*4+2],a=d[i*4+3];
+    m[i]=transparent ? (a>60) : (Math.max(r,g,b)>100);
+  }
+  const e=[];
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+    const i=y*w+x;
+    if(m[i] && (!m[i-1]||!m[i+1]||!m[i-w]||!m[i+w])) e.push([x/w-.5,y/h-.5]);
+  }
+  return e;
+}
+const LW=643, LH=311;                                   // 로고 설계 좌표계
+const TILES=[
+  ["코",20,18,"#45ff4a"],["딩",154,18,"#ffe81a"],["과",288,18,"#2ff3e6"],
+  ["함",97,165,"#ff2d2d"],["께",231,165,"#a43bff"],["라",365,165,"#ff4fc0"],["면",499,165,"#2ff3e6"]];
+const TW=120, TH=124, TR=28;
+const lighten=(h,k)=>{const n=parseInt(h.slice(1),16);
+  const c=[n>>16,(n>>8)&255,n&255].map(v=>Math.round(v+(255-v)*k));return `rgb(${c})`;};
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+// glow=false: 윤곽 추출용 마스크 / glow=true: 실제 네온 표시용
+function neon(g,col,lw,glow,draw){
+  if(!glow){g.strokeStyle="#fff";g.lineWidth=lw*.6;draw();return;}
+  g.save();g.strokeStyle=col;g.lineWidth=lw;g.shadowColor=col;g.shadowBlur=20;draw();g.shadowBlur=7;draw();g.restore();
+  g.strokeStyle=lighten(col,.6);g.lineWidth=lw*.34;draw();
+}
+function drawLogo(g,glow){
+  g.lineJoin="round";g.lineCap="round";g.textAlign="center";g.textBaseline="middle";
+  for(const [ch,x,y,c] of TILES){
+    neon(g,c,6,glow,()=>{rr(g,x,y,TW,TH,TR);g.stroke();});
+    g.font='bold 74px Jua,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+    neon(g,c,5,glow,()=>g.strokeText(ch,x+TW/2,y+TH/2+5));
+  }
+  // 타일 사이의 작은 화살 표시
+  for(const i of [0,1,3,4,5]){
+    const [, x,y,c]=TILES[i], ax=x+TW+3, ay=y+TH/2;
+    neon(g,c,4,glow,()=>{g.beginPath();g.moveTo(ax-5,ay-9);g.lineTo(ax+6,ay);g.lineTo(ax-5,ay+9);g.stroke();});
+  }
+  g.font='bold 33px "Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+  g.fillStyle="#fff";
+  if(glow){g.save();g.shadowColor="#fff";g.shadowBlur=14;}
+  g.fillText("WITH",505,80);g.fillText("CODING",505,118);
+  if(glow)g.restore();
+}
+async function prepareLogo(){
+  try{await Promise.race([document.fonts.load('bold 74px Jua','코딩과함께라면'),new Promise(r=>setTimeout(r,1500))]);}catch(_){}
+  const mk=(k)=>{const cv=document.createElement("canvas");cv.width=LW*k;cv.height=LH*k;
+    const g=cv.getContext("2d");g.scale(k,k);return [cv,g];};
+  const [mask,gm]=mk(1); drawLogo(gm,false);
+  // 최종 로고도 이미지 파일이 아니라 실제 canvas에 코드로 직접 그린다.
+  const view=$("logo");
+  view.width=LW*2; view.height=LH*2;
+  const gv=view.getContext("2d");
+  gv.scale(2,2); drawLogo(gv,true);
+  return {aspect:LW/LH,edges:extractEdges(mask)};
+}
+logo = await prepareLogo();
+
+/* ---------- 화면 배치 (로고 사각형) ---------- */
+const rect = {cx:0,cy:0,w:0,h:0};
+function layoutLogo(){
+  const vw=innerWidth, vh=innerHeight;
+  const w=Math.min(vw*.78,760,vh*.34*logo.aspect), h=w/logo.aspect;
+  rect.w=w;rect.h=h;rect.cx=vw/2;rect.cy=vh*.44;
+  const L=$("logo");
+  L.style.width=w+"px";L.style.height=h+"px";
+  L.style.left=(rect.cx-w/2)+"px";L.style.top=(rect.cy-h/2)+"px";
+  $("since").style.top=(rect.cy+h/2+Math.max(22,vh*.04))+"px";
+}
+layoutLogo();
+
+/* ---------- 종료 화면 ---------- */
+let state="idle", raf=0, running=false;
+function showEnd(){
+  running=false; cancelAnimationFrame(raf); state="end";
+  $("flash").style.opacity=0;
+  $("startScreen").classList.add("hide"); $("skip").classList.add("hide");
+  $("logo").style.opacity=1; $("since").style.opacity=1; $("actions").classList.add("on");
+  if(glReady){ renderer.setClearColor(0,1); renderer.clear(); }
+  if(reduce) $("replay").style.display="none";
+}
+
+/* ---------- WebGL 준비 ---------- */
+let glReady=false, renderer;
+if(typeof THREE==="undefined"){
+  $("err").textContent="애니메이션을 불러오지 못해 결과 화면만 표시합니다.";
+  showEnd(); return;
+}
+if(reduce){ showEnd(); return; }
+try{
+  renderer=new THREE.WebGLRenderer({canvas:$("gl"),antialias:true,preserveDrawingBuffer:true});
+  glReady=true;
+}catch(_){ $("err").textContent="WebGL을 사용할 수 없어 결과 화면만 표시합니다."; showEnd(); return; }
+renderer.autoClear=false; renderer.setClearColor(0x000000,1);
+
+const V3=THREE.Vector3, scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(58,1,.05,2000);
+const fadeScene=new THREE.Scene(), fadeCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const fadeMat=new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:1,depthTest:false,depthWrite:false});
+fadeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),fadeMat));
+
+/* ---------- 단 하나의 경로 (미리 계산하되 지나간 부분만 그린다) ---------- */
+const STEP=.25, S_END=370, TRAIL0=28, NS=Math.ceil((S_END+30)/STEP)+2;
+const P=[];
+(()=>{ let p=new V3(),yaw=0,pitch=0;
+  for(let i=0;i<NS;i++){
+    P.push(p.clone());
+    const s=i*STEP, ramp=sm(45,90,s);
+    yaw+=ramp*(.12*Math.sin(s*.05+1)+.07*Math.sin(s*.13+2))*STEP;
+    pitch+=(ramp*(.4*Math.sin(s*.06+.5)+.22*Math.sin(s*.14))-pitch)*.16*STEP;
+    const cp=Math.cos(pitch);
+    p.x+=Math.sin(yaw)*cp*STEP; p.y+=Math.sin(pitch)*STEP; p.z-=Math.cos(yaw)*cp*STEP;
+  }})();
+const posAt=(s,o)=>{const f=clamp(s/STEP,0,NS-1.001),i=f|0;return o.copy(P[i]).lerp(P[i+1],f-i);};
+
+/* ---------- 궤적(빛줄기) 메쉬 ---------- */
+const i0=Math.round(TRAIL0/STEP), i1=Math.round(S_END/STEP), R=i1-i0+1, RAD=.018;
+const tPos=new Float32Array(R*12), tOff=new Float32Array(R*12), tIdx=new Float32Array(R*4), tInd=new Uint16Array((R-1)*24);
+{ const n=new V3(0,1,0),T=new V3(),B=new V3(),o=new V3();
+  for(let r=0;r<R;r++){
+    const i=i0+r; T.subVectors(P[i+1],P[i-1]).normalize();
+    n.addScaledVector(T,-n.dot(T)).normalize(); B.crossVectors(T,n);
+    for(let j=0;j<4;j++){
+      const a=j*Math.PI/2, k=r*4+j;
+      o.copy(n).multiplyScalar(Math.cos(a)).addScaledVector(B,Math.sin(a)).multiplyScalar(RAD);
+      tPos.set([P[i].x,P[i].y,P[i].z],k*3); tOff.set([o.x,o.y,o.z],k*3); tIdx[k]=r*STEP;
+    }}
+  for(let r=0;r<R-1;r++)for(let j=0;j<4;j++){
+    const a=r*4+j,b=r*4+(j+1)%4,c=(r+1)*4+j,d=(r+1)*4+(j+1)%4,q=(r*4+j)*6;
+    tInd.set([a,c,b,b,c,d],q);
+  }}
+const tg=new THREE.BufferGeometry();
+tg.setAttribute("position",new THREE.BufferAttribute(tPos,3));
+tg.setAttribute("aOff",new THREE.BufferAttribute(tOff,3));
+tg.setAttribute("aIdx",new THREE.BufferAttribute(tIdx,1));
+tg.setIndex(new THREE.BufferAttribute(tInd,1));
+tg.setDrawRange(0,0);
+const tubeU={uHead:{value:0},uThick:{value:1},uLit:{value:0},uOpacity:{value:1},uTotal:{value:S_END-TRAIL0}};
+const tube=new THREE.Mesh(tg,new THREE.ShaderMaterial({
+  uniforms:tubeU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  vertexShader:`${HUE}attribute vec3 aOff;attribute float aIdx;
+    uniform float uHead,uThick,uLit,uOpacity,uTotal;varying float vB;varying vec3 vC;
+    void main(){
+      vec4 mv=modelViewMatrix*vec4(position+aOff*uThick,1.);
+      float age=max(uHead-aIdx,0.);
+      float b=mix(.22+.78*exp(-age*.03),.8,uLit);
+      vB=b*smoothstep(.5,2.,-mv.z)*uOpacity;
+      vec3 railColor=hue(aIdx/uTotal);
+      vC=mix(railColor,vec3(.88,1.,.96),exp(-age*1.5));
+      gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`varying float vB;varying vec3 vC;void main(){gl_FragColor=vec4(vC*vB,1.);}`}));
+tube.frustumCulled=false; scene.add(tube);
+
+/* ---------- 빛의 머리(헤드) ---------- */
+const hg=new THREE.BufferGeometry(); hg.setAttribute("position",new THREE.BufferAttribute(new Float32Array(3),3));
+const headU={uK:{value:0},uI:{value:0},uPx:{value:600},uSize:{value:.25}};
+const head=new THREE.Points(hg,new THREE.ShaderMaterial({
+  uniforms:headU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  vertexShader:`uniform float uPx,uSize;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);
+    gl_PointSize=clamp(uSize*uPx/max(-mv.z,.1),2.,90.);gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${HUE}uniform float uI,uK;void main(){float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;
+    vec3 c=vec3(.92,1.,.97)*exp(-r*r*20.)+hue(uK)*exp(-r*r*4.5)*.3;gl_FragColor=vec4(c*uI,1.);}`}));
+head.frustumCulled=false; scene.add(head);
+
+/* ---------- 수렴용 점 (궤적 위에서 출발 → 로고 윤곽) ---------- */
+const cPos=new Float32Array(C*3), cK=new Float32Array(C), sPos=new Float32Array(C*3), tPosL=new Float32Array(C*3), dly=new Float32Array(C);
+for(let i=0;i<C;i++){cK[i]=i/C;dly[i]=Math.random()*.3;}
+const cg=new THREE.BufferGeometry();
+cg.setAttribute("position",new THREE.BufferAttribute(cPos,3)); cg.setAttribute("aK",new THREE.BufferAttribute(cK,1));
+const ptsU={uO:{value:0},uPx:{value:2}};
+const pts=new THREE.Points(cg,new THREE.ShaderMaterial({
+  uniforms:ptsU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  vertexShader:`${HUE}attribute float aK;uniform float uPx;varying vec3 vC;
+    void main(){vC=hue(aK);gl_PointSize=uPx;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader:`uniform float uO;varying vec3 vC;void main(){float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;
+    gl_FragColor=vec4(vC*uO*(1.-r*r*.6),1.);}`}));
+pts.frustumCulled=false; pts.visible=false; scene.add(pts);
+
+/* ---------- 리사이즈 ---------- */
+let baseFov=58;
+function resize(){
+  const w=innerWidth,h=innerHeight,dpr=Math.min(devicePixelRatio||1,innerWidth<700?1.75:2);
+  renderer.setPixelRatio(dpr); renderer.setSize(w,h,false);
+  camera.aspect=w/h; baseFov=w/h<1?74:58; if(ph<3||!running){camera.fov=baseFov;} camera.updateProjectionMatrix();
+  ptsU.uPx.value=Math.max(1.6,1.7*dpr);
+  layoutLogo();
+}
+
+/* ---------- 상태 ---------- */
+let ph=1,t1=0,t2=0,t3=0,t4=0,headS=TRAIL0,camS=0,speedN=0,roll=0,last=0;
+const look=new V3(),cpos=new V3(),tmp=new V3(),tmp2=new V3(),upv=new V3();
+const ov={c:new V3(),dist:1,a0:.5,startPos:new V3(),startQ:new THREE.Quaternion(),startFov:58,thick:1};
+const qEnd=new THREE.Quaternion(),mt=new THREE.Matrix4(),dirBase=new V3(.3,.3,1).normalize();
+
+function overviewPos(a,o){return o.copy(dirBase).applyAxisAngle(new V3(0,1,0),a).multiplyScalar(ov.dist).add(ov.c);}
+
+function runCamera(dt,snap){
+  posAt(camS,cpos); posAt(camS+7,tmp).sub(cpos).normalize();
+  look.lerp(tmp,snap?1:1-Math.exp(-dt*7)).normalize();
+  posAt(camS+2,tmp).sub(posAt(camS,tmp2)).normalize();
+  const a=tmp.clone(); posAt(camS+16,tmp).sub(posAt(camS+8,tmp2)).normalize();
+  const turn=a.cross(tmp).y;                       // 우회전이면 음수
+  roll+=(clamp(-turn*.6,-.45,.45)-roll)*(snap?1:1-Math.exp(-dt*3));
+  upv.set(0,1,0).applyAxisAngle(look,roll);
+  camera.up.copy(upv);
+  camera.position.copy(cpos).addScaledVector(upv,-.4); // 빛줄기 살짝 위에서 따라가는 시점
+  camera.lookAt(tmp.copy(camera.position).addScaledVector(look,10));
+}
+
+function prepOverview(){
+  const bb=new THREE.Box3(); for(let i=i0;i<=i1;i+=4)bb.expandByPoint(P[i]);
+  bb.getCenter(ov.c); let r=0; for(let i=i0;i<=i1;i+=4)r=Math.max(r,P[i].distanceTo(ov.c));
+  const fv=baseFov*Math.PI/180, fh=2*Math.atan(Math.tan(fv/2)*camera.aspect);
+  ov.dist=r/Math.sin(Math.min(fv,fh)/2)*.95;
+  ov.thick=1.3*ov.dist*2*Math.tan(fv/2)/innerHeight/RAD;   // 멀리서도 약 1.3px 두께 유지
+  ov.startPos.copy(camera.position); ov.startQ.copy(camera.quaternion); ov.startFov=camera.fov;
+}
+
+function prepConverge(){
+  camera.updateMatrixWorld();
+  const F=new V3(),Rt=new V3(),U=new V3(); camera.getWorldDirection(F);
+  Rt.crossVectors(F,camera.up).normalize(); U.crossVectors(Rt,F).normalize();
+  const hh=ov.dist*Math.tan(camera.fov*Math.PI/360), hw=hh*camera.aspect, vw=innerWidth, vh=innerHeight;
+  const E=logo.edges, T=[];
+  for(let i=0;i<C;i++){ const e=E[(Math.random()*E.length)|0];
+    T.push([rect.cx+e[0]*rect.w+(Math.random()-.5)*.8, rect.cy+e[1]*rect.h+(Math.random()-.5)*.8]); }
+  T.sort((a,b)=>a[0]-b[0]);                         // 왼→오른쪽으로 쓸리듯 수렴
+  const w=new V3();
+  for(let i=0;i<C;i++){
+    w.copy(camera.position).addScaledVector(F,ov.dist)
+     .addScaledVector(Rt,(T[i][0]/vw*2-1)*hw).addScaledVector(U,-(T[i][1]/vh*2-1)*hh);
+    tPosL.set([w.x,w.y,w.z],i*3);
+    posAt(TRAIL0+(i+.5)/C*(S_END-TRAIL0),w); sPos.set([w.x,w.y,w.z],i*3);
+  }
+  pts.visible=true;
+}
+
+function resetAll(){
+  ph=1;t1=t2=t3=t4=0;headS=TRAIL0;camS=0;speedN=0;roll=0;
+  tubeU.uHead.value=0;tubeU.uThick.value=1;tubeU.uLit.value=0;tubeU.uOpacity.value=1;tg.setDrawRange(0,0);
+  headU.uI.value=0;head.visible=true;pts.visible=false;ptsU.uO.value=0;
+  posAt(7,tmp);look.copy(tmp).sub(posAt(0,tmp2)).normalize();
+  camera.fov=baseFov;camera.updateProjectionMatrix();
+  $("flash").style.opacity=0;
+  $("logo").style.opacity=0;$("logo").style.transition="";$("since").style.opacity=0;$("actions").classList.remove("on");
+  runCamera(0,true);
+}
+
+/* ---------- 프레임 업데이트 ---------- */
+function update(dt){
+  let persist=0;
+  if(ph===1){
+    t1+=dt;
+    headU.uI.value=sm(3.5,9,t1);
+    camS=24.5*eis(clamp((t1-3.5)/7));
+    runCamera(dt,false);
+    if(t1>=10.5){ph=2;t2=0;}
+  }else if(ph===2){
+    t2+=dt;
+    let v=1.5+25*sm(0,10,t2); const rem=S_END-headS;
+    if(rem<45) v=Math.max(1.2,v*rem/45);
+    headS+=v*dt; camS=headS-3.5; speedN=v/26.5;
+    camera.fov=baseFov+16*speedN; camera.updateProjectionMatrix();
+    headU.uI.value=1; persist=.6*sm(.3,1,speedN);
+    runCamera(dt,false);
+    if(headS>=S_END-.5){ headS=S_END; ph=3; t3=0; speedN=0; prepOverview(); }
+  }else if(ph===3){
+    t3+=dt;
+    const b=eio(clamp(t3/9));
+    overviewPos(ov.a0+.7*(1-b),tmp);
+    camera.position.copy(ov.startPos).lerp(tmp,b);
+    mt.lookAt(camera.position,ov.c,new V3(0,1,0)); qEnd.setFromRotationMatrix(mt);
+    camera.quaternion.copy(ov.startQ).slerp(qEnd,b);
+    camera.fov=ov.startFov+(baseFov-ov.startFov)*b; camera.updateProjectionMatrix();
+    tubeU.uLit.value=sm(.5,6,t3); tubeU.uThick.value=1+(ov.thick-1)*sm(0,9,t3);
+    headU.uI.value=1-sm(2,6,t3);
+    if(t3>=9){ ph=4; t4=0; head.visible=false; camera.fov=baseFov; camera.updateProjectionMatrix(); prepConverge(); }
+  }else if(ph===4){
+    t4+=dt;
+    const tn=t4/4.4;
+    for(let i=0;i<C;i++){
+      const p=eio(clamp((tn-dly[i])/.7)), k=i*3;
+      cPos[k]=sPos[k]+(tPosL[k]-sPos[k])*p; cPos[k+1]=sPos[k+1]+(tPosL[k+1]-sPos[k+1])*p; cPos[k+2]=sPos[k+2]+(tPosL[k+2]-sPos[k+2])*p;
+    }
+    cg.attributes.position.needsUpdate=true;
+    tubeU.uOpacity.value=1-sm(0,1.4,t4);
+    ptsU.uO.value=sm(0,1.4,t4)*(1-sm(5.4,7,t4))*(t4>4.5&&t4<5.4?1.6:1);
+    let f=0; if(t4>4.5&&t4<5.4) f=t4<4.65?(t4-4.5)/.15:1-(t4-4.65)/.75;
+    $("flash").style.opacity=clamp(f)*.9;
+    $("logo").style.opacity=sm(5.2,6.6,t4); $("since").style.opacity=sm(6.4,7.6,t4);
+    if(t4>7.2)$("actions").classList.add("on");
+    if(t4>=8){ showEnd(); return false; }
+  }
+  if(ph<4){
+    const rings=clamp(Math.floor((headS-TRAIL0)/STEP)+1,0,R);
+    tg.setDrawRange(0,Math.max(0,rings-1)*24); tubeU.uHead.value=headS-TRAIL0;
+  }
+  posAt(headS,head.position); headU.uK.value=clamp((headS-TRAIL0)/(S_END-TRAIL0));
+  headU.uPx.value=renderer.domElement.height/(2*Math.tan(camera.fov*Math.PI/360));
+  fadeMat.opacity=1-persist;
+  return true;
+}
+function frame(now){
+  raf=requestAnimationFrame(frame);
+  const dt=Math.min((now-last)/1000,.05); last=now;
+  if(!update(dt)) return;
+  renderer.render(fadeScene,fadeCam); renderer.clearDepth(); renderer.render(scene,camera);
+}
+
+/* ---------- 제어 ---------- */
+function begin(){
+  cancelAnimationFrame(raf); resize(); resetAll();
+  state="run"; running=true; last=performance.now();
+  $("startScreen").classList.add("hide"); $("skip").classList.remove("hide");
+  $("actions").classList.remove("on");
+  renderer.setClearColor(0,1); renderer.clear();
+  raf=requestAnimationFrame(frame);
+}
+$("startBtn").addEventListener("click",begin);
+$("skip").addEventListener("click",showEnd);
+$("replay").addEventListener("click",()=>{ $("logo").style.opacity=0;$("since").style.opacity=0; begin(); });
+addEventListener("keydown",e=>{ if(e.key==="Escape"&&state==="run") showEnd(); });
+addEventListener("resize",resize);
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){ cancelAnimationFrame(raf); }
+  else if(state==="run"){ last=performance.now(); cancelAnimationFrame(raf); raf=requestAnimationFrame(frame); }
+});
+
+resize(); resetAll(); renderer.clear();
+$("startBtn").disabled=false;
+})();
+</script>
+</body>
+</html>
