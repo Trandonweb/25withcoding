@@ -22,14 +22,10 @@
   button:disabled{opacity:.3;cursor:default}
   #skip{position:fixed;top:max(18px,env(safe-area-inset-top));right:max(18px,env(safe-area-inset-right));
     padding:.5em 1.2em;font-size:13px;letter-spacing:.15em;border-color:rgba(80,255,180,.25);color:rgba(157,255,212,.6)}
-  #end{position:fixed;inset:0;pointer-events:none}
+  #end{position:fixed;inset:0;pointer-events:none;z-index:3}
   #logo{position:absolute;opacity:0;mix-blend-mode:screen;display:block;height:auto}
   #since{position:absolute;left:0;right:0;text-align:center;font-size:13px;letter-spacing:.6em;
     padding-left:.6em;color:rgba(157,255,212,.75);opacity:0}
-  #actions{position:absolute;left:0;right:0;bottom:max(9vh,env(safe-area-inset-bottom));display:flex;
-    gap:14px;justify-content:center;flex-wrap:wrap;opacity:0;transition:opacity .9s}
-  #actions.on{opacity:1;pointer-events:auto}
-  #actions>*{pointer-events:auto}
   #err{position:fixed;left:0;right:0;bottom:3vh;text-align:center;font-size:12px;color:rgba(157,255,212,.4)}
 </style>
 </head>
@@ -43,16 +39,11 @@
 <div id="end">
   <canvas id="logo" aria-label="코딩과 함께라면" role="img"></canvas>
   <div id="since">SINCE 2025</div>
-  <div id="actions">
-    <a class="btn" id="home" href="../">홈페이지로</a>
-    <button id="replay">다시 보기</button>
-  </div>
 </div>
 <div id="err"></div>
 
 <script>
 /* ============ 설정 (저장소 확인 후 필요 시 수정) ============ */
-const HOME_URL = "../";                // ← 실제 홈페이지 경로로 교체
 const THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
 /* ============================================================ */
 </script>
@@ -79,10 +70,10 @@ const HUE=`vec3 hue(float k){
   return mix(c5,c6,f);
 }`;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-$("home").href = HOME_URL;
+
 
 /* ---------- 로고 로드 + 윤곽점 추출 ---------- */
-const C = 3600;                       // 수렴에 쓰이는 점 개수
+const C = 9000;                       // 수렴에 쓰이는 점 개수
 let logo;
 
 function extractEdges(cv){
@@ -152,7 +143,7 @@ logo = await prepareLogo();
 const rect = {cx:0,cy:0,w:0,h:0};
 function layoutLogo(){
   const vw=innerWidth, vh=innerHeight;
-  const w=Math.min(vw*.78,760,vh*.34*logo.aspect), h=w/logo.aspect;
+  const w=Math.min(vw*.90,820,vh*.48*logo.aspect), h=w/logo.aspect;
   rect.w=w;rect.h=h;rect.cx=vw/2;rect.cy=vh*.44;
   const L=$("logo");
   L.style.width=w+"px";L.style.height=h+"px";
@@ -167,7 +158,7 @@ function showEnd(){
   running=false; cancelAnimationFrame(raf); state="end";
   $("flash").style.opacity=0;
   $("startScreen").classList.add("hide"); $("skip").classList.add("hide");
-  $("logo").style.opacity=1; $("since").style.opacity=1; $("actions").classList.add("on");
+  $("logo").style.opacity=1; $("since").style.opacity=1;
   if(glReady){ renderer.setClearColor(0,1); renderer.clear(); }
   if(reduce) $("replay").style.display="none";
 }
@@ -192,17 +183,18 @@ const fadeMat=new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:1,de
 fadeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),fadeMat));
 
 /* ---------- 단 하나의 경로 (미리 계산하되 지나간 부분만 그린다) ---------- */
-const STEP=.25, S_END=370, TRAIL0=28, NS=Math.ceil((S_END+30)/STEP)+2;
+const STEP=.25, S_END=245, TRAIL0=2, NS=Math.ceil((S_END+30)/STEP)+2;
 const P=[];
-(()=>{ let p=new V3(),yaw=0,pitch=0;
+/* 부드러운 단일 궤적. 전체 궤적은 멀리서 보면 무한대(∞)를 연상시키는 하나의 상징 */
+(()=>{
   for(let i=0;i<NS;i++){
-    P.push(p.clone());
-    const s=i*STEP, ramp=sm(45,90,s);
-    yaw+=ramp*(.12*Math.sin(s*.05+1)+.07*Math.sin(s*.13+2))*STEP;
-    pitch+=(ramp*(.4*Math.sin(s*.06+.5)+.22*Math.sin(s*.14))-pitch)*.16*STEP;
-    const cp=Math.cos(pitch);
-    p.x+=Math.sin(yaw)*cp*STEP; p.y+=Math.sin(pitch)*STEP; p.z-=Math.cos(yaw)*cp*STEP;
-  }})();
+    const s=i*STEP, u=s/S_END, a=u*Math.PI*4.2;
+    const x=5.2*Math.sin(a)*Math.cos(a*.18);
+    const y=2.35*Math.sin(a*.5)+.32*Math.sin(a*1.7);
+    const z=-s;
+    P.push(new V3(x,y,z));
+  }
+})();
 const posAt=(s,o)=>{const f=clamp(s/STEP,0,NS-1.001),i=f|0;return o.copy(P[i]).lerp(P[i+1],f-i);};
 
 /* ---------- 궤적(빛줄기) 메쉬 ---------- */
@@ -335,7 +327,7 @@ function resetAll(){
   posAt(7,tmp);look.copy(tmp).sub(posAt(0,tmp2)).normalize();
   camera.fov=baseFov;camera.updateProjectionMatrix();
   $("flash").style.opacity=0;
-  $("logo").style.opacity=0;$("logo").style.transition="";$("since").style.opacity=0;$("actions").classList.remove("on");
+  $("logo").style.opacity=0;$("logo").style.transition="";$("since").style.opacity=0;
   runCamera(0,true);
 }
 
@@ -344,14 +336,14 @@ function update(dt){
   let persist=0;
   if(ph===1){
     t1+=dt;
-    headU.uI.value=sm(3.5,9,t1);
-    camS=24.5*eis(clamp((t1-3.5)/7));
+    headU.uI.value=sm(.12,.55,t1);
+    camS=1.8*eis(clamp(t1/1.5));
     runCamera(dt,false);
-    if(t1>=10.5){ph=2;t2=0;}
+    if(t1>=1.5){ph=2;t2=0;}
   }else if(ph===2){
     t2+=dt;
-    let v=1.5+25*sm(0,10,t2); const rem=S_END-headS;
-    if(rem<45) v=Math.max(1.2,v*rem/45);
+    let v=2.5+21*sm(0,4,t2); const rem=S_END-headS;
+    if(rem<28) v=Math.max(1.5,v*rem/28);
     headS+=v*dt; camS=headS-3.5; speedN=v/26.5;
     camera.fov=baseFov+16*speedN; camera.updateProjectionMatrix();
     headU.uI.value=1; persist=.6*sm(.3,1,speedN);
@@ -359,30 +351,29 @@ function update(dt){
     if(headS>=S_END-.5){ headS=S_END; ph=3; t3=0; speedN=0; prepOverview(); }
   }else if(ph===3){
     t3+=dt;
-    const b=eio(clamp(t3/9));
-    overviewPos(ov.a0+.7*(1-b),tmp);
+    const b=eio(clamp(t3/4.8));
+    overviewPos(ov.a0+.12*(1-b),tmp);
     camera.position.copy(ov.startPos).lerp(tmp,b);
     mt.lookAt(camera.position,ov.c,new V3(0,1,0)); qEnd.setFromRotationMatrix(mt);
     camera.quaternion.copy(ov.startQ).slerp(qEnd,b);
     camera.fov=ov.startFov+(baseFov-ov.startFov)*b; camera.updateProjectionMatrix();
     tubeU.uLit.value=sm(.5,6,t3); tubeU.uThick.value=1+(ov.thick-1)*sm(0,9,t3);
     headU.uI.value=1-sm(2,6,t3);
-    if(t3>=9){ ph=4; t4=0; head.visible=false; camera.fov=baseFov; camera.updateProjectionMatrix(); prepConverge(); }
+    if(t3>=4.8){ ph=4; t4=0; head.visible=false; camera.fov=baseFov; camera.updateProjectionMatrix(); prepConverge(); }
   }else if(ph===4){
     t4+=dt;
-    const tn=t4/4.4;
+    const tn=t4/2.7;
     for(let i=0;i<C;i++){
-      const p=eio(clamp((tn-dly[i])/.7)), k=i*3;
+      const p=eio(clamp((tn-dly[i])/.42)), k=i*3;
       cPos[k]=sPos[k]+(tPosL[k]-sPos[k])*p; cPos[k+1]=sPos[k+1]+(tPosL[k+1]-sPos[k+1])*p; cPos[k+2]=sPos[k+2]+(tPosL[k+2]-sPos[k+2])*p;
     }
     cg.attributes.position.needsUpdate=true;
-    tubeU.uOpacity.value=1-sm(0,1.4,t4);
-    ptsU.uO.value=sm(0,1.4,t4)*(1-sm(5.4,7,t4))*(t4>4.5&&t4<5.4?1.6:1);
-    let f=0; if(t4>4.5&&t4<5.4) f=t4<4.65?(t4-4.5)/.15:1-(t4-4.65)/.75;
+    tubeU.uOpacity.value=1-sm(0,.7,t4);
+    ptsU.uO.value=sm(0,.7,t4)*(1-sm(3.3,4.2,t4));
+    let f=0; if(t4>2.9&&t4<3.25) f=t4<3.0?(t4-2.9)/.1:1-(t4-3.0)/.25;
     $("flash").style.opacity=clamp(f)*.9;
-    $("logo").style.opacity=sm(5.2,6.6,t4); $("since").style.opacity=sm(6.4,7.6,t4);
-    if(t4>7.2)$("actions").classList.add("on");
-    if(t4>=8){ showEnd(); return false; }
+    $("logo").style.opacity=sm(2.5,3.4,t4); $("since").style.opacity=sm(3.0,3.8,t4);
+    if(t4>=4.1){ showEnd(); return false; }
   }
   if(ph<4){
     const rings=clamp(Math.floor((headS-TRAIL0)/STEP)+1,0,R);
@@ -411,7 +402,6 @@ function begin(){
 }
 $("startBtn").addEventListener("click",begin);
 $("skip").addEventListener("click",showEnd);
-$("replay").addEventListener("click",()=>{ $("logo").style.opacity=0;$("since").style.opacity=0; begin(); });
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&state==="run") showEnd(); });
 addEventListener("resize",resize);
 document.addEventListener("visibilitychange",()=>{
