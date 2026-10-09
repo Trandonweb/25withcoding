@@ -23,7 +23,7 @@
   #skip{position:fixed;top:max(18px,env(safe-area-inset-top));right:max(18px,env(safe-area-inset-right));
     padding:.5em 1.2em;font-size:13px;letter-spacing:.15em;border-color:rgba(80,255,180,.25);color:rgba(157,255,212,.6)}
   #end{position:fixed;inset:0;pointer-events:none;z-index:3}
-  #logo{position:absolute;opacity:0;mix-blend-mode:screen;display:block;height:auto}
+  #logo{position:absolute;opacity:0;display:block;height:auto;object-fit:contain}
   #since{position:absolute;left:0;right:0;text-align:center;font-size:13px;letter-spacing:.6em;
     padding-left:.6em;color:rgba(157,255,212,.75);opacity:0}
   #err{position:fixed;left:0;right:0;bottom:3vh;text-align:center;font-size:12px;color:rgba(157,255,212,.4)}
@@ -37,7 +37,7 @@
 <button id="skip" class="hide fade">건너뛰기</button>
 
 <div id="end">
-  <canvas id="logo" aria-label="코딩과 함께라면" role="img"></canvas>
+  <img id="logo" src="./logo.png" alt="코딩과 함께라면">
   <div id="since">SINCE 2025</div>
 </div>
 <div id="err"></div>
@@ -83,7 +83,7 @@ function extractEdges(cv){
   const m=new Uint8Array(w*h);
   for(let i=0;i<w*h;i++){
     const r=d[i*4],g=d[i*4+1],b=d[i*4+2],a=d[i*4+3];
-    m[i]=transparent ? (a>60) : (Math.max(r,g,b)>100);
+    m[i]=transparent ? (a>35) : (Math.max(r,g,b)>100);
   }
   const e=[];
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
@@ -92,50 +92,19 @@ function extractEdges(cv){
   }
   return e;
 }
-const LW=643, LH=311;                                   // 로고 설계 좌표계
-const TILES=[
-  ["코",20,18,"#45ff4a"],["딩",154,18,"#ffe81a"],["과",288,18,"#2ff3e6"],
-  ["함",97,165,"#ff2d2d"],["께",231,165,"#a43bff"],["라",365,165,"#ff4fc0"],["면",499,165,"#2ff3e6"]];
-const TW=120, TH=124, TR=28;
-const lighten=(h,k)=>{const n=parseInt(h.slice(1),16);
-  const c=[n>>16,(n>>8)&255,n&255].map(v=>Math.round(v+(255-v)*k));return `rgb(${c})`;};
-function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);
-  g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
-// glow=false: 윤곽 추출용 마스크 / glow=true: 실제 네온 표시용
-function neon(g,col,lw,glow,draw){
-  if(!glow){g.strokeStyle="#fff";g.lineWidth=lw*.6;draw();return;}
-  g.save();g.strokeStyle=col;g.lineWidth=lw;g.shadowColor=col;g.shadowBlur=20;draw();g.shadowBlur=7;draw();g.restore();
-  g.strokeStyle=lighten(col,.6);g.lineWidth=lw*.34;draw();
-}
-function drawLogo(g,glow){
-  g.lineJoin="round";g.lineCap="round";g.textAlign="center";g.textBaseline="middle";
-  for(const [ch,x,y,c] of TILES){
-    neon(g,c,6,glow,()=>{rr(g,x,y,TW,TH,TR);g.stroke();});
-    g.font='bold 74px Jua,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
-    neon(g,c,5,glow,()=>g.strokeText(ch,x+TW/2,y+TH/2+5));
-  }
-  // 타일 사이의 작은 화살 표시
-  for(const i of [0,1,3,4,5]){
-    const [, x,y,c]=TILES[i], ax=x+TW+3, ay=y+TH/2;
-    neon(g,c,4,glow,()=>{g.beginPath();g.moveTo(ax-5,ay-9);g.lineTo(ax+6,ay);g.lineTo(ax-5,ay+9);g.stroke();});
-  }
-  g.font='bold 33px "Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
-  g.fillStyle="#fff";
-  if(glow){g.save();g.shadowColor="#fff";g.shadowBlur=14;}
-  g.fillText("WITH",505,80);g.fillText("CODING",505,118);
-  if(glow)g.restore();
-}
 async function prepareLogo(){
-  try{await Promise.race([document.fonts.load('bold 74px Jua','코딩과함께라면'),new Promise(r=>setTimeout(r,1500))]);}catch(_){}
-  const mk=(k)=>{const cv=document.createElement("canvas");cv.width=LW*k;cv.height=LH*k;
-    const g=cv.getContext("2d");g.scale(k,k);return [cv,g];};
-  const [mask,gm]=mk(1); drawLogo(gm,false);
-  // 최종 로고도 이미지 파일이 아니라 실제 canvas에 코드로 직접 그린다.
-  const view=$("logo");
-  view.width=LW*2; view.height=LH*2;
-  const gv=view.getContext("2d");
-  gv.scale(2,2); drawLogo(gv,true);
-  return {aspect:LW/LH,edges:extractEdges(mask)};
+  const img = $("logo");
+  await new Promise((resolve,reject)=>{
+    if(img.complete && img.naturalWidth) return resolve();
+    img.onload=resolve; img.onerror=reject;
+  });
+  const LW=img.naturalWidth, LH=img.naturalHeight;
+  const cv=document.createElement("canvas");
+  cv.width=LW; cv.height=LH;
+  const g=cv.getContext("2d",{willReadFrequently:true});
+  g.drawImage(img,0,0,LW,LH);
+  const edges=extractEdges(cv);
+  return {aspect:LW/LH,edges};
 }
 logo = await prepareLogo();
 
@@ -280,18 +249,18 @@ const qEnd=new THREE.Quaternion(),mt=new THREE.Matrix4(),dirBase=new V3(.3,.3,1)
 function overviewPos(a,o){return o.copy(dirBase).applyAxisAngle(new V3(0,1,0),a).multiplyScalar(ov.dist).add(ov.c);}
 
 function runCamera(dt,snap){
-  posAt(camS,cpos); posAt(camS+2.8,tmp).sub(cpos).normalize();
-  look.lerp(tmp,snap?1:1-Math.exp(-dt*7)).normalize();
-  posAt(camS+1.0,tmp).sub(posAt(camS,tmp2)).normalize();
-  const a=tmp.clone(); posAt(camS+5,tmp).sub(posAt(camS+2.5,tmp2)).normalize();
-  const turn=a.cross(tmp).y;                       // 우회전이면 음수
-  roll+=(clamp(-turn*1.8,-.7,.7)-roll)*(snap?1:1-Math.exp(-dt*3));
-  upv.set(0,1,0).applyAxisAngle(look,roll);
-  camera.up.copy(upv);
-  const zoomPulse=1.15 + .42*Math.sin(camS*.075) + .16*Math.sin(camS*.19);
-  camera.position.copy(cpos).addScaledVector(upv,-.18*zoomPulse);
-  camera.fov=baseFov + 3*Math.sin(camS*.055); camera.updateProjectionMatrix();
-  camera.lookAt(tmp.copy(camera.position).addScaledVector(look,10));
+  posAt(camS,cpos);
+  // Keep the horizon upright. The track stays in the lower part of the view;
+  // turns are communicated by the world/track moving sideways above it, not by rolling the camera.
+  posAt(camS+4.2,tmp).sub(cpos).normalize();
+  look.lerp(tmp,snap?1:1-Math.exp(-dt*5)).normalize();
+  const zoomPulse=1.0 + .22*Math.sin(camS*.055) + .10*Math.sin(camS*.14);
+  camera.up.set(0,1,0);
+  camera.position.copy(cpos).add(new V3(0,2.1*zoomPulse,0));
+  const target=camera.position.clone().addScaledVector(look,12);
+  target.y += .35;
+  camera.fov=baseFov + 4*Math.sin(camS*.045); camera.updateProjectionMatrix();
+  camera.lookAt(target);
 }
 
 function prepOverview(){
