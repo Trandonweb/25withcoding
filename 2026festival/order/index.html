@@ -9,23 +9,23 @@
 </head>
 <body>
 <div id="roleScreen" class="role-screen"><div><h1>콘솔 명령어로 역할을 지정하세요.</h1><p>role.change("host,1") 또는 role.change("client,1")</p></div></div>
-<div id="clientApp" class="app"><div class="client"><main class="menu"><div id="clientKiosk" class="kiosk"></div><h1>주문하기</h1><div id="menus" class="menus"></div></main><aside class="cart"><h2>담은 메뉴</h2><div id="cartList" class="cart-list"><div class="empty">아직 담은 메뉴가 없습니다.</div></div><div class="total">총 <span id="total">0</span>원</div><div id="paidBox"></div></aside></div></div>
-<div id="hostApp" class="app"><div class="host"><div class="host-top"><div><h1>주문 관리자</h1><div class="hint" id="hostInfo"></div></div><div class="host-total">총 매출 <span id="hostTotal">0</span>원</div></div><div class="host-content"><div class="host-list"><div class="order-row header"><div>키오스크</div><div>메뉴</div><div>수량</div><div>금액</div><div>상태</div><div>처리</div></div><div id="hostList"></div></div><section class="history-wrap"><h2>이전 주문 기록 · 불러오기로 키오스크에 복원</h2><div class="history-list"><div class="order-row header"><div>키오스크</div><div>메뉴</div><div>수량</div><div>금액</div><div>상태</div><div>처리</div></div><div id="historyList"></div></div></section></div></div></div>
+<div id="clientApp" class="app"><div class="client"><main class="menu"><div id="clientKiosk" class="kiosk"></div><div id="rtcStatus" class="hint">P2P 연결 준비 중...</div><h1>주문하기</h1><div id="menus" class="menus"></div></main><aside class="cart"><h2>담은 메뉴</h2><div id="cartList" class="cart-list"><div class="empty">아직 담은 메뉴가 없습니다.</div></div><div class="total">총 <span id="total">0</span>원</div><div id="paidBox"></div></aside></div></div>
+<div id="hostApp" class="app"><div class="host"><div class="host-top"><div><h1>주문 관리자</h1><div class="hint" id="hostInfo"></div><div class="hint" id="rtcHostStatus">WebRTC 연결 준비 중...</div></div><div class="host-total">총 매출 <span id="hostTotal">0</span>원</div></div><div class="host-content"><div class="host-list"><div class="order-row header"><div>키오스크</div><div>메뉴</div><div>수량</div><div>금액</div><div>상태</div><div>처리</div></div><div id="hostList"></div></div><section class="history-wrap"><h2>이전 주문 기록 · 불러오기로 키오스크에 복원</h2><div class="history-list"><div class="order-row header"><div>키오스크</div><div>메뉴</div><div>수량</div><div>금액</div><div>상태</div><div>처리</div></div><div id="historyList"></div></div></section></div></div></div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import{getFirestore,doc,onSnapshot,setDoc,updateDoc}from"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import{getFirestore,doc,onSnapshot,setDoc,updateDoc,collection,addDoc}from"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyBwjCbt7ykOHRHpVpfvnKBxlI-XIllqPsQ",authDomain:"festival2026-admin.firebaseapp.com",projectId:"festival2026-admin",storageBucket:"festival2026-admin.firebasestorage.app",messagingSenderId:"909628177160",appId:"1:909628177160:web:d7360a9c017b4fee828abd"};
 const db=getFirestore(initializeApp(firebaseConfig));
 const PASSWORD="25쟈소채야ㅜㅎ";
 const menus=[{id:"m1",name:"메뉴 1",price:3000},{id:"m2",name:"메뉴 2",price:4000},{id:"m3",name:"메뉴 3",price:5000},{id:"m4",name:"메뉴 4",price:6000}];
 const ORDER_COLLECTION="order";
-let role=null,kiosks=[],orders={},writeQueues={};
+let role=null,kiosks=[],orders={},writeQueues={},rtcPeers={},rtcChannels={},rtcSeenOffers={},rtcListeners=[];
 const orderDoc=k=>doc(db,ORDER_COLLECTION,"kiosk-"+k);
 window.role={change(value){if(typeof value!=="string"){console.warn('role.change("host,1") 형식으로 입력하세요.');return}const p=value.split(",").map(x=>x.trim());if(!["host","client"].includes(p[0])){console.warn("host 또는 client만 사용할 수 있습니다.");return}if(p[0]==="host"){let raw=p.slice(1);if(raw.length===1&&raw[0].includes("-")){const[a,b]=raw[0].split("-").map(Number);if(Number.isInteger(a)&&Number.isInteger(b)&&a>=1&&b>=a&&b-a<4)raw=Array.from({length:b-a+1},(_,i)=>String(a+i))}if(!raw.length||raw.length>4||raw.some(x=>!/^[1-9]\d*$/.test(x))||new Set(raw).size!==raw.length){console.warn("host는 최대 4개의 키오스크 번호를 지정할 수 있습니다. 예: host,1-4 또는 host,1,3");return}role="host";kiosks=raw}else{if(p.length!==2||!/^[1-9]\d*$/.test(p[1])){console.warn("client는 client,1 형식으로 입력하세요.");return}role="client";kiosks=[p[1]]}console.log("enter password");}};
 window.password={enter(value){if(value!==PASSWORD){console.warn("password incorrect");return}if(!role){console.warn("먼저 role.change(...)를 실행하세요.");return}start();}};
 const money=n=>Number(n||0).toLocaleString("ko-KR"),emptyOrder=()=>({items:{},total:0,status:"waiting",updatedAt:Date.now()});
 function renderMenus(){document.getElementById("menus").innerHTML=menus.map(m=>`<div class="menu-card"><div class="name">${m.name}</div><div class="price">${money(m.price)}원</div><div class="controls"><button class="qty-btn minus" data-id="${m.id}" data-delta="-1">−</button><div class="qty-num" id="qty-${m.id}">0</div><button class="qty-btn" data-id="${m.id}" data-delta="1">+</button></div></div>`).join("");document.querySelectorAll(".qty-btn").forEach(b=>b.onclick=()=>changeQty(b.dataset.id,Number(b.dataset.delta)));}
-async function changeQty(id,delta){const kiosk=kiosks[0],current=orders[kiosk]||emptyOrder();if(current.status==='paid'||current.status==='cancelled')return;const items={...(current.items||{})};items[id]=Math.max(0,(Number(items[id])||0)+delta);if(items[id]===0)delete items[id];const total=menus.reduce((s,m)=>s+m.price*(items[m.id]||0),0);const next={...current,items,total,status:'waiting',updatedAt:Date.now(),kiosk};orders[kiosk]=next;renderClient(next);writeQueues[kiosk]=(writeQueues[kiosk]||Promise.resolve()).then(()=>setDoc(orderDoc(kiosk),next,{merge:true}));try{await writeQueues[kiosk];}catch(e){console.error('ORDER_WRITE_ERROR',e);alert('주문 저장 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. '+e.message);}}
+async function changeQty(id,delta){const kiosk=kiosks[0],current=orders[kiosk]||emptyOrder();if(current.status==='paid'||current.status==='cancelled')return;const items={...(current.items||{})};items[id]=Math.max(0,(Number(items[id])||0)+delta);if(items[id]===0)delete items[id];const total=menus.reduce((s,m)=>s+m.price*(items[m.id]||0),0);const next={...current,items,total,status:'waiting',updatedAt:Date.now(),kiosk};orders[kiosk]=next;renderClient(next);sendRtc(kiosk,{type:"order",order:next});writeQueues[kiosk]=(writeQueues[kiosk]||Promise.resolve()).then(()=>setDoc(orderDoc(kiosk),next,{merge:true}));try{await writeQueues[kiosk];}catch(e){console.error('ORDER_WRITE_ERROR',e);alert('주문 저장 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. '+e.message);}}
 function renderClient(o){menus.forEach(m=>{const el=document.getElementById("qty-"+m.id);if(el)el.textContent=o.items?.[m.id]||0});const rows=menus.filter(m=>o.items?.[m.id]).map(m=>`<div class="cart-item"><div class="cart-item-row"><b>${m.name}</b><b>${money(m.price*(o.items[m.id]||0))}원</b></div><div class="qty">${o.items[m.id]}개 × ${money(m.price)}원</div></div>`).join("");document.getElementById("cartList").innerHTML=rows||'<div class="empty">아직 담은 메뉴가 없습니다.</div>';document.getElementById("total").textContent=money(o.total);document.getElementById("paidBox").innerHTML=o.status==='paid'?'<div class="paidbox">결제 완료</div>':o.status==='cancelled'?'<div class="paidbox" style="background:#fdecec;color:#b42318">결제 취소</div>':'';document.querySelectorAll('.qty-btn').forEach(b=>b.disabled=o.status==='paid'||o.status==='cancelled');}
 function itemCount(o){return menus.reduce((n,m)=>n+Number((o.items||{})[m.id]||0),0);}
 function historyFor(k){return Array.isArray((orders[k]||{}).history)?orders[k].history:[];}
@@ -43,13 +43,51 @@ function renderHost(){
  document.getElementById("hostList").innerHTML=html;document.getElementById("historyList").innerHTML=historyHtml||'<div class="empty">아직 이전 주문 기록이 없습니다.</div>';document.getElementById("hostTotal").textContent=money(grand);
  document.querySelectorAll("[data-action]").forEach(b=>b.onclick=()=>{const k=b.dataset.kiosk,a=b.dataset.action;if(a==="complete")completePayment(k);else if(a==="undo")undoCompletion(k);else if(a==="cancel")cancelOrder(k);else if(a==="load")loadHistory(k,b.dataset.history);});
 }
-async function saveOrder(k,next){orders[k]=next;renderHost();try{await setDoc(orderDoc(k),next,{merge:true});}catch(e){console.error("ORDER_ACTION_ERROR",e);alert("처리 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. "+e.message);}}
+async function saveOrder(k,next){orders[k]=next;renderHost();sendRtc(k,{type:"order",order:next});try{await setDoc(orderDoc(k),next,{merge:true});}catch(e){console.error("ORDER_ACTION_ERROR",e);alert("처리 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. "+e.message);}}
 async function completePayment(k){const o=orders[k]||emptyOrder();if(!itemCount(o)){alert("완료할 주문이 없습니다.");return;}if(o.status==="paid"){alert("이미 결제 완료된 주문입니다.");return;}await saveOrder(k,{...o,status:"paid",updatedAt:Date.now(),kiosk:k,lastAction:"paid"});}
 async function cancelOrder(k){const o=orders[k]||emptyOrder();if(o.status!=="paid"){alert("결제 완료된 주문만 결제 취소할 수 있습니다.");return;}if(!confirm("이 주문의 결제를 취소할까요? 주문 내역은 유지되고 상태만 결제 취소로 바뀝니다."))return;await saveOrder(k,{...o,status:"cancelled",updatedAt:Date.now(),kiosk:k,lastAction:"payment-cancelled"});}
 async function undoCompletion(k){const o=orders[k]||emptyOrder();if(o.status!=="paid"){alert("결제 완료 상태인 주문만 되돌릴 수 있습니다.");return;}await saveOrder(k,{...o,status:"waiting",updatedAt:Date.now(),kiosk:k,lastAction:"payment-undone"});}
 async function loadHistory(k,id){const o=orders[k]||emptyOrder(),h=historyFor(k).find(x=>x.id===id);if(!h){alert("해당 주문 기록을 찾을 수 없습니다.");return;}if(itemCount(o)&&!confirm("현재 주문을 이전 주문으로 덮어쓸까요? 현재 주문은 기록에 보존되지 않습니다."))return;await saveOrder(k,{...o,items:{...(h.items||{})},total:Number(h.total||0),status:"waiting",updatedAt:Date.now(),kiosk:k,lastAction:"history-loaded"});}
 async function pay(k){await completePayment(k);}
-function start(){document.getElementById("roleScreen").style.display="none";if(role==='client'){document.getElementById("clientApp").style.display="block";document.getElementById("clientKiosk").textContent=kiosks[0]+"번 키오스크";renderMenus();const k=kiosks[0];onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderClient(orders[k]);},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message)});}else{document.getElementById("hostApp").style.display="block";document.getElementById("hostInfo").textContent="관리 키오스크: "+kiosks.join(", ")+"번";kiosks.forEach(k=>onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderHost();},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message)}));}}
+
+const rtcConfig={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
+function rtcSignalDoc(k){return doc(db,"webrtcRooms","kiosk-"+k);}
+function rtcCandidateCollection(k,side){return collection(db,"webrtcRooms","kiosk-"+k,side+"Candidates");}
+function rtcStatus(text){const a=document.getElementById("rtcStatus");if(a)a.textContent=text;const b=document.getElementById("rtcHostStatus");if(b)b.textContent=text;}
+function sendRtc(k,message){const ch=rtcChannels[k];if(ch&&ch.readyState==="open"){try{ch.send(JSON.stringify(message));}catch(e){console.warn("WebRTC send failed",e);}}}
+function attachChannel(k,ch){rtcChannels[k]=ch;ch.onopen=()=>{rtcStatus("WebRTC P2P 연결됨 · "+k+"번 키오스크");const o=orders[k];if(o)sendRtc(k,{type:"order",order:o});};ch.onclose=()=>{if(rtcChannels[k]===ch)delete rtcChannels[k];rtcStatus("WebRTC 연결 끊김 · Firebase 동기화 사용 중");};ch.onmessage=e=>{try{const msg=JSON.parse(e.data);if(msg.type!=="order"||!msg.order)return;orders[k]={...emptyOrder(),...msg.order};if(role==="host")renderHost();else renderClient(orders[k]);}catch(err){console.warn("Invalid WebRTC message",err);}};}
+async function addIceCandidates(pc,k,side){const unsub=onSnapshot(rtcCandidateCollection(k,side),snap=>{snap.docChanges().forEach(async change=>{if(change.type!=="added")return;try{await pc.addIceCandidate(new RTCIceCandidate(change.doc.data().candidate));}catch(e){console.warn("ICE candidate skipped",e);}});},e=>console.warn("ICE listener",e));rtcListeners.push(unsub);}
+async function startClientRtc(k){
+ try{
+  const pc=new RTCPeerConnection(rtcConfig);rtcPeers[k]=pc;
+  pc.onconnectionstatechange=()=>rtcStatus(pc.connectionState==="connected"?"WebRTC P2P 연결됨 · "+k+"번 키오스크":"WebRTC 상태: "+pc.connectionState+" · Firebase 동기화 사용 중");
+  pc.onicecandidate=e=>{if(e.candidate)addDoc(rtcCandidateCollection(k,"client"),{candidate:e.candidate.toJSON(),createdAt:Date.now()}).catch(err=>console.warn("ICE write",err));};
+  const ch=pc.createDataChannel("orders");attachChannel(k,ch);
+  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+  await setDoc(rtcSignalDoc(k),{offer:{type:offer.type,sdp:offer.sdp},updatedAt:Date.now()},{merge:true});
+  const unsub=onSnapshot(rtcSignalDoc(k),async snap=>{const data=snap.data();if(!data?.answer||pc.currentRemoteDescription)return;try{await pc.setRemoteDescription(new RTCSessionDescription(data.answer));}catch(e){console.warn("Set answer failed",e);}});
+  rtcListeners.push(unsub);await addIceCandidates(pc,k,"host");
+ }catch(e){console.warn("WebRTC client setup failed; Firestore remains active",e);rtcStatus("WebRTC 연결 실패 · Firebase 동기화 사용 중");}
+}
+function startHostRtc(k){
+ const unsub=onSnapshot(rtcSignalDoc(k),async snap=>{
+  const data=snap.data();if(!data?.offer)return;
+  const signature=data.offer.sdp;if(rtcSeenOffers[k]===signature)return;rtcSeenOffers[k]=signature;
+  try{
+   const pc=new RTCPeerConnection(rtcConfig);rtcPeers[k]=pc;
+   pc.onconnectionstatechange=()=>{if(pc.connectionState!=="connected")rtcStatus("WebRTC 상태: "+pc.connectionState+" · Firebase 동기화 사용 중");else rtcStatus("WebRTC P2P 연결됨 · 키오스크 "+k);};
+   pc.onicecandidate=e=>{if(e.candidate)addDoc(rtcCandidateCollection(k,"host"),{candidate:e.candidate.toJSON(),createdAt:Date.now()}).catch(err=>console.warn("ICE write",err));};
+   pc.ondatachannel=e=>attachChannel(k,e.channel);
+   await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+   const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
+   await setDoc(rtcSignalDoc(k),{answer:{type:answer.type,sdp:answer.sdp},updatedAt:Date.now()},{merge:true});
+   await addIceCandidates(pc,k,"client");
+  }catch(e){console.warn("WebRTC host setup failed; Firestore remains active",e);rtcStatus("WebRTC 연결 실패 · Firebase 동기화 사용 중");}
+ });
+ rtcListeners.push(unsub);
+}
+
+function start(){document.getElementById("roleScreen").style.display="none";if(role==='client'){document.getElementById("clientApp").style.display="block";document.getElementById("clientKiosk").textContent=kiosks[0]+"번 키오스크";renderMenus();const k=kiosks[0];startClientRtc(k);onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderClient(orders[k]);},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message)});}else{document.getElementById("hostApp").style.display="block";document.getElementById("hostInfo").textContent="관리 키오스크: "+kiosks.join(", ")+"번";kiosks.forEach(k=>{startHostRtc(k);onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderHost();},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message)});});}}
 </script>
 </body>
 </html>
