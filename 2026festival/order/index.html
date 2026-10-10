@@ -64,7 +64,7 @@ async function startClientRtc(k){
   pc.onicecandidate=e=>{if(e.candidate)addDoc(rtcCandidateCollection(k,"client"),{candidate:e.candidate.toJSON(),createdAt:Date.now()}).catch(err=>console.warn("ICE write",err));};
   const ch=pc.createDataChannel("orders");attachChannel(k,ch);
   const offer=await pc.createOffer();await pc.setLocalDescription(offer);
-  await setDoc(rtcSignalDoc(k),{offer:{type:offer.type,sdp:offer.sdp},updatedAt:Date.now()},{merge:true});
+  await setDoc(rtcSignalDoc(k),{offer:{type:offer.type,sdp:offer.sdp},answer:null,updatedAt:Date.now()},{merge:true});
   const unsub=onSnapshot(rtcSignalDoc(k),async snap=>{const data=snap.data();if(!data?.answer||pc.currentRemoteDescription)return;try{await pc.setRemoteDescription(new RTCSessionDescription(data.answer));}catch(e){console.warn("Set answer failed",e);}});
   rtcListeners.push(unsub);await addIceCandidates(pc,k,"host");
  }catch(e){console.warn("WebRTC client setup failed; Firestore remains active",e);rtcStatus("WebRTC 연결 실패 · Firebase 동기화 사용 중");}
