@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>코딩과 함께라면</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <style>
   html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#bfffe6;
     font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
@@ -23,9 +23,11 @@
   #skip{position:fixed;top:max(18px,env(safe-area-inset-top));right:max(18px,env(safe-area-inset-right));
     padding:.5em 1.2em;font-size:13px;letter-spacing:.15em;border-color:rgba(80,255,180,.25);color:rgba(157,255,212,.6)}
   #end{position:fixed;inset:0;pointer-events:none;z-index:3}
-  #logo{position:absolute;opacity:0;display:flex;align-items:center;justify-content:center;height:auto;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:800;letter-spacing:.035em;color:#caffea;text-shadow:0 0 5px rgba(120,255,200,.9),0 0 18px rgba(50,255,160,.55)}
+  #logo{position:absolute;opacity:0;display:flex;align-items:center;justify-content:center;height:auto;white-space:nowrap;font-family:"Caveat",cursive;font-weight:700;letter-spacing:.015em;color:#caffea;text-shadow:0 0 5px rgba(120,255,200,.9),0 0 18px rgba(50,255,160,.55)}
   #since{position:absolute;left:0;right:0;text-align:center;font-size:13px;letter-spacing:.6em;
     padding-left:.6em;color:rgba(157,255,212,.75);opacity:0}
+  #finalStart{position:absolute;left:50%;transform:translateX(-50%);top:0;opacity:0;pointer-events:none;font-family:"Caveat",cursive;font-size:30px;font-weight:700;letter-spacing:.12em;padding:.25em 1.4em;color:#caffea;border-color:rgba(202,255,234,.45)}
+  #finalStart.visible{opacity:1;pointer-events:auto;transition:opacity .7s ease}
   #err{position:fixed;left:0;right:0;bottom:3vh;text-align:center;font-size:12px;color:rgba(157,255,212,.4)}
 </style>
 </head>
@@ -39,6 +41,7 @@
 <div id="end">
   <div id="logo" aria-label="2026FESTIVAL">2026FESTIVAL</div>
   <div id="since">SINCE 2025</div>
+  <button id="finalStart" type="button">START</button>
 </div>
 <div id="err"></div>
 
@@ -93,13 +96,18 @@ function extractEdges(cv){
   return e;
 }
 async function prepareLogo(){
-  // 최종 2D 출력과 입자 수렴 대상은 동일한 문구를 사용한다.
+  // 폰트가 로드된 뒤 최종 Caveat 로고와 같은 글꼴로 입자 목표를 만든다.
+  await document.fonts.ready;
+  const measureCanvas=document.createElement("canvas");
+  const measure=measureCanvas.getContext("2d");
+  measure.font="700 290px Caveat";
+  const textWidth=measure.measureText("2026FESTIVAL").width;
   const cv=document.createElement("canvas");
-  cv.width=2200; cv.height=420;
+  cv.width=Math.ceil(textWidth+100); cv.height=420;
   const g=cv.getContext("2d",{willReadFrequently:true});
   g.clearRect(0,0,cv.width,cv.height);
   g.fillStyle="#fff";
-  g.font="800 230px Arial, Helvetica, sans-serif";
+  g.font="700 290px Caveat";
   g.textAlign="center"; g.textBaseline="middle";
   g.fillText("2026FESTIVAL",cv.width/2,cv.height/2);
   return {aspect:cv.width/cv.height,edges:extractEdges(cv)};
@@ -116,6 +124,7 @@ function layoutLogo(){
   L.style.width=w+"px";L.style.height=h+"px";L.style.fontSize=(h*.57)+"px";
   L.style.left=(rect.cx-w/2)+"px";L.style.top=(rect.cy-h/2)+"px";
   $("since").style.top=(rect.cy+h/2+Math.max(22,vh*.04))+"px";
+  $("finalStart").style.top=(rect.cy+h/2+Math.max(68,vh*.105))+"px";
 }
 layoutLogo();
 
@@ -126,6 +135,8 @@ function showEnd(){
   $("flash").style.opacity=0;
   $("startScreen").classList.add("hide"); $("skip").classList.add("hide");
   $("logo").style.opacity=1; $("since").style.opacity=1;
+  if(!window.__introEmbedded) $("finalStart").classList.add("visible");
+  else notifyParent();
   if(glReady){ renderer.setClearColor(0,1); renderer.clear(); }
 }
 
@@ -365,8 +376,9 @@ function update(dt){
     ptsU.uO.value=sm(0,.7,t4)*(1-sm(3.3,4.2,t4));
     let f=0; if(t4>4.2&&t4<4.65) f=t4<4.35?(t4-4.2)/.15:1-(t4-4.35)/.3;
     $("flash").style.opacity=clamp(f)*.9;
-    $("logo").style.opacity=sm(4.0,4.8,t4); $("since").style.opacity=sm(4.5,5.1,t4);
-    if(t4>=5.5){ showEnd(); return false; }
+    // 입자에서 최종 Caveat 로고로 한 번만 이어지며 별도 폰트/색상 전환은 하지 않는다.
+    $("logo").style.opacity=sm(3.8,4.5,t4); $("since").style.opacity=sm(4.3,4.9,t4);
+    if(t4>=5.1){ showEnd(); return false; }
   }
   if(ph<4){
     const rings=clamp(Math.floor((headS-TRAIL0)/STEP)+1,0,R);
@@ -383,6 +395,26 @@ function frame(now){
   if(!update(dt)) return;
   renderer.render(fadeScene,fadeCam); renderer.clearDepth(); renderer.render(scene,camera);
 }
+
+/* ---------- 임베드 신호 ---------- */
+// 신호 이름: START_CLICKED
+// 임베드된 경우 버튼은 숨기고, 인트로가 끝날 때 바깥 페이지에 같은 신호를 보낸다.
+window.__introEmbedded = window.parent !== window;
+let signalSent=false;
+function notifyParent(){
+  if(!window.__introEmbedded || signalSent) return;
+  signalSent=true;
+  window.parent.postMessage({type:"START_CLICKED"}, "*");
+}
+if(window.__introEmbedded){
+  $("startScreen").classList.add("hide");
+  $("finalStart").style.display="none";
+}
+$("finalStart").addEventListener("click",()=>{
+  if(window.__introEmbedded) return;
+  window.parent.postMessage({type:"START_CLICKED"}, "*");
+  $("finalStart").classList.remove("visible");
+});
 
 /* ---------- 제어 ---------- */
 function begin(){
