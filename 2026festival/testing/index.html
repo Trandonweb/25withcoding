@@ -3,262 +3,239 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#101014">
-<title>작품 플레이어 | 코딩과 함께라면</title>
+<meta name="theme-color" content="#f5f7f2">
+<title>작품 이름 | 2026 코딩과 함께라면</title>
 <style>
-:root{color-scheme:dark;--bg:#101014;--panel:#1b1b22;--line:rgba(255,255,255,.1);--green:#27ae60;--lime:#64dd17;--muted:#a5a5b2}
+:root{
+  --ink:#20271f;--muted:#70796e;--paper:#f5f7f2;--white:#fff;
+  --green:#247a45;--lime:#c8f169;--line:#e2e7dd;--soft:#edf2e8;
+}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -15%,rgba(39,174,96,.16),transparent 48%),var(--bg);color:#f7f7f9;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif}
 a{color:inherit;text-decoration:none}
-.topbar{height:66px;padding:0 clamp(16px,4vw,48px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:rgba(16,16,20,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:5}
-.brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.03em}
-.brand-mark{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--green),var(--lime));box-shadow:0 4px 18px #27ae6044}
-.brand small{display:block;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.12em;margin-top:2px}
-.back{font-size:13px;color:#d1d1d9;padding:9px 13px;border:1px solid var(--line);border-radius:10px}
-main{width:min(1320px,100%);margin:0 auto;padding:30px clamp(14px,3vw,38px) 48px}
-.eyebrow{display:flex;align-items:center;gap:8px;color:#8be6a9;font-size:11px;font-weight:800;letter-spacing:.15em}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px #64dd1788}
-.heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:10px 0 22px}
-h1{font-size:clamp(25px,4vw,38px);letter-spacing:-.045em;margin:0;font-weight:850}
-.lead{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.6}
-.live{font-size:12px;color:#b8b8c4;white-space:nowrap;padding-bottom:5px}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
-.viewer-card,.side-card{background:linear-gradient(145deg,#1d1d25,#17171d);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 18px 50px #0002}
-.viewer-top{min-height:49px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);background:#ffffff03}
-.window-dots{display:flex;gap:6px}.window-dots i{display:block;width:8px;height:8px;border-radius:50%;background:#555560}.window-dots i:first-child{background:#ff6b6b}.window-dots i:nth-child(2){background:#ffc65c}.window-dots i:nth-child(3){background:#52d889}
-.viewer-label{font-size:12px;color:#bdbdc8;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.viewer-label strong{color:#fff}
-.viewer-actions{display:flex;gap:7px}
-.small-btn{font:inherit;font-size:11px;color:#e7e7ed;border:1px solid var(--line);background:#ffffff08;padding:7px 9px;border-radius:8px;cursor:pointer}
-.small-btn:hover{background:#ffffff14}
-.screen{position:relative;background:#050505;aspect-ratio:16/9;min-height:300px;overflow:hidden}
-#game{position:absolute;inset:0;width:100%;height:100%;display:flex;align-items:stretch;justify-content:stretch}
-.entry-box{width:100%;height:100%;background:#050505;overflow:hidden}
-.entry-box iframe{display:block;width:100%;height:100%;border:0}
-.github-box{width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(ellipse at 50% 45%,#27ae6022,transparent 60%),#101014}
-.github-inner{max-width:390px}
-.project-icon{width:54px;height:54px;margin:0 auto 17px;border-radius:16px;display:grid;place-items:center;background:#27ae601a;border:1px solid #27ae6044;color:#8df2ae;font-size:24px}
-.github-box h2,.message h2{font-size:20px;margin:0 0 8px;letter-spacing:-.03em}
-.github-box p,.message p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
-.launch-btn{display:inline-flex;margin-top:18px;padding:11px 16px;border-radius:10px;background:linear-gradient(135deg,var(--green),#218c4b);font-weight:750;font-size:13px}
-.message{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(ellipse at 50% 45%,#27ae6022,transparent 60%),#101014}
-.message[hidden]{display:none}
-.message-inner{max-width:390px}
-.viewer-bottom{padding:13px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
-#signalStatus{display:flex;align-items:center;gap:8px}.status-light{width:7px;height:7px;border-radius:50%;background:#ffc65c}.status-light.ready{background:#64dd17;box-shadow:0 0 10px #64dd1766}
-.side-card{padding:21px}
-.side-label{font-size:10px;letter-spacing:.15em;color:#83dba0;font-weight:800;margin-bottom:12px}
-.side-card h2{font-size:19px;margin:0 0 10px;letter-spacing:-.03em}
-.side-card p{font-size:13px;color:var(--muted);line-height:1.75;margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
-.rule{height:1px;background:var(--line);margin:19px 0}
-.info-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin:12px 0;color:var(--muted)}
-.info-row strong{color:#e8e8ee;font-weight:650;text-align:right;overflow-wrap:anywhere}
-.info-block{margin-top:17px}.info-block h3{font-size:12px;margin:0 0 7px;color:#e8e8ee}
-.tip{border:1px solid #27ae6033;background:#27ae600d;padding:12px;border-radius:11px;font-size:12px;line-height:1.7;color:#b7c8bc}
-.footer{display:flex;justify-content:space-between;gap:12px;padding:22px 2px 0;color:#777783;font-size:11px}
-@media(max-width:900px){.layout{grid-template-columns:1fr}.side-card{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}.side-card .rule{grid-column:1/-1}.side-card .tip{align-self:start}.heading{align-items:start;flex-direction:column;gap:6px}.live{padding:0}}
-@media(max-width:560px){.topbar{height:58px}.brand{font-size:13px}.back{font-size:11px;padding:8px}.screen{aspect-ratio:4/3;min-height:240px}.viewer-top{padding:10px}.viewer-label{font-size:10px}.small-btn{padding:6px;font-size:10px}.side-card{display:block}.footer{flex-direction:column}}
+button{font:inherit}
+.site-header{height:70px;padding:0 clamp(18px,5vw,76px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:#f9faf7}
+.brand{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:850;letter-spacing:-.04em}
+.brand-mark{width:31px;height:31px;display:grid;place-items:center;background:var(--green);color:white;border-radius:9px;font-size:17px}
+.brand-sub{display:block;margin-top:2px;font-size:9px;letter-spacing:.14em;color:var(--muted);font-weight:750}
+.back-link{display:flex;align-items:center;gap:8px;color:#4b5748;font-size:12px;font-weight:700;padding:10px 13px;border:1px solid var(--line);border-radius:9px;transition:.2s}
+.back-link:hover{background:var(--white);border-color:#c7d2c1}
+main{width:min(1440px,100%);margin:auto;padding:38px clamp(16px,4vw,58px) 54px}
+.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px}
+.kicker{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:850;letter-spacing:.17em;color:var(--green);margin-bottom:12px}
+.kicker:before{content:"";width:22px;height:2px;background:var(--green)}
+h1{margin:0;font-size:clamp(27px,4vw,44px);line-height:1.16;letter-spacing:-.06em;font-weight:850}
+.subtitle{margin:11px 0 0;color:var(--muted);font-size:14px;line-height:1.7}
+.edition{font-size:11px;font-weight:750;letter-spacing:.08em;color:#7b8476;white-space:nowrap;padding-bottom:4px}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:stretch}
+.stage-card,.details-card{background:var(--white);border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.stage-head{height:53px;padding:0 17px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line)}
+.stage-name{display:flex;align-items:center;gap:10px;min-width:0;font-size:12px;font-weight:800}
+.stage-symbol{width:25px;height:25px;border-radius:7px;background:var(--soft);display:grid;place-items:center;color:var(--green);font-size:13px;flex:none}
+.stage-name span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.actions{display:flex;gap:7px;flex:none}
+.action{border:1px solid var(--line);background:white;color:#394236;padding:8px 11px;border-radius:8px;font-size:11px;font-weight:750;cursor:pointer;transition:.18s}
+.action:hover{background:var(--soft);border-color:#d0dac9}
+.action.primary{background:var(--green);border-color:var(--green);color:white}
+.action.primary:hover{background:#1c6338}
+.screen{position:relative;width:100%;aspect-ratio:16/9;min-height:300px;background:#171a17;overflow:hidden}
+#project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#fff}
+.empty-state{position:absolute;inset:0;display:grid;place-items:center;padding:28px;text-align:center;color:#dfe8dc;background:radial-gradient(ellipse at center,#29372a,#171a17 70%)}
+.empty-state[hidden]{display:none}
+.empty-inner{max-width:330px}
+.empty-icon{width:48px;height:48px;border:1px solid #718a6c;border-radius:14px;display:grid;place-items:center;margin:0 auto 16px;color:var(--lime);font-size:22px}
+.empty-state h2{font-size:18px;letter-spacing:-.04em;margin:0 0 8px}
+.empty-state p{font-size:12px;line-height:1.7;color:#b8c5b5;margin:0}
+.stage-foot{min-height:44px;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}
+.status{display:flex;align-items:center;gap:7px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#8bba68}
+.details-card{padding:23px 22px;display:flex;flex-direction:column}
+.section-label{font-size:10px;font-weight:850;letter-spacing:.15em;color:var(--green);margin-bottom:13px}
+.details-card h2{font-size:21px;line-height:1.35;letter-spacing:-.045em;margin:0 0 10px;overflow-wrap:anywhere}
+.description{font-size:13px;line-height:1.8;color:#60695c;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.meta{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:12px}
+.meta:first-of-type{margin-top:19px;border-top:1px solid var(--line)}
+.meta span{color:var(--muted)}
+.meta strong{font-weight:750;text-align:right;overflow-wrap:anywhere}
+.info-section{padding-top:19px}
+.info-section h3{font-size:12px;margin:0 0 8px;font-weight:850}
+.info-section p{font-size:12px;line-height:1.8;color:#65705f;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.note-panel{margin-top:auto;padding-top:21px}
+.note-box{padding:13px 14px;background:#f2f6eb;border-radius:10px;color:#53664c;font-size:11px;line-height:1.75}
+.below{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:20px;padding:18px 2px 0;border-top:1px solid var(--line);color:#81897b;font-size:10px}
+.below strong{color:#596453;font-weight:800}
+@media(min-width:1100px){.stage-card{min-width:0}.screen{min-height:440px}}
+@media(max-width:920px){.workspace{grid-template-columns:1fr}.details-card{display:grid;grid-template-columns:1fr 1fr;column-gap:28px;row-gap:4px}.details-main{grid-row:span 2}.meta:first-of-type{margin-top:14px}.note-panel{margin-top:0}.intro{align-items:flex-start}.edition{padding-top:4px}}
+@media(max-width:600px){.site-header{height:61px;padding:0 14px}.brand{font-size:12px}.brand-mark{width:28px;height:28px}.brand-sub{font-size:8px}.back-link{font-size:11px;padding:8px}.back-label{display:none}main{padding:27px 12px 34px}.intro{display:block;margin-bottom:18px}.edition{margin-top:13px}.subtitle{font-size:12px}.stage-head{height:auto;min-height:53px;padding:10px}.stage-name{font-size:11px}.action{padding:8px;font-size:10px}.screen{aspect-ratio:4/3;min-height:240px}.details-card{display:block;padding:19px}.below{align-items:flex-start;flex-direction:column;gap:8px}}
 </style>
 </head>
 <body>
-<header class="topbar">
-  <a class="brand" href="/2026festival/"><span class="brand-mark"></span><span>코딩과 함께라면<small>2026 FESTIVAL · PROJECT PLAYER</small></span></a>
-  <a class="back" href="/2026festival/">← 축제 작품 목록</a>
+<header class="site-header">
+  <a class="brand" href="/2026festival/">
+    <span class="brand-mark">↗</span>
+    <span>코딩과 함께라면<span class="brand-sub">2026 SCHOOL FESTIVAL</span></span>
+  </a>
+  <a class="back-link" href="/2026festival/"><span>←</span><span class="back-label">작품 목록으로</span></a>
 </header>
+
 <main>
-  <div class="eyebrow"><i class="dot"></i> FESTIVAL PROJECT SPACE</div>
-  <div class="heading">
-    <div><h1 id="pageHeading">작품 플레이어</h1><p class="lead">가운데에서 작품을 실행하고, 바깥 영역에서 작품 정보를 확인하세요.</p></div>
-    <div class="live">2026 · 코딩과 함께라면</div>
-  </div>
-  <div class="layout">
-    <section class="viewer-card">
-      <div class="viewer-top">
-        <div class="viewer-label"><span class="window-dots"><i></i><i></i><i></i></span> WORKSPACE <strong id="viewerTitle">작품 불러오기</strong></div>
-        <div class="viewer-actions">
-          <button class="small-btn" id="reloadBtn" type="button">새로고침</button>
-          <button class="small-btn" id="fullscreenBtn" type="button">전체 화면 ↗</button>
+  <section class="intro">
+    <div>
+      <div class="kicker">FESTIVAL PROJECT</div>
+      <h1 id="page-title">작품 이름</h1>
+      <p class="subtitle">직접 만들고, 직접 경험하는 우리들의 작품.</p>
+    </div>
+    <div class="edition">OKGYE · 2026</div>
+  </section>
+
+  <div class="workspace">
+    <section class="stage-card" aria-label="작품 실행 영역">
+      <div class="stage-head">
+        <div class="stage-name"><span class="stage-symbol">▶</span><span id="stage-title">작품 실행 화면</span></div>
+        <div class="actions">
+          <button class="action" id="reload-button" type="button">다시 실행</button>
+          <button class="action primary" id="fullscreen-button" type="button">전체 화면 ↗</button>
         </div>
       </div>
       <div class="screen" id="screen">
-        <div id="game"></div>
-        <div class="message" id="message">
-          <div class="message-inner">
-            <div class="project-icon">…</div>
-            <h2 id="messageTitle">작품 정보를 불러오는 중</h2>
-            <p id="messageText">잠시만 기다려 주세요.</p>
+        <iframe id="project-frame" title="작품 실행 화면" allowfullscreen></iframe>
+        <div class="empty-state" id="empty-state" hidden>
+          <div class="empty-inner">
+            <div class="empty-icon">↗</div>
+            <h2>작품을 새 창에서 실행해 주세요</h2>
+            <p>이 작품은 이 화면 안에 직접 표시할 수 없는 형식입니다.</p>
+            <a class="action primary" id="open-project" href="#" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:17px">작품 실행하기 ↗</a>
           </div>
         </div>
       </div>
-      <div class="viewer-bottom">
-        <div id="signalStatus"><i class="status-light" id="statusLight"></i><span id="statusText">작품 정보 불러오는 중</span></div>
-        <span id="typeLabel">EMBEDDED VIEWPORT</span>
+      <div class="stage-foot">
+        <span class="status"><i class="status-dot"></i><span id="status-text">작품 실행 준비 완료</span></span>
+        <span id="type-label">PROJECT VIEWER</span>
       </div>
     </section>
-    <aside class="side-card">
-      <div>
-        <div class="side-label">ABOUT THIS PROJECT</div>
-        <h2 id="projectTitle">작품</h2>
-        <p id="projectDescription">작품 설명이 여기에 표시됩니다.</p>
-        <div class="info-block"><h3>사용 방법</h3><p id="howto">-</p></div>
-        <div class="info-block"><h3>참고 사항</h3><p id="note">-</p></div>
+
+    <aside class="details-card">
+      <div class="details-main">
+        <div class="section-label">ABOUT THE PROJECT</div>
+        <h2 id="info-title">작품 이름</h2>
+        <p class="description" id="description">작품 설명을 입력하세요.</p>
+        <div class="meta"><span>제작</span><strong id="author">제작자 이름</strong></div>
+        <div class="meta"><span>작품 형식</span><strong id="project-type">Entry</strong></div>
       </div>
-      <div class="rule"></div>
-      <div>
-        <div class="side-label">PROJECT INFO</div>
-        <div class="info-row"><span>작품 ID</span><strong id="projectId">-</strong></div>
-        <div class="info-row"><span>제작자</span><strong id="projectBy">-</strong></div>
-        <div class="info-row"><span>작품 유형</span><strong id="projectType">-</strong></div>
+      <div class="info-section">
+        <h3>사용 방법</h3>
+        <p id="how-to">작품 사용 방법을 입력하세요.</p>
       </div>
-      <div class="rule"></div>
-      <div class="tip">작품 데이터는 주소의 <code>?id=작품ID</code> 값으로 불러옵니다. Entry 작품은 이 화면에 임베드하고, GitHub 작품은 실행 링크를 표시합니다.</div>
+      <div class="info-section">
+        <h3>참고 사항</h3>
+        <p id="notes">참고 사항을 입력하세요.</p>
+      </div>
+      <div class="note-panel">
+        <div class="note-box">작품을 실행한 뒤 화면을 클릭해 조작해 보세요. 전체 화면 버튼을 누르면 더 넓은 화면에서 즐길 수 있습니다.</div>
+      </div>
     </aside>
   </div>
-  <footer class="footer"><span>코딩과 함께라면 · 2026 Festival</span><span>PROJECT EMBED PLAYER</span></footer>
+
+  <footer class="below">
+    <strong>코딩과 함께라면 · SINCE 2025</strong>
+    <span>2026 SCHOOL FESTIVAL</span>
+  </footer>
 </main>
+
 <script>
-const screen = document.getElementById("screen");
-const game = document.getElementById("game");
-const message = document.getElementById("message");
-const messageTitle = document.getElementById("messageTitle");
-const messageText = document.getElementById("messageText");
-const statusText = document.getElementById("statusText");
-const statusLight = document.getElementById("statusLight");
-let loadedType = "";
-let projectUrl = "";
+/*
+ * 작품마다 이 설정만 수정하세요.
+ * Entry 임베드 작품: type을 "entry"로 두고 embed에 Entry 임베드 코드를 입력합니다.
+ * 별도 주소로 실행하는 작품: type을 "link"로 두고 url에 작품 주소를 입력합니다.
+ */
+const PROJECT = {
+  title: "작품 이름",
+  author: "제작자 이름",
+  description: "작품 설명을 입력하세요.",
+  howTo: "사용 방법을 입력하세요.",
+  notes: "참고 사항이 없다면 '없음'으로 입력하세요.",
+  type: "entry", // "entry" 또는 "link"
+  embed: '<iframe src="ENTRY_임베드_주소를_여기에_입력" allowfullscreen></iframe>',
+  url: ""
+};
 
-function setStatus(text, ready = false) {
-  statusText.textContent = text;
-  statusLight.classList.toggle("ready", ready);
+const $ = (id) => document.getElementById(id);
+const frame = $("project-frame");
+const emptyState = $("empty-state");
+const openProject = $("open-project");
+const screen = $("screen");
+
+$("page-title").textContent = PROJECT.title;
+$("stage-title").textContent = PROJECT.title;
+$("info-title").textContent = PROJECT.title;
+$("author").textContent = PROJECT.author;
+$("description").textContent = PROJECT.description;
+$("how-to").textContent = PROJECT.howTo;
+$("notes").textContent = PROJECT.notes;
+document.title = PROJECT.title + " | 2026 코딩과 함께라면";
+
+function getEmbedUrl(markup) {
+  const template = document.createElement("template");
+  template.innerHTML = markup || "";
+  const element = template.content.querySelector("iframe");
+  return element ? element.getAttribute("src") : "";
 }
-function showMessage(title, text) {
-  message.hidden = false;
-  messageTitle.textContent = title;
-  messageText.textContent = text;
-}
-function hideMessage() { message.hidden = true; }
-function safeHttpUrl(value) {
+
+function safeUrl(value) {
   try {
-    const url = new URL(value, location.origin);
-    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
-  } catch { return ""; }
-}
-function renderEntry(embed) {
-  game.replaceChildren();
-  const wrap = document.createElement("div");
-  wrap.className = "entry-box";
-  // Firestore의 embed 필드는 Entry에서 제공한 임베드 HTML 코드입니다.
-  wrap.innerHTML = embed || "";
-  if (!wrap.querySelector("iframe, object, embed")) {
-    game.replaceChildren();
-    showMessage("임베드 코드를 확인해 주세요", "이 Entry 작품에는 실행할 임베드 코드가 등록되어 있지 않습니다.");
-    setStatus("임베드 코드 없음");
-    return;
+    const parsed = new URL(value, location.href);
+    return ["https:", "http:"].includes(parsed.protocol) ? parsed.href : "";
+  } catch {
+    return "";
   }
-  game.appendChild(wrap);
-  hideMessage();
-  setStatus("Entry 작품 임베드 완료", true);
-  document.getElementById("typeLabel").textContent = "ENTRY EMBED";
-}
-function renderGithub(url) {
-  game.replaceChildren();
-  const safeUrl = safeHttpUrl(url);
-  projectUrl = safeUrl;
-  const box = document.createElement("div");
-  box.className = "github-box";
-  const inner = document.createElement("div");
-  inner.className = "github-inner";
-  const icon = document.createElement("div");
-  icon.className = "project-icon";
-  icon.textContent = "↗";
-  const title = document.createElement("h2");
-  title.textContent = "프로젝트 실행하기";
-  const desc = document.createElement("p");
-  desc.textContent = safeUrl ? "아래 버튼을 눌러 작품을 새 탭에서 실행할 수 있습니다." : "이 작품에는 유효한 실행 주소가 등록되어 있지 않습니다.";
-  inner.append(icon, title, desc);
-  if (safeUrl) {
-    const link = document.createElement("a");
-    link.className = "launch-btn";
-    link.href = safeUrl;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = "🚀 프로젝트 실행하기";
-    inner.appendChild(link);
-  }
-  box.appendChild(inner);
-  game.appendChild(box);
-  hideMessage();
-  setStatus(safeUrl ? "실행 링크 준비 완료" : "실행 주소 없음", Boolean(safeUrl));
-  document.getElementById("typeLabel").textContent = "GITHUB PROJECT";
 }
 
-document.getElementById("reloadBtn").addEventListener("click", () => {
-  if (loadedType === "entry") {
-    const frames = game.querySelectorAll("iframe");
-    if (frames.length) frames.forEach(frame => { frame.src = frame.src; });
-    else location.reload();
-  } else if (loadedType === "github" && projectUrl) {
-    window.open(projectUrl, "_blank", "noopener,noreferrer");
+function showExternalProject(url) {
+  const safe = safeUrl(url);
+  frame.hidden = true;
+  emptyState.hidden = false;
+  $("project-type").textContent = "외부 실행";
+  $("type-label").textContent = "EXTERNAL PROJECT";
+  $("status-text").textContent = safe ? "새 창에서 실행할 수 있습니다" : "작품 주소를 입력해 주세요";
+  openProject.href = safe || "#";
+  openProject.style.opacity = safe ? "1" : ".45";
+  openProject.style.pointerEvents = safe ? "auto" : "none";
+}
+
+if (PROJECT.type === "entry") {
+  const embedUrl = safeUrl(getEmbedUrl(PROJECT.embed));
+  if (embedUrl) {
+    frame.src = embedUrl;
+    $("project-type").textContent = "Entry 임베드";
+    $("type-label").textContent = "ENTRY EMBED";
+    $("status-text").textContent = "작품 실행 준비 완료";
+    emptyState.hidden = true;
   } else {
-    location.reload();
+    showExternalProject(PROJECT.url);
+    $("status-text").textContent = "임베드 주소를 확인해 주세요";
+  }
+} else {
+  showExternalProject(PROJECT.url);
+}
+
+$("reload-button").addEventListener("click", () => {
+  if (!frame.hidden && frame.src) {
+    frame.src = frame.src;
+    $("status-text").textContent = "작품을 다시 불러오는 중";
+  } else if (openProject.href && openProject.href !== location.href && openProject.href !== "#") {
+    window.open(openProject.href, "_blank", "noopener,noreferrer");
   }
 });
-document.getElementById("fullscreenBtn").addEventListener("click", async () => {
+
+$("fullscreen-button").addEventListener("click", async () => {
   try {
     if (!document.fullscreenElement) await screen.requestFullscreen();
     else await document.exitFullscreen();
-  } catch { setStatus("전체 화면을 사용할 수 없습니다"); }
+  } catch {
+    $("status-text").textContent = "전체 화면을 사용할 수 없습니다";
+  }
 });
-
-(async function loadProject() {
-  const id = new URLSearchParams(location.search).get("id");
-  if (!id) {
-    showMessage("작품 정보가 없습니다", "주소에 ?id=작품ID를 붙여 접속해 주세요.");
-    setStatus("작품 ID 없음");
-    document.getElementById("projectTitle").textContent = "작품을 선택해 주세요";
-    return;
-  }
-  document.getElementById("projectId").textContent = id;
-  try {
-    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
-    const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
-    const firebaseConfig = {
-      apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
-      authDomain: "festivallikes.firebaseapp.com",
-      projectId: "festivallikes",
-      storageBucket: "festivallikes.firebasestorage.app",
-      messagingSenderId: "782245120700",
-      appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
-    };
-    const app = initializeApp(firebaseConfig, "festivalProjectPlayer");
-    const db = getFirestore(app);
-    const snap = await getDoc(doc(db, "projects", id));
-    if (!snap.exists()) {
-      showMessage("작품을 찾을 수 없습니다", "등록된 작품 ID인지 확인해 주세요.");
-      document.getElementById("projectTitle").textContent = "작품을 찾을 수 없습니다";
-      document.getElementById("pageHeading").textContent = "작품을 찾을 수 없습니다";
-      setStatus("작품 정보 없음");
-      return;
-    }
-    const data = snap.data();
-    const title = data.title || id;
-    document.title = title + " - 2026 Festival";
-    document.getElementById("pageHeading").textContent = title;
-    document.getElementById("viewerTitle").textContent = title;
-    document.getElementById("projectTitle").textContent = "작품 이름: " + id;
-    document.getElementById("projectDescription").textContent = data.detail || "등록된 작품 설명이 없습니다.";
-    document.getElementById("howto").textContent = data.howto || "등록된 사용 방법이 없습니다.";
-    document.getElementById("note").textContent = data.note || "참고 사항이 없습니다.";
-    document.getElementById("projectBy").textContent = data.by || "미등록";
-    loadedType = data.type === "entry" ? "entry" : "github";
-    document.getElementById("projectType").textContent = loadedType === "entry" ? "Entry" : "GitHub";
-    if (loadedType === "entry") renderEntry(data.embed);
-    else renderGithub(data.url || "");
-  } catch (error) {
-    console.error(error);
-    showMessage("작품 정보를 불러오지 못했습니다", "Firestore 연결 또는 데이터베이스 규칙을 확인해 주세요.");
-    setStatus("불러오기 실패");
-  }
-})();
 </script>
 </body>
 </html>
