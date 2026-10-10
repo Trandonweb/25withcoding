@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101014">
+<title>작품 임베드 테스트 | 코딩과 함께라면</title>
+<style>
+:root{color-scheme:dark;--bg:#101014;--panel:#1b1b22;--line:rgba(255,255,255,.12);--green:#27ae60;--muted:#9b9ba7}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:#fff;overflow:hidden}
+#stage{position:fixed;inset:0;background:#000}
+#workFrame{display:block;width:100%;height:100%;border:0;background:#000}
+#status{position:fixed;left:14px;bottom:14px;z-index:10;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(20,20,25,.82);backdrop-filter:blur(12px);font-size:12px;color:#ddd;transition:opacity .25s}
+#status.done{opacity:0;pointer-events:none}
+#status strong{color:#7dffad}
+#fallback{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;background:radial-gradient(ellipse at 50% 40%,rgba(39,174,96,.12),transparent 55%),var(--bg)}
+#fallback[hidden]{display:none}
+.card{width:min(460px,100%);padding:28px;border:1px solid var(--line);border-radius:20px;background:var(--panel)}
+h1{margin:0 0 10px;font-size:clamp(22px,4vw,30px)}
+p{margin:8px 0;color:var(--muted);line-height:1.7;font-size:14px}
+code{color:#9dffbd;background:#111;padding:3px 6px;border-radius:5px}
+</style>
+</head>
+<body>
+<main id="stage">
+  <iframe id="workFrame" title="임베드 작품" allow="autoplay; fullscreen; gamepad; clipboard-read; clipboard-write" allowfullscreen></iframe>
+</main>
+
+<section id="fallback">
+  <div class="card">
+    <h1>작품 임베드 대기 중</h1>
+    <p>인트로에서 <code>START_CLICKED</code> 신호가 오면 작품 화면으로 전환됩니다.</p>
+    <p>아직 연결할 작품 주소가 설정되지 않았습니다. 아래 코드의 <code>WORK_URL</code>에 작품 주소를 넣으면 됩니다.</p>
+  </div>
+</section>
+
+<div id="status">신호 대기 중 · <strong>START_CLICKED</strong></div>
+
+<script>
+(() => {
+  /*
+   * 연결할 작품 주소를 여기에 입력하세요.
+   * 예: const WORK_URL = "/2026festival/작품폴더/index.html";
+   * 외부 사이트도 가능하지만, 해당 사이트가 iframe 임베드를 허용해야 합니다.
+   */
+  const WORK_URL = "";
+
+  const INTRO_URL = "/intro/index.html";
+  const frame = document.getElementById("workFrame");
+  const fallback = document.getElementById("fallback");
+  const status = document.getElementById("status");
+
+  let switched = false;
+
+  function showWork() {
+    if (switched) return;
+    switched = true;
+
+    if (!WORK_URL.trim()) {
+      status.textContent = "START_CLICKED 수신 완료 · WORK_URL 설정 필요";
+      status.classList.remove("done");
+      fallback.hidden = false;
+      fallback.querySelector("h1").textContent = "신호 수신 완료";
+      fallback.querySelectorAll("p")[0].textContent =
+        "인트로의 START_CLICKED 신호를 정상적으로 받았습니다.";
+      fallback.querySelectorAll("p")[1].textContent =
+        "이제 코드 상단의 WORK_URL에 임베드할 작품 주소를 지정하면 자동으로 전환됩니다.";
+      return;
+    }
+
+    fallback.hidden = true;
+    status.innerHTML = "신호 수신 완료 · <strong>작품 표시 중</strong>";
+    frame.src = WORK_URL;
+    status.classList.add("done");
+  }
+
+  window.addEventListener("message", (event) => {
+    // 이 페이지에 삽입된 인트로에서 보내는 시작 신호만 처리합니다.
+    if (event.source !== frame.contentWindow) return;
+    if (!event.data || event.data.type !== "START_CLICKED") return;
+    showWork();
+  });
+
+  // 처음에는 인트로를 띄웁니다. 인트로는 이 프레임 안에서 실행됩니다.
+  window.__introEmbedded = true;
+  frame.src = INTRO_URL;
+})();
+</script>
+</body>
+</html>
