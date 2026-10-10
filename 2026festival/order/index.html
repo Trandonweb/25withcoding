@@ -54,7 +54,7 @@ async function changeQty(id,delta){
 function renderClient(o){menus.forEach(m=>{const el=document.getElementById("qty-"+m.id);if(el)el.textContent=o.items?.[m.id]||0});const rows=menus.filter(m=>o.items?.[m.id]).map(m=>`<div class="cart-item"><div class="cart-item-row"><b>${m.name}</b><b>${money(m.price*(o.items[m.id]||0))}원</b></div><div class="qty">${o.items[m.id]}개 × ${money(m.price)}원</div></div>`).join("");document.getElementById("cartList").innerHTML=rows||'<div class="empty">아직 담은 메뉴가 없습니다.</div>';document.getElementById("total").textContent=money(o.total);document.getElementById("paidBox").innerHTML=o.status==='paid'?'<div class="paidbox">결제 완료</div>':o.status==='cancelled'?'<div class="paidbox" style="background:#fdecec;color:#b42318">결제 취소</div>':'';document.querySelectorAll('.qty-btn').forEach(b=>b.disabled=o.status==='paid'||o.status==='cancelled');}
 function itemCount(o){return menus.reduce((n,m)=>n+Number((o.items||{})[m.id]||0),0);}
 function historyFor(k){return Array.isArray((orders[k]||{}).history)?orders[k].history:[];}
-function nextOrderNo(k){const maxSeq=historyFor(k).reduce((max,h)=>{const raw=String(h.orderNo||h.id||"");const n=Number(raw.slice(String(k).length));return raw.startsWith(String(k))&&Number.isFinite(n)?Math.max(max,n):max;},0);return String(k)+String(maxSeq+1).padStart(2,"0");}
+function nextOrderNo(k,sourceHistory=historyFor(k)){const maxSeq=sourceHistory.reduce((max,h)=>{const raw=String(h.orderNo||h.id||"");const n=Number(raw.slice(String(k).length));return raw.startsWith(String(k))&&Number.isFinite(n)?Math.max(max,n):max;},0);return String(k)+String(maxSeq+1).padStart(2,"0");}
 function renderHost(){
  let html="",grand=0,historyHtml="";
  for(const k of kiosks){
@@ -85,7 +85,7 @@ async function completePayment(k){
  const orderNo=o.orderNo||nextOrderNo(k);
  const archived={id:orderNo,orderNo,kiosk:k,items:{...(o.items||{})},total:Number(o.total||0),status:"paid",updatedAt:Date.now()};
  history.push(archived);
- await saveOrder(k,{...emptyOrder(),history,updatedAt:Date.now(),kiosk:k,lastAction:"paid",nextOrderSeq:Number(orderNo.slice(String(k).length))+1});
+ await saveOrder(k,{...emptyOrder(),orderNo:nextOrderNo(k,history),history,updatedAt:Date.now(),kiosk:k,lastAction:"paid",nextOrderSeq:Number(orderNo.slice(String(k).length))+1});
 }
 async function cancelHistoryOrder(k,id){const o=orders[k]||emptyOrder(),history=historyFor(k),h=history.find(x=>x.id===id);if(!h||h.status!=="paid")return;if(!confirm("이 주문의 결제를 취소할까요? 주문 기록은 유지됩니다."))return;await saveOrder(k,{...o,history:history.map(x=>x.id===id?{...x,status:"cancelled",updatedAt:Date.now()}:x),updatedAt:Date.now(),kiosk:k,lastAction:"payment-cancelled"});}
 async function undoHistoryCompletion(k,id){const o=orders[k]||emptyOrder(),history=historyFor(k),h=history.find(x=>x.id===id);if(!h||h.status!=="paid")return;if(itemCount(o)){alert("현재 진행 중인 주문이 있어 되돌릴 수 없습니다. 먼저 현재 주문을 비워 주세요.");return;}await saveOrder(k,{...o,items:{...(h.items||{})},total:Number(h.total||0),status:"waiting",orderNo:h.orderNo,history:history.filter(x=>x.id!==id),updatedAt:Date.now(),kiosk:k,lastAction:"payment-undone"});}
