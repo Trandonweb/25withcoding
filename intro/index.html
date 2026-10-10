@@ -142,8 +142,7 @@ function showEnd(){
   $("flash").style.opacity=0;
   $("startScreen").classList.add("hide"); $("skip").classList.add("hide");
   $("logo").style.opacity=1; $("since").style.opacity=1;
-  if(!window.__introEmbedded) $("finalStart").classList.add("visible");
-  else notifyParent();
+  $("finalStart").classList.add("visible");
   if(glReady){ renderer.setClearColor(0,1); renderer.clear(); }
 }
 
@@ -406,11 +405,9 @@ function frame(now){
 /* ---------- 임베드 표시 처리 ---------- */
 if(window.__introEmbedded){
   $("startScreen").classList.add("hide");
-  $("finalStart").style.display="none";
 }
 $("finalStart").addEventListener("click",()=>{
-  if(window.__introEmbedded) return;
-  window.parent.postMessage({type:"START_CLICKED"}, "*");
+  if(window.__introEmbedded) notifyParent();
   $("finalStart").classList.remove("visible");
 });
 
