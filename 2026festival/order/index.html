@@ -38,10 +38,23 @@ document.getElementById("setupPassword").addEventListener("keydown",e=>{if(e.key
 try{const saved=JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null");if(saved&&["client","host"].includes(saved.role)&&Array.isArray(saved.kiosks)){selectedRole=saved.role;selectedKiosks=saved.kiosks.filter(k=>["1","2","3","4"].includes(k)).slice(0,4);if(selectedRole==="client")selectedKiosks=[selectedKiosks[0]||"1"];updateSetupUI();if(saved.unlocked&&selectedKiosks.length){role=selectedRole;kiosks=[...selectedKiosks];start();}}}catch(e){console.warn("설정 복원 실패",e);}
 const money=n=>Number(n||0).toLocaleString("ko-KR"),emptyOrder=()=>({items:{},total:0,status:"waiting",updatedAt:Date.now()});
 function renderMenus(){document.getElementById("menus").innerHTML=menus.map(m=>`<div class="menu-card"><div class="name">${m.name}</div><div class="price">${money(m.price)}원</div><div class="controls"><button class="qty-btn minus" data-id="${m.id}" data-delta="-1">−</button><div class="qty-num" id="qty-${m.id}">0</div><button class="qty-btn" data-id="${m.id}" data-delta="1">+</button></div></div>`).join("");document.querySelectorAll(".qty-btn").forEach(b=>b.onclick=()=>changeQty(b.dataset.id,Number(b.dataset.delta)));}
-async function changeQty(id,delta){const kiosk=kiosks[0],current=orders[kiosk]||emptyOrder();if(current.status==='paid'||current.status==='cancelled')return;const items={...(current.items||{})};items[id]=Math.max(0,(Number(items[id])||0)+delta);if(items[id]===0)delete items[id];const total=menus.reduce((s,m)=>s+m.price*(items[m.id]||0),0);const next={...current,items,total,status:'waiting',updatedAt:Date.now(),kiosk};orders[kiosk]=next;renderClient(next);sendRtc(kiosk,{type:"order",order:next});writeQueues[kiosk]=(writeQueues[kiosk]||Promise.resolve()).then(()=>setDoc(orderDoc(kiosk),next,{merge:true}));try{await writeQueues[kiosk];}catch(e){console.error('ORDER_WRITE_ERROR',e);alert('주문 저장 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. '+e.message);}}
+async function changeQty(id,delta){
+ const kiosk=kiosks[0],current=orders[kiosk]||emptyOrder();
+ if(current.status==='paid'||current.status==='cancelled')return;
+ const items={...(current.items||{})};
+ items[id]=Math.max(0,(Number(items[id])||0)+delta);
+ if(items[id]===0)delete items[id];
+ const total=menus.reduce((sum,m)=>sum+m.price*(items[m.id]||0),0);
+ const hasItems=menus.some(m=>Number(items[m.id]||0)>0);
+ const next={...current,items,total,status:'waiting',orderNo:hasItems?(current.orderNo||nextOrderNo(kiosk)):null,updatedAt:Date.now(),kiosk};
+ orders[kiosk]=next;renderClient(next);sendRtc(kiosk,{type:"order",order:next});
+ writeQueues[kiosk]=(writeQueues[kiosk]||Promise.resolve()).then(()=>setDoc(orderDoc(kiosk),next,{merge:true}));
+ try{await writeQueues[kiosk];}catch(e){console.error('ORDER_WRITE_ERROR',e);alert('주문 저장 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. '+e.message);}
+}
 function renderClient(o){menus.forEach(m=>{const el=document.getElementById("qty-"+m.id);if(el)el.textContent=o.items?.[m.id]||0});const rows=menus.filter(m=>o.items?.[m.id]).map(m=>`<div class="cart-item"><div class="cart-item-row"><b>${m.name}</b><b>${money(m.price*(o.items[m.id]||0))}원</b></div><div class="qty">${o.items[m.id]}개 × ${money(m.price)}원</div></div>`).join("");document.getElementById("cartList").innerHTML=rows||'<div class="empty">아직 담은 메뉴가 없습니다.</div>';document.getElementById("total").textContent=money(o.total);document.getElementById("paidBox").innerHTML=o.status==='paid'?'<div class="paidbox">결제 완료</div>':o.status==='cancelled'?'<div class="paidbox" style="background:#fdecec;color:#b42318">결제 취소</div>':'';document.querySelectorAll('.qty-btn').forEach(b=>b.disabled=o.status==='paid'||o.status==='cancelled');}
 function itemCount(o){return menus.reduce((n,m)=>n+Number((o.items||{})[m.id]||0),0);}
 function historyFor(k){return Array.isArray((orders[k]||{}).history)?orders[k].history:[];}
+function nextOrderNo(k){const maxSeq=historyFor(k).reduce((max,h)=>{const raw=String(h.orderNo||h.id||"");const n=Number(raw.slice(String(k).length));return raw.startsWith(String(k))&&Number.isFinite(n)?Math.max(max,n):max;},0);return String(k)+String(maxSeq+1).padStart(2,"0");}
 function renderHost(){
  let html="",grand=0,historyHtml="";
  for(const k of kiosks){
@@ -69,15 +82,14 @@ async function saveOrder(k,next){orders[k]=next;renderHost();sendRtc(k,{type:"or
 async function completePayment(k){
  const o=orders[k]||emptyOrder();if(!itemCount(o)){alert("완료할 주문이 없습니다.");return;}if(o.status==="paid"||o.status==="cancelled"){alert("이미 처리된 주문입니다.");return;}
  const history=[...historyFor(k)];
- const maxSeq=history.reduce((max,h)=>{const n=Number(String(h.orderNo||"").slice(String(k).length));return String(h.orderNo||"").startsWith(String(k))&&Number.isFinite(n)?Math.max(max,n):max;},0);
- const orderNo=o.orderNo||String(k)+String(maxSeq+1).padStart(2,"0");
+ const orderNo=o.orderNo||nextOrderNo(k);
  const archived={id:orderNo,orderNo,kiosk:k,items:{...(o.items||{})},total:Number(o.total||0),status:"paid",updatedAt:Date.now()};
  history.push(archived);
- await saveOrder(k,{...emptyOrder(),history,updatedAt:Date.now(),kiosk:k,lastAction:"paid",nextOrderSeq:maxSeq+2});
+ await saveOrder(k,{...emptyOrder(),history,updatedAt:Date.now(),kiosk:k,lastAction:"paid",nextOrderSeq:Number(orderNo.slice(String(k).length))+1});
 }
 async function cancelHistoryOrder(k,id){const o=orders[k]||emptyOrder(),history=historyFor(k),h=history.find(x=>x.id===id);if(!h||h.status!=="paid")return;if(!confirm("이 주문의 결제를 취소할까요? 주문 기록은 유지됩니다."))return;await saveOrder(k,{...o,history:history.map(x=>x.id===id?{...x,status:"cancelled",updatedAt:Date.now()}:x),updatedAt:Date.now(),kiosk:k,lastAction:"payment-cancelled"});}
 async function undoHistoryCompletion(k,id){const o=orders[k]||emptyOrder(),history=historyFor(k),h=history.find(x=>x.id===id);if(!h||h.status!=="paid")return;if(itemCount(o)){alert("현재 진행 중인 주문이 있어 되돌릴 수 없습니다. 먼저 현재 주문을 비워 주세요.");return;}await saveOrder(k,{...o,items:{...(h.items||{})},total:Number(h.total||0),status:"waiting",orderNo:h.orderNo,history:history.filter(x=>x.id!==id),updatedAt:Date.now(),kiosk:k,lastAction:"payment-undone"});}
-async function loadHistory(k,id){const o=orders[k]||emptyOrder(),h=historyFor(k).find(x=>x.id===id);if(!h){alert("해당 주문 기록을 찾을 수 없습니다.");return;}if(itemCount(o)&&!confirm("현재 주문을 이전 주문으로 덮어쓸까요? 현재 주문은 기록에 보존되지 않습니다."))return;await saveOrder(k,{...o,items:{...(h.items||{})},total:Number(h.total||0),status:"waiting",orderNo:h.orderNo||h.orderNo,status:"waiting",updatedAt:Date.now(),kiosk:k,lastAction:"history-loaded"});}
+async function loadHistory(k,id){const o=orders[k]||emptyOrder(),h=historyFor(k).find(x=>x.id===id);if(!h){alert("해당 주문 기록을 찾을 수 없습니다.");return;}if(itemCount(o)&&!confirm("현재 주문을 이전 주문으로 덮어쓸까요? 현재 주문은 기록에 보존되지 않습니다."))return;await saveOrder(k,{...o,items:{...(h.items||{})},total:Number(h.total||0),status:"waiting",orderNo:null,status:"waiting",updatedAt:Date.now(),kiosk:k,lastAction:"history-loaded"});}
 async function pay(k){await completePayment(k);}
 
 
