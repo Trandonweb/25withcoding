@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101114">
+<title>작품 이름 | 2026 코딩과 함께라면</title>
+<style>
+:root{color-scheme:dark;--bg:#101114;--panel:#191b20;--panel2:#202329;--line:#30333a;--text:#f2f4f1;--muted:#a0a6a0;--green:#2fba68;--lime:#b5ef69}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto}
+body{background:var(--bg);color:var(--text);font-family:Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif}
+a{color:inherit;text-decoration:none}button{font:inherit}
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--line);background:#141519;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:850;letter-spacing:-.03em;min-width:0}
+.mark{display:grid;place-items:center;width:29px;height:29px;background:var(--green);color:#08140c;border-radius:8px;font-size:16px;font-weight:950}
+.brand small{display:block;color:#8c948c;font-size:9px;letter-spacing:.13em;margin-top:2px}
+.back{font-size:11px;color:#c4c9c2;padding:8px 11px;border:1px solid #35383e;border-radius:8px;white-space:nowrap}
+.back:hover{background:#24262b}
+main{min-height:0;min-width:0;width:100%;padding:17px 22px 24px;display:block;flex:1}
+.intro{display:flex;align-items:center;justify-content:space-between;gap:18px;min-width:0;margin-bottom:14px}
+.intro-left{min-width:0}
+.kicker{font-size:9px;letter-spacing:.19em;color:var(--green);font-weight:850;margin-bottom:5px}
+h1{margin:0;font-size:clamp(20px,2.2vw,30px);line-height:1.15;letter-spacing:-.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subtitle{font-size:11px;color:var(--muted);margin:6px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.year{flex:none;text-align:right;color:#7d857e;font-size:10px;letter-spacing:.1em}
+.workspace{display:grid;grid-template-columns:minmax(0,3fr) minmax(220px,1fr);gap:16px;align-items:start;min-height:0;min-width:0}
+.viewer{width:min(100%,900px,calc((100dvh - 210px) * 640 / 420));aspect-ratio:640 / 420;height:auto;justify-self:center;min-width:0;min-height:0;display:grid;grid-template-rows:43px minmax(0,1fr) 34px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.viewer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 13px;border-bottom:1px solid var(--line);min-width:0}
+.viewer-title{display:flex;align-items:center;gap:9px;min-width:0;font-size:11px;font-weight:750}
+.viewer-title span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.play-icon{width:23px;height:23px;border-radius:6px;display:grid;place-items:center;background:#20372a;color:var(--lime);font-size:11px;flex:none}
+.actions{display:flex;gap:6px;flex:none}
+.btn{border:1px solid #3a3d43;background:#22252a;color:#e5e8e3;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#2d3036}
+.btn.primary{background:var(--green);border-color:var(--green);color:#08140c}
+.btn.primary:hover{background:#48cf7c}
+.screen{position:relative;min-height:0;min-width:0;background:#08090a;overflow:hidden}
+#project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;display:block}
+#project-frame[hidden]{display:none}
+.empty{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;background:radial-gradient(ellipse at center,#202a22,#090a0b 72%)}
+.empty[hidden]{display:none}
+.empty-inner{max-width:300px}
+.empty-icon{width:42px;height:42px;display:grid;place-items:center;margin:0 auto 13px;border:1px solid #3d6346;border-radius:12px;color:var(--lime);font-size:20px}
+.empty h2{font-size:16px;margin:0 0 7px;letter-spacing:-.03em}
+.empty p{font-size:11px;line-height:1.65;color:#a9b4a9;margin:0}
+.launch{display:inline-block;margin-top:13px}
+.viewer-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 13px;border-top:1px solid var(--line);font-size:9px;color:#969d96}
+.status{display:flex;align-items:center;gap:7px;min-width:0}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex:none}
+#status-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.details{grid-column:1 / -1;min-height:0;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;overflow:visible}
+.recommendations{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px;overflow:hidden}
+.recommendations-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.recommendations-head h2{font-size:13px;margin:0;letter-spacing:-.03em}
+.recommendations-head span{font-size:9px;color:var(--green);font-weight:800;letter-spacing:.08em}
+.recommendation-list{display:flex;flex-direction:column;gap:8px}
+.recommendation{display:block;padding:11px;border:1px solid var(--line);border-radius:9px;background:#202228;transition:background .15s,border-color .15s}
+.recommendation:hover{background:#282c30;border-color:#39744b}
+.recommendation strong{display:block;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+.recommendation small{display:block;color:#9ba39b;font-size:9px;line-height:1.5;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.recommendation-empty{font-size:10px;line-height:1.6;color:#9ba39b;margin:0}
+.all-projects{display:block;margin-top:11px;padding:9px 10px;text-align:center;border-radius:8px;background:#26392c;color:#b9efc7;font-size:10px;font-weight:750}
+.section-label{font-size:9px;font-weight:850;letter-spacing:.16em;color:var(--green);margin-bottom:10px}
+.details h2{font-size:18px;line-height:1.25;letter-spacing:-.04em;margin:0 0 8px;overflow-wrap:anywhere}
+.description{font-size:12px;line-height:1.75;color:#b0b6af;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding:9px 0;font-size:10px}
+.meta:first-of-type{margin-top:13px}
+.meta span{color:#8f978f}.meta strong{text-align:right;font-weight:700;overflow-wrap:anywhere}
+.info{padding-top:11px;border-top:1px solid var(--line);margin-top:2px;min-height:0}
+.info h3{font-size:10px;margin:0 0 5px;font-weight:800}
+.info p{font-size:11px;line-height:1.7;color:#aeb5ad;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.tip{margin-top:auto;padding:9px 10px;background:#202a22;border:1px solid #2a4230;border-radius:8px;color:#b5c9b6;font-size:9px;line-height:1.5}
+footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 23px;color:#707770;font-size:9px;border-top:1px solid #25272c;min-width:0;margin-top:auto}
+footer strong{color:#a6aea5;font-weight:750}
+@media(max-width:760px){
+ .topbar{padding:0 12px}.brand{font-size:11px}.mark{width:26px;height:26px}.brand small{font-size:8px}.back{font-size:10px;padding:7px}
+ main{padding:11px 10px 20px}
+ .intro{gap:8px;margin-bottom:10px}.kicker{font-size:8px;margin-bottom:4px}h1{font-size:20px}.subtitle{font-size:10px;margin-top:4px}.year{font-size:8px}
+ .workspace{grid-template-columns:minmax(0,3fr) minmax(190px,1fr);gap:10px}
+ .viewer{width:min(100%,900px,calc((100dvh - 175px) * 640 / 420));aspect-ratio:640 / 420;height:auto;grid-template-rows:39px minmax(0,1fr) 29px}
+ .viewer-head{padding:0 8px;gap:5px}.viewer-title{font-size:10px;gap:5px}.play-icon{width:20px;height:20px}
+ .actions{gap:4px}.btn{font-size:9px;padding:6px}
+ .details{padding:14px}.section-label{font-size:8px;margin-bottom:7px}.details h2{font-size:15px}.description{font-size:11px}.meta{padding:8px 0;font-size:9px}.info{padding-top:10px}.info h3{font-size:10px}.info p{font-size:10px}.tip{font-size:9px;padding:8px;margin-top:14px}
+ footer{padding:10px 11px;font-size:8px}
+}
+@media(max-width:620px){
+ .workspace{grid-template-columns:minmax(0,1fr)}
+ .viewer{width:min(100%,900px,calc((100dvh - 175px) * 640 / 420));justify-self:center}
+ .recommendations{padding:13px}
+ .recommendation-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:420px){
+ .viewer-head{align-items:center}.viewer-title{max-width:90px}.btn{padding:6px 5px;font-size:8px}
+ .subtitle{max-width:65vw}
+}
+@media(max-height:520px){
+ .topbar{min-height:44px}
+ main{padding-top:7px;padding-bottom:16px}
+ .intro{gap:8px;margin-bottom:7px}.kicker{margin-bottom:3px}h1{font-size:20px}.subtitle{margin-top:3px;font-size:10px}
+ .viewer{width:min(100%,900px,calc((100dvh - 155px) * 640 / 420));aspect-ratio:640 / 420;height:auto;min-height:0;grid-template-rows:33px minmax(0,1fr) 25px}
+ .details{padding:12px}.section-label{margin-bottom:5px}.details h2{font-size:14px;margin-bottom:5px}.meta{padding:5px 0;margin-top:5px}.info{padding-top:7px}.info h3{margin-bottom:3px}.tip{padding:5px;font-size:8px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <a class="brand" href="/2026festival/"><span class="mark">↗</span><span>코딩과 함께라면<small>2026 SCHOOL FESTIVAL</small></span></a>
+  <a class="back" href="/2026festival/">← 작품 목록</a>
+</header>
+<main>
+  <section class="intro">
+    <div class="intro-left"><div class="kicker">FESTIVAL PROJECT</div><h1 id="page-title">작품 이름</h1><p class="subtitle">직접 만들고, 직접 경험하는 우리들의 작품.</p></div>
+    <div class="year">OKGYE · 2026</div>
+  </section>
+  <div class="workspace">
+    <section class="viewer">
+      <div class="viewer-head">
+        <div class="viewer-title"><span class="play-icon">▶</span><span id="stage-title">작품 실행 화면</span></div>
+        <div class="actions"><button class="btn" id="reload-button" type="button">↻ 새로고침</button><button class="btn primary" id="fullscreen-button" type="button">전체 화면 ↗</button></div>
+      </div>
+      <div class="screen" id="screen">
+        <iframe id="project-frame" title="작품 실행 화면" allowfullscreen></iframe>
+        <div class="empty" id="empty-state" hidden><div class="empty-inner"><div class="empty-icon">↗</div><h2>작품 실행하기</h2><p>이 작품은 별도 창에서 실행됩니다.</p><a class="btn primary launch" id="open-project" href="#" target="_blank" rel="noopener noreferrer">작품 열기 ↗</a></div></div>
+      </div>
+      <div class="viewer-foot"><span class="status"><i class="status-dot"></i><span id="status-text">작품 실행 준비 완료</span></span><span id="type-label">PROJECT VIEWER</span></div>
+    </section>
+    <aside class="recommendations">
+      <div class="recommendations-head"><h2>다른 작품</h2><span>DISCOVER</span></div>
+      <div class="recommendation-list" id="recommendation-list"><p class="recommendation-empty">작품을 불러오는 중...</p></div>
+      <a class="all-projects" href="/2026festival/">전체 작품 보기 ↗</a>
+    </aside>
+    <aside class="details">
+      <div class="section-label">ABOUT THE PROJECT</div>
+      <h2 id="info-title">작품 이름</h2>
+      <p class="description" id="description">축제 프로젝트를 실행하고 응원해 주세요.</p>
+      <div class="meta"><span>제작자</span><strong id="author">코딩과 함께라면</strong></div>
+      <div class="meta"><span>작품 형식</span><strong id="project-type">프로젝트 임베드</strong></div><div class="meta"><span>응원</span><strong><button class="btn primary" id="like-button" type="button">❤️ 응원하기 <span id="like-count">불러오는 중</span></button></strong></div>
+      <section class="info"><h3>사용 방법</h3><p id="how-to">사용 방법을 입력하세요.</p></section>
+      <section class="info"><h3>참고 사항</h3><p id="notes">참고 사항을 입력하세요.</p></section>
+      <div class="tip">화면이 작다면 전체 화면 버튼을 눌러 작품을 넓게 즐겨 보세요.</div>
+    </aside>
+  </div>
+</main>
+<footer><strong>코딩과 함께라면 · SINCE 2025</strong><span>2026 SCHOOL FESTIVAL</span></footer>
+</div>
+<script>
+/* 작품마다 아래 PROJECT 설정만 수정하세요. */
+const PROJECT = {
+  slug: "이준혁",
+  title: "이준혁 작품",
+  author: "코딩과 함께라면",
+  description: "2026 코딩과 함께라면 축제 프로젝트입니다.",
+  howTo: "인트로가 끝나면 작품이 실행됩니다. 전체 화면 버튼으로 넓게 즐길 수 있습니다.",
+  notes: "작품을 즐긴 뒤 응원하기를 눌러 주세요.",
+  type: "entry",
+  codeUrl: "/2026festival/이준혁_code/index.html",
+  embed: '<iframe src="/intro/index.html" allowfullscreen></iframe>',
+  url: ""
+};
+const $ = id => document.getElementById(id);
+const frame = $("project-frame"), empty = $("empty-state"), openLink = $("open-project"), screen = $("screen");
+$("page-title").textContent = PROJECT.title;
+$("stage-title").textContent = PROJECT.title;
+$("info-title").textContent = PROJECT.title;
+$("author").textContent = PROJECT.author;
+$("description").textContent = PROJECT.description;
+$("how-to").textContent = PROJECT.howTo;
+$("notes").textContent = PROJECT.notes;
+document.title = PROJECT.title + " | 2026 코딩과 함께라면";
+function safeUrl(value) {
+  try { const u = new URL(value, location.href); return ["https:","http:"].includes(u.protocol) ? u.href : ""; }
+  catch { return ""; }
+}
+function getEmbedUrl(markup) {
+  const template = document.createElement("template");
+  template.innerHTML = markup || "";
+  const iframe = template.content.querySelector("iframe");
+  return iframe ? safeUrl(iframe.getAttribute("src") || "") : "";
+}
+function external(url) {
+  const safe = safeUrl(url);
+  frame.hidden = true; empty.hidden = false;
+  $("project-type").textContent = "외부 실행";
+  $("type-label").textContent = "EXTERNAL PROJECT";
+  $("status-text").textContent = safe ? "새 창에서 실행할 수 있습니다" : "작품 주소를 입력해 주세요";
+  openLink.href = safe || "#";
+  openLink.style.opacity = safe ? "1" : ".45";
+  openLink.style.pointerEvents = safe ? "auto" : "none";
+}
+if (PROJECT.type === "entry") {
+  const src = getEmbedUrl(PROJECT.embed);
+  if (src) {
+    frame.src = src;
+    $("project-type").textContent = "Entry 임베드";
+    $("type-label").textContent = "ENTRY EMBED";
+    $("status-text").textContent = "작품 실행 준비 완료";
+    empty.hidden = true;
+  } else external(PROJECT.url);
+} else external(PROJECT.url);
+$("reload-button").addEventListener("click", () => {
+  if (!frame.hidden && frame.src) { frame.src = frame.src; $("status-text").textContent = "작품을 다시 불러오는 중"; }
+  else if (openLink.href && openLink.href !== location.href && openLink.href !== "#") window.open(openLink.href, "_blank", "noopener,noreferrer");
+});
+// 인트로 임베드가 완료 신호를 보내면 테스트용으로 메인 페이지를 같은 화면에 표시합니다.
+window.addEventListener("message", event => {
+  if (event.origin !== location.origin) return;
+  if (event.data && event.data.type === "START_CLICKED" && !frame.hidden) {
+    frame.src = PROJECT.codeUrl;
+    $("status-text").textContent = "작품을 불러오는 중";
+    $("type-label").textContent = "FESTIVAL PROJECT";
+  }
+});
+$("fullscreen-button").addEventListener("click", async () => {
+  try { if (!document.fullscreenElement) await screen.requestFullscreen(); else await document.exitFullscreen(); }
+  catch { $("status-text").textContent = "전체 화면을 사용할 수 없습니다"; }
+});
+
+// 축제 메인 페이지와 동일한 projects 문서의 likes를 실시간으로 표시하고 증가시킵니다.
+const likeButton = $("like-button");
+const likeCount = $("like-count");
+let likeDb = null;
+let likeDocRef = null;
+let likeSubmitting = false;
+import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async appModule => {
+  const dbModule = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+  const likeApp = appModule.initializeApp(firebaseConfig, "project-likes-" + PROJECT.slug);
+  likeDb = dbModule.getFirestore(likeApp);
+  likeDocRef = dbModule.doc(likeDb, "projects", PROJECT.slug);
+  dbModule.onSnapshot(likeDocRef, snap => {
+    if (!snap.exists()) {
+      likeCount.textContent = "등록 대기 중";
+      likeButton.disabled = true;
+      likeButton.title = "메인 축제 목록에 이 작품의 projects 문서가 등록되어야 응원할 수 있습니다.";
+      return;
+    }
+    likeCount.textContent = Number(snap.data().likes || 0).toLocaleString();
+    likeButton.disabled = false;
+  }, error => {
+    console.error("응원 수 불러오기 실패:", error);
+    likeCount.textContent = "오류";
+  });
+  likeButton.addEventListener("click", async event => {
+    event.stopPropagation();
+    if (likeSubmitting || !likeDocRef) return;
+    likeSubmitting = true;
+    likeButton.disabled = true;
+    try {
+      await dbModule.updateDoc(likeDocRef, { likes: dbModule.increment(1) });
+      likeButton.title = "응원해 주셔서 감사합니다!";
+    } catch (error) {
+      console.error("응원 처리 실패:", error);
+      likeButton.title = "응원에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+    } finally {
+      likeSubmitting = false;
+      likeButton.disabled = false;
+    }
+  });
+}).catch(error => {
+  console.error("응원 기능 초기화 실패:", error);
+  likeCount.textContent = "오류";
+});
+
+// 축제 작품 목록에서 다른 작품 몇 개를 추천 바로가기로 표시합니다.
+const recommendationList = $("recommendation-list");
+const firebaseConfig = {
+  apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
+  authDomain: "festivallikes.firebaseapp.com",
+  projectId: "festivallikes",
+  storageBucket: "festivallikes.firebasestorage.app",
+  messagingSenderId: "782245120700",
+  appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
+};
+import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async appModule => {
+  const dbModule = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+  const app = appModule.initializeApp(firebaseConfig, "recommendations");
+  const db = dbModule.getFirestore(app);
+  const snapshot = await dbModule.getDocs(dbModule.collection(db, "projects"));
+  const projects = snapshot.docs.map(item => ({id:item.id, ...item.data()}))
+    .filter(item => item.id !== PROJECT.title && item.id !== "작품 이름")
+    .sort((a,b) => (Number(b.likes)||0) - (Number(a.likes)||0))
+    .slice(0,4);
+  recommendationList.replaceChildren();
+  if (!projects.length) {
+    recommendationList.innerHTML = '<p class="recommendation-empty">아직 추천할 작품이 없습니다.</p>';
+    return;
+  }
+  for (const project of projects) {
+    let target = String(project.url || "");
+    const hay = (project.id + " " + target + " " + String(project.detail || "") + " " + String(project.howto || "")).toLowerCase();
+    if (project.id.includes("FPS") || hay.includes("fps_code") || hay.includes("황혼의 균열") || hay.includes("twilight rift")) {
+      target = "/2026festival/FPS_code/index.html?v=4d8b747096848e23b65899d929b3c0b6a8b6a5f0";
+    }
+    try {
+      const parsed = new URL(target, location.origin);
+      if (!["https:", "http:"].includes(parsed.protocol)) continue;
+      const link = document.createElement("a");
+      link.className = "recommendation";
+      link.href = parsed.href;
+      const title = document.createElement("strong");
+      title.textContent = project.id;
+      const description = document.createElement("small");
+      description.textContent = project.detail || "축제 작품 바로가기";
+      link.append(title, description);
+      recommendationList.appendChild(link);
+    } catch {}
+  }
+  if (!recommendationList.children.length) recommendationList.innerHTML = '<p class="recommendation-empty">추천 작품이 아직 등록되지 않았습니다.</p>';
+}).catch(error => {
+  console.error("추천 작품 불러오기 실패:", error);
+  recommendationList.innerHTML = '<p class="recommendation-empty">추천 작품을 불러오지 못했습니다.</p>';
+});
+</script>
+</body>
+</html>
