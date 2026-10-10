@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>코딩과 함께라면</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <style>
   html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#bfffe6;
     font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
@@ -23,7 +23,7 @@
   #skip{position:fixed;top:max(18px,env(safe-area-inset-top));right:max(18px,env(safe-area-inset-right));
     padding:.5em 1.2em;font-size:13px;letter-spacing:.15em;border-color:rgba(80,255,180,.25);color:rgba(157,255,212,.6)}
   #end{position:fixed;inset:0;pointer-events:none;z-index:3}
-  #logo{position:absolute;opacity:0;display:flex;align-items:center;justify-content:center;height:auto;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:800;letter-spacing:.035em;color:#caffea;text-shadow:0 0 5px rgba(120,255,200,.9),0 0 18px rgba(50,255,160,.55)}
+  #logo{position:absolute;opacity:0;display:flex;align-items:center;justify-content:center;height:auto;white-space:nowrap;font-family:"Caveat",cursive;font-weight:700;letter-spacing:.015em;color:#caffea;text-shadow:0 0 5px rgba(120,255,200,.9),0 0 18px rgba(50,255,160,.55)}
   #since{position:absolute;left:0;right:0;text-align:center;font-size:13px;letter-spacing:.6em;
     padding-left:.6em;color:rgba(157,255,212,.75);opacity:0}
   #err{position:fixed;left:0;right:0;bottom:3vh;text-align:center;font-size:12px;color:rgba(157,255,212,.4)}
@@ -94,12 +94,17 @@ function extractEdges(cv){
 }
 async function prepareLogo(){
   // 최종 2D 출력과 입자 수렴 대상은 동일한 문구를 사용한다.
+  await document.fonts.ready;
+  const measureCanvas=document.createElement("canvas");
+  const measure=measureCanvas.getContext("2d");
+  measure.font="700 290px Caveat";
+  const width=measure.measureText("2026FESTIVAL").width;
   const cv=document.createElement("canvas");
-  cv.width=2200; cv.height=420;
+  cv.width=Math.ceil(width+100); cv.height=420;
   const g=cv.getContext("2d",{willReadFrequently:true});
   g.clearRect(0,0,cv.width,cv.height);
   g.fillStyle="#fff";
-  g.font="800 230px Arial, Helvetica, sans-serif";
+  g.font="700 290px Caveat";
   g.textAlign="center"; g.textBaseline="middle";
   g.fillText("2026FESTIVAL",cv.width/2,cv.height/2);
   return {aspect:cv.width/cv.height,edges:extractEdges(cv)};
@@ -328,7 +333,7 @@ function update(dt){
     if(t1>=.9){ph=2;t2=0;}
   }else if(ph===2){
     t2+=dt;
-    const v=2.5+17*sm(0,3,t2); const rem=S_END-headS;
+    const v=2.0+9*sm(0,4.5,t2); const rem=S_END-headS;
     // 끝에서 감속하거나 제자리에서 방향을 꺾지 않는다. 이동 속도를 유지한 채 카메라 전환을 미리 시작한다.
     travelV=v;
     headS=Math.min(S_END,headS+v*dt); camS=headS-3.5; speedN=v/26.5;
@@ -342,7 +347,7 @@ function update(dt){
     headS=Math.min(S_END,headS+travelV*dt); camS=headS-3.5;
     speedN=travelV/26.5;
     runCamera(dt,false);
-    const b=eio(clamp(t3/3.8));
+    const b=eio(clamp(t3/5.2));
     overviewPos(ov.a0+.08*(1-b),tmp);
     camera.position.copy(ov.startPos).lerp(tmp,b);
     mt.lookAt(camera.position,ov.c,new V3(0,1,0)); qEnd.setFromRotationMatrix(mt);
@@ -351,10 +356,10 @@ function update(dt){
     camera.fov=ov.startFov+(baseFov+8-ov.startFov)*b; camera.updateProjectionMatrix();
     tubeU.uLit.value=sm(.5,6,t3); tubeU.uThick.value=1+(ov.thick-1)*sm(0,9,t3);
     headU.uI.value=1-sm(2,6,t3);
-    if(t3>=3.8){ headS=S_END; ph=4; t4=0; head.visible=false; prepConverge(); }
+    if(t3>=5.2){ headS=S_END; ph=4; t4=0; head.visible=false; prepConverge(); }
   }else if(ph===4){
     t4+=dt;
-    const tn=t4/2.7;
+    const tn=t4/3.8;
     for(let i=0;i<C;i++){
       const p=eio(clamp((tn-dly[i])/.42)), k=i*3;
       cPos[k]=sPos[k]+(tPosL[k]-sPos[k])*p; cPos[k+1]=sPos[k+1]+(tPosL[k+1]-sPos[k+1])*p; cPos[k+2]=sPos[k+2]+(tPosL[k+2]-sPos[k+2])*p;
@@ -362,10 +367,10 @@ function update(dt){
     cg.attributes.position.needsUpdate=true;
     tubeU.uOpacity.value=1-sm(0,.7,t4);
     ptsU.uO.value=sm(0,.7,t4)*(1-sm(3.3,4.2,t4));
-    let f=0; if(t4>2.9&&t4<3.25) f=t4<3.0?(t4-2.9)/.1:1-(t4-3.0)/.25;
+    let f=0; if(t4>3.8&&t4<4.25) f=t4<3.95?(t4-3.8)/.15:1-(t4-3.95)/.3;
     $("flash").style.opacity=clamp(f)*.9;
-    $("logo").style.opacity=sm(2.5,3.4,t4); $("since").style.opacity=sm(3.0,3.8,t4);
-    if(t4>=4.1){ showEnd(); return false; }
+    $("logo").style.opacity=sm(3.5,4.3,t4); $("since").style.opacity=sm(4.0,4.7,t4);
+    if(t4>=5.2){ showEnd(); return false; }
   }
   if(ph<4){
     const rings=clamp(Math.floor((headS-TRAIL0)/STEP)+1,0,R);
