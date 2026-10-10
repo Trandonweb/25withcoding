@@ -36,8 +36,8 @@ h1{margin:0;font-size:clamp(20px,2.2vw,30px);line-height:1.15;letter-spacing:-.0
 .btn:hover{background:#2d3036}
 .btn.primary{background:var(--green);border-color:var(--green);color:#08140c}
 .btn.primary:hover{background:#48cf7c}
-.screen{position:relative;min-height:0;min-width:0;background:#08090a;overflow:hidden;display:grid;place-items:center;container-type:size}
-#project-frame{position:relative;inset:auto;width:min(100cqw,calc(100cqh * 4 / 3));height:min(100cqh,calc(100cqw * 3 / 4));aspect-ratio:4 / 3;border:0;background:#fff;display:block;flex:none}
+.screen{position:relative;min-height:0;min-width:0;background:#08090a;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#project-frame{position:relative;width:100%;height:100%;max-width:100%;max-height:100%;aspect-ratio:4 / 3;border:0;background:#fff;display:block;flex:none}
 #project-frame[hidden]{display:none}
 .empty{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;background:radial-gradient(ellipse at center,#202a22,#090a0b 72%)}
 .empty[hidden]{display:none}
@@ -138,6 +138,17 @@ const PROJECT = {
 };
 const $ = id => document.getElementById(id);
 const frame = $("project-frame"), empty = $("empty-state"), openLink = $("open-project"), screen = $("screen");
+// 실행창은 4:3 비율을 유지하며, 사용 가능한 영역 안에서 최대 크기로 맞춥니다.
+function fitProjectFrame() {
+  if (frame.hidden || !screen.clientWidth || !screen.clientHeight) return;
+  const ratio = 4 / 3;
+  let w = screen.clientWidth, h = w / ratio;
+  if (h > screen.clientHeight) { h = screen.clientHeight; w = h * ratio; }
+  frame.style.width = Math.floor(w) + "px";
+  frame.style.height = Math.floor(h) + "px";
+}
+new ResizeObserver(fitProjectFrame).observe(screen);
+window.addEventListener("resize", fitProjectFrame);
 $("page-title").textContent = PROJECT.title;
 $("stage-title").textContent = PROJECT.title;
 $("info-title").textContent = PROJECT.title;
@@ -170,6 +181,7 @@ if (PROJECT.type === "entry") {
   const src = getEmbedUrl(PROJECT.embed);
   if (src) {
     frame.src = src;
+    requestAnimationFrame(fitProjectFrame);
     $("project-type").textContent = "Entry 임베드";
     $("type-label").textContent = "ENTRY EMBED";
     $("status-text").textContent = "작품 실행 준비 완료";
