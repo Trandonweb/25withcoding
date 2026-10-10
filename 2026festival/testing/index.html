@@ -150,7 +150,7 @@ const PROJECT = {
   howTo: "사용 방법을 입력하세요.",
   notes: "참고 사항을 입력하세요.",
   type: "entry", // "entry" 또는 "link"
-  embed: '<iframe src="/intro/index2.html?next=%2F" allowfullscreen></iframe>',
+  embed: '<iframe src="/intro/index.html" allowfullscreen></iframe>',
   url: ""
 };
 const $ = id => document.getElementById(id);
@@ -196,6 +196,15 @@ if (PROJECT.type === "entry") {
 $("reload-button").addEventListener("click", () => {
   if (!frame.hidden && frame.src) { frame.src = frame.src; $("status-text").textContent = "작품을 다시 불러오는 중"; }
   else if (openLink.href && openLink.href !== location.href && openLink.href !== "#") window.open(openLink.href, "_blank", "noopener,noreferrer");
+});
+// 인트로 임베드가 완료 신호를 보내면 테스트용으로 메인 페이지를 같은 화면에 표시합니다.
+window.addEventListener("message", event => {
+  if (event.origin !== location.origin) return;
+  if (event.data && event.data.type === "START_CLICKED" && !frame.hidden) {
+    frame.src = "/";
+    $("status-text").textContent = "메인 페이지를 불러오는 중";
+    $("type-label").textContent = "HOMEPAGE EMBED";
+  }
 });
 $("fullscreen-button").addEventListener("click", async () => {
   try { if (!document.fullscreenElement) await screen.requestFullscreen(); else await document.exitFullscreen(); }
