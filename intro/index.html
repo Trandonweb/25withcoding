@@ -54,6 +54,13 @@ const THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.mi
 <script>
 (async () => {
 const $ = id => document.getElementById(id);
+window.__introEmbedded = window.parent !== window;
+let signalSent=false;
+function notifyParent(){
+  if(!window.__introEmbedded || signalSent) return;
+  signalSent=true;
+  window.parent.postMessage({type:"START_CLICKED"}, "*");
+}
 const clamp = (x,a=0,b=1) => Math.min(b,Math.max(a,x));
 const sm  = (a,b,x) => { x = clamp((x-a)/(b-a)); return x*x*(3-2*x); };
 const eio = x => x<.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
@@ -396,16 +403,7 @@ function frame(now){
   renderer.render(fadeScene,fadeCam); renderer.clearDepth(); renderer.render(scene,camera);
 }
 
-/* ---------- 임베드 신호 ---------- */
-// 신호 이름: START_CLICKED
-// 임베드된 경우 버튼은 숨기고, 인트로가 끝날 때 바깥 페이지에 같은 신호를 보낸다.
-window.__introEmbedded = window.parent !== window;
-let signalSent=false;
-function notifyParent(){
-  if(!window.__introEmbedded || signalSent) return;
-  signalSent=true;
-  window.parent.postMessage({type:"START_CLICKED"}, "*");
-}
+/* ---------- 임베드 표시 처리 ---------- */
 if(window.__introEmbedded){
   $("startScreen").classList.add("hide");
   $("finalStart").style.display="none";
@@ -435,6 +433,7 @@ function begin(){
   }
 }
 $("startBtn").addEventListener("click",begin);
+if(window.__introEmbedded) begin();
 $("skip").addEventListener("click",showEnd);
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&state==="run") showEnd(); });
 addEventListener("resize",resize);
