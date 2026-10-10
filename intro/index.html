@@ -353,7 +353,7 @@ function update(dt){
     camera.fov=baseFov+16*speedN; camera.updateProjectionMatrix();
     headU.uI.value=1; persist=.6*sm(.3,1,speedN);
     runCamera(dt,false);
-    if(S_END-headS<=76){ ph=3; t3=0; prepOverview(); }
+    if(S_END-headS<=38){ ph=3; t3=0; prepOverview(); }
   }else if(ph===3){
     t3+=dt;
     // 카메라는 멀어지기 시작하지만 빛의 머리는 같은 속도로 경로를 계속 달린다.
