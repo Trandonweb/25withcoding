@@ -82,8 +82,8 @@ async function startClientRtc(k){
   rtcListeners.push(unsub);await addIceCandidates(pc,k,"host");
  }catch(e){console.warn("WebRTC client setup failed; Firestore remains active",e);rtcStatus("WebRTC 연결 실패 · Firebase 동기화 사용 중");}
 }
-function startHostRtc(k){
- loadRtcConfig().catch(e=>console.warn("TURN config load",e));
+async function startHostRtc(k){
+ await loadRtcConfig();
  const unsub=onSnapshot(rtcSignalDoc(k),async snap=>{
   const data=snap.data();if(!data?.offer)return;
   const signature=data.offer.sdp;if(rtcSeenOffers[k]===signature)return;rtcSeenOffers[k]=signature;
