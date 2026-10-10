@@ -35,7 +35,7 @@ document.getElementById("chooseHost").onclick=()=>{selectedRole="host";if(!selec
 document.querySelectorAll("[data-kiosk]").forEach(b=>b.onclick=()=>{const k=b.dataset.kiosk;if(selectedRole==="client")selectedKiosks=[k];else if(selectedKiosks.includes(k)){if(selectedKiosks.length>1)selectedKiosks=selectedKiosks.filter(x=>x!==k);}else if(selectedKiosks.length<4)selectedKiosks=[...selectedKiosks,k].sort();updateSetupUI();persistSetup(false);});
 document.getElementById("setupStart").onclick=()=>{const error=document.getElementById("setupError");if(!selectedKiosks.length){error.textContent="키오스크 번호를 하나 이상 선택하세요.";return;}if(document.getElementById("setupPassword").value!==PASSWORD){error.textContent="비밀번호가 올바르지 않습니다.";return;}role=selectedRole;kiosks=[...selectedKiosks];persistSetup(true);start();};
 document.getElementById("setupPassword").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("setupStart").click();});
-try{const saved=JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null");if(saved&&["client","host"].includes(saved.role)&&Array.isArray(saved.kiosks)){selectedRole=saved.role;selectedKiosks=saved.kiosks.filter(k=>["1","2","3","4"].includes(k)).slice(0,4);if(selectedRole==="client")selectedKiosks=[selectedKiosks[0]||"1"];updateSetupUI();if(saved.unlocked&&selectedKiosks.length){role=selectedRole;kiosks=[...selectedKiosks];start();}}}catch(e){console.warn("설정 복원 실패",e);}
+
 const money=n=>Number(n||0).toLocaleString("ko-KR"),emptyOrder=()=>({items:{},total:0,status:"waiting",updatedAt:Date.now()});
 function renderMenus(){document.getElementById("menus").innerHTML=menus.map(m=>`<div class="menu-card"><div class="name">${m.name}</div><div class="price">${money(m.price)}원</div><div class="controls"><button class="qty-btn minus" data-id="${m.id}" data-delta="-1">−</button><div class="qty-num" id="qty-${m.id}">0</div><button class="qty-btn" data-id="${m.id}" data-delta="1">+</button></div></div>`).join("");document.querySelectorAll(".qty-btn").forEach(b=>b.onclick=()=>changeQty(b.dataset.id,Number(b.dataset.delta)));}
 async function changeQty(id,delta){
@@ -145,6 +145,8 @@ async function startHostRtc(k){
 }
 
 function start(){document.getElementById("roleScreen").style.display="none";if(role==='client'){document.getElementById("clientApp").style.display="block";document.getElementById("clientKiosk").textContent=kiosks[0]+"번 키오스크";renderMenus();const k=kiosks[0];startClientRtc(k);onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderClient(orders[k]);},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message)});}else{document.getElementById("hostApp").style.display="block";document.getElementById("hostInfo").textContent="관리 키오스크: "+kiosks.join(", ")+"번";kiosks.forEach(k=>{startHostRtc(k);onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderHost();},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message)});});}}
+
+try{const saved=JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null");if(saved&&["client","host"].includes(saved.role)&&Array.isArray(saved.kiosks)){selectedRole=saved.role;selectedKiosks=saved.kiosks.filter(k=>["1","2","3","4"].includes(k)).slice(0,4);if(selectedRole==="client")selectedKiosks=[selectedKiosks[0]||"1"];updateSetupUI();if(saved.unlocked&&selectedKiosks.length){role=selectedRole;kiosks=[...selectedKiosks];start();}}}catch(e){console.warn("설정 복원 실패",e);}
 </script>
 </body>
 </html>
