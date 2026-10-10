@@ -256,7 +256,7 @@ function resize(){
 }
 
 /* ---------- 상태 ---------- */
-let ph=1,t1=0,t2=0,t3=0,t4=0,headS=TRAIL0,camS=0,speedN=0,roll=0,last=0;
+let ph=1,t1=0,t2=0,t3=0,t4=0,headS=TRAIL0,camS=0,speedN=0,travelV=19.5,roll=0,last=0;
 const look=new V3(),cpos=new V3(),tmp=new V3(),tmp2=new V3(),upv=new V3();
 const ov={c:new V3(),dist:1,a0:.5,startPos:new V3(),startQ:new THREE.Quaternion(),startFov:58,thick:1};
 const qEnd=new THREE.Quaternion(),mt=new THREE.Matrix4(),dirBase=new V3(.3,.3,1).normalize();
@@ -323,26 +323,30 @@ function update(dt){
     if(t1>=.9){ph=2;t2=0;}
   }else if(ph===2){
     t2+=dt;
-    let v=2.5+17*sm(0,3,t2); const rem=S_END-headS;
-    // 마지막 구간에서 속도를 서서히 줄여, 궤적 끝에서 갑자기 멈춘 듯한 느낌을 없앤다.
-    v *= .12 + .88*sm(0,48,rem);
+    const v=2.5+17*sm(0,3,t2); const rem=S_END-headS;
+    // 끝에서 감속하거나 제자리에서 방향을 꺾지 않는다. 이동 속도를 유지한 채 카메라 전환을 미리 시작한다.
+    travelV=v;
     headS=Math.min(S_END,headS+v*dt); camS=headS-3.5; speedN=v/26.5;
     camera.fov=baseFov+16*speedN; camera.updateProjectionMatrix();
     headU.uI.value=1; persist=.6*sm(.3,1,speedN);
     runCamera(dt,false);
-    if(headS>=S_END-.5){ headS=S_END; ph=3; t3=0; speedN=0; prepOverview(); }
+    if(S_END-headS<=76){ ph=3; t3=0; prepOverview(); }
   }else if(ph===3){
     t3+=dt;
+    // 카메라는 멀어지기 시작하지만 빛의 머리는 같은 속도로 경로를 계속 달린다.
+    headS=Math.min(S_END,headS+travelV*dt); camS=headS-3.5;
+    speedN=travelV/26.5;
+    runCamera(dt,false);
     const b=eio(clamp(t3/3.8));
     overviewPos(ov.a0+.08*(1-b),tmp);
     camera.position.copy(ov.startPos).lerp(tmp,b);
     mt.lookAt(camera.position,ov.c,new V3(0,1,0)); qEnd.setFromRotationMatrix(mt);
     camera.quaternion.copy(ov.startQ).slerp(qEnd,b);
-    // 바깥 풍경이 점점 드러나도록 넓은 시야를 유지하며 부드럽게 전환한다.
+    // 시야를 넓히며 주변을 드러내고, 이동과 줌아웃을 동시에 이어 붙인다.
     camera.fov=ov.startFov+(baseFov+8-ov.startFov)*b; camera.updateProjectionMatrix();
     tubeU.uLit.value=sm(.5,6,t3); tubeU.uThick.value=1+(ov.thick-1)*sm(0,9,t3);
     headU.uI.value=1-sm(2,6,t3);
-    if(t3>=3.8){ ph=4; t4=0; head.visible=false; prepConverge(); }
+    if(t3>=3.8){ headS=S_END; ph=4; t4=0; head.visible=false; prepConverge(); }
   }else if(ph===4){
     t4+=dt;
     const tn=t4/2.7;
