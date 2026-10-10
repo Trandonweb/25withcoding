@@ -377,11 +377,21 @@ function frame(now){
 
 /* ---------- 제어 ---------- */
 function begin(){
-  cancelAnimationFrame(raf); resize(); resetAll();
-  state="run"; running=true; last=performance.now();
-  $("startScreen").classList.add("hide"); $("skip").classList.remove("hide");
-  renderer.setClearColor(0,1); renderer.clear();
-  raf=requestAnimationFrame(frame);
+  if(state==="run") return;
+  try{
+    cancelAnimationFrame(raf);
+    resize();
+    resetAll();
+    state="run"; running=true; last=performance.now();
+    $("startScreen").classList.add("hide"); $("skip").classList.remove("hide");
+    $("err").textContent="";
+    renderer.setClearColor(0,1); renderer.clear();
+    raf=requestAnimationFrame(frame);
+  }catch(err){
+    console.error("인트로 시작 오류:",err);
+    $("err").textContent="애니메이션을 시작하지 못했습니다. 결과 화면으로 이동합니다.";
+    showEnd();
+  }
 }
 $("startBtn").addEventListener("click",begin);
 $("skip").addEventListener("click",showEnd);
@@ -392,8 +402,17 @@ document.addEventListener("visibilitychange",()=>{
   else if(state==="run"){ last=performance.now(); cancelAnimationFrame(raf); raf=requestAnimationFrame(frame); }
 });
 
-resize(); resetAll(); renderer.clear();
+// 초기화 오류가 있어도 START가 영구 비활성화되지 않도록 먼저 활성화한다.
 $("startBtn").disabled=false;
+try{
+  resize();
+  resetAll();
+  renderer.clear();
+}catch(err){
+  console.error("인트로 초기화 오류:",err);
+  $("err").textContent="초기화에 실패했습니다. START를 누르면 결과 화면을 표시합니다.";
+  $("startBtn").disabled=false;
+}
 })();
 </script>
 </body>
