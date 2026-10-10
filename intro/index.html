@@ -270,7 +270,7 @@ function runCamera(dt,snap){
   camera.up.set(0,1,0);
   camera.position.copy(cpos);
   camera.lookAt(tmp);
-  camera.fov=baseFov;
+  // FOV는 이동 단계에서 계산한 값을 유지해 속도감과 줌이 끊기지 않게 한다.
   camera.updateProjectionMatrix();
 }
 function prepOverview(){
@@ -324,8 +324,9 @@ function update(dt){
   }else if(ph===2){
     t2+=dt;
     let v=2.5+17*sm(0,3,t2); const rem=S_END-headS;
-    if(rem<28) v=Math.max(1.5,v*rem/28);
-    headS+=v*dt; camS=headS-3.5; speedN=v/26.5;
+    // 마지막 구간에서 속도를 서서히 줄여, 궤적 끝에서 갑자기 멈춘 듯한 느낌을 없앤다.
+    v *= .12 + .88*sm(0,48,rem);
+    headS=Math.min(S_END,headS+v*dt); camS=headS-3.5; speedN=v/26.5;
     camera.fov=baseFov+16*speedN; camera.updateProjectionMatrix();
     headU.uI.value=1; persist=.6*sm(.3,1,speedN);
     runCamera(dt,false);
@@ -337,10 +338,11 @@ function update(dt){
     camera.position.copy(ov.startPos).lerp(tmp,b);
     mt.lookAt(camera.position,ov.c,new V3(0,1,0)); qEnd.setFromRotationMatrix(mt);
     camera.quaternion.copy(ov.startQ).slerp(qEnd,b);
-    camera.fov=ov.startFov+(baseFov-ov.startFov)*b; camera.updateProjectionMatrix();
+    // 바깥 풍경이 점점 드러나도록 넓은 시야를 유지하며 부드럽게 전환한다.
+    camera.fov=ov.startFov+(baseFov+8-ov.startFov)*b; camera.updateProjectionMatrix();
     tubeU.uLit.value=sm(.5,6,t3); tubeU.uThick.value=1+(ov.thick-1)*sm(0,9,t3);
     headU.uI.value=1-sm(2,6,t3);
-    if(t3>=3.8){ ph=4; t4=0; head.visible=false; camera.fov=baseFov; camera.updateProjectionMatrix(); prepConverge(); }
+    if(t3>=3.8){ ph=4; t4=0; head.visible=false; prepConverge(); }
   }else if(ph===4){
     t4+=dt;
     const tn=t4/2.7;
