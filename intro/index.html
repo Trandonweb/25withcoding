@@ -151,6 +151,14 @@ fadeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),fadeMat));
 /* ---------- 한 획으로 이어지는 2026FESTIVAL 경로 ---------- */
 const STEP=.22, S_END=190, TRAIL0=1.5, NS=Math.ceil((S_END+25)/STEP)+2;
 const P=[];
+// 경로 진행 거리(s)를 샘플링된 3D 경로 P의 위치로 변환한다.
+// 이 함수가 없으면 초기화 단계에서 ReferenceError가 발생해 애니메이션이 시작되지 않는다.
+function posAt(s,out=new THREE.Vector3()){
+  if(!P.length) return out.set(0,0,0);
+  const f=clamp(s/STEP,0,P.length-1);
+  const i=Math.floor(f), j=Math.min(i+1,P.length-1);
+  return out.copy(P[i]).lerp(P[j],f-i);
+}
 const glyphs={
   "2":[[.08,.22],[.16,.08],[.42,.02],[.72,.05],[.91,.19],[.86,.34],[.62,.51],[.32,.72],[.08,.94],[.94,.94]],
   "0":Array.from({length:49},(_,i)=>{const a=-Math.PI/2+i/48*Math.PI*2;return [.5+.40*Math.cos(a),.5+.48*Math.sin(a)];}),
