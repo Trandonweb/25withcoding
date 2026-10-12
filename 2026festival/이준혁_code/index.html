@@ -240,7 +240,9 @@ let gameMode = 0;
 let maxScore = 0;
 maxScoreEl.textContent = maxScore;
 
-let savedSkinsState = JSON.parse(localStorage.getItem('infiniteStairs_skins')) || {};
+// 페이지를 새로 열면 이전 플레이의 캐릭터 해금 진행을 초기화합니다.
+localStorage.removeItem('infiniteStairs_skins');
+let savedSkinsState = {};
 let skins = [
     { id: 0, name: "기본이", price: 0, unlocked: true, bodyColor: "#9b59b6", faceColor: "#fdb45c", hairColor: "#4a2306", hairType: "short", deathType: "fall" },
     { id: 1, name: "유리인간", price: 0, unlocked: savedSkinsState[1] || false, specialUnlock: "유리계단 150계단", bodyColor: "rgba(255,255,255,0.25)", faceColor: "rgba(255,255,255,0.25)", hairColor: "rgba(255,255,255,0.4)", hairType: "none", deathType: "shatter", isGlass: true },
