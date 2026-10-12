@@ -47,11 +47,13 @@ body {
 }
 #canvas-container {
     position: relative;
-    flex: 1 1 auto;
-    width: 100vw;
+    flex: 0 1 auto;
+    align-self: center;
+    width: min(720px, 90vw, 52vh);
+    aspect-ratio: 2 / 3;
     min-width: 0;
     min-height: 0;
-    height: auto;
+    max-height: 78vh;
 }
 canvas {
     display: block;
