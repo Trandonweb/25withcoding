@@ -251,7 +251,7 @@ let skins = [
     { id: 6, name: "스페이스 파일럿", price: 150, unlocked: savedSkinsState[6] !== undefined ? savedSkinsState[6] : false, bodyColor: "#3498db", faceColor: "#ffffff", hairColor: "#bdc3c7", hairType: "propeller", deathType: "flyAway" },
     { id: 7, name: "꼬마 마법사", price: 150, unlocked: savedSkinsState[7] !== undefined ? savedSkinsState[7] : false, bodyColor: "#8e44ad", faceColor: "#ffd32a", hairColor: "#e67e22", hairType: "long", deathType: "broomFly" },
     { id: 8, name: "제트 슬라이더", price: 150, unlocked: savedSkinsState[8] !== undefined ? savedSkinsState[8] : false, bodyColor: "#e74c3c", faceColor: "#fffa65", hairColor: "#2c3e50", hairType: "ninja", deathType: "spinDrop" },
-    { id: 9, name: "임지완", price: 0, unlocked: savedSkinsState[9] || false, specialUnlock: "250계단 달성", bodyColor: "#ffffff", faceColor: "#ffffff", hairColor: "#ffffff", hairType: "none", deathType: "rainbowFade", isRainbow: true },
+    { id: 9, name: "임지완", price: 0, unlocked: savedSkinsState[9] || false, specialUnlock: "500계단 달성", bodyColor: "#ffffff", faceColor: "#ffffff", hairColor: "#ffffff", hairType: "none", deathType: "rainbowFade", isRainbow: true },
     { id: 10, name: "신", price: 0, unlocked: savedSkinsState[10] || false, specialUnlock: "500계단 달성", bodyColor: "#ffffff", faceColor: "#fff8dc", hairColor: "#ffd700", hairType: "none", deathType: "heavenAscend", isGod: true }
 ];
 let currentSkinId = 0;
@@ -638,6 +638,14 @@ function endGame() {
     earnedGemsEl.textContent = gameGems;
 
     let unlockedMsg = "";
+    if (score >= 500) {
+        const rainbowSkin = skins.find(s => s.id === 9);
+        if (!rainbowSkin.unlocked) {
+            rainbowSkin.unlocked = true;
+            saveSkinsData();
+            unlockedMsg = "🌈 500계단 달성! '무지개 임지완' 캐릭터 해금!";
+        }
+    }
     if (gameMode === 1 && score >= 150) {
         const glassHuman = skins.find(s => s.id === 1);
         if (!glassHuman.unlocked) {
