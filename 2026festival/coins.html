@@ -18,8 +18,8 @@
 <div class="top-controls"><div class="control"><span class="label">팀</span><select id="team" class="team-select"><option value="1">1팀</option><option value="2">2팀</option></select></div><div class="control"><span class="label">부스</span><div class="toggle"><input id="coding" name="booth" value="coding" type="radio" checked><label for="coding">코딩과 함께라면</label><input id="sancafe" name="booth" value="sancafe" type="radio"><label for="sancafe">S A N C A F E</label></div></div></div>
 <div id="rule" class="rule"></div>
 <div class="coin-types"><div class="coin"><input id="c1" name="people" value="1" type="radio"><label for="c1"><div class="coin-num">1인권</div><div class="coin-sub">이용권 수 · 1</div></label></div><div class="coin"><input id="c2" name="people" value="2" type="radio"><label for="c2"><div class="coin-num">2인권</div><div class="coin-sub">이용권 수 · 2</div></label></div><div class="coin"><input id="c3" name="people" value="3" type="radio"><label for="c3"><div class="coin-num">3인권</div><div class="coin-sub">이용권 수 · 3</div></label></div><div class="coin"><input id="c4" name="people" value="4" type="radio"><label for="c4"><div class="coin-num">4인권</div><div class="coin-sub">이용권 수 · 4</div></label></div><div class="coin"><input id="c5" name="people" value="5" type="radio"><label for="c5"><div class="coin-num">5인권</div><div class="coin-sub">이용권 수 · 5</div></label></div></div>
-<button id="generate" class="generate">이용권 발급</button><div id="status" class="status"></div><div id="issued" class="issued"><b>발급 완료</b><div id="issuedCode" class="issued-code"></div><div id="issuedInfo"></div><button id="copy" class="copy">복사하기</button></div></section>
-<section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px"><div><h2 class="card-title" style="margin:0 0 6px">발급된 이용권</h2><div style="font-size:13px;color:#999">발급 현황을 확인하고 관리합니다.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button id="selectAll" class="action">전체 선택</button><button id="clearSelect" class="action">선택 해제</button><button id="distribution" class="action" style="background:linear-gradient(90deg,#00c853,#64dd17);font-weight:bold;padding:12px 16px">▤ 선택 항목 배부용 출력</button><button id="excel" class="action" style="background:#292933;font-weight:bold;padding:12px 16px">▦ 관리용 Excel 다운로드</button></div></div><div id="list" class="code-list"><div class="loading">이용권을 불러오는 중...</div></div></section></main></div>
+<div class="control" style="margin-top:14px"><label class="label" for="quantity">생성할 이용권 개수</label><input id="quantity" class="team-select" type="number" min="1" max="100" value="1" inputmode="numeric"><div style="font-size:12px;color:#999;margin-top:7px">한 번에 1~100개까지 생성할 수 있습니다.</div></div><button id="generate" class="generate">이용권 발급</button><div id="status" class="status"></div><div id="issued" class="issued"><b>발급 완료</b><div id="issuedCode" class="issued-code"></div><div id="issuedInfo"></div><button id="copy" class="copy">복사하기</button></div></section>
+<section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px"><div><h2 class="card-title" style="margin:0 0 6px">발급된 이용권</h2><div style="font-size:13px;color:#999">발급 현황을 확인하고 관리합니다.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button id="selectAll" class="action">전체 선택</button><button id="clearSelect" class="action">선택 해제</button><button id="deleteSelected" class="action danger">선택 삭제</button><button id="distribution" class="action" style="background:linear-gradient(90deg,#00c853,#64dd17);font-weight:bold;padding:12px 16px">▤ 선택 항목 배부용 출력</button><button id="excel" class="action" style="background:#292933;font-weight:bold;padding:12px 16px">▦ 관리용 Excel 다운로드</button></div></div><div id="list" class="code-list"><div class="loading">이용권을 불러오는 중...</div></div></section></main></div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
@@ -35,7 +35,33 @@ function booth(){return document.querySelector('input[name="booth"]:checked').va
 function updateRule(){const t=$('team').value,b=booth(),p=document.querySelector('input[name="people"]:checked')?.value,d=p?discriminator(p):'판별문자';$('rule').innerHTML=b==='coding'?`현재 <strong>코딩과 함께라면</strong> · <strong>${t}팀</strong><br>코드 형식: <span class="code-rule">(이용권 수)(랜덤)(랜덤)(랜덤)(판별문자)</span><br>판별문자: <strong>A=1인권 · F=2인권 · K=3인권 · P=4인권 · U=5인권</strong>${p?` · 현재 <strong>${d}</strong>`:''}`:`현재 <strong>S A N C A F E</strong> · <strong>${t}팀</strong><br>코드 형식: <span class="code-rule">(알파벳)(랜덤)(랜덤)(랜덤)(판별문자)</span><br>판별문자: <strong>A=1인권 · F=2인권 · K=3인권 · P=4인권 · U=5인권</strong>${p?` · 현재 <strong>${d}</strong>`:''}`}
 function makeCode(p,b){const lastChar=discriminator(p);return b==='coding'?`${p}${random(3)}${lastChar}`:`${alpha()}${random(3)}${lastChar}`}
 async function access(){const id=localStorage.getItem('userId');if(!id){$('denied').style.display='flex';return false}try{const s=await getDoc(doc(loginDB,'users',id));if(!s.exists())throw 0;const u=s.data();if(!(u.role==='president'||u.role==='vice'||u.coinManager===true))throw 0;$('app').style.display='block';return true}catch(e){$('denied').style.display='flex';return false}}
-async function generate(){const sel=document.querySelector('input[name="people"]:checked');if(!sel){$('status').className='status error';$('status').textContent='이용권 수를 선택해주세요.';return}const p=Number(sel.value),b=booth(),t=Number($('team').value);$('generate').disabled=true;$('issued').style.display='none';$('status').className='status';$('status').textContent='이용권을 발급하는 중...';try{let saved=null;for(let i=0;i<20&&!saved;i++){const code=makeCode(p,b),ref=doc(db,'accesscodes',code);const ok=await runTransaction(db,async tx=>{if((await tx.get(ref)).exists())return false;tx.set(ref,{max:p,used:0,active:true,team:t,booth:b,createdAt:serverTimestamp(),createdBy:localStorage.getItem('userId')||'unknown'});return true});if(ok)saved=code}if(!saved)throw Error('FAIL');last=saved;$('issuedCode').textContent=saved;$('issuedInfo').textContent=`${t}팀 · ${b==='coding'?'코딩과 함께라면':'S A N C A F E'} · ${p}인권 · 판별문자 ${discriminator(p)}`;$('issued').style.display='block';$('status').className='status success';$('status').textContent=`${saved} 발급 완료!`;sel.checked=false;updateRule()}catch(e){console.error(e);$('status').className='status error';$('status').textContent='이용권 발급에 실패했습니다.'}finally{$('generate').disabled=false}}
+async function generate(){
+ const sel=document.querySelector('input[name="people"]:checked');
+ if(!sel){$('status').className='status error';$('status').textContent='이용권 수를 선택해주세요.';return}
+ const quantity=Number($('quantity').value);
+ if(!Number.isInteger(quantity)||quantity<1||quantity>100){$('status').className='status error';$('status').textContent='생성 개수는 1~100 사이의 정수로 입력해주세요.';return}
+ const p=Number(sel.value),b=booth(),t=Number($('team').value);
+ $('generate').disabled=true;$('issued').style.display='none';$('status').className='status';$('status').textContent=quantity+'개 이용권을 발급하는 중...';
+ const created=[];
+ try{
+  for(let n=0;n<quantity;n++){
+   let saved=null;
+   for(let attempt=0;attempt<30&&!saved;attempt++){
+    const code=makeCode(p,b),ref=doc(db,'accesscodes',code);
+    const ok=await runTransaction(db,async tx=>{if((await tx.get(ref)).exists())return false;tx.set(ref,{max:p,used:0,active:true,team:t,booth:b,createdAt:serverTimestamp(),createdBy:localStorage.getItem('userId')||'unknown'});return true});
+    if(ok)saved=code;
+   }
+   if(!saved)throw new Error('중복 코드가 반복되어 '+(n+1)+'번째 발급에서 중단되었습니다.');
+   created.push(saved);$('status').textContent='발급 중... '+created.length+' / '+quantity;
+  }
+  last=created[0];$('issuedCode').textContent=created.length===1?created[0]:created.length+'개 발급 완료';
+  $('issuedInfo').textContent=t+'팀 · '+(b==='coding'?'코딩과 함께라면':'S A N C A F E')+' · '+p+'인권 · '+created.length+'개 생성'+(created.length>1?' · 복사하기는 첫 번째 인증키를 복사합니다.':' · 판별문자 '+discriminator(p));
+  $('issued').style.display='block';$('status').className='status success';$('status').textContent=created.length===quantity?quantity+'개 이용권 발급 완료!':created.length+'/'+quantity+'개 발급됨. 일부 발급에 실패했습니다.';
+  sel.checked=false;updateRule();
+  if(created.length>1){const box=document.createElement('div');box.style.cssText='margin-top:12px;text-align:left;font:13px monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow:auto;background:#101018;padding:12px;border-radius:8px';box.textContent=created.join('\n');$('issued').appendChild(box)}
+ }catch(e){console.error(e);$('status').className='status error';$('status').textContent='발급 중 오류: '+e.message+' 이미 발급된 '+created.length+'개는 유지됩니다.';if(created.length){last=created[0];$('issuedCode').textContent=created.length+'개 발급됨';$('issuedInfo').textContent=created.join(' · ');$('issued').style.display='block'}}
+ finally{$('generate').disabled=false}
+}
 $('generate').onclick=generate;$('team').onchange=updateRule;document.querySelectorAll('input[name="booth"]').forEach(x=>x.onchange=updateRule);document.querySelectorAll('input[name="people"]').forEach(x=>x.onchange=updateRule);
 $('copy').onclick=async()=>{if(!last)return;try{await navigator.clipboard.writeText(last);$('copy').textContent='복사됨';setTimeout(()=>$('copy').textContent='복사하기',1200)}catch(e){alert(`코드: ${last}`)}};
 function name(b){return b==='sancafe'?'S A N C A F E':'코딩과 함께라면'}function date(x){return x?.toDate?x.toDate().toLocaleString('ko-KR'):'-'}
@@ -108,6 +134,14 @@ $('excel').onclick=downloadManagementExcel;
 $('distribution').onclick=downloadDistributionExcel;
 $('selectAll').onclick=()=>document.querySelectorAll('.pass-select').forEach(x=>x.checked=true);
 $('clearSelect').onclick=()=>document.querySelectorAll('.pass-select').forEach(x=>x.checked=false);
+$('deleteSelected').onclick=async()=>{
+ const selected=[...document.querySelectorAll('.pass-select:checked')].map(x=>x.value);
+ if(!selected.length){alert('삭제할 이용권을 먼저 선택해주세요.');return}
+ const typed=prompt('선택한 '+selected.length+'개 이용권을 영구 삭제합니다.\n계속하려면 DELETE를 입력하세요.');
+ if(typed!=='DELETE')return;
+ $('deleteSelected').disabled=true;
+ try{for(let i=0;i<selected.length;i++){await deleteDoc(doc(db,'accesscodes',selected[i]))}alert(selected.length+'개 이용권을 삭제했습니다.')}catch(e){console.error(e);alert('일부 삭제에 실패했을 수 있습니다. 목록을 새로 확인해주세요.')}finally{$('deleteSelected').disabled=false}
+};
 
 
 function downloadDistributionExcel(){
