@@ -346,33 +346,33 @@ function update(dt){
     if(t1>=.9){ph=2;t2=0;}
   }else if(ph===2){
     t2+=dt;
-    const v=1.2+4.8*sm(0,7,t2); const rem=S_END-headS;
+    const v=12+16*sm(0,.6,t2); const rem=S_END-headS;
     // 끝에서 감속하거나 제자리에서 방향을 꺾지 않는다. 이동 속도를 유지한 채 카메라 전환을 미리 시작한다.
     travelV=v;
     headS=Math.min(S_END,headS+v*dt); camS=headS-3.5; speedN=v/26.5;
     camera.fov=baseFov+16*speedN; camera.updateProjectionMatrix();
     headU.uI.value=1; persist=.6*sm(.3,1,speedN);
     runCamera(dt,false);
-    if(S_END-headS<=38){ ph=3; t3=0; prepOverview(); }
+    if(S_END-headS<=70){ ph=3; t3=0; prepOverview(); }
   }else if(ph===3){
     t3+=dt;
     // 카메라는 멀어지기 시작하지만 빛의 머리는 같은 속도로 경로를 계속 달린다.
     headS=Math.min(S_END,headS+travelV*dt); camS=headS-3.5;
     speedN=travelV/26.5;
     runCamera(dt,false);
-    const b=eio(clamp(t3/6.5));
+    const b=eio(clamp(t3/2.5));
     overviewPos(ov.a0+.08*(1-b),tmp);
     camera.position.copy(ov.startPos).lerp(tmp,b);
     mt.lookAt(camera.position,ov.c,new V3(0,1,0)); qEnd.setFromRotationMatrix(mt);
     camera.quaternion.copy(ov.startQ).slerp(qEnd,b);
     // 시야를 넓히며 주변을 드러내고, 이동과 줌아웃을 동시에 이어 붙인다.
     camera.fov=ov.startFov+(baseFov+8-ov.startFov)*b; camera.updateProjectionMatrix();
-    tubeU.uLit.value=sm(.5,6,t3); tubeU.uThick.value=1+(ov.thick-1)*sm(0,9,t3);
-    headU.uI.value=1-sm(2,6,t3);
-    if(t3>=6.5){ headS=S_END; ph=4; t4=0; head.visible=false; prepConverge(); }
+    tubeU.uLit.value=sm(.2,2.3,t3); tubeU.uThick.value=1+(ov.thick-1)*sm(0,2.5,t3);
+    headU.uI.value=1-sm(.6,2.2,t3);
+    if(t3>=2.5){ headS=S_END; ph=4; t4=0; head.visible=false; prepConverge(); }
   }else if(ph===4){
     t4+=dt;
-    const tn=t4/4.5;
+    const tn=t4/2.7;
     for(let i=0;i<C;i++){
       const p=eio(clamp((tn-dly[i])/.42)), k=i*3;
       cPos[k]=sPos[k]+(tPosL[k]-sPos[k])*p; cPos[k+1]=sPos[k+1]+(tPosL[k+1]-sPos[k+1])*p; cPos[k+2]=sPos[k+2]+(tPosL[k+2]-sPos[k+2])*p;
@@ -380,11 +380,11 @@ function update(dt){
     cg.attributes.position.needsUpdate=true;
     tubeU.uOpacity.value=1-sm(0,.7,t4);
     ptsU.uO.value=sm(0,.7,t4)*(1-sm(3.3,4.2,t4));
-    let f=0; if(t4>4.2&&t4<4.65) f=t4<4.35?(t4-4.2)/.15:1-(t4-4.35)/.3;
+    let f=0; if(t4>2.0&&t4<2.45) f=t4<2.15?(t4-2.0)/.15:1-(t4-2.15)/.3;
     $("flash").style.opacity=clamp(f)*.9;
     // 입자에서 최종 Caveat 로고로 한 번만 이어지며 별도 폰트/색상 전환은 하지 않는다.
-    $("logo").style.opacity=sm(3.8,4.5,t4); $("since").style.opacity=sm(4.3,4.9,t4);
-    if(t4>=5.1){ showEnd(); return false; }
+    $("logo").style.opacity=sm(2.0,2.7,t4); $("since").style.opacity=sm(2.5,3.0,t4);
+    if(t4>=3.1){ showEnd(); return false; }
   }
   if(ph<4){
     const rings=clamp(Math.floor((headS-TRAIL0)/STEP)+1,0,R);
