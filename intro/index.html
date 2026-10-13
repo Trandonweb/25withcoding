@@ -240,7 +240,13 @@ const tube=new THREE.Mesh(tg,new THREE.ShaderMaterial({
       vC=mix(railColor,vec3(.88,1.,.96),exp(-age*1.5));
       gl_Position=projectionMatrix*mv;}`,
   fragmentShader:`varying float vB;varying vec3 vC;void main(){gl_FragColor=vec4(vC*vB,1.);}`}));
-tube.frustumCulled=false; scene.add(tube);
+const tubeRGeom=tg.clone();
+const tubeRMat=tube.material.clone();
+tubeRMat.vertexShader=tubeRMat.vertexShader.replace("max(uHead-aIdx,0.)","max(aIdx-uHead,0.)");
+const tubeRU={uHead:{value:S_END-TRAIL0},uThick:{value:1},uLit:{value:0},uOpacity:{value:1},uTotal:{value:S_END-TRAIL0}};
+tubeRMat.uniforms=tubeRU;
+const tubeR=new THREE.Mesh(tubeRGeom,tubeRMat);
+tubeR.frustumCulled=false; scene.add(tube); scene.add(tubeR);
 
 /* ---------- 빛의 머리(헤드) ---------- */
 const hg=new THREE.BufferGeometry(); hg.setAttribute("position",new THREE.BufferAttribute(new Float32Array(3),3));
@@ -251,7 +257,12 @@ const head=new THREE.Points(hg,new THREE.ShaderMaterial({
     gl_PointSize=clamp(uSize*uPx/max(-mv.z,.1),2.,90.);gl_Position=projectionMatrix*mv;}`,
   fragmentShader:`${HUE}uniform float uI,uK;void main(){float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;
     vec3 c=vec3(.92,1.,.97)*exp(-r*r*20.)+hue(uK)*exp(-r*r*4.5)*.3;gl_FragColor=vec4(c*uI,1.);}`}));
-head.frustumCulled=false; scene.add(head);
+head.frustumCulled=false;
+const hgR=hg.clone();
+const headRMat=head.material.clone();
+headRMat.uniforms.uI.value=0;
+const headR=new THREE.Points(hgR,headRMat);
+headR.frustumCulled=false; scene.add(head); scene.add(headR);
 
 /* ---------- 수렴용 점 (궤적 위에서 출발 → 로고 윤곽) ---------- */
 const cPos=new Float32Array(C*3), cK=new Float32Array(C), sPos=new Float32Array(C*3), tPosL=new Float32Array(C*3), dly=new Float32Array(C);
@@ -279,7 +290,7 @@ function resize(){
 }
 
 /* ---------- 상태 ---------- */
-let ph=1,t1=0,t2=0,t3=0,t4=0,headS=TRAIL0,camS=0,speedN=0,travelV=19.5,roll=0,last=0;
+let ph=1,t1=0,t2=0,t3=0,t4=0,headS=TRAIL0,headBack=S_END,camS=0,speedN=0,travelV=19.5,roll=0,last=0;
 const look=new V3(),cpos=new V3(),tmp=new V3(),tmp2=new V3(),upv=new V3();
 const ov={c:new V3(),dist:1,a0:0,startPos:new V3(),startQ:new THREE.Quaternion(),startFov:58,thick:1};
 const qEnd=new THREE.Quaternion(),mt=new THREE.Matrix4(),dirBase=new V3(0,0,1).normalize();
@@ -325,9 +336,9 @@ function prepConverge(){
 }
 
 function resetAll(){
-  ph=1;t1=t2=t3=t4=0;headS=TRAIL0;camS=0;speedN=0;roll=0;
-  tubeU.uHead.value=0;tubeU.uThick.value=1;tubeU.uLit.value=0;tubeU.uOpacity.value=1;tg.setDrawRange(0,0);
-  headU.uI.value=0;head.visible=true;pts.visible=false;ptsU.uO.value=0;
+  ph=1;t1=t2=t3=t4=0;headS=TRAIL0;headBack=S_END;camS=0;speedN=0;roll=0;
+  tubeU.uHead.value=0;tubeU.uThick.value=1;tubeU.uLit.value=0;tubeU.uOpacity.value=1;tg.setDrawRange(0,0);tubeRU.uHead.value=S_END-TRAIL0;tubeRU.uThick.value=1;tubeRU.uLit.value=0;tubeRU.uOpacity.value=1;tubeRGeom.setDrawRange(0,0);
+  headU.uI.value=0;head.visible=true;headR.visible=true;headR.material.uniforms.uI.value=0;pts.visible=false;ptsU.uO.value=0;
   posAt(7,tmp);look.copy(tmp).sub(posAt(0,tmp2)).normalize();
   camera.fov=baseFov;camera.updateProjectionMatrix();
   $("flash").style.opacity=0;
@@ -343,13 +354,13 @@ function update(dt){
     headU.uI.value=sm(.02,.22,t1);
     camS=1.8*eis(clamp(t1/.9));
     runCamera(dt,false);
-    if(t1>=.9){ph=2;t2=0;}
+    if(t1>=.9){ph=2;t2=0;headR.material.uniforms.uI.value=1;}
   }else if(ph===2){
     t2+=dt;
     const v=12+16*sm(0,.6,t2); const rem=S_END-headS;
     // 끝에서 감속하거나 제자리에서 방향을 꺾지 않는다. 이동 속도를 유지한 채 카메라 전환을 미리 시작한다.
     travelV=v;
-    headS=Math.min(S_END,headS+v*dt); camS=headS-3.5; speedN=v/26.5;
+    headS=Math.min(S_END,headS+v*dt); headBack=Math.max(TRAIL0,headBack-v*dt); camS=headS-3.5; speedN=v/26.5;
     camera.fov=baseFov+16*speedN; camera.updateProjectionMatrix();
     headU.uI.value=1; persist=.6*sm(.3,1,speedN);
     runCamera(dt,false);
@@ -357,7 +368,7 @@ function update(dt){
   }else if(ph===3){
     t3+=dt;
     // 카메라는 멀어지기 시작하지만 빛의 머리는 같은 속도로 경로를 계속 달린다.
-    headS=Math.min(S_END,headS+travelV*dt); camS=headS-3.5;
+    headS=Math.min(S_END,headS+travelV*dt); headBack=Math.max(TRAIL0,headBack-travelV*dt); camS=headS-3.5;
     speedN=travelV/26.5;
     runCamera(dt,false);
     const b=eio(clamp(t3/2.5));
@@ -368,8 +379,8 @@ function update(dt){
     // 시야를 넓히며 주변을 드러내고, 이동과 줌아웃을 동시에 이어 붙인다.
     camera.fov=ov.startFov+(baseFov+8-ov.startFov)*b; camera.updateProjectionMatrix();
     tubeU.uLit.value=sm(.2,2.3,t3); tubeU.uThick.value=1+(ov.thick-1)*sm(0,2.5,t3);
-    headU.uI.value=1-sm(.6,2.2,t3);
-    if(t3>=2.5){ headS=S_END; ph=4; t4=0; head.visible=false; prepConverge(); }
+    headU.uI.value=1-sm(.6,2.2,t3); headR.material.uniforms.uI.value=1-sm(.6,2.2,t3);
+    if(headS>=headBack || t3>=2.5){ const meet=(headS+headBack)/2; headS=meet; headBack=meet; ph=4; t4=0; head.visible=false; headR.visible=false; prepConverge(); }
   }else if(ph===4){
     t4+=dt;
     const tn=t4/2.7;
@@ -378,7 +389,7 @@ function update(dt){
       cPos[k]=sPos[k]+(tPosL[k]-sPos[k])*p; cPos[k+1]=sPos[k+1]+(tPosL[k+1]-sPos[k+1])*p; cPos[k+2]=sPos[k+2]+(tPosL[k+2]-sPos[k+2])*p;
     }
     cg.attributes.position.needsUpdate=true;
-    tubeU.uOpacity.value=1-sm(0,.7,t4);
+    tubeU.uOpacity.value=1-sm(0,.7,t4); tubeRU.uOpacity.value=1-sm(0,.7,t4);
     ptsU.uO.value=sm(0,.7,t4)*(1-sm(3.3,4.2,t4));
     let f=0; if(t4>2.0&&t4<2.45) f=t4<2.15?(t4-2.0)/.15:1-(t4-2.15)/.3;
     $("flash").style.opacity=clamp(f)*.9;
@@ -387,10 +398,16 @@ function update(dt){
     if(t4>=3.1){ showEnd(); return false; }
   }
   if(ph<4){
-    const rings=clamp(Math.floor((headS-TRAIL0)/STEP)+1,0,R);
-    tg.setDrawRange(0,Math.max(0,rings-1)*24); tubeU.uHead.value=headS-TRAIL0;
+    const frontRings=clamp(Math.floor((headS-TRAIL0)/STEP)+1,0,R);
+    tg.setDrawRange(0,Math.max(0,frontRings-1)*24);
+    tubeU.uHead.value=headS-TRAIL0;
+    const backStart=clamp(Math.floor((headBack-TRAIL0)/STEP),0,R-1);
+    tubeRGeom.setDrawRange(backStart*24,Math.max(0,(R-1-backStart)*24));
+    tubeRU.uHead.value=headBack-TRAIL0;
+    tubeRU.uThick.value=tubeU.uThick.value;
+    tubeRU.uLit.value=tubeU.uLit.value;
   }
-  posAt(headS,head.position); headU.uK.value=clamp((headS-TRAIL0)/(S_END-TRAIL0));
+  posAt(headS,head.position); headU.uK.value=clamp((headS-TRAIL0)/(S_END-TRAIL0)); posAt(headBack,headR.position); headR.material.uniforms.uK.value=clamp((headBack-TRAIL0)/(S_END-TRAIL0));
   headU.uPx.value=renderer.domElement.height/(2*Math.tan(camera.fov*Math.PI/360));
   fadeMat.opacity=1-persist;
   return true;
