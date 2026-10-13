@@ -114,36 +114,51 @@ function downloadDistributionExcel(){
  const selected=[...document.querySelectorAll('.pass-select:checked')].map(x=>latestCodes.find(c=>c.code===x.value)).filter(Boolean);
  if(!selected.length){alert('먼저 배부할 이용권의 체크 박스를 선택해주세요.');return}
  if(!window.XLSX){alert('Excel 모듈을 불러오지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해주세요.');return}
- const wb=XLSX.utils.book_new(),rows=[['2026  /  SCHOOL FESTIVAL','','','','','','','',''],['FESTIVAL PASS · 배부용 이용권','','','','','','','','']];
- const ws=XLSX.utils.aoa_to_sheet(rows);
- ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}}];
- ws['!cols']=[{wch:4},{wch:12},{wch:12},{wch:12},{wch:12},{wch:4},{wch:4},{wch:12},{wch:12}];
- ws['!rows']=[{hpt:26},{hpt:22}];
- const green='16803D',ink='17352A',mint='EAF5EC',white='FFFFFF',gray='5F7165',line='C8D9CC';
- function cellStyle(addr,s){if(ws[addr])ws[addr].s=s}
- for(let col=0;col<9;col++){const a=XLSX.utils.encode_col(col);cellStyle(a+'1',{font:{name:'맑은 고딕',sz:16,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:ink}},alignment:{horizontal:'center',vertical:'center'}});cellStyle(a+'2',{font:{name:'맑은 고딕',sz:11,bold:true,color:{rgb:green}},fill:{fgColor:{rgb:mint}},alignment:{horizontal:'center',vertical:'center'}})}
- selected.forEach((x,i)=>{
-  const top=4+i*9;
-  const booth=x.booth==='coding'?'코딩과 함께라면':'S A N C A F E';
-  const ticket=[
-   ['2026  /  SCHOOL FESTIVAL','','','','','','','',''],
-   [booth,'','','','','','','',''],
-   ['FESTIVAL PASS  ·  인증키','','','','','','','',''],
-   [x.code,'','','','','','','',''],
-   [(x.team?x.team+'팀':'팀 미지정')+'   ·   '+x.max+'인 이용권','','','','','','','',''],
-   [x.active?'입장 시 이 인증키를 제시해 주세요.':'비활성 이용권 · 배부하지 마세요.','','','','','','','',''],
-   ['코딩과 함께라면  ×  S A N C A F E','','','','','','','',''],
-   ['2026 FESTIVAL  •  KEEP THIS PASS','','','','','','','','']
-  ];
-  ticket.forEach((r,j)=>{const row=top+j;XLSX.utils.sheet_add_aoa(ws,[r],{origin:'A'+row});ws['!rows'][row-1]={hpt:[22,28,20,38,23,22,18,20][j]};ws['!merges']=ws['!merges']||[];ws['!merges'].push({s:{r:row-1,c:0},e:{r:row-1,c:8}});const addr='A'+row;const font=j===3?{name:'Consolas',sz:24,bold:true,color:{rgb:green}}:{name:'맑은 고딕',sz:j===1?15:(j===0?9:10),bold:j===0||j===1||j===3||j===7,color:{rgb:j===0||j===7?white:(j===1?ink:gray)}};const fill=j===0||j===7?{fgColor:{rgb:j===0?ink:green}}:(j===1||j===4?{fgColor:{rgb:mint}}:undefined);cellStyle(addr,{font,fill,alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:j===0?'medium':'thin',color:{rgb:line}},bottom:{style:j===7?'medium':'thin',color:{rgb:line}},left:{style:'medium',color:{rgb:green}},right:{style:'medium',color:{rgb:green}}}})});
-  if(i<selected.length-1){const gap=top+8;ws['!rows'][gap-1]={hpt:12}}
- });
- ws['!autofilter']=undefined;ws['!sheetViews']=[{showGridLines:false}];
- XLSX.utils.book_append_sheet(wb,ws,'배부용 이용권');
- const stamp=new Date().toISOString().slice(0,10).replace(/-/g,'');
+ const wb=XLSX.utils.book_new(),stamp=new Date().toISOString().slice(0,10).replace(/-/g,'');
+ const C={ink:'12352B',green:'16803D',mint:'EAF5EC',white:'FFFFFF',muted:'52675A',red:'B42318',redBg:'FDECEC'};
+ const font='맑은 고딕';
+ // A4 세로 한 장에 5열 × 20행 = 최대 100개. 100개를 넘으면 페이지별 시트로 분리.
+ for(let page=0;page<Math.ceil(selected.length/100);page++){
+  const items=selected.slice(page*100,(page+1)*100);
+  const ws=XLSX.utils.aoa_to_sheet([Array(15).fill('')]);
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:14}}];
+  ws['!cols']=Array.from({length:15},()=>({wch:6.1}));
+  ws['!rows']=[{hpt:25}];
+  ws['!sheetViews']=[{showGridLines:false}];
+  ws['!pageSetup']={orientation:'portrait',paperSize:9,fitToWidth:1,fitToHeight:1};
+  ws['!fitToPage']=true;
+  ws['!margins']={left:0.22,right:0.22,top:0.25,bottom:0.25,header:0.1,footer:0.1};
+  ws['!printArea']='A1:O61';
+  ws['A1'].v='2026  FESTIVAL  /  OFFICIAL PASS  ·  배부용  ·  '+(page+1);
+  ws['A1'].s={font:{name:font,sz:12,bold:true,color:{rgb:C.white}},fill:{fgColor:{rgb:C.ink}},alignment:{horizontal:'center',vertical:'center'}};
+  for(let i=0;i<items.length;i++){
+   const x=items[i],groupRow=1+Math.floor(i/5)*3,groupCol=(i%5)*3;
+   const booth=x.booth==='coding'?'코딩과 함께라면':'S A N C A F E';
+   const active=x.active!==false;
+   const vals=[active?booth:'사용 중지 · 배부 금지',x.code,(x.team?x.team+'팀':'팀 미지정')+'  /  '+x.max+'인권'];
+   const bg=active?(x.booth==='coding'?C.mint:'F0F5FF'):C.redBg;
+   const accent=active?(x.booth==='coding'?C.green:'3157A4'):C.red;
+   for(let r=0;r<3;r++){
+    const row=groupRow+r+1,first=XLSX.utils.encode_cell({r:row-1,c:groupCol});
+    XLSX.utils.sheet_add_aoa(ws,[[vals[r]]],{origin:first});
+    ws['!merges'].push({s:{r:row-1,c:groupCol},e:{r:row-1,c:groupCol+2}});
+    ws[first].s={
+     font:{name:r===1?'Consolas':font,sz:r===1?13:8,bold:r===1||r===0,color:{rgb:r===1?accent:(r===0?C.white:C.muted)}},
+     fill:{fgColor:{rgb:r===0?accent:(r===1?C.white:bg)}},
+     alignment:{horizontal:'center',vertical:'center',wrapText:true},
+     border:{left:{style:'medium',color:{rgb:accent}},right:{style:'medium',color:{rgb:accent}},top:{style:r===0?'medium':'thin',color:{rgb:accent}},bottom:{style:r===2?'medium':'thin',color:{rgb:accent}}}
+    };
+   }
+   ws['!rows'][groupRow]={hpt:11};ws['!rows'][groupRow+1]={hpt:19};ws['!rows'][groupRow+2]={hpt:11};
+  }
+  for(let r=1;r<=60;r++){
+   if(!ws['!rows'][r])ws['!rows'][r]={hpt:11};
+   for(let c=0;c<15;c++){const addr=XLSX.utils.encode_cell({r,c});if(!ws[addr])ws[addr]={t:'s',v:''}}
+  }
+  XLSX.utils.book_append_sheet(wb,ws,'배부용 '+String(page+1).padStart(2,'0'));
+ }
  XLSX.writeFile(wb,'2026_Festival_배부용_선택_'+stamp+'.xlsx',{cellStyles:true});
 }
-
 function load(){onSnapshot(query(collection(db,'accesscodes'),orderBy('createdAt','desc')),s=>{latestCodes=s.docs.filter(x=>x.id!=='_meta').map(x=>{const v=x.data(),used=Number(v.used??v.usedCount??0),max=Number(v.max??v.maxUses??0);return{code:x.id,team:v.team,booth:v.booth,max,used,remaining:Math.max(0,max-used),active:v.active!==false,createdAt:date(v.createdAt),createdBy:v.createdBy||'-'}});const list=$('list');list.innerHTML='';if(!s.size){list.innerHTML='<div class="empty">아직 발급된 이용권이 없습니다.</div>';return}s.forEach(x=>{const v=x.data(),used=Number(v.used||0),max=Number(v.max||0),active=v.active!==false,remaining=Math.max(0,max-used),el=document.createElement('div');el.className='code-item';el.innerHTML=`<label style="display:flex;align-items:center;gap:8px;grid-column:1/-1;color:#bbb;font-size:13px"><input class="pass-select" type="checkbox" value="${x.id}" style="width:18px;height:18px;accent-color:#00c853"> 배부용 출력에 포함</label><div><div class="code">${x.id}</div><div class="info">${v.team?`${v.team}팀 · `:''}${v.booth?`${name(v.booth)} · `:''}${used}/${max} 사용 · 잔여 ${remaining}<br>발급: ${date(v.createdAt)}</div></div><span class="badge ${active?'':'inactive'}">${active?'활성':'비활성'}</span><button class="action" data-action="toggle">${active?'비활성화':'활성화'}</button><button class="action danger" data-action="delete">삭제</button>`;el.querySelector('[data-action="toggle"]').onclick=()=>toggle(x.id,active);el.querySelector('[data-action="delete"]').onclick=()=>del(x.id);list.appendChild(el)})},e=>{console.error(e);$('list').innerHTML='<div class="empty">이용권을 불러오지 못했습니다.</div>'})}
 updateRule();access().then(ok=>{if(ok)load()});
 </script>
