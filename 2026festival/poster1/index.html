@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>코딩과 함께라면 | 축제 카페 포스터</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;600;700;900&display=swap');
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10131b;color:#f7ffe9;font-family:'Noto Sans KR',sans-serif}
+.tools{position:sticky;top:0;z-index:2;display:flex;justify-content:center;gap:10px;padding:12px;background:#10131bee}
+button{border:1px solid #beff00;background:#beff00;color:#111827;border-radius:999px;padding:10px 18px;font-weight:900;cursor:pointer}
+.poster{width:210mm;height:297mm;margin:18px auto;padding:15mm 13mm;position:relative;overflow:hidden;background:radial-gradient(ellipse at 80% 15%,#164a4d 0,transparent 35%),linear-gradient(145deg,#101923,#11131d 58%,#17251f);border:1px solid #beff00;box-shadow:0 0 30px #beff0020}
+.poster:before,.poster:after{content:"";position:absolute;pointer-events:none;border:1px solid #beff0050;transform:rotate(-24deg);width:180%;height:30mm;left:-30%;top:32%;background:repeating-linear-gradient(90deg,transparent 0 18mm,#beff0018 18mm 18.5mm,transparent 18.5mm 36mm)}
+.poster:after{top:72%;transform:rotate(24deg);border-color:#38e8ff55;background:repeating-linear-gradient(90deg,transparent 0 22mm,#38e8ff13 22mm 22.5mm,transparent 22.5mm 44mm)}
+.content{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+.eyebrow{font-size:10pt;letter-spacing:.18em;color:#beff00;font-weight:900}
+h1{font-family:'Black Han Sans','Noto Sans KR',sans-serif;font-size:35pt;line-height:1.13;letter-spacing:-.04em;margin:8mm 0 2mm;word-break:keep-all}
+.sub{font-size:12pt;color:#b7c6cf;font-weight:700}
+.cupzone{display:flex;justify-content:center;align-items:center;min-height:55mm;position:relative}
+.cup{width:39mm;height:47mm;position:relative;background:linear-gradient(100deg,#beff00,#d9ff6d 45%,#83bd00);clip-path:polygon(7% 0,93% 0,80% 100%,20% 100%);filter:drop-shadow(0 0 15px #beff0050)}
+.cup:before{content:"</>";position:absolute;inset:13mm 0 auto;text-align:center;color:#14200b;font-size:20pt;font-weight:900}
+.cup:after{content:"";position:absolute;top:-2mm;left:-3mm;width:45mm;height:5mm;border-radius:50%;background:#f2ffbd;border:1px solid #beff00}
+.straw{position:absolute;top:1mm;left:51%;width:2mm;height:26mm;background:#38e8ff;transform:rotate(13deg);border-radius:4px}
+.offer{border:2px solid #beff00;border-radius:5mm;padding:6mm 5mm;text-align:center;background:#beff0010;box-shadow:0 0 24px #beff0015}
+.offer small{display:block;font-weight:900;color:#beff00;font-size:11pt;letter-spacing:.1em}
+.offer strong{display:block;font-family:'Black Han Sans',sans-serif;font-size:28pt;line-height:1.25;margin:2mm 0;color:#fff}
+.offer strong span{color:#beff00}
+.offer p{margin:1mm 0 0;color:#c7d5d9;font-size:10pt;font-weight:700}
+.menuhead{font-size:10pt;letter-spacing:.15em;color:#38e8ff;font-weight:900;margin:8mm 0 3mm}
+.menu{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}
+.item{border:1px solid #38e8ff60;background:#0a1821c9;border-radius:3mm;text-align:center;padding:4mm 1mm}
+.item b{display:block;font-size:11pt;white-space:nowrap}
+.item span{display:block;color:#38e8ff;font-size:8pt;margin-top:2mm;font-weight:700}
+.price{text-align:center;font-size:20pt;font-weight:900;color:#beff00;margin:7mm 0 0}
+.price small{font-size:9pt;color:#c7d5d9}
+.foot{margin-top:auto;border-top:1px solid #beff0050;padding-top:4mm;display:flex;justify-content:space-between;gap:4mm;color:#b8c7c6;font-size:8pt;font-weight:700}
+.foot b{color:#beff00}
+@page{size:A4;margin:0}@media print{body{background:#fff}.tools{display:none}.poster{margin:0;border:0;box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media(max-width:700px){.poster{transform-origin:top center;max-width:100%;width:100%;height:auto;min-height:141vw;padding:6vw}.content{min-height:125vw}h1{font-size:9vw}.offer strong{font-size:7vw}.cupzone{min-height:20vw}.cup{transform:scale(.75)}}
+</style>
+</head>
+<body>
+<div class="tools"><button onclick="window.print()">A4 포스터 인쇄 / PDF 저장</button></div>
+<main class="poster"><div class="content">
+<div class="eyebrow">2026 SCHOOL FESTIVAL · SPECIAL EVENT</div>
+<h1>코딩과<br>함께라면<span style="color:#beff00">.</span></h1>
+<div class="sub">코드처럼 짜릿하고, 한 잔처럼 시원하게.</div>
+<div class="cupzone"><div class="cup"></div><div class="straw"></div></div>
+<section class="offer">
+<small>DUAL BOOTH BENEFIT</small>
+<strong>하나 사면<br><span>반대쪽은 공짜!</span></strong>
+<p>한 부스에서 음료를 구매하면 반대편 부스 음료 1잔 무료</p>
+</section>
+<div class="menuhead">DRINK MENU / 메뉴</div>
+<div class="menu">
+<div class="item"><b>아이스티</b><span>ICE TEA</span></div>
+<div class="item"><b>레몬에이드</b><span>LEMON ADE</span></div>
+<div class="item"><b>초코라테</b><span>CHOCO LATTE</span></div>
+</div>
+<div class="price">1,500원 <small>/ 한 잔</small></div>
+<div class="foot"><span><b>코딩과 함께라면</b> × S A N C A F E</span><span>축제에서 만나요!</span></div>
+</div></main>
+</body></html>
