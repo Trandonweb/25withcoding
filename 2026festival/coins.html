@@ -50,13 +50,13 @@ function downloadExcel(){
   ['2026 FESTIVAL','이용권 발급 현황 보고서','','','','','','',''],
   ['코딩과 함께라면 × S A N C A F E','발급 데이터 관리용 · 생성 시각: '+new Date().toLocaleString('ko-KR'),'','','','','','',''],
   ['총 이용권',latestCodes.length,'활성',latestCodes.filter(x=>x.active).length,'비활성',latestCodes.filter(x=>!x.active).length,'총 허용 이용',latestCodes.reduce((n,x)=>n+x.max,0),'총 사용 횟수'],
-  [latestCodes.reduce((n,x)=>n+x.used,0),'','','','','','','',''],
+  [null,null,null,null,null,null,null,null,latestCodes.reduce((n,x)=>n+x.used,0)],
   [],
   ['인증키','팀','부스','권한 인원','사용 횟수','잔여 횟수','상태','발급 일시','발급 관리자']
  ];
  latestCodes.forEach(x=>rows.push([x.code,x.team?x.team+'팀':'-',x.booth==='coding'?'코딩과 함께라면':x.booth==='sancafe'?'S A N C A F E':'-',x.max,x.used,x.remaining,x.active?'활성':'비활성',x.createdAt,x.createdBy||'-']));
  const ws=XLSX.utils.aoa_to_sheet(rows);
- ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}},{s:{r:3,c:0},e:{r:3,c:8}}];
+ ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}}];
  ws['!cols']=[{wch:16},{wch:9},{wch:23},{wch:12},{wch:12},{wch:12},{wch:11},{wch:23},{wch:20}];
  ws['!rows']=[{hpt:34},{hpt:23},{hpt:24},{hpt:6},{hpt:10},{hpt:25}];
  ws['!autofilter']={ref:'A6:I'+(rows.length)};
@@ -67,7 +67,7 @@ function downloadExcel(){
  const subtitleStyle={font:{name:'맑은 고딕',sz:10,color:{rgb:'D0D5DD'}},fill:{fgColor:{rgb:'101820'}},alignment:{vertical:'center',horizontal:'left'}};
  for(let c=0;c<9;c++){const col=XLSX.utils.encode_col(c);style(col+'1',titleStyle);style(col+'2',subtitleStyle)}
  for(const cell of ['A3','C3','E3','G3','I3'])style(cell,{font:{name:'맑은 고딕',sz:10,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:'16803D'}},alignment:{horizontal:'center',vertical:'center'}});
- for(const cell of ['B3','D3','F3','H3','A4'])style(cell,{font:{name:'맑은 고딕',sz:14,bold:true,color:{rgb:'101820'}},fill:{fgColor:{rgb:'E8F8EE'}},alignment:{horizontal:'center',vertical:'center'}});
+ for(const cell of ['B3','D3','F3','H3','I4'])style(cell,{font:{name:'맑은 고딕',sz:14,bold:true,color:{rgb:'101820'}},fill:{fgColor:{rgb:'E8F8EE'}},alignment:{horizontal:'center',vertical:'center'}});
  for(let c=0;c<9;c++)style(XLSX.utils.encode_col(c)+'6',{font:{name:'맑은 고딕',sz:10,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:green}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{bottom:{style:'medium',color:{rgb:'008A3A'}}}});
  for(let r=7;r<=rows.length;r++){
   for(let c=0;c<9;c++){
