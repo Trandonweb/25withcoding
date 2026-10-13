@@ -64,7 +64,7 @@ async function changeQty(id,delta){
  const hasItems=orderLines({items}).length>0;
  const next={...current,items,total,status:'waiting',orderNo:hasItems?(current.orderNo||nextOrderNo(kiosk)):null,updatedAt:Date.now(),kiosk};
  orders[kiosk]=next;renderClient(next);sendRtc(kiosk,{type:"order",order:next});
- writeQueues[kiosk]=(writeQueues[kiosk]||Promise.resolve()).then(()=>setDoc(orderDoc(kiosk),next,{merge:true}));
+ writeQueues[kiosk]=(writeQueues[kiosk]||Promise.resolve()).then(()=>setDoc(orderDoc(kiosk),next));
  try{await writeQueues[kiosk];}catch(e){console.error('ORDER_WRITE_ERROR',e);alert('주문 저장 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. '+e.message);}
 }
 function renderClient(o){menus.forEach(m=>{const el=document.getElementById("qty-"+m.id);if(el)el.textContent=m.voucher?voucherDrinks.reduce((n,d)=>n+Number(o.items?.[voucherItemId(d)]||0),0):o.items?.[m.id]||0});const rows=orderLines(o).map(line=>`<div class="cart-item"><div class="cart-item-row"><b>${line.name}</b><b>${money(line.price*line.qty)}원</b></div><div class="qty">${line.qty}개 × ${money(line.price)}원</div></div>`).join("");document.getElementById("cartList").innerHTML=rows||'<div class="empty">아직 담은 메뉴가 없습니다.</div>';document.getElementById("total").textContent=money(o.total);document.getElementById("paidBox").innerHTML=o.status==='paid'?'<div class="paidbox">결제 완료</div>':o.status==='cancelled'?'<div class="paidbox" style="background:#fdecec;color:#b42318">결제 취소</div>':'';document.querySelectorAll('.qty-btn').forEach(b=>b.disabled=o.status==='paid'||o.status==='cancelled');}
@@ -94,7 +94,7 @@ function renderHost(){
  document.getElementById("hostTotal").textContent=money(grand);
  document.querySelectorAll("[data-action]").forEach(b=>b.onclick=()=>{const k=b.dataset.kiosk,a=b.dataset.action;if(a==="complete")completePayment(k);else if(a==="load")loadHistory(k,b.dataset.history);else if(a==="undo-history")undoHistoryCompletion(k,b.dataset.history);else if(a==="cancel-history")cancelHistoryOrder(k,b.dataset.history);});
 }
-async function saveOrder(k,next){orders[k]=next;renderHost();sendRtc(k,{type:"order",order:next});try{await setDoc(orderDoc(k),next,{merge:true});}catch(e){console.error("ORDER_ACTION_ERROR",e);alert("처리 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. "+e.message);}}
+async function saveOrder(k,next){orders[k]=next;renderHost();sendRtc(k,{type:"order",order:next});try{await setDoc(orderDoc(k),next);}catch(e){console.error("ORDER_ACTION_ERROR",e);alert("처리 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. "+e.message);}}
 async function completePayment(k){
  const o=orders[k]||emptyOrder();if(!itemCount(o)){alert("완료할 주문이 없습니다.");return;}if(o.status==="paid"||o.status==="cancelled"){alert("이미 처리된 주문입니다.");return;}
  const history=[...historyFor(k)];
