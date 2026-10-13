@@ -26,6 +26,30 @@ window.o={o:async function(which,available=false){if(role!=="host"){console.warn
 function voucherItemId(drink){return "m4__"+voucherDrinks.indexOf(drink);}
 function orderLines(o){const items=o?.items||{};const lines=menus.filter(m=>!m.voucher&&Number(items[m.id]||0)>0).map(m=>({id:m.id,name:m.name,price:m.price,qty:Number(items[m.id]||0)}));for(const drink of voucherDrinks){const id=voucherItemId(drink),qty=Number(items[id]||0);if(qty>0)lines.push({id,name:"음료 교환권 사용 ("+drink+")",price:0,qty});}return lines;}
 
+const SESSION_KEY="festivalOrderSetup";
+let selectedRole="client",selectedKiosks=["1"],role=null,kiosks=[],orders={},writeQueues={},rtcPeers={},rtcChannels={},rtcListeners=[],rtcSeenOffers={};
+function orderDoc(k){return doc(db,"order","kiosk-"+k);}
+function updateSetupUI(){
+ document.getElementById("chooseClient").classList.toggle("selected",selectedRole==="client");
+ document.getElementById("chooseHost").classList.toggle("selected",selectedRole==="host");
+ document.querySelectorAll("[data-kiosk]").forEach(b=>b.classList.toggle("selected",selectedKiosks.includes(b.dataset.kiosk)));
+ const hint=document.getElementById("setupHint");
+ hint.textContent=selectedRole==="client"?"주문할 키오스크 번호를 하나 선택하세요.":"관리할 키오스크를 선택하세요. 여러 개를 선택할 수 있습니다.";
+ document.querySelectorAll("[data-kiosk]").forEach(b=>b.disabled=selectedRole==="client"&&selectedKiosks.length===1&&!selectedKiosks.includes(b.dataset.kiosk));
+}
+document.getElementById("chooseClient").addEventListener("click",()=>{selectedRole="client";selectedKiosks=[selectedKiosks[0]||"1"];updateSetupUI();});
+document.getElementById("chooseHost").addEventListener("click",()=>{selectedRole="host";if(!selectedKiosks.length)selectedKiosks=["1"];updateSetupUI();});
+document.getElementById("kioskChoices").addEventListener("click",e=>{const b=e.target.closest("[data-kiosk]");if(!b)return;const k=b.dataset.kiosk;if(selectedRole==="client")selectedKiosks=[k];else if(selectedKiosks.includes(k)){if(selectedKiosks.length>1)selectedKiosks=selectedKiosks.filter(x=>x!==k);}else if(selectedKiosks.length<4)selectedKiosks=[...selectedKiosks,k];updateSetupUI();});
+document.getElementById("setupStart").addEventListener("click",()=>{
+ const error=document.getElementById("setupError");
+ if(document.getElementById("setupPassword").value!==PASSWORD){error.textContent="비밀번호가 올바르지 않습니다.";return;}
+ if(!selectedKiosks.length){error.textContent="키오스크 번호를 하나 이상 선택하세요.";return;}
+ role=selectedRole;kiosks=[...selectedKiosks];
+ try{sessionStorage.setItem(SESSION_KEY,JSON.stringify({role,kiosks,unlocked:true}));}catch(e){console.warn("세션 설정 저장 실패",e);}
+ error.textContent="";start();
+});
+document.getElementById("setupPassword").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("setupStart").click();});
+
 const money=n=>Number(n||0).toLocaleString("ko-KR"),emptyOrder=()=>({items:{},total:0,status:"waiting",updatedAt:Date.now()});
 function renderMenus(){document.getElementById("menus").innerHTML=menus.map(m=>{const unavailable=!!soldOut[m.id]&&!m.voucher;return `<div class="menu-card ${unavailable?"sold-out":""}"><div class="name">${m.name}${unavailable?' <span class="sold-out-label">품절</span>':""}</div><div class="price">${money(m.price)}원</div><div class="hint menu-description">${m.description||""}</div>${m.voucher?`<label class="voucher-label" for="voucherChoice">교환할 음료</label><select id="voucherChoice" class="voucher-select">${voucherDrinks.map(d=>`<option value="${d}" ${soldOut[drinkIds[voucherDrinks.indexOf(d)+1]]?"disabled":""}>${d}${soldOut[drinkIds[voucherDrinks.indexOf(d)+1]]?" (품절)":""}</option>`).join("")}</select>`:""}<div class="controls"><button class="qty-btn minus" data-id="${m.id}" data-delta="-1" ${unavailable?"disabled":""}>−</button><div class="qty-num" id="qty-${m.id}">0</div><button class="qty-btn" data-id="${m.id}" data-delta="1" ${unavailable?"disabled":""}>+</button></div></div>`}).join("");document.querySelectorAll(".qty-btn").forEach(b=>b.onclick=()=>changeQty(b.dataset.id,Number(b.dataset.delta)));const select=document.getElementById("voucherChoice");if(select){const available=voucherDrinks.filter(d=>!soldOut[drinkIds[voucherDrinks.indexOf(d)+1]]);if(available.length)select.value=available[0];}}
 async function changeQty(id,delta){
@@ -46,7 +70,6 @@ async function changeQty(id,delta){
 }
 function renderClient(o){menus.forEach(m=>{const el=document.getElementById("qty-"+m.id);if(el)el.textContent=m.voucher?voucherDrinks.reduce((n,d)=>n+Number(o.items?.[voucherItemId(d)]||0),0):o.items?.[m.id]||0});const rows=orderLines(o).map(line=>`<div class="cart-item"><div class="cart-item-row"><b>${line.name}</b><b>${money(line.price*line.qty)}원</b></div><div class="qty">${line.qty}개 × ${money(line.price)}원</div></div>`).join("");document.getElementById("cartList").innerHTML=rows||'<div class="empty">아직 담은 메뉴가 없습니다.</div>';document.getElementById("total").textContent=money(o.total);document.getElementById("paidBox").innerHTML=o.status==='paid'?'<div class="paidbox">결제 완료</div>':o.status==='cancelled'?'<div class="paidbox" style="background:#fdecec;color:#b42318">결제 취소</div>':'';document.querySelectorAll('.qty-btn').forEach(b=>b.disabled=o.status==='paid'||o.status==='cancelled');}
 function itemCount(o){return Object.values(o.items||{}).reduce((n,v)=>n+Number(v||0),0);}
-function itemCount(o){return menus.reduce((n,m)=>n+Number((o.items||{})[m.id]||0),0);}
 function historyFor(k){return Array.isArray((orders[k]||{}).history)?orders[k].history:[];}
 function nextOrderNo(k,sourceHistory=historyFor(k)){const maxSeq=sourceHistory.reduce((max,h)=>{const raw=String(h.orderNo||h.id||"");const n=Number(raw.slice(String(k).length));return raw.startsWith(String(k))&&Number.isFinite(n)?Math.max(max,n):max;},0);return String(k)+String(maxSeq+1).padStart(2,"0");}
 function renderHost(){
