@@ -19,7 +19,8 @@
 <div id="rule" class="rule"></div>
 <div class="coin-types"><div class="coin"><input id="c1" name="people" value="1" type="radio"><label for="c1"><div class="coin-num">1인권</div><div class="coin-sub">이용권 수 · 1</div></label></div><div class="coin"><input id="c2" name="people" value="2" type="radio"><label for="c2"><div class="coin-num">2인권</div><div class="coin-sub">이용권 수 · 2</div></label></div><div class="coin"><input id="c3" name="people" value="3" type="radio"><label for="c3"><div class="coin-num">3인권</div><div class="coin-sub">이용권 수 · 3</div></label></div><div class="coin"><input id="c4" name="people" value="4" type="radio"><label for="c4"><div class="coin-num">4인권</div><div class="coin-sub">이용권 수 · 4</div></label></div><div class="coin"><input id="c5" name="people" value="5" type="radio"><label for="c5"><div class="coin-num">5인권</div><div class="coin-sub">이용권 수 · 5</div></label></div></div>
 <button id="generate" class="generate">이용권 발급</button><div id="status" class="status"></div><div id="issued" class="issued"><b>발급 완료</b><div id="issuedCode" class="issued-code"></div><div id="issuedInfo"></div><button id="copy" class="copy">복사하기</button></div></section>
-<section class="card"><h2 class="card-title">발급된 이용권</h2><div id="list" class="code-list"><div class="loading">이용권을 불러오는 중...</div></div></section></main></div>
+<section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px"><div><h2 class="card-title" style="margin:0 0 6px">발급된 이용권</h2><div style="font-size:13px;color:#999">발급 현황을 확인하고 관리합니다.</div></div><button id="excel" class="action" style="background:linear-gradient(90deg,#00c853,#64dd17);font-weight:bold;padding:12px 16px">▦ Excel 보고서 다운로드</button></div><div id="list" class="code-list"><div class="loading">이용권을 불러오는 중...</div></div></section></main></div>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
 import{getFirestore,doc,getDoc,collection,onSnapshot,deleteDoc,serverTimestamp,runTransaction,query,orderBy,updateDoc}from'https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js';
@@ -39,7 +40,73 @@ $('generate').onclick=generate;$('team').onchange=updateRule;document.querySelec
 $('copy').onclick=async()=>{if(!last)return;try{await navigator.clipboard.writeText(last);$('copy').textContent='복사됨';setTimeout(()=>$('copy').textContent='복사하기',1200)}catch(e){alert(`코드: ${last}`)}};
 function name(b){return b==='sancafe'?'S A N C A F E':'코딩과 함께라면'}function date(x){return x?.toDate?x.toDate().toLocaleString('ko-KR'):'-'}
 async function toggle(id,a){const n=!a;if(!confirm(`이 이용권을 ${n?'활성화':'비활성화'}할까요?\n\n${id}`))return;try{await updateDoc(doc(db,'accesscodes',id),{active:n})}catch(e){alert('변경에 실패했습니다.')}}async function del(id){if(!confirm(`정말 삭제할까요?\n\n${id}`))return;try{await deleteDoc(doc(db,'accesscodes',id))}catch(e){alert('삭제에 실패했습니다.')}}
-function load(){onSnapshot(query(collection(db,'accesscodes'),orderBy('createdAt','desc')),s=>{const list=$('list');list.innerHTML='';if(!s.size){list.innerHTML='<div class="empty">아직 발급된 이용권이 없습니다.</div>';return}s.forEach(x=>{const v=x.data(),used=Number(v.used||0),max=Number(v.max||0),active=v.active!==false,remaining=Math.max(0,max-used),el=document.createElement('div');el.className='code-item';el.innerHTML=`<div><div class="code">${x.id}</div><div class="info">${v.team?`${v.team}팀 · `:''}${v.booth?`${name(v.booth)} · `:''}${used}/${max} 사용 · 잔여 ${remaining}<br>발급: ${date(v.createdAt)}</div></div><span class="badge ${active?'':'inactive'}">${active?'활성':'비활성'}</span><button class="action" data-action="toggle">${active?'비활성화':'활성화'}</button><button class="action danger" data-action="delete">삭제</button>`;el.querySelector('[data-action="toggle"]').onclick=()=>toggle(x.id,active);el.querySelector('[data-action="delete"]').onclick=()=>del(x.id);list.appendChild(el)})},e=>{console.error(e);$('list').innerHTML='<div class="empty">이용권을 불러오지 못했습니다.</div>'})}
+
+let latestCodes=[];
+function downloadExcel(){
+ if(!latestCodes.length){alert('내보낼 이용권 데이터가 없습니다.');return}
+ if(!window.XLSX){alert('Excel 모듈을 불러오지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해주세요.');return}
+ const wb=XLSX.utils.book_new();
+ const rows=[
+  ['2026 FESTIVAL','이용권 발급 현황 보고서','','','','','','',''],
+  ['코딩과 함께라면 × S A N C A F E','발급 데이터 관리용 · 생성 시각: '+new Date().toLocaleString('ko-KR'),'','','','','','',''],
+  ['총 이용권',latestCodes.length,'활성',latestCodes.filter(x=>x.active).length,'비활성',latestCodes.filter(x=>!x.active).length,'총 허용 이용',latestCodes.reduce((n,x)=>n+x.max,0),'총 사용 횟수'],
+  [latestCodes.reduce((n,x)=>n+x.used,0),'','','','','','','',''],
+  [],
+  ['인증키','팀','부스','권한 인원','사용 횟수','잔여 횟수','상태','발급 일시','발급 관리자']
+ ];
+ latestCodes.forEach(x=>rows.push([x.code,x.team?x.team+'팀':'-',x.booth==='coding'?'코딩과 함께라면':x.booth==='sancafe'?'S A N C A F E':'-',x.max,x.used,x.remaining,x.active?'활성':'비활성',x.createdAt,x.createdBy||'-']));
+ const ws=XLSX.utils.aoa_to_sheet(rows);
+ ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}},{s:{r:3,c:0},e:{r:3,c:8}}];
+ ws['!cols']=[{wch:16},{wch:9},{wch:23},{wch:12},{wch:12},{wch:12},{wch:11},{wch:23},{wch:20}];
+ ws['!rows']=[{hpt:34},{hpt:23},{hpt:24},{hpt:6},{hpt:10},{hpt:25}];
+ ws['!autofilter']={ref:'A6:I'+(rows.length)};
+ ws['!freeze']={xSplit:0,ySplit:6};
+ const green='00C853',dark='15151C',white='FFFFFF',muted='667085';
+ function style(cell,s){if(ws[cell])ws[cell].s=s}
+ const titleStyle={font:{name:'맑은 고딕',sz:20,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:'101820'}},alignment:{vertical:'center',horizontal:'left'}};
+ const subtitleStyle={font:{name:'맑은 고딕',sz:10,color:{rgb:'D0D5DD'}},fill:{fgColor:{rgb:'101820'}},alignment:{vertical:'center',horizontal:'left'}};
+ for(let c=0;c<9;c++){const col=XLSX.utils.encode_col(c);style(col+'1',titleStyle);style(col+'2',subtitleStyle)}
+ for(const cell of ['A3','C3','E3','G3','I3'])style(cell,{font:{name:'맑은 고딕',sz:10,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:'16803D'}},alignment:{horizontal:'center',vertical:'center'}});
+ for(const cell of ['B3','D3','F3','H3','A4'])style(cell,{font:{name:'맑은 고딕',sz:14,bold:true,color:{rgb:'101820'}},fill:{fgColor:{rgb:'E8F8EE'}},alignment:{horizontal:'center',vertical:'center'}});
+ for(let c=0;c<9;c++)style(XLSX.utils.encode_col(c)+'6',{font:{name:'맑은 고딕',sz:10,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:green}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{bottom:{style:'medium',color:{rgb:'008A3A'}}}});
+ for(let r=7;r<=rows.length;r++){
+  for(let c=0;c<9;c++){
+   const cell=XLSX.utils.encode_cell({r:r-1,c});
+   style(cell,{font:{name:'맑은 고딕',sz:10,color:{rgb:'20252B'}},fill:{fgColor:{rgb:r%2===0?'F2F8F4':'FFFFFF'}},alignment:{vertical:'center',horizontal:c===0?'center':(c===3||c===4||c===5?'center':'left')},border:{bottom:{style:'thin',color:{rgb:'DDE5DF'}}}});
+  }
+  style('G'+r,{font:{name:'맑은 고딕',sz:10,bold:true,color:{rgb:latestCodes[r-7]?.active?'16803D':'C0392B'}},fill:{fgColor:{rgb:latestCodes[r-7]?.active?'E8F8EE':'FDECEC'}},alignment:{horizontal:'center',vertical:'center'}});
+  ws['!rows'][r-1]={hpt:22};
+ }
+ ws['!sheetViews']=[{showGridLines:false}];
+ XLSX.utils.book_append_sheet(wb,ws,'이용권 현황');
+ const guide=XLSX.utils.aoa_to_sheet([
+  ['사용 안내'],
+  ['2026 FESTIVAL · 이용권 관리'],
+  ['1. 첫 번째 시트에서 인증키별 팀, 부스, 이용 가능 인원, 사용량 및 상태를 확인할 수 있습니다.'],
+  ['2. 비활성 이용권은 상태 열에 비활성으로 표시됩니다.'],
+  ['3. 이 파일은 다운로드 시점의 스냅샷이며, 이후 사이트에서 변경한 내용은 자동 반영되지 않습니다.'],
+  ['4. 인증키는 이용권 접근에 사용될 수 있으므로 파일을 안전하게 보관하세요.'],
+  [''],
+  ['다운로드 시각',new Date().toLocaleString('ko-KR')],
+  ['관리 페이지','https://25withcoding.kr/2026festival/coins.html']
+ ]);
+ guide['!cols']=[{wch:88},{wch:34}];
+ guide['!merges']=[{s:{r:0,c:0},e:{r:0,c:1}},{s:{r:1,c:0},e:{r:1,c:1}},{s:{r:2,c:0},e:{r:2,c:1}},{s:{r:3,c:0},e:{r:3,c:1}},{s:{r:4,c:0},e:{r:4,c:1}},{s:{r:5,c:0},e:{r:5,c:1}}];
+ styleGuide(guide,XLSX);
+ XLSX.utils.book_append_sheet(wb,guide,'안내');
+ const stamp=new Date().toISOString().slice(0,10).replace(/-/g,'');
+ XLSX.writeFile(wb,'2026_Festival_이용권현황_'+stamp+'.xlsx',{cellStyles:true});
+}
+function styleGuide(ws,XLSX){
+ for(let c=0;c<2;c++){const a=XLSX.utils.encode_col(c)+'1';if(ws[a])ws[a].s={font:{name:'맑은 고딕',sz:18,bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'101820'}},alignment:{vertical:'center'}}}
+ for(let r=2;r<=6;r++){const a='A'+r;if(ws[a])ws[a].s={font:{name:'맑은 고딕',sz:11,color:{rgb:'27332B'}},fill:{fgColor:{rgb:r%2?'F2F8F4':'FFFFFF'}},alignment:{vertical:'center',wrapText:true}}}
+ if(ws['A8'])ws['A8'].s={font:{name:'맑은 고딕',sz:10,bold:true,color:{rgb:'16803D'}}};
+ if(ws['A9'])ws['A9'].s={font:{name:'맑은 고딕',sz:10,bold:true,color:{rgb:'16803D'}}};
+ ws['!rows']=[{hpt:32},{hpt:24},{hpt:30},{hpt:25},{hpt:30},{hpt:38},{hpt:10},{hpt:22},{hpt:22}];
+}
+$('excel').onclick=downloadExcel;
+
+function load(){onSnapshot(query(collection(db,'accesscodes'),orderBy('createdAt','desc')),s=>{latestCodes=s.docs.filter(x=>x.id!=='_meta').map(x=>{const v=x.data(),used=Number(v.used??v.usedCount??0),max=Number(v.max??v.maxUses??0);return{code:x.id,team:v.team,booth:v.booth,max,used,remaining:Math.max(0,max-used),active:v.active!==false,createdAt:date(v.createdAt),createdBy:v.createdBy||'-'}});const list=$('list');list.innerHTML='';if(!s.size){list.innerHTML='<div class="empty">아직 발급된 이용권이 없습니다.</div>';return}s.forEach(x=>{const v=x.data(),used=Number(v.used||0),max=Number(v.max||0),active=v.active!==false,remaining=Math.max(0,max-used),el=document.createElement('div');el.className='code-item';el.innerHTML=`<div><div class="code">${x.id}</div><div class="info">${v.team?`${v.team}팀 · `:''}${v.booth?`${name(v.booth)} · `:''}${used}/${max} 사용 · 잔여 ${remaining}<br>발급: ${date(v.createdAt)}</div></div><span class="badge ${active?'':'inactive'}">${active?'활성':'비활성'}</span><button class="action" data-action="toggle">${active?'비활성화':'활성화'}</button><button class="action danger" data-action="delete">삭제</button>`;el.querySelector('[data-action="toggle"]').onclick=()=>toggle(x.id,active);el.querySelector('[data-action="delete"]').onclick=()=>del(x.id);list.appendChild(el)})},e=>{console.error(e);$('list').innerHTML='<div class="empty">이용권을 불러오지 못했습니다.</div>'})}
 updateRule();access().then(ok=>{if(ok)load()});
 </script>
 </body>
