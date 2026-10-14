@@ -145,47 +145,60 @@ $('deleteSelected').onclick=async()=>{
 
 
 function downloadDistributionExcel(){
- const selected=[...document.querySelectorAll('.pass-select:checked')].map(x=>latestCodes.find(c=>c.code===x.value)).filter(Boolean);
- if(!selected.length){alert('먼저 배부할 이용권을 선택해주세요.');return}
- if(!window.XLSX){alert('Excel 모듈을 불러오지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해주세요.');return}
- const wb=XLSX.utils.book_new(),stamp=new Date().toISOString().slice(0,10).replace(/-/g,'');
- const font='맑은 고딕';
- for(let page=0;page<Math.ceil(selected.length/100);page++){
-  const items=selected.slice(page*100,(page+1)*100);
-  const ws=XLSX.utils.aoa_to_sheet([Array(15).fill('')]);
-  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:14}}];
-  ws['!cols']=Array.from({length:15},()=>({wch:6.1}));
-  ws['!rows']=[{hpt:24}];
-  ws['!sheetViews']=[{showGridLines:false}];
-  ws['!pageSetup']={orientation:'portrait',paperSize:9,fitToWidth:1,fitToHeight:1};
-  ws['!fitToPage']=true;
-  ws['!margins']={left:0.22,right:0.22,top:0.25,bottom:0.25,header:0.1,footer:0.1};
-  ws['!printArea']='A1:O21';
-  ws['A1'].v='✦  2026 FESTIVAL  ·  이용권  ✦';
-  ws['A1'].s={font:{name:font,sz:12,bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'183D2B'}},alignment:{horizontal:'center',vertical:'center'}};
-  for(let i=0;i<items.length;i++){
-   const x=items[i],row=i+1,col=(i%5)*3,active=x.active!==false;
-   const accent=active?(x.booth==='sancafe'?'3157A4':'16803D'):'B42318';
-   const bg=active?(x.booth==='sancafe'?'F0F5FF':'EAF5EC'):'FDECEC';
-   const label=active?String(x.max)+'인용 : '+x.code:'사용 중지 · 배부 금지';
-   const issuer=x.booth==='sancafe'?'S A N C A F E':'코딩과 함께라면';
-   const main=XLSX.utils.encode_cell({r:row,c:col});
-   XLSX.utils.sheet_add_aoa(ws,[[label]],{origin:main});
-   ws['!merges'].push({s:{r:row,c:col},e:{r:row,c:col+2}});
-   ws[main].s={font:{name:font,sz:active?10:8,bold:true,color:{rgb:accent}},fill:{fgColor:{rgb:bg}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{left:{style:'medium',color:{rgb:accent}},right:{style:'medium',color:{rgb:accent}},top:{style:'medium',color:{rgb:accent}},bottom:{style:'thin',color:{rgb:accent}}}};
-   const footerRow=row+1,footer=XLSX.utils.encode_cell({r:footerRow,c:col});
-   XLSX.utils.sheet_add_aoa(ws,[[issuer]],{origin:footer});
-   ws['!merges'].push({s:{r:footerRow,c:col},e:{r:footerRow,c:col+2}});
-   ws[footer].s={font:{name:font,sz:7,bold:true,color:{rgb:accent}},fill:{fgColor:{rgb:bg}},alignment:{horizontal:'left',vertical:'center',indent:1},border:{left:{style:'medium',color:{rgb:accent}},right:{style:'medium',color:{rgb:accent}},bottom:{style:'medium',color:{rgb:accent}}}};
-   ws['!rows'][row]={hpt:20};ws['!rows'][footerRow]={hpt:9};
-  }
-  for(let r=1;r<=20;r++){
-   if(!ws['!rows'][r])ws['!rows'][r]={hpt:20};
-   for(let c=0;c<15;c++){const addr=XLSX.utils.encode_cell({r,c});if(!ws[addr])ws[addr]={t:'s',v:''}}
-  }
-  XLSX.utils.book_append_sheet(wb,ws,'배부용 '+String(page+1).padStart(2,'0'));
+ const picked=[...document.querySelectorAll('.pass-select:checked')].map(c=>latestCodes.find(x=>x.code===c.value)).filter(Boolean);
+ if(!picked.length){alert('먼저 배부할 이용권을 선택해주세요.');return}
+ const inactive=picked.filter(x=>x.active===false);
+ if(inactive.length&&!confirm('비활성 이용권 '+inactive.length+'개는 출력에서 제외됩니다. 계속할까요?'))return;
+ const items=picked.filter(x=>x.active!==false);
+ if(!items.length){alert('출력할 수 있는 활성 이용권이 없습니다.');return}
+ let style=document.getElementById('distributionPrintStyle');
+ if(!style){
+  style=document.createElement('style');style.id='distributionPrintStyle';
+  style.textContent=`
+  #distributionPrintOverlay{position:fixed;inset:0;z-index:9999;background:#292933;overflow:auto;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
+  #distributionPrintOverlay .dp-bar{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 18px;background:#15151c;color:white}
+  #distributionPrintOverlay .dp-bar button{border:0;border-radius:8px;padding:10px 16px;background:#333;color:#fff;font-weight:bold}
+  #distributionPrintOverlay .dp-bar .dp-print{background:#16803d}
+  #distributionPrintOverlay .dp-pages{display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px 0}
+  #distributionPrintOverlay .dp-sheet{width:210mm;height:297mm;padding:5mm;background:#fff;box-sizing:border-box;overflow:hidden;box-shadow:0 4px 24px #0008}
+  #distributionPrintOverlay .dp-grid{width:200mm;height:287mm;display:grid;grid-template-columns:repeat(7,28.5714mm);grid-template-rows:repeat(10,28.7mm);border-top:.25mm dashed #888;border-left:.25mm dashed #888}
+  #distributionPrintOverlay .dp-cell{position:relative;border-right:.25mm dashed #888;border-bottom:.25mm dashed #888;min-width:0;min-height:0;box-sizing:border-box}
+  #distributionPrintOverlay .dp-ticket{position:absolute;inset:1mm;border:.35mm solid var(--accent);border-radius:1.6mm;background:var(--paper);overflow:hidden;box-sizing:border-box;color:#171717}
+  #distributionPrintOverlay .dp-ticket:before{content:'';position:absolute;left:0;right:0;top:0;height:1.3mm;background:var(--accent)}
+  #distributionPrintOverlay .dp-ticket:after{content:'✦  ✦  ✦';position:absolute;right:1mm;top:2mm;font-size:1.5mm;color:var(--accent)}
+  #distributionPrintOverlay .dp-code{position:absolute;left:.5mm;right:.5mm;top:8.3mm;display:flex;align-items:baseline;justify-content:center;gap:.5mm;white-space:nowrap;line-height:1}
+  #distributionPrintOverlay .dp-n{font-size:2.1mm;font-weight:700;color:var(--accent)}
+  #distributionPrintOverlay .dp-key{font:800 3.3mm/1 Consolas,Menlo,'Courier New',monospace;letter-spacing:.01em;color:#171717}
+  #distributionPrintOverlay .dp-brand{position:absolute;left:1.2mm;bottom:1.6mm;white-space:nowrap;line-height:1;color:var(--accent)}
+  #distributionPrintOverlay .dp-brand.coding{font:400 1.75mm/1 'Black Han Sans','Malgun Gothic',sans-serif}
+  #distributionPrintOverlay .dp-brand.sancafe{font:700 1.45mm/1 Georgia,'Times New Roman',serif;letter-spacing:.25mm}
+  #distributionPrintOverlay .dp-brand:before{content:'';display:block;width:4mm;height:.35mm;background:var(--accent);margin-bottom:.75mm}
+  @page{size:A4 portrait;margin:0}
+  @media print{html,body{margin:0!important;padding:0!important;background:#fff!important}body>*:not(#distributionPrintOverlay){display:none!important}#distributionPrintOverlay{position:static;overflow:visible;background:#fff}#distributionPrintOverlay .dp-bar{display:none}#distributionPrintOverlay .dp-pages{display:block;padding:0}#distributionPrintOverlay .dp-sheet{margin:0;box-shadow:none;break-after:page;page-break-after:always}#distributionPrintOverlay .dp-sheet:last-child{break-after:auto;page-break-after:auto}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  `;
+  document.head.appendChild(style);
  }
- XLSX.writeFile(wb,'2026_Festival_배부용_선택_'+stamp+'.xlsx',{cellStyles:true});
+ document.getElementById('distributionPrintOverlay')?.remove();
+ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const PER=70,pages=Math.ceil(items.length/PER);
+ let sheets='';
+ for(let p=0;p<pages;p++){
+  const pageItems=items.slice(p*PER,(p+1)*PER);
+  sheets+='<section class="dp-sheet"><div class="dp-grid">';
+  for(const x of pageItems){
+   const cafe=x.booth==='sancafe',accent=cafe?'#6b3a1c':'#0b6b3d',paper=cafe?'#fbf5ee':'#f4faf6',brand=cafe?'S A N C A F E':'코딩과 함께라면';
+   sheets+='<div class="dp-cell"><div class="dp-ticket" style="--accent:'+accent+';--paper:'+paper+'"><div class="dp-code"><span class="dp-n">'+esc(x.max)+'인용 :</span><span class="dp-key">'+esc(x.code)+'</span></div><div class="dp-brand '+(cafe?'sancafe':'coding')+'">'+brand+'</div></div></div>';
+  }
+  sheets+='</div></section>';
+ }
+ const ov=document.createElement('div');ov.id='distributionPrintOverlay';
+ ov.innerHTML='<div class="dp-bar"><div>배부용 이용권 미리보기 · '+items.length+'장 · A4 '+pages+'페이지 · 페이지당 최대 70장</div><div style="display:flex;gap:8px"><button class="dp-print" id="dpPrint">인쇄</button><button id="dpClose">닫기</button></div></div><div class="dp-pages">'+sheets+'</div>';
+ document.body.appendChild(ov);
+ const close=()=>{ov.remove();document.removeEventListener('keydown',escKey)};
+ const escKey=e=>{if(e.key==='Escape')close()};
+ document.addEventListener('keydown',escKey);
+ ov.querySelector('#dpClose').onclick=close;
+ ov.querySelector('#dpPrint').onclick=()=>window.print();
 }
 function load(){onSnapshot(query(collection(db,'accesscodes'),orderBy('createdAt','desc')),s=>{latestCodes=s.docs.filter(x=>x.id!=='_meta').map(x=>{const v=x.data(),used=Number(v.used??v.usedCount??0),max=Number(v.max??v.maxUses??0);return{code:x.id,team:v.team,booth:v.booth,max,used,remaining:Math.max(0,max-used),active:v.active!==false,createdAt:date(v.createdAt),createdBy:v.createdBy||'-'}});const list=$('list');list.innerHTML='';if(!s.size){list.innerHTML='<div class="empty">아직 발급된 이용권이 없습니다.</div>';return}s.forEach(x=>{const v=x.data(),used=Number(v.used||0),max=Number(v.max||0),active=v.active!==false,remaining=Math.max(0,max-used),el=document.createElement('div');el.className='code-item';el.innerHTML=`<label style="display:flex;align-items:center;gap:8px;grid-column:1/-1;color:#bbb;font-size:13px"><input class="pass-select" type="checkbox" value="${x.id}" style="width:18px;height:18px;accent-color:#00c853"> 배부용 출력에 포함</label><div><div class="code">${x.id}</div><div class="info">${v.team?`${v.team}팀 · `:''}${v.booth?`${name(v.booth)} · `:''}${used}/${max} 사용 · 잔여 ${remaining}<br>발급: ${date(v.createdAt)}</div></div><span class="badge ${active?'':'inactive'}">${active?'활성':'비활성'}</span><button class="action" data-action="toggle">${active?'비활성화':'활성화'}</button><button class="action danger" data-action="delete">삭제</button>`;el.querySelector('[data-action="toggle"]').onclick=()=>toggle(x.id,active);el.querySelector('[data-action="delete"]').onclick=()=>del(x.id);list.appendChild(el)})},e=>{console.error(e);$('list').innerHTML='<div class="empty">이용권을 불러오지 못했습니다.</div>'})}
 updateRule();access().then(ok=>{if(ok)load()});
