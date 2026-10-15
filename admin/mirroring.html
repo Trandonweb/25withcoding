@@ -30,7 +30,7 @@ header{height:70px;padding:0 20px;background:var(--panel);display:flex;align-ite
 <div id="viewer"><div id="viewerBox"><div id="viewerTop"><h2 id="viewerTitle">학생 화면 <span class="viewer-status connecting">● 연결 중</span></h2><button id="closeViewer">닫기</button></div><video id="bigVideo" autoplay playsinline></video></div></div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import{getFirestore,collection,onSnapshot,doc,getDoc,updateDoc,arrayUnion,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import{getFirestore,collection,onSnapshot,doc,getDoc,updateDoc,arrayUnion,serverTimestamp,deleteField}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
 const db=getFirestore(initializeApp(firebaseConfig));
@@ -197,12 +197,41 @@ document.getElementById("back").onclick=()=>location.href="/admin/index.html";
 
 function renderEmpty(){const g=document.getElementById("grid");if(!g.children.length)g.innerHTML='<div class="empty">현재 접속 중인 학생이 없습니다.</div>'}
 
+// 사용자 계정 문서는 절대 삭제하지 않는다. 화면 공유용 임시 신호 필드만 정리한다.
+const TEMP_SIGNAL_FIELDS={
+ mode:deleteField(),sharing:deleteField(),sharingStartedAt:deleteField(),
+ sessionId:deleteField(),clientOffer:deleteField(),adminAnswer:deleteField(),
+ clientCandidates:deleteField(),adminCandidates:deleteField(),updatedAt:deleteField(),
+ online:false,state:"offline"
+};
+const cleanupInProgress=new Set();
+async function clearStaleShareData(id,reason){
+ if(cleanupInProgress.has(id))return;
+ cleanupInProgress.add(id);
+ try{
+  await updateDoc(doc(db,"users",id),{...TEMP_SIGNAL_FIELDS});
+  console.info("[ADMIN] 화면 공유 임시 데이터 정리:",id,reason);
+ }catch(e){console.warn("[ADMIN] 임시 데이터 정리 실패:",id,e)}
+ finally{cleanupInProgress.delete(id)}
+}
+function isStaleShareSession(d){
+ if(d.online!==true)return true;
+ const t=d.updatedAt;
+ if(!t||typeof t.toMillis!=="function")return false;
+ return Date.now()-t.toMillis()>45000;
+}
 function loadUsers(){
  onSnapshot(collection(db,"users"),snap=>{
   const g=document.getElementById("grid");const seen=new Set();let online=0;
   for(const u of snap.docs){
    const id=u.id;if(id===adminId)continue;
-   const d=u.data();if(d.online!==true)continue;
+   const d=u.data();
+   const hasTempData=["sessionId","clientOffer","adminAnswer","clientCandidates","adminCandidates","sharingStartedAt"].some(k=>Object.prototype.hasOwnProperty.call(d,k));
+   if(isStaleShareSession(d)){
+    if(hasTempData||d.online===true||d.state==="connecting"||d.state==="live")clearStaleShareData(id,d.online===true?"45초 이상 신호 갱신 없음":"오프라인");
+    continue;
+   }
+   if(d.online!==true)continue;
    online++;seen.add(id);
    if(!findCard(id)){g.querySelector(".empty")?.remove();g.appendChild(makeCard(id,d))}
    if(!sessions.has(id)&&d.clientOffer)connectStudent(id,d);
