@@ -64,6 +64,7 @@ h1{margin:0;font-size:clamp(20px,2.2vw,30px);line-height:1.15;letter-spacing:-.0
 .all-projects{display:block;margin-top:11px;padding:9px 10px;text-align:center;border-radius:8px;background:#26392c;color:#b9efc7;font-size:10px;font-weight:750}
 .section-label{font-size:9px;font-weight:850;letter-spacing:.16em;color:var(--green);margin-bottom:10px}
 .details h2{font-size:18px;line-height:1.25;letter-spacing:-.04em;margin:0 0 8px;overflow-wrap:anywhere}
+.project-thumbnail{display:none;width:100%;max-height:220px;object-fit:contain;background:#0c0d0f;border:1px solid var(--line);border-radius:9px;margin:4px 0 12px}.project-thumbnail.visible{display:block}
 .description{font-size:12px;line-height:1.75;color:#b0b6af;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding:9px 0;font-size:10px}
 .meta:first-of-type{margin-top:13px}
@@ -135,6 +136,7 @@ footer strong{color:#a6aea5;font-weight:750}
     <aside class="details">
       <div class="section-label">ABOUT THE PROJECT</div>
       <h2 id="info-title">작품 이름</h2>
+      <img id="project-thumbnail" class="project-thumbnail" alt="작품 썸네일">
       <p class="description" id="description">축제 프로젝트를 실행하고 응원해 주세요.</p>
       <div class="meta"><span>제작자</span><strong id="author">코딩과 함께라면</strong></div>
       <div class="meta"><span>작품 형식</span><strong id="project-type">프로젝트 임베드</strong></div><div class="meta"><span>응원</span><strong><button class="btn primary" id="like-button" type="button">❤️ 응원하기 <span id="like-count">불러오는 중</span></button></strong></div>
@@ -169,6 +171,40 @@ $("author").textContent = PROJECT.author;
 $("description").textContent = PROJECT.description;
 $("how-to").textContent = PROJECT.howTo;
 $("notes").textContent = PROJECT.notes;
+
+async function loadFolderMetadata(){
+  const readText = async name => {
+    try {
+      const response = await fetch("./" + name, {cache:"no-store"});
+      return response.ok ? (await response.text()).trim() : "";
+    } catch { return ""; }
+  };
+  const [title, explanation, madeBy, how] = await Promise.all([
+    readText("title.txt"),
+    readText("explanation.txt"),
+    readText("madeby.txt"),
+    readText("how.txt")
+  ]);
+  if(title){
+    $("page-title").textContent = title;
+    $("stage-title").textContent = title;
+    $("info-title").textContent = title;
+    document.title = title + " | 2026 코딩과 함께라면";
+  }
+  if(explanation) $("description").textContent = explanation;
+  if(madeBy) $("author").textContent = madeBy;
+  if(how) $("how-to").textContent = how;
+  const thumbnail = $("project-thumbnail");
+  try {
+    const response = await fetch("./thubnail.png", {method:"HEAD", cache:"no-store"});
+    if(response.ok){
+      thumbnail.src = "./thubnail.png";
+      thumbnail.classList.add("visible");
+    }
+  } catch {}
+}
+loadFolderMetadata();
+
 document.title = PROJECT.title + " | 2026 코딩과 함께라면";
 function safeUrl(value) {
   try { const u = new URL(value, location.href); return ["https:","http:"].includes(u.protocol) ? u.href : ""; }
