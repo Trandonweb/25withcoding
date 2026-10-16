@@ -2589,12 +2589,14 @@ async function discoverProjectFolders(){
     const projects=await Promise.all([...names].map(async id=>{
       const folder=root+"/"+id;
       const metaPaths={
+        title:folder+"/title.txt",
         description:folder+"/explanation.txt",
         madeBy:folder+"/madeby.txt",
         how:folder+"/how.txt",
         thumbnail:folder+"/thubnail.png"
       };
-      const [description,madeBy,how]=await Promise.all([
+      const [title,description,madeBy,how]=await Promise.all([
+        files.has(metaPaths.title)?fileText(metaPaths.title):Promise.resolve(""),
         files.has(metaPaths.description)?fileText(metaPaths.description):Promise.resolve(""),
         files.has(metaPaths.madeBy)?fileText(metaPaths.madeBy):Promise.resolve(""),
         files.has(metaPaths.how)?fileText(metaPaths.how):Promise.resolve("")
@@ -2607,7 +2609,7 @@ async function discoverProjectFolders(){
 
       return {
         id,
-        title:id,
+        title:title||id,
         description:description||String(existing.detail||""),
         madeBy:madeBy||String(existing.madeby||existing.madeBy||existing.author||""),
         how:how||String(existing.howto||existing.how||""),
