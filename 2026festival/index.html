@@ -2534,7 +2534,6 @@ function renderProjects(){
     const description=p.description||String(existing.detail||"");
     const madeBy=p.madeBy||String(existing.madeby||existing.madeBy||existing.author||"");
     const how=p.how||String(existing.howto||existing.how||"");
-    const thumbnail=p.thumbnail||String(existing.thum||"");
     info.appendChild(makeText("div","desc",description||"작품 설명이 등록되지 않았습니다."));
     if(madeBy) info.appendChild(makeText("div","project-maker","제작자 · "+madeBy));
     if(how) info.appendChild(makeText("div","project-how","작동법 · "+how));
