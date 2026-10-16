@@ -170,7 +170,31 @@ async function startHostRtc(k){
  rtcListeners.push(unsub);
 }
 
-function start(){document.getElementById("roleScreen").style.display="none";onSnapshot(availabilityDoc,s=>{soldOut={m1:false,m2:false,m3:false,...(s.exists()?s.data().soldOut||{}:{})};if(role==="client"){renderMenus();renderClient(orders[kiosks[0]]||emptyOrder());}},e=>console.error("MENU_AVAILABILITY_LISTEN_ERROR",e));if(role==='client'){document.getElementById("clientApp").style.display="block";document.getElementById("clientKiosk").textContent=kiosks[0]+"번 키오스크";renderMenus();const k=kiosks[0];startClientRtc(k);onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderClient(orders[k]);},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message)});}else{document.getElementById("hostApp").style.display="block";document.getElementById("hostInfo").textContent="관리 키오스크: "+kiosks.join(", ")+"번";kiosks.forEach(k=>{startHostRtc(k);onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderHost();},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message)});});}}
+function start(){
+ document.getElementById("roleScreen").style.display="none";
+ if(role==="client"){
+  document.getElementById("clientApp").style.display="block";
+  document.getElementById("clientKiosk").textContent=kiosks[0]+"번 키오스크";
+  renderMenus();
+  const k=kiosks[0];
+  startClientRtc(k);
+  try{
+   onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderClient(orders[k]);},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message);});
+  }catch(e){console.error("ORDER_LISTEN_SETUP_ERROR",e);alert("주문 연결 실패: "+e.message);}
+ }else{
+  document.getElementById("hostApp").style.display="block";
+  document.getElementById("hostInfo").textContent="관리 키오스크: "+kiosks.join(", ")+"번";
+  kiosks.forEach(k=>{
+   startHostRtc(k);
+   try{
+    onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderHost();},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message);});
+   }catch(e){console.error("ORDER_LISTEN_SETUP_ERROR",e);alert("주문 연결 실패: "+e.message);}
+  });
+ }
+ try{
+  onSnapshot(availabilityDoc,s=>{soldOut={m1:false,m2:false,m3:false,...(s.exists()?s.data().soldOut||{}:{})};if(role==="client"){renderMenus();renderClient(orders[kiosks[0]]||emptyOrder());}},e=>console.error("MENU_AVAILABILITY_LISTEN_ERROR",e));
+ }catch(e){console.error("MENU_AVAILABILITY_SETUP_ERROR",e);}
+}
 
 try{const saved=JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null");if(saved&&["client","host"].includes(saved.role)&&Array.isArray(saved.kiosks)){selectedRole=saved.role;selectedKiosks=saved.kiosks.filter(k=>["1","2","3","4"].includes(k)).slice(0,4);if(selectedRole==="client")selectedKiosks=[selectedKiosks[0]||"1"];updateSetupUI();if(saved.unlocked&&selectedKiosks.length){role=selectedRole;kiosks=[...selectedKiosks];start();}}}catch(e){console.warn("설정 복원 실패",e);}
 </script>
