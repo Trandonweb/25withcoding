@@ -4,6 +4,10 @@ Before changing code, read this file and `.github/copilot-instructions.md` (if p
 
 ## Critical production-site protection
 
+- **Never let `.github/workflows/coby-preview.yml` deploy to GitHub Pages.** It may package `AI/` as a downloadable artifact only. Deploying `./AI` with `actions/deploy-pages` replaces the whole production site root with COBY; this was the confirmed cause of the incident.
+- The only workflow allowed to publish the production site must publish the repository's actual site root, not the `AI/` subdirectory.
+
+
 - **Never make the root homepage (`/`, `index.html`) display, redirect to, or be replaced by COBY/AI.** COBY is a separate feature linked from the homepage; it is not the homepage.
 - Do not add redirects, meta refreshes, iframe replacements, or unconditional `location.replace()` / `location.href` rules that route `/` to `/AI/`, `/coby/`, `/COBY/`, or similar.
 - Treat `index.html` as the canonical public homepage. Before changing it, inspect the full file and preserve its existing homepage UI and links.
