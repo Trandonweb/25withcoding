@@ -58,6 +58,7 @@ h1{margin:0;font-size:clamp(20px,2.2vw,30px);line-height:1.15;letter-spacing:-.0
 .recommendation-list{display:flex;flex-direction:column;gap:8px}
 .recommendation{display:block;padding:11px;border:1px solid var(--line);border-radius:9px;background:#202228;transition:background .15s,border-color .15s}
 .recommendation:hover{background:#282c30;border-color:#39744b}
+.recommendation-thumb{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;margin-bottom:8px;background:#101114}.recommendation-likes{color:#b5ef69!important;margin-top:5px!important}
 .recommendation strong{display:block;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
 .recommendation small{display:block;color:#9ba39b;font-size:9px;line-height:1.5;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .recommendation-empty{font-size:10px;line-height:1.6;color:#9ba39b;margin:0}
@@ -294,9 +295,9 @@ import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async 
   likeCount.textContent = "오류";
 });
 
-// 축제 작품 목록에서 다른 작품 몇 개를 추천 바로가기로 표시합니다.
+// 추천 작품: 실제 작품 폴더와 메타데이터를 기준으로 표시하고, 응원 수가 높은 순으로 정렬합니다.
 const recommendationList = $("recommendation-list");
-const firebaseConfig = {
+const recommendationFirebaseConfig = {
   apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
   authDomain: "festivallikes.firebaseapp.com",
   projectId: "festivallikes",
@@ -304,45 +305,80 @@ const firebaseConfig = {
   messagingSenderId: "782245120700",
   appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
 };
-import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async appModule => {
-  const dbModule = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
-  const app = appModule.initializeApp(firebaseConfig, "recommendations");
-  const db = dbModule.getFirestore(app);
-  const snapshot = await dbModule.getDocs(dbModule.collection(db, "projects"));
-  const projects = snapshot.docs.map(item => ({id:item.id, ...item.data()}))
-    .filter(item => item.id !== PROJECT.title && item.id !== "작품 이름")
-    .sort((a,b) => (Number(b.likes)||0) - (Number(a.likes)||0))
-    .slice(0,4);
-  recommendationList.replaceChildren();
-  if (!projects.length) {
-    recommendationList.innerHTML = '<p class="recommendation-empty">아직 추천할 작품이 없습니다.</p>';
-    return;
-  }
-  for (const project of projects) {
-    let target = String(project.url || "");
-    const hay = (project.id + " " + target + " " + String(project.detail || "") + " " + String(project.howto || "")).toLowerCase();
-    if (project.id.includes("FPS") || hay.includes("fps_code") || hay.includes("황혼의 균열") || hay.includes("twilight rift")) {
-      target = "/2026festival/FPS_code/index.html?v=4d8b747096848e23b65899d929b3c0b6a8b6a5f0";
+async function loadRecommendations(){
+  try {
+    const [appModule, dbModule, treeResponse] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js"),
+      fetch("https://api.github.com/repos/Trandonweb/25withcoding/git/trees/main?recursive=1",{cache:"no-store"})
+    ]);
+    if(!treeResponse.ok) throw new Error("작품 폴더 목록을 불러오지 못했습니다.");
+    const treeData=await treeResponse.json();
+    if(treeData.truncated) throw new Error("작품 폴더 목록이 일부만 반환되었습니다.");
+    const files=new Set((treeData.tree||[]).filter(x=>x.type==="blob").map(x=>x.path));
+    const dirs=new Set((treeData.tree||[]).filter(x=>x.type==="tree").map(x=>x.path));
+    const root="2026festival";
+    const ids=[];
+    for(const path of dirs){
+      if(!path.startsWith(root+"/")) continue;
+      const id=path.slice(root.length+1);
+      if(!id||id.includes("/")||id.endsWith("_code")) continue;
+      if(!dirs.has(root+"/"+id+"_code")) continue;
+      if(!files.has(root+"/"+id+"/index.html")||!files.has(root+"/"+id+"_code/index.html")) continue;
+      if(id===PROJECT.slug) continue;
+      ids.push(id);
     }
-    try {
-      const parsed = new URL(target, location.origin);
-      if (!["https:", "http:"].includes(parsed.protocol)) continue;
-      const link = document.createElement("a");
-      link.className = "recommendation";
-      link.href = parsed.href;
-      const title = document.createElement("strong");
-      title.textContent = project.id;
-      const description = document.createElement("small");
-      description.textContent = project.detail || "축제 작품 바로가기";
-      link.append(title, description);
+    const app=appModule.initializeApp(recommendationFirebaseConfig,"recommendations-"+PROJECT.slug);
+    const db=dbModule.getFirestore(app);
+    const snapshot=await dbModule.getDocs(dbModule.collection(db,"projects"));
+    const likes=new Map(snapshot.docs.map(item=>[item.id,Number(item.data().likes)||0]));
+    const rawRoot="https://raw.githubusercontent.com/Trandonweb/25withcoding/main/";
+    const readText=async path=>{
+      try{const res=await fetch(rawRoot+path,{cache:"no-store"});return res.ok?(await res.text()).trim():"";}catch{return "";}
+    };
+    const projects=await Promise.all(ids.map(async id=>{
+      const folder=root+"/"+id+"/";
+      const [title,description]=await Promise.all([
+        files.has(folder+"title.txt")?readText(folder+"title.txt"):Promise.resolve(""),
+        files.has(folder+"explanation.txt")?readText(folder+"explanation.txt"):Promise.resolve("")
+      ]);
+      return {id,title:title||id,description:description||"축제 작품을 체험해 보세요.",thumbnail:files.has(folder+"thubnail.png")?rawRoot+folder+"thubnail.png":"",likes:likes.get(id)||0};
+    }));
+    projects.sort((a,b)=>b.likes-a.likes||a.title.localeCompare(b.title,"ko"));
+    recommendationList.replaceChildren();
+    if(!projects.length){
+      recommendationList.appendChild(Object.assign(document.createElement("p"),{className:"recommendation-empty",textContent:"추천할 작품이 아직 없습니다."}));
+      return;
+    }
+    for(const project of projects.slice(0,4)){
+      const link=document.createElement("a");
+      link.className="recommendation";
+      link.href="/2026festival/"+encodeURIComponent(project.id)+"/";
+      if(project.thumbnail){
+        const img=document.createElement("img");
+        img.className="recommendation-thumb";
+        img.src=project.thumbnail;
+        img.alt="";
+        img.loading="lazy";
+        img.onerror=()=>img.remove();
+        link.appendChild(img);
+      }
+      const title=document.createElement("strong");
+      title.textContent=project.title;
+      const description=document.createElement("small");
+      description.textContent=project.description;
+      const count=document.createElement("small");
+      count.className="recommendation-likes";
+      count.textContent="❤️ "+project.likes.toLocaleString()+"번 응원";
+      link.append(title,description,count);
       recommendationList.appendChild(link);
-    } catch {}
+    }
+  } catch(error) {
+    console.error("추천 작품 불러오기 실패:",error);
+    recommendationList.replaceChildren(Object.assign(document.createElement("p"),{className:"recommendation-empty",textContent:"추천 작품을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."}));
   }
-  if (!recommendationList.children.length) recommendationList.innerHTML = '<p class="recommendation-empty">추천 작품이 아직 등록되지 않았습니다.</p>';
-}).catch(error => {
-  console.error("추천 작품 불러오기 실패:", error);
-  recommendationList.innerHTML = '<p class="recommendation-empty">추천 작품을 불러오지 못했습니다.</p>';
-});
+}
+loadRecommendations();
 </script>
 </body>
 </html>
