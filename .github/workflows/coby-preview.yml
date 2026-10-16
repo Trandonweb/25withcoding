@@ -1,5 +1,8 @@
-name: COBY Preview Pages
+name: COBY Preview Artifact
 
+# IMPORTANT: This workflow must never deploy to GitHub Pages.
+# The Pages deployment is the production 25withcoding.kr site; publishing ./AI
+# here replaces the entire site root with COBY and makes every visitor see COBY.
 on:
   push:
     branches:
@@ -8,32 +11,23 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
-  deploy:
+  package-preview:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Include 2026 Festival pages
+      - name: Include 2026 Festival pages in the COBY preview package
         run: |
           mkdir -p AI/2026festival
           cp -R 2026festival/. AI/2026festival/
 
-      - name: Upload COBY site
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload COBY preview artifact (not GitHub Pages)
+        uses: actions/upload-artifact@v4
         with:
+          name: coby-preview
           path: ./AI
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          if-no-files-found: error
+          retention-days: 7
