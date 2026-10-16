@@ -311,6 +311,27 @@ body{
   transform:scale(.96)
 }
 
+#festivalEndButton{
+  border:1px solid rgba(255,100,100,.55);
+  border-radius:8px;
+  padding:5px 8px;
+  background:rgba(180,35,24,.18);
+  color:#ffb0a8;
+  font-size:11px;
+  font-weight:bold;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:.15s
+}
+
+#festivalEndButton:hover{
+  background:rgba(180,35,24,.35)
+}
+
+#festivalEndButton:active{
+  transform:scale(.96)
+}
+
 .timer-warning{
   border-color:#ffb74d!important
 }
@@ -688,6 +709,14 @@ header{
   >
     일시정지
   </button>
+
+  <button
+    id="festivalEndButton"
+    type="button"
+    title="현재 이용 세션을 종료하고 입장 화면으로 돌아갑니다."
+  >
+    이용권 사용 종료
+  </button>
 </div>
 
 
@@ -738,6 +767,7 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  setDoc,
   increment,
   getDoc,
   runTransaction
@@ -1310,6 +1340,46 @@ window.addEventListener(
   blockKeysWhilePaused,
   true
 );
+
+
+/* =========================
+   이용권 사용 종료
+========================= */
+
+function endFestivalAccess(){
+  if(!sessionStorage.getItem("festival2026CodeAccess")){
+    return;
+  }
+
+  const confirmed=confirm(
+    "현재 축제 이용 세션을 종료하고 입장 화면으로 돌아갈까요?\n\n사용한 이용 횟수는 복구되지 않습니다."
+  );
+
+  if(!confirmed) return;
+
+  clearInterval(timerInterval);
+  timerInterval=null;
+  festivalPaused=false;
+  festivalPauseStartedAt=0;
+
+  for(const key of [
+    "festival2026CodeAccess",
+    "festival2026AccessCode",
+    "festival2026AccessExpiresAt",
+    "festival2026AccessSessions"
+  ]){
+    sessionStorage.removeItem(key);
+  }
+
+  festivalTimer.style.display="none";
+  festivalTimer.classList.remove("timer-warning","timer-danger");
+  festivalPauseOverlay.classList.remove("show");
+  location.reload();
+}
+
+document
+  .getElementById("festivalEndButton")
+  .addEventListener("click",endFestivalAccess);
 
 
 /* =========================
@@ -2388,166 +2458,191 @@ const grid=
   );
 
 
-function normalizeProjectUrl(p){
-  const id=String(p?.id||"");
-  const raw=String(p?.url||"");
-  const hay=(id+" "+raw+" "+String(p?.detail||"")+" "+String(p?.howto||"")).toLowerCase();
-  if(id.includes("FPS")||hay.includes("fps_code")||hay.includes("황혼의 균열")||hay.includes("twilight rift")){
-    return "/2026festival/FPS_code/index.html?v=4d8b747096848e23b65899d929b3c0b6a8b6a5f0";
+const GITHUB_TREE_URL="https://api.github.com/repos/Trandonweb/25withcoding/git/trees/main?recursive=1";
+const RAW_GITHUB_ROOT="https://raw.githubusercontent.com/Trandonweb/25withcoding/main/";
+let discoveredProjects=[];
+let projectLikes=new Map();
+let projectDocs=new Map();
+let projectsLoading=true;
+
+function fileText(path){
+  return fetch(RAW_GITHUB_ROOT+path)
+    .then(response=>response.ok?response.text():"")
+    .then(value=>String(value||"").trim())
+    .catch(()=> "");
+}
+
+function safeImageUrl(path){
+  return RAW_GITHUB_ROOT+path.split("/").map(encodeURIComponent).join("/");
+}
+
+function makeText(tag,className,value){
+  const node=document.createElement(tag);
+  if(className) node.className=className;
+  node.textContent=value||"";
+  return node;
+}
+
+function renderProjects(){
+  if(projectsLoading) return;
+
+  grid.replaceChildren();
+
+  if(!discoveredProjects.length){
+    grid.appendChild(makeText("div","empty","연동된 작품을 찾지 못했습니다. 작품 폴더와 _code 폴더를 확인해주세요."));
+    return;
   }
-  return raw;
+
+  const projects=[...discoveredProjects].sort((a,b)=>
+    (projectLikes.get(b.id)||0)-(projectLikes.get(a.id)||0)
+  );
+
+  const totalLikes=projects.reduce((sum,p)=>sum+(projectLikes.get(p.id)||0),0);
+  document.getElementById("subtitle").innerHTML=
+    `<div>since 2025</div><div>❤️ 지금까지 ${totalLikes.toLocaleString()}번의 응원이 도착했어요</div>`;
+
+  projects.forEach((p,index)=>{
+    const card=document.createElement("article");
+    card.className="card";
+    card.tabIndex=0;
+    card.setAttribute("role","link");
+    card.setAttribute("aria-label",p.title+" 작품 정보 보기");
+
+    const openProject=()=>{ location.href="/2026festival/"+encodeURIComponent(p.id)+"/"; };
+    card.addEventListener("click",openProject);
+    card.addEventListener("keydown",event=>{
+      if(event.key==="Enter"||event.key===" "){
+        event.preventDefault();
+        openProject();
+      }
+    });
+
+    if(p.thumbnail){
+      const img=document.createElement("img");
+      img.src=p.thumbnail;
+      img.alt=p.title+" 썸네일";
+      img.loading="lazy";
+      img.onerror=()=>img.remove();
+      card.appendChild(img);
+    }
+
+    const info=makeText("div","info","");
+    const medal=index===0?"🥇 ":index===1?"🥈 ":index===2?"🥉 ":"";
+    info.appendChild(makeText("div","title",medal+p.title));
+    info.appendChild(makeText("div","desc",p.description||"작품 설명이 등록되지 않았습니다."));
+    info.appendChild(makeText("div","project-maker",p.madeBy?"제작자 · "+p.madeBy:""));
+    info.appendChild(makeText("div","project-how",p.how||""));
+    info.appendChild(makeText("div","likes","❤️ "+(projectLikes.get(p.id)||0)));
+
+    const likeButton=makeText("button","like-btn","응원하기");
+    likeButton.type="button";
+    likeButton.addEventListener("click",async event=>{
+      event.stopPropagation();
+      likeButton.disabled=true;
+      const oldLabel=likeButton.textContent;
+      likeButton.textContent="반영 중...";
+      try{
+        await updateDoc(doc(db,"projects",p.id),{likes:increment(1)});
+      }catch(error){
+        console.error("응원 처리 실패:",error);
+        showNotice("응원을 반영하지 못했습니다. 잠시 후 다시 시도해주세요.",true);
+        likeButton.textContent=oldLabel;
+      }finally{
+        likeButton.disabled=false;
+      }
+    });
+    info.appendChild(likeButton);
+    card.appendChild(info);
+    grid.appendChild(card);
+  });
+}
+
+async function discoverProjectFolders(){
+  try{
+    const response=await fetch(GITHUB_TREE_URL,{cache:"no-store"});
+    if(!response.ok) throw new Error("GitHub 저장소 목록을 불러오지 못했습니다.");
+    const data=await response.json();
+    if(data.truncated) throw new Error("저장소 파일 목록이 일부만 반환되었습니다.");
+
+    const files=new Set((data.tree||[]).filter(item=>item.type==="blob").map(item=>item.path));
+    const directories=new Set((data.tree||[]).filter(item=>item.type==="tree").map(item=>item.path));
+    const root="2026festival";
+    const names=new Set();
+
+    for(const path of directories){
+      if(!path.startsWith(root+"/")) continue;
+      const relative=path.slice(root.length+1);
+      if(!relative||relative.includes("/")) continue;
+      if(relative.endsWith("_code")) continue;
+      const codeName=relative+"_code";
+      if(!directories.has(root+"/"+codeName)) continue;
+      if(!files.has(root+"/"+relative+"/index.html")) continue;
+      if(!files.has(root+"/"+codeName+"/index.html")) continue;
+      names.add(relative);
+    }
+
+    const projects=await Promise.all([...names].map(async id=>{
+      const folder=root+"/"+id;
+      const metaPaths={
+        description:folder+"/explanation.txt",
+        madeBy:folder+"/madeby.txt",
+        how:folder+"/how.txt",
+        thumbnail:folder+"/thubnail.png"
+      };
+      const [description,madeBy,how]=await Promise.all([
+        files.has(metaPaths.description)?fileText(metaPaths.description):Promise.resolve(""),
+        files.has(metaPaths.madeBy)?fileText(metaPaths.madeBy):Promise.resolve(""),
+        files.has(metaPaths.how)?fileText(metaPaths.how):Promise.resolve("")
+      ]);
+
+      const existing=projectDocs.get(id)||{};
+      const thumbnail=files.has(metaPaths.thumbnail)
+        ?safeImageUrl(metaPaths.thumbnail)
+        :String(existing.thum||"");
+
+      return {
+        id,
+        title:id,
+        description:description||String(existing.detail||""),
+        madeBy:madeBy||String(existing.madeby||existing.madeBy||existing.author||""),
+        how:how||String(existing.howto||existing.how||""),
+        thumbnail
+      };
+    }));
+
+    discoveredProjects=projects;
+    projectsLoading=false;
+    renderProjects();
+  }catch(error){
+    console.error("작품 폴더 자동 검색 실패:",error);
+    projectsLoading=false;
+    grid.replaceChildren(makeText("div","empty","작품 목록을 불러오지 못했습니다. 네트워크 연결을 확인해주세요."));
+  }
 }
 
 function loadProjects(){
-
   onSnapshot(
-    collection(
-      db,
-      "projects"
-    ),
-
+    collection(db,"projects"),
     snap=>{
-
-      grid.innerHTML="";
-
-      const projects=[];
-
-      snap.forEach(
-        docSnap=>{
-          projects.push({
-            id:docSnap.id,
-            ...docSnap.data()
-          });
-        }
-      );
-
-      projects.sort(
-        (a,b)=>
-          (b.likes||0)-
-          (a.likes||0)
-      );
-
-      const totalLikes=
-        projects.reduce(
-          (sum,p)=>
-            sum+
-            (p.likes||0),
-          0
-        );
-
-      document.getElementById(
-        "subtitle"
-      ).innerHTML=
-        `<div>since 2025</div>
-         <div>❤️ 지금까지 ${totalLikes.toLocaleString()}번의 응원이 도착했어요</div>`;
-
-
-      projects.forEach(
-        (p,index)=>{
-
-          const medal=
-            index===0
-              ?"🥇 "
-              :index===1
-                ?"🥈 "
-                :index===2
-                  ?"🥉 "
-                  :"";
-
-          const card=
-            document.createElement(
-              "div"
-            );
-
-          card.className=
-            "card";
-
-          card.innerHTML=
-            `<img
-              src="${p.thum}"
-              alt="${p.id}"
-            >
-            <div class="info">
-              <div class="title">
-                ${medal}${p.id}
-              </div>
-
-              <div class="desc">
-                ${p.detail}
-              </div>
-
-              <div class="likes">
-                ❤️ ${p.likes||0}
-              </div>
-
-              <button class="like-btn">
-                응원하기
-              </button>
-            </div>`;
-
-
-          card.onclick=()=>{
-            location.href=
-              normalizeProjectUrl(p);
-          };
-
-
-          card
-            .querySelector(
-              ".like-btn"
-            )
-            .onclick=
-            async event=>{
-
-              event.stopPropagation();
-
-              try{
-
-                await updateDoc(
-                  doc(
-                    db,
-                    "projects",
-                    p.id
-                  ),
-                  {
-                    likes:
-                      increment(1)
-                  }
-                );
-
-              }catch(error){
-
-                console.error(
-                  "응원 처리 실패:",
-                  error
-                );
-
-              }
-
-            };
-
-
-          grid.appendChild(
-            card
-          );
-
-        }
-      );
-
+      projectLikes=new Map();
+      projectDocs=new Map();
+      snap.forEach(docSnap=>{
+        const data=docSnap.data()||{};
+        projectLikes.set(docSnap.id,Number(data.likes)||0);
+        projectDocs.set(docSnap.id,data);
+      });
+      renderProjects();
     },
-
     error=>{
-      console.error(
-        "작품 목록 불러오기 실패:",
-        error
-      );
+      console.error("작품 응원 데이터 불러오기 실패:",error);
+      showNotice("응원 수를 불러오지 못했습니다.",true);
     }
   );
 
+  discoverProjectFolders();
 }
 
 
-loadProjects();
 
 </script>
 
