@@ -141,22 +141,27 @@
     updateUI().then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));});
   </script>
 <script>
-  // SAFETY: the homepage must never be replaced by stale cached HTML or a legacy service worker.
-  // Keep this cleanup for existing visitors; do not add HTML/navigation caching to sw.js.
-  (async () => {
-    try {
-      if ("serviceWorker" in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(registration => registration.unregister()));
+  // One-time cleanup of legacy homepage caches/workers from older deployments.
+  // Keep this scoped to known legacy cache names; never erase unrelated app data.
+  const legacyCleanupKey = "25withcoding-legacy-homepage-cleanup-v1";
+  if (!localStorage.getItem(legacyCleanupKey)) {
+    (async () => {
+      try {
+        if ("serviceWorker" in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(registration => registration.unregister()));
+        }
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          const legacyKeys = keys.filter(key => /^coding-club-v[12]$/.test(key));
+          await Promise.all(legacyKeys.map(key => caches.delete(key)));
+        }
+        localStorage.setItem(legacyCleanupKey, "done");
+      } catch (error) {
+        console.warn("기존 홈페이지 캐시 정리 실패:", error);
       }
-      if ("caches" in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map(key => caches.delete(key)));
-      }
-    } catch (error) {
-      console.warn("기존 오프라인 캐시 정리 실패:", error);
-    }
-  })();
+    })();
+  }
 </script>
 </body>
 </html>
