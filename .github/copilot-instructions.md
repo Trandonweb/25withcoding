@@ -4,6 +4,10 @@ These instructions apply to all files in this repository.
 
 ## Production homepage and COBY are separate
 
+- **Never configure `.github/workflows/coby-preview.yml` to call `actions/deploy-pages` or upload `./AI` as the GitHub Pages deployment artifact.** That replaces the entire `25withcoding.kr` site with the COBY subdirectory. COBY preview must use `actions/upload-artifact` only.
+- The production Pages deployment must publish the repository site root, not `./AI`.
+
+
 - The production homepage is `index.html` at `https://25withcoding.kr/`.
 - **Do not redirect the root homepage to `/AI/` or any COBY alias.** COBY/AI must remain a separate page that users open intentionally from a link.
 - Do not add an unconditional meta refresh, redirect script, iframe takeover, or global navigation handler that makes the homepage render COBY.
