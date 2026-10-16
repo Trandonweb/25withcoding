@@ -29,6 +29,9 @@ function orderLines(o){const items=o?.items||{};const lines=menus.filter(m=>!m.v
 
 const SESSION_KEY="festivalOrderSetup";
 let selectedRole="client",selectedKiosks=["1"],role=null,kiosks=[],orders={},writeQueues={},rtcPeers={},rtcChannels={},rtcListeners=[],rtcSeenOffers={};
+const rtcDisabled=new Set(),rtcTimers={};
+function useFirebaseOnly(k,reason){if(rtcDisabled.has(k))return;rtcDisabled.add(k);clearTimeout(rtcTimers[k]);const pc=rtcPeers[k];if(pc){try{pc.onicecandidate=null;pc.ondatachannel=null;pc.close();}catch(_){}delete rtcPeers[k];}const ch=rtcChannels[k];if(ch){try{ch.close();}catch(_){}delete rtcChannels[k];}const msg=language==="en"?"WebRTC unavailable — Firebase only":"WebRTC 연결 실패 — Firebase만 사용 중";rtcStatus(msg);console.warn("Kiosk "+k+" switched to Firebase-only mode",reason||"");}
+function watchRtcTimeout(k){clearTimeout(rtcTimers[k]);rtcTimers[k]=setTimeout(()=>{const pc=rtcPeers[k],ch=rtcChannels[k];if(!rtcDisabled.has(k)&&(!pc||pc.connectionState!=="connected"||!ch||ch.readyState!=="open"))useFirebaseOnly(k,"connection timeout");},12000);}
 function orderDoc(k){return doc(db,"order","kiosk-"+k);}
 function updateSetupUI(){
  document.getElementById("chooseClient").classList.toggle("selected",selectedRole==="client");
@@ -126,14 +129,15 @@ async function loadRtcConfig(){
 function rtcSignalDoc(k){return doc(db,"webrtcRooms","kiosk-"+k);}
 function rtcCandidateCollection(k,side){return collection(db,"webrtcRooms","kiosk-"+k,side+"Candidates");}
 function rtcStatus(text){const a=document.getElementById("rtcStatus");if(a)a.textContent=text;const b=document.getElementById("rtcHostStatus");if(b)b.textContent=text;}
-function sendRtc(k,message){const ch=rtcChannels[k];if(ch&&ch.readyState==="open"){try{ch.send(JSON.stringify(message));}catch(e){console.warn("WebRTC send failed",e);}}}
-function attachChannel(k,ch){rtcChannels[k]=ch;ch.onopen=()=>{rtcStatus("WebRTC P2P 연결됨 · "+k+"번 키오스크");const o=orders[k];if(o)sendRtc(k,{type:"order",order:o});};ch.onclose=()=>{if(rtcChannels[k]===ch)delete rtcChannels[k];rtcStatus("WebRTC 연결 끊김 · Firebase 동기화 사용 중");};ch.onmessage=e=>{try{const msg=JSON.parse(e.data);if(msg.type!=="order"||!msg.order)return;orders[k]={...emptyOrder(),...msg.order};if(role==="host")renderHost();else renderClient(orders[k]);}catch(err){console.warn("Invalid WebRTC message",err);}};}
+function sendRtc(k,message){if(rtcDisabled.has(k))return;const ch=rtcChannels[k];if(ch&&ch.readyState==="open"){try{ch.send(JSON.stringify(message));}catch(e){useFirebaseOnly(k,e);}}}
+function attachChannel(k,ch){if(rtcDisabled.has(k)){try{ch.close();}catch(_){}return;}rtcChannels[k]=ch;ch.onopen=()=>{if(rtcDisabled.has(k))return;clearTimeout(rtcTimers[k]);rtcStatus((language==="en"?"WebRTC connected · Kiosk ":"WebRTC P2P 연결됨 · ")+k+(language==="en"?"":"번 키오스크"));const o=orders[k];if(o)sendRtc(k,{type:"order",order:o});};ch.onclose=()=>{if(rtcChannels[k]===ch)delete rtcChannels[k];useFirebaseOnly(k,"data channel closed");};ch.onmessage=e=>{if(rtcDisabled.has(k))return;try{const msg=JSON.parse(e.data);if(msg.type!=="order"||!msg.order)return;orders[k]={...emptyOrder(),...msg.order};if(role==="host")renderHost();else renderClient(orders[k]);}catch(err){console.warn("Invalid WebRTC message",err);}};}
 async function addIceCandidates(pc,k,side){const unsub=onSnapshot(rtcCandidateCollection(k,side),snap=>{snap.docChanges().forEach(async change=>{if(change.type!=="added")return;try{await pc.addIceCandidate(new RTCIceCandidate(change.doc.data().candidate));}catch(e){console.warn("ICE candidate skipped",e);}});},e=>console.warn("ICE listener",e));rtcListeners.push(unsub);}
 async function startClientRtc(k){
+ if(rtcDisabled.has(k))return;watchRtcTimeout(k);
  try{
   await loadRtcConfig();
   const pc=new RTCPeerConnection(rtcConfig);rtcPeers[k]=pc;
-  pc.onconnectionstatechange=()=>rtcStatus(pc.connectionState==="connected"?"WebRTC P2P 연결됨 · "+k+"번 키오스크":"WebRTC 상태: "+pc.connectionState+" · Firebase 동기화 사용 중");
+  pc.onconnectionstatechange=()=>{if(rtcDisabled.has(k))return;if(pc.connectionState==="connected"){clearTimeout(rtcTimers[k]);rtcStatus((language==="en"?"WebRTC connected · Kiosk ":"WebRTC P2P 연결됨 · ")+k+(language==="en"?"":"번 키오스크"));}else if(["failed","closed"].includes(pc.connectionState))useFirebaseOnly(k,pc.connectionState);else if(pc.connectionState==="disconnected"){setTimeout(()=>{if(!rtcDisabled.has(k)&&rtcPeers[k]?.connectionState==="disconnected")useFirebaseOnly(k,"disconnected");},3000);}};
   pc.onicecandidate=e=>{if(e.candidate)addDoc(rtcCandidateCollection(k,"client"),{candidate:e.candidate.toJSON(),createdAt:Date.now()}).catch(err=>console.warn("ICE write",err));};
   const ch=pc.createDataChannel("orders");attachChannel(k,ch);
   const offer=await pc.createOffer();await pc.setLocalDescription(offer);
@@ -143,13 +147,14 @@ async function startClientRtc(k){
  }catch(e){console.warn("WebRTC client setup failed; Firestore remains active",e);rtcStatus("WebRTC 연결 실패 · Firebase 동기화 사용 중");}
 }
 async function startHostRtc(k){
+ if(rtcDisabled.has(k))return;watchRtcTimeout(k);
  await loadRtcConfig();
  const unsub=onSnapshot(rtcSignalDoc(k),async snap=>{
-  const data=snap.data();if(!data?.offer)return;
+  if(rtcDisabled.has(k))return;const data=snap.data();if(!data?.offer)return;
   const signature=data.offer.sdp;if(rtcSeenOffers[k]===signature)return;rtcSeenOffers[k]=signature;
   try{
    const pc=new RTCPeerConnection(rtcConfig);rtcPeers[k]=pc;
-   pc.onconnectionstatechange=()=>{if(pc.connectionState!=="connected")rtcStatus("WebRTC 상태: "+pc.connectionState+" · Firebase 동기화 사용 중");else rtcStatus("WebRTC P2P 연결됨 · 키오스크 "+k);};
+   pc.onconnectionstatechange=()=>{if(rtcDisabled.has(k))return;if(pc.connectionState==="connected"){clearTimeout(rtcTimers[k]);rtcStatus((language==="en"?"WebRTC connected · Kiosk ":"WebRTC P2P 연결됨 · 키오스크 ")+k);}else if(["failed","closed"].includes(pc.connectionState))useFirebaseOnly(k,pc.connectionState);else if(pc.connectionState==="disconnected"){setTimeout(()=>{if(!rtcDisabled.has(k)&&rtcPeers[k]?.connectionState==="disconnected")useFirebaseOnly(k,"disconnected");},3000);}};
    pc.onicecandidate=e=>{if(e.candidate)addDoc(rtcCandidateCollection(k,"host"),{candidate:e.candidate.toJSON(),createdAt:Date.now()}).catch(err=>console.warn("ICE write",err));};
    pc.ondatachannel=e=>attachChannel(k,e.channel);
    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
