@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101114">
-<title>Team Fortress Classic | 2026 코딩과 함께라면</title>
+<title>작품 이름 | 2026 코딩과 함께라면</title>
 <style>
 :root{color-scheme:dark;--bg:#101114;--panel:#191b20;--panel2:#202329;--line:#30333a;--text:#f2f4f1;--muted:#a0a6a0;--green:#2fba68;--lime:#b5ef69}
 *{box-sizing:border-box}
@@ -129,13 +129,18 @@ footer strong{color:#a6aea5;font-weight:750}
       </div>
       <div class="viewer-foot"><span class="status"><i class="status-dot"></i><span id="status-text">작품 실행 준비 완료</span></span><span id="type-label">PROJECT VIEWER</span></div>
     </section>
+    <aside class="recommendations">
+      <div class="recommendations-head"><h2>다른 작품</h2><span>DISCOVER</span></div>
+      <div class="recommendation-list" id="recommendation-list"><p class="recommendation-empty">작품을 불러오는 중...</p></div>
+      <a class="all-projects" href="/2026festival/">전체 작품 보기 ↗</a>
+    </aside>
     <aside class="details">
       <div class="section-label">ABOUT THE PROJECT</div>
       <h2 id="info-title">작품 이름</h2>
       <img id="project-thumbnail" class="project-thumbnail" alt="작품 썸네일">
-      <p class="description" id="description">작품 설명을 입력하세요.</p>
-      <div class="meta"><span>제작자</span><strong id="author">제작자 이름</strong></div>
-      <div class="meta"><span>작품 형식</span><strong id="project-type">Entry</strong></div>
+      <p class="description" id="description">축제 프로젝트를 실행하고 응원해 주세요.</p>
+      <div class="meta"><span>제작자</span><strong id="author">코딩과 함께라면</strong></div>
+      <div class="meta"><span>작품 형식</span><strong id="project-type">프로젝트 임베드</strong></div><div class="meta"><span>응원</span><strong><button class="btn primary" id="like-button" type="button">❤️ 응원하기 <span id="like-count">불러오는 중</span></button></strong></div>
       <section class="info"><h3>사용 방법</h3><p id="how-to">사용 방법을 입력하세요.</p></section>
       <section class="info"><h3>참고 사항</h3><p id="notes">참고 사항을 입력하세요.</p></section>
       <div class="tip">화면이 작다면 전체 화면 버튼을 눌러 작품을 넓게 즐겨 보세요.</div>
@@ -147,14 +152,15 @@ footer strong{color:#a6aea5;font-weight:750}
 <script>
 /* 작품마다 아래 PROJECT 설정만 수정하세요. */
 const PROJECT = {
-  title: "Team Fortress Classic",
   slug: "Team_Fortress_Classic",
+  title: "Team Fortress Classic",
   author: "코딩과 함께라면",
   description: "RED와 BLU 중 한 팀을 선택하고 병과를 골라 1인칭 팀 전투를 체험하는 게임입니다.",
   howTo: "WASD 이동 · 마우스 조준 · 좌클릭 발사 · R 재장전 · 1/2/3 무기 전환 · Space 점프 · Shift 달리기 · Esc 일시정지",
-  notes: "게임 로딩에 잠시 시간이 걸릴 수 있습니다. 화면이 작으면 전체 화면 버튼을 이용하세요.",
-  type: "entry", // "entry" 또는 "link"
-  embed: '<iframe src="/2026festival/Team_Fortress_Classic_code/index.html" allowfullscreen></iframe>',
+  notes: "인트로 화면에서 시작한 뒤 게임이 실행됩니다. 작품을 즐긴 뒤 응원하기를 눌러 주세요.",
+  type: "entry",
+  codeUrl: "/2026festival/Team_Fortress_Classic_code/index.html",
+  embed: '<iframe src="/intro/index.html" allowfullscreen></iframe>',
   url: ""
 };
 const $ = id => document.getElementById(id);
@@ -175,22 +181,27 @@ async function loadFolderMetadata(){
     } catch { return ""; }
   };
   const [title, explanation, madeBy, how] = await Promise.all([
-    readText("title.txt"), readText("explanation.txt"),
-    readText("madeby.txt"), readText("how.txt")
+    readText("title.txt"),
+    readText("explanation.txt"),
+    readText("madeby.txt"),
+    readText("how.txt")
   ]);
   if(title){
-    $("page-title").textContent=title;
-    $("stage-title").textContent=title;
-    $("info-title").textContent=title;
-    document.title=title+" | 2026 코딩과 함께라면";
+    $("page-title").textContent = title;
+    $("stage-title").textContent = title;
+    $("info-title").textContent = title;
+    document.title = title + " | 2026 코딩과 함께라면";
   }
-  if(explanation) $("description").textContent=explanation;
-  if(madeBy) $("author").textContent=madeBy;
-  if(how) $("how-to").textContent=how;
-  const thumbnail=$("project-thumbnail");
+  if(explanation) $("description").textContent = explanation;
+  if(madeBy) $("author").textContent = madeBy;
+  if(how) $("how-to").textContent = how;
+  const thumbnail = $("project-thumbnail");
   try {
-    const response=await fetch("./thubnail.png",{method:"HEAD",cache:"no-store"});
-    if(response.ok){thumbnail.src="./thubnail.png";thumbnail.classList.add("visible");}
+    const response = await fetch("./thubnail.png", {method:"HEAD", cache:"no-store"});
+    if(response.ok){
+      thumbnail.src = "./thubnail.png";
+      thumbnail.classList.add("visible");
+    }
   } catch {}
 }
 loadFolderMetadata();
@@ -230,11 +241,150 @@ $("reload-button").addEventListener("click", () => {
   if (!frame.hidden && frame.src) { frame.src = frame.src; $("status-text").textContent = "작품을 다시 불러오는 중"; }
   else if (openLink.href && openLink.href !== location.href && openLink.href !== "#") window.open(openLink.href, "_blank", "noopener,noreferrer");
 });
+// 인트로 임베드가 완료 신호를 보내면 테스트용으로 메인 페이지를 같은 화면에 표시합니다.
+window.addEventListener("message", event => {
+  if (event.origin !== location.origin) return;
+  if (event.data && event.data.type === "START_CLICKED" && !frame.hidden) {
+    frame.src = PROJECT.codeUrl;
+    $("status-text").textContent = "작품을 불러오는 중";
+    $("type-label").textContent = "FESTIVAL PROJECT";
+  }
+});
 $("fullscreen-button").addEventListener("click", async () => {
   try { if (!document.fullscreenElement) await screen.requestFullscreen(); else await document.exitFullscreen(); }
   catch { $("status-text").textContent = "전체 화면을 사용할 수 없습니다"; }
 });
 
+// 축제 메인 페이지와 동일한 projects 문서의 likes를 실시간으로 표시하고 증가시킵니다.
+const likeButton = $("like-button");
+const likeCount = $("like-count");
+let likeDb = null;
+let likeDocRef = null;
+let likeSubmitting = false;
+import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async appModule => {
+  const dbModule = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+  const likeApp = appModule.initializeApp(firebaseConfig, "project-likes-" + PROJECT.slug);
+  likeDb = dbModule.getFirestore(likeApp);
+  likeDocRef = dbModule.doc(likeDb, "projects", PROJECT.slug);
+  dbModule.onSnapshot(likeDocRef, snap => {
+    if (!snap.exists()) {
+      likeCount.textContent = "등록 대기 중";
+      likeButton.disabled = true;
+      likeButton.title = "메인 축제 목록에 이 작품의 projects 문서가 등록되어야 응원할 수 있습니다.";
+      return;
+    }
+    likeCount.textContent = Number(snap.data().likes || 0).toLocaleString();
+    likeButton.disabled = false;
+  }, error => {
+    console.error("응원 수 불러오기 실패:", error);
+    likeCount.textContent = "오류";
+  });
+  likeButton.addEventListener("click", async event => {
+    event.stopPropagation();
+    if (likeSubmitting || !likeDocRef) return;
+    likeSubmitting = true;
+    likeButton.disabled = true;
+    try {
+      await dbModule.updateDoc(likeDocRef, { likes: dbModule.increment(1) });
+      likeButton.title = "응원해 주셔서 감사합니다!";
+    } catch (error) {
+      console.error("응원 처리 실패:", error);
+      likeButton.title = "응원에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+    } finally {
+      likeSubmitting = false;
+      likeButton.disabled = false;
+    }
+  });
+}).catch(error => {
+  console.error("응원 기능 초기화 실패:", error);
+  likeCount.textContent = "오류";
+});
+
+// 추천 작품: 실제 작품 폴더와 메타데이터를 기준으로 표시하고, 응원 수가 높은 순으로 정렬합니다.
+const recommendationList = $("recommendation-list");
+const recommendationFirebaseConfig = {
+  apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
+  authDomain: "festivallikes.firebaseapp.com",
+  projectId: "festivallikes",
+  storageBucket: "festivallikes.firebasestorage.app",
+  messagingSenderId: "782245120700",
+  appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
+};
+async function loadRecommendations(){
+  try {
+    const [appModule, dbModule, treeResponse] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js"),
+      fetch("https://api.github.com/repos/Trandonweb/25withcoding/git/trees/main?recursive=1",{cache:"no-store"})
+    ]);
+    if(!treeResponse.ok) throw new Error("작품 폴더 목록을 불러오지 못했습니다.");
+    const treeData=await treeResponse.json();
+    if(treeData.truncated) throw new Error("작품 폴더 목록이 일부만 반환되었습니다.");
+    const files=new Set((treeData.tree||[]).filter(x=>x.type==="blob").map(x=>x.path));
+    const dirs=new Set((treeData.tree||[]).filter(x=>x.type==="tree").map(x=>x.path));
+    const root="2026festival";
+    const ids=[];
+    for(const path of dirs){
+      if(!path.startsWith(root+"/")) continue;
+      const id=path.slice(root.length+1);
+      if(!id||id.includes("/")||id.endsWith("_code")) continue;
+      if(!dirs.has(root+"/"+id+"_code")) continue;
+      if(!files.has(root+"/"+id+"/index.html")||!files.has(root+"/"+id+"_code/index.html")) continue;
+      if(id===PROJECT.slug) continue;
+      ids.push(id);
+    }
+    const app=appModule.initializeApp(recommendationFirebaseConfig,"recommendations-"+PROJECT.slug);
+    const db=dbModule.getFirestore(app);
+    const snapshot=await dbModule.getDocs(dbModule.collection(db,"projects"));
+    const likes=new Map(snapshot.docs.map(item=>[item.id,Number(item.data().likes)||0]));
+    const rawRoot="https://raw.githubusercontent.com/Trandonweb/25withcoding/main/";
+    const readText=async path=>{
+      try{const res=await fetch(rawRoot+path,{cache:"no-store"});return res.ok?(await res.text()).trim():"";}catch{return "";}
+    };
+    const projects=await Promise.all(ids.map(async id=>{
+      const folder=root+"/"+id+"/";
+      const [title,description,thumbnail]=await Promise.all([
+        files.has(folder+"title.txt")?readText(folder+"title.txt"):Promise.resolve(""),
+        files.has(folder+"explanation.txt")?readText(folder+"explanation.txt"):Promise.resolve(""),
+        Promise.resolve(files.has(folder+"thubnail.png")?rawRoot+folder+"thubnail.png":"")
+      ]);
+      return {id,title:title||id,description:description||"축제 작품을 체험해 보세요.",thumbnail,likes:likes.get(id)||0};
+    }));
+    projects.sort((a,b)=>b.likes-a.likes||a.title.localeCompare(b.title,"ko"));
+    recommendationList.replaceChildren();
+    if(!projects.length){
+      recommendationList.appendChild(Object.assign(document.createElement("p"),{className:"recommendation-empty",textContent:"추천할 작품이 아직 없습니다."}));
+      return;
+    }
+    for(const project of projects.slice(0,4)){
+      const link=document.createElement("a");
+      link.className="recommendation";
+      link.href="/2026festival/"+encodeURIComponent(project.id)+"/";
+      if(project.thumbnail){
+        const img=document.createElement("img");
+        img.className="recommendation-thumb";
+        img.src=project.thumbnail;
+        img.alt="";
+        img.loading="lazy";
+        img.onerror=()=>img.remove();
+        link.appendChild(img);
+      }
+      const title=document.createElement("strong");
+      title.textContent=project.title;
+      const description=document.createElement("small");
+      description.textContent=project.description;
+      const count=document.createElement("small");
+      count.className="recommendation-likes";
+      count.textContent="❤️ "+project.likes.toLocaleString()+"번 응원";
+      link.append(title,description,count);
+      recommendationList.appendChild(link);
+    }
+  } catch(error) {
+    console.error("추천 작품 불러오기 실패:",error);
+    recommendationList.replaceChildren(Object.assign(document.createElement("p"),{className:"recommendation-empty",textContent:"추천 작품을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."}));
+  }
+}
+loadRecommendations();
 </script>
 </body>
 </html>
