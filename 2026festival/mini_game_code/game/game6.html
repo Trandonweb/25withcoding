@@ -23,10 +23,10 @@ function fire(p,y){if(!playing)return;bullets.push({x:p===1?130:W-130,y:y??(p===
 function move(p,d){if(p===1)y1=clamp(y1+d,28,H-28);else if(mode==='local')y2=clamp(y2+d,28,H-28)}
 function reversePlayer(){if(playing)playerDir*=-1;}
 function relocate(o){placeObstacle(o);let attempts=0;while(obstacles.some(q=>q!==o&&Math.abs(q.y-o.y)<48)&&attempts++<12)placeObstacle(o)}
-function obstacleEffect(b,o){const roll=Math.random();if(roll<.38){b.vy=(Math.random()<.5?-1:1)*(2.5+Math.random()*2.8);b.vx*=.82;flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#ffcf67',life:18});document.getElementById('message').textContent='↗ 총알 굴절!';}
-else if(roll<.72){for(const sign of [-1,1])bullets.push({x:b.x,y:b.y,vx:b.vx,vy:sign*(2.1+Math.random()*1.4),p:b.p,life:0});b.dead=true;flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#79aaff',life:18});document.getElementById('message').textContent='✳ 총알 분열! 두 발로 나뉘었다';}
-else{b.dead=true;flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#f07d8b',life:18});document.getElementById('message').textContent='× 총알 소멸!';}
-relocate(o);flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#53e88a',life:18})}
+function obstacleEffect(b,o){const hitX=o.x+o.w/2,hitY=o.y+o.h/2;const roll=Math.random();let label,color;if(roll<.38){b.vy=(Math.random()<.5?-1:1)*(2.5+Math.random()*2.8);b.vx*=.82;color='#ffcf67';label='굴절';document.getElementById('message').textContent='굴절: 총알이 위쪽 또는 아래쪽으로 꺾였습니다.';}
+else if(roll<.72){for(const sign of [-1,1])bullets.push({x:b.x,y:b.y,vx:b.vx,vy:sign*(2.1+Math.random()*1.4),p:b.p,life:0});b.dead=true;color='#79aaff';label='분열 ×2';document.getElementById('message').textContent='분열: 총알이 두 발로 나뉘었습니다.';}
+else{b.dead=true;color='#f07d8b';label='소멸';document.getElementById('message').textContent='소멸: 총알이 사라졌습니다.';}
+flash.push({x:hitX,y:hitY,color,life:42,label});relocate(o);flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#53e88a',life:18,label:'재배치'});}
 function end(w){if(!playing)return;playing=false;const winner=w;localStorage.setItem('miniGameResult',JSON.stringify({game:'🚀 장애물 슈팅',winner,me:4-h1,opp:4-h2}));document.getElementById('message').textContent=winner==='me'?'승리 · 상대의 피격 횟수가 한도에 도달했습니다.':'패배 · 피격 횟수가 한도에 도달했습니다.';document.getElementById('done').classList.remove('hidden');draw()}
 function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#07110b';ctx.fillRect(0,0,W,H);
 // subtle star/grid
@@ -35,7 +35,7 @@ ctx.fillStyle='#214632';ctx.fillRect(W/2-2,0,4,H);
 ctx.fillStyle='#53e88a';ctx.fillRect(70,y1-18,38,36);ctx.fillStyle='#07110b';ctx.fillRect(91,y1-7,12,14);ctx.fillStyle='#ffcf67';ctx.fillRect(W-108,y2-18,38,36);ctx.fillStyle='#07110b';ctx.fillRect(W-103,y2-7,12,14);
 for(const o of obstacles){ctx.fillStyle='#183b28';ctx.fillRect(o.x-4,o.y-4,o.w+8,o.h+8);ctx.fillStyle='#2d6945';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.strokeStyle='#53e88a';ctx.lineWidth=2;ctx.strokeRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#a8ffc4';ctx.fillRect(o.x+o.w*.25,o.y+o.h*.25,o.w*.5,3)}
 for(const b of bullets){ctx.strokeStyle=b.p===1?'#a8ffc4':'#ffe2a0';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(b.x-b.vx*1.8,b.y-b.vy*1.8);ctx.stroke();ctx.fillStyle=b.p===1?'#53e88a':'#ffcf67';ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fill()}
-for(const f of flash){ctx.globalAlpha=Math.max(0,f.life/18);ctx.strokeStyle=f.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(f.x,f.y,22-f.life*.5,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
+for(const f of flash){const alpha=Math.min(1,f.life/12);ctx.globalAlpha=alpha;ctx.strokeStyle=f.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(f.x,f.y,Math.max(7,22-(42-f.life)*.3),0,Math.PI*2);ctx.stroke();if(f.label){ctx.font='bold 16px Arial';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#07110b';ctx.strokeText(f.label,f.x,f.y-25);ctx.fillStyle=f.color;ctx.fillText(f.label,f.x,f.y-25);ctx.textAlign='left'}ctx.globalAlpha=1}
 ctx.fillStyle='#a9c5b2';ctx.font='14px Arial';ctx.fillText('PLAYER',24,24);ctx.textAlign='right';ctx.fillText(mode==='cpu'?'CPU':'PLAYER 2',W-24,24);ctx.textAlign='left'}
 function frame(){if(!playing)return;tick++;y1+=playerDir*3.4;if(y1>=H-28){y1=H-28;playerDir=-1}else if(y1<=28){y1=28;playerDir=1}if(mode==='cpu'){y2+=cpuDir*2.8;if(y2>=H-28){y2=H-28;cpuDir=-1}else if(y2<=28){y2=28;cpuDir=1}}else if(mode==='local'){y2+=cpuDir*3;if(y2>=H-28){y2=H-28;cpuDir=-1}else if(y2<=28){y2=28;cpuDir=1}}
 if(mode==='cpu'&&tick%38===0)fire(2,y2+(Math.random()-.5)*12);
