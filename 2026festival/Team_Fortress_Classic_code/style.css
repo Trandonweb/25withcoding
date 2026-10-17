@@ -40,3 +40,5 @@ body.damaged #game:before{content:"";position:fixed;inset:0;z-index:3;pointer-ev
 .roster-row small{color:#d2d9de}
 .scoreboard-card p{text-align:center;font-size:10px;letter-spacing:.12em;color:#bac3ca;margin:17px 0 0}
 @media(max-width:600px){.scoreboard-card{padding:12px}.scoreboard-card h2{font-size:22px}.roster-columns{gap:6px}.roster-row{font-size:10px;grid-template-columns:1fr auto;gap:4px}.roster-row small:last-child{display:none}}
+
+.ability-hud{margin-top:6px;padding-top:6px;border-top:1px solid #ffffff26;color:#f5d46c;font-size:10px;letter-spacing:.08em;font-weight:900}
