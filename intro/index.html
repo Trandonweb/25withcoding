@@ -11,7 +11,7 @@
     font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
   canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000}
   #flash{position:fixed;inset:0;background:#d8fff0;opacity:0;pointer-events:none}
-  .fade{transition:opacity .5s ease}
+  .fade{transition:opacity .3s ease}
   .hide{opacity:0;pointer-events:none}
   #startScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
   button,a.btn{font:inherit;color:#9dffd4;background:transparent;border:1px solid rgba(80,255,180,.55);
@@ -432,11 +432,11 @@ function update(dt){
     }
     cg.attributes.position.needsUpdate=true;
     tubeU.uOpacity.value=1-sm(0,.7,t4); tubeRU.uOpacity.value=1-sm(0,.7,t4);
-    ptsU.uO.value=sm(0,.7,t4)*(1-sm(2.0,2.6,t4));
-    let f=0; if(t4>2.0&&t4<2.45) f=t4<2.15?(t4-2.0)/.15:1-(t4-2.15)/.3;
+    ptsU.uO.value=sm(0,.7,t4)*(1-sm(1.4,2.0,t4));
+    let f=0; if(t4>1.65&&t4<2.05) f=t4<1.8?(t4-1.65)/.15:1-(t4-1.8)/.25;
     $("flash").style.opacity=clamp(f)*.9;
     // 입자에서 최종 Caveat 로고로 한 번만 이어지며 별도 폰트/색상 전환은 하지 않는다.
-    $("logo").style.opacity=sm(2.0,2.7,t4); $("since").style.opacity=sm(2.5,3.0,t4);
+    $("logo").style.opacity=sm(1.85,2.55,t4); $("since").style.opacity=sm(2.35,2.85,t4);
     if(t4>=3.1){ showEnd(); return false; }
   }
   if(ph<4){
