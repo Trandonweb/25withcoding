@@ -391,7 +391,7 @@ function update(dt){
     }
     cg.attributes.position.needsUpdate=true;
     tubeU.uOpacity.value=1-sm(0,.7,t4); tubeRU.uOpacity.value=1-sm(0,.7,t4);
-    ptsU.uO.value=sm(0,.7,t4)*(1-sm(3.3,4.2,t4));
+    ptsU.uO.value=sm(0,.7,t4)*(1-sm(2.65,3.55,t4));
     let f=0; if(t4>2.0&&t4<2.45) f=t4<2.15?(t4-2.0)/.15:1-(t4-2.15)/.3;
     $("flash").style.opacity=clamp(f)*.9;
     // 입자에서 최종 Caveat 로고로 한 번만 이어지며 별도 폰트/색상 전환은 하지 않는다.
