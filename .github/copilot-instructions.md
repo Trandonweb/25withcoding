@@ -2,6 +2,12 @@
 
 These instructions apply to all files in this repository.
 
+## Mandatory repository and branch rule
+
+- **All ordinary code changes must be made directly in `Trandonweb/25withcoding` on the `main` branch.** Never edit in, switch to, create, or target `COBY Preview Artifact`, any COBY preview artifact/workspace, a preview repository, or another branch.
+- Treat the latest file contents on `main` as the source of truth. Fetch before editing and commit the targeted change to `main`.
+- If the tool opens a preview/artifact context by default, do not edit there; return to the canonical repository and `main`.
+
 ## Production homepage and COBY are separate
 
 - **Never configure `.github/workflows/coby-preview.yml` to call `actions/deploy-pages` or upload `./AI` as the GitHub Pages deployment artifact.** That replaces the entire `25withcoding.kr` site with the COBY subdirectory. COBY preview must use `actions/upload-artifact` only.
