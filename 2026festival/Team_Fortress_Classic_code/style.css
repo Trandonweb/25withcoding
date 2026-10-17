@@ -26,3 +26,17 @@ body.scoped #game:after{content:"";position:fixed;inset:0;pointer-events:none;z-
 body.damaged #game:before{content:"";position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse,transparent 35%,#e21c1c88 100%)}
 .health-max{font-size:12px;color:#cbd2d7;font-weight:700}
 .health-label{font-size:10px;letter-spacing:.12em}
+
+.scoreboard{background:#080b0ee8}
+.scoreboard-card{width:min(820px,94vw);padding:26px;background:linear-gradient(145deg,#242c33,#11161a);border:1px solid #66737d;box-shadow:0 20px 70px #000}
+.scoreboard-card h2{text-align:center;font-size:30px;font-style:italic;margin:0 0 18px;color:#f4d46e}
+.roster-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.roster-columns>div{min-width:0}
+.roster-columns h3{margin:0;padding:8px;font-size:17px}
+.red-title{background:#7d302b}.blue-title{background:#285681}
+.roster-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:7px 8px;background:#30383f;border-bottom:1px solid #1a2025;font-size:12px}
+.roster-row.you{outline:1px solid #f3d36c;background:#49452f}
+.roster-row.dead{opacity:.42}
+.roster-row small{color:#d2d9de}
+.scoreboard-card p{text-align:center;font-size:10px;letter-spacing:.12em;color:#bac3ca;margin:17px 0 0}
+@media(max-width:600px){.scoreboard-card{padding:12px}.scoreboard-card h2{font-size:22px}.roster-columns{gap:6px}.roster-row{font-size:10px;grid-template-columns:1fr auto;gap:4px}.roster-row small:last-child{display:none}}
