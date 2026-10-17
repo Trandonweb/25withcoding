@@ -6,16 +6,16 @@ body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 12% 0%,#174
 </style></head><body><main class="wrap">
 <div class="top"><span>MINI GAME / 06</span><span id="round"></span></div>
 <div class="heading"><div><h1>활쏘기 대결</h1><p>상대에게 화살을 맞히세요. 최대 3발을 장전하며, 화살은 1초마다 1발씩 보충됩니다.</p></div><div class="status"><small>승리 조건</small><br><strong>4회 명중</strong></div></div>
-<div class="arena"><canvas id="arena" width="960" height="480" aria-label="장애물 슈팅 게임 화면"></canvas></div>
-<div class="scores"><div class="score"><small>플레이어 · W/S 조준 이동 / ENTER 발사</small><strong><span id="playerScoreLabel">플레이어</span> <span id="hits1">0</span>/4</strong></div><div class="vs">VS</div><div class="score right"><small id="opponentLabel">컴퓨터 · 자동 조준</small><strong><span id="opponentScoreLabel">상대</span> <span id="hits2">0</span>/4</strong></div></div>
-<div class="controls"><button class="btn" id="up">▲ 위</button><button class="btn" id="down">▼ 아래</button><button class="btn primary" id="fire">화살 발사 ENTER</button><button class="btn hidden" id="done">결과 확인 →</button><span class="hint">화살 장전: 1초마다 1발 · 최대 3발</span></div>
-<div id="message">플레이어는 화면 위아래를 왕복합니다. Space: 방향 전환 · Enter: 발사</div><div class="legend"><span><i class="dot" style="background:#ffcf67"></i>굴절: 탄환 방향 변경</span><span><i class="dot" style="background:#79aaff"></i>분열: 탄환 2개 생성</span><span><i class="dot" style="background:#f07d8b"></i>소멸: 탄환 사라짐</span><span><i class="dot" style="background:#53e88a"></i>장애물은 맞으면 재배치</span></div>
+<div class="arena"><canvas id="arena" width="960" height="480" aria-label="활쏘기 대결 화면"></canvas></div>
+<div class="scores"><div class="score"><small id="playerControls">플레이어 · W/S 조준 / SPACE 발사</small><strong><span id="playerScoreLabel">플레이어</span> <span id="hits1">0</span>/4</strong></div><div class="vs">VS</div><div class="score right"><small id="opponentLabel">컴퓨터 · 자동 조준</small><strong><span id="opponentScoreLabel">상대</span> <span id="hits2">0</span>/4</strong></div></div>
+<div class="controls"><button class="btn" id="up">▲ 위</button><button class="btn" id="down">▼ 아래</button><button class="btn primary" id="fire">화살 발사 SPACE</button><button class="btn hidden" id="done">결과 확인 →</button><span class="hint">화살 장전: 1초마다 1발 · 최대 3발</span></div>
+<div id="message">조작: W/S 조준 · Space 발사. 한 컴퓨터 2P: ↑/↓ 조준 · Enter 발사.</div>
 </main><script>
 const s=JSON.parse(localStorage.getItem('miniGameSettings')||'null')||{mode:'cpu'};
 const mode=s.mode||'cpu';
 document.getElementById('round').textContent=s.round?s.round+'번째 게임':'';
 document.getElementById('opponentLabel').textContent=mode==='local'?'2P · 방향키 조준 / 오른쪽 Shift 발사':'컴퓨터 · 자동 조준';
-if(mode==='local'){document.getElementById('playerScoreLabel').textContent='1P';document.getElementById('opponentScoreLabel').textContent='2P';document.querySelector('.score small').textContent='1P · W/S 조준 / Enter 발사';}
+if(mode==='local'){document.getElementById('playerScoreLabel').textContent='1P';document.getElementById('opponentScoreLabel').textContent='2P';document.getElementById('playerControls').textContent='1P · W/S 조준 / Space 발사';document.getElementById('opponentLabel').textContent='2P · ↑/↓ 조준 / Enter 발사';}
 const cv=document.getElementById('arena'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
 let y1=H*.5,y2=H*.5,h1=0,h2=0,arrows=[],tick=0,playing=true,flash=[],playerDir=1,cpuDir=1;
 let ammo1=3,ammo2=3,lastReload1=performance.now(),lastReload2=performance.now(),lastCpuShot=0;
@@ -62,13 +62,13 @@ document.addEventListener('keydown',e=>{
  if(e.key.toLowerCase()==='s')move(1,28);
  if(e.key==='ArrowUp'&&mode==='local'){e.preventDefault();move(2,-28)}
  if(e.key==='ArrowDown'&&mode==='local'){e.preventDefault();move(2,28)}
- if(e.key==='Enter'){e.preventDefault();fire(1)}
- if(e.code==='ShiftRight'&&mode==='local'){e.preventDefault();fire(2)}
+ if(e.code==='Space'){e.preventDefault();fire(1)}
+ if(e.key==='Enter'&&mode==='local'){e.preventDefault();fire(2)}
 });
 document.getElementById('up').onclick=()=>move(1,-28);
 document.getElementById('down').onclick=()=>move(1,28);
 document.getElementById('fire').onclick=()=>fire(1);
 document.getElementById('done').onclick=()=>location.href='../index.html';
-document.getElementById('message').textContent=mode==='local'?'1P: W/S 조준·Enter 발사 / 2P: ↑/↓ 조준·오른쪽 Shift 발사':'W/S로 조준 위치 이동, Enter로 발사하세요. 화살은 최대 3발이며 1초마다 1발씩 보충됩니다.';
+document.getElementById('message').textContent=mode==='local'?'1P: W/S 조준 · Space 발사  |  2P: ↑/↓ 조준 · Enter 발사':'W/S로 조준하고 Space로 발사하세요. 화살은 최대 3발이며 1초마다 1발씩 보충됩니다.';
 updateAmmo();draw();requestAnimationFrame(frame);
 </script></body></html>
