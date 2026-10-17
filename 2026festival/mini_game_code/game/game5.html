@@ -8,35 +8,34 @@ body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 10% 0%,#174
 @media(max-width:680px){body{padding:14px}.heading{align-items:start;flex-direction:column}.timerbox{text-align:left}.lanes{grid-template-columns:1fr}.hint{width:100%;margin-left:0}.lane{padding:10px}}
 </style></head><body><main class="wrap">
 <div class="top"><span>MINI GAME / 05</span><span id="round"></span></div>
-<div class="heading"><div><h1>점프 러너</h1><p>왼쪽은 나, 오른쪽은 컴퓨터. 속도가 점점 빨라져!</p></div><div class="timerbox"><small>경과 시간</small><strong><span id="time">0.0</span>s</strong></div></div>
+<div class="heading"><div><h1>점프 러너</h1><p>나와 컴퓨터의 주행 거리와 속도는 동일합니다.</p></div><div class="timerbox"><small>경과 시간</small><strong><span id="time">0.0</span>s</strong></div></div>
 <div class="lanes">
 <section class="lane"><div class="lanehead"><strong>플레이어</strong><span class="pill">YOU</span></div><canvas id="player" width="480" height="220" aria-label="플레이어 점프 러너"></canvas><div class="lanefoot"><span>스페이스 / ↑ / 탭</span><span id="playerSpeed">속도 1.0×</span></div></section>
 <section class="lane computer"><div class="lanehead"><strong>컴퓨터</strong><span class="pill">CPU</span></div><canvas id="cpu" width="480" height="220" aria-label="컴퓨터 점프 러너"></canvas><div class="lanefoot"><span id="cpuState">AI 대기 중</span><span id="cpuSpeed">속도 1.0×</span></div></section>
 </div>
 <div class="controls"><button class="btn primary" id="start">시작 / 다시 시작</button><button class="btn" id="jump">점프 ↑</button><button class="btn" id="done" hidden>결과 확인 →</button><span class="hint">먼저 장애물에 부딪히면 패배</span></div>
-<div id="message">시작을 눌러 대결하세요.</div><div class="note">시간이 지날수록 장애물 이동 속도와 등장 빈도가 증가합니다. 30초를 버티면 완주!</div>
+<div id="message">시작을 눌러 대결하세요.</div><div class="note">두 주행 코스는 같은 속도와 같은 장애물 배치를 사용합니다. 시간이 지날수록 속도가 증가하며, 30초 생존 시 완주합니다.</div>
 </main><script>
 const s=JSON.parse(localStorage.getItem('miniGameSettings')||'null')||{mode:'cpu'};
 document.getElementById('round').textContent=s.round?s.round+'번째 게임':'연습 모드';
 const pCanvas=document.getElementById('player'),cCanvas=document.getElementById('cpu'),pctx=pCanvas.getContext('2d'),cctx=cCanvas.getContext('2d');
 const W=480,H=220,ground=178,finishAt=30;
-let running=false,ended=false,t=0,last=0,raf=0,spawnP=30,spawnC=38,py=0,pvy=0,cy=0,cvy=0,pobs=[],cobs=[],cpuNextJump=0;
-function reset(){cancelAnimationFrame(raf);running=true;ended=false;t=0;last=0;spawnP=28;spawnC=34;py=cy=pvy=cvy=0;pobs=[];cobs=[];cpuNextJump=0;document.getElementById('done').hidden=true;document.getElementById('message').textContent='달리는 중!';document.getElementById('cpuState').textContent='AI 주행 중';raf=requestAnimationFrame(loop)}
+let running=false,ended=false,t=0,last=0,raf=0,spawnP=30,py=0,pvy=0,cy=0,cvy=0,pobs=[],cobs=[],cpuNextJump=0;
+function reset(){cancelAnimationFrame(raf);running=true;ended=false;t=0;last=0;spawnP=28;py=cy=pvy=cvy=0;pobs=[];cobs=[];cpuNextJump=0;document.getElementById('done').hidden=true;document.getElementById('message').textContent='달리는 중!';document.getElementById('cpuState').textContent='AI 주행 중';raf=requestAnimationFrame(loop)}
 function jump(){if(running&&py>=-0.5)pvy=-10.5}
 function draw(ctx,y,obs,speed,label){ctx.clearRect(0,0,W,H);ctx.fillStyle='#0a1b11';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#31583b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,ground);ctx.lineTo(W,ground);ctx.stroke();ctx.fillStyle='#1a3825';for(let i=0;i<12;i++){let x=((i*53-t*speed*28)%W+W)%W;ctx.fillRect(x,ground+10,22,2)}ctx.fillStyle='#53e88a';ctx.fillRect(65,ground-34+y,29,34);ctx.fillRect(83,ground-45+y,13,15);ctx.fillStyle='#07110d';ctx.fillRect(91,ground-40+y,3,3);ctx.fillStyle='#ffcf67';for(const o of obs){ctx.fillRect(o.x,ground-o.h,o.w,o.h);ctx.fillRect(o.x+o.w*.2,ground-o.h-5,o.w*.6,5)}ctx.fillStyle='#9ab6a1';ctx.font='11px Arial';ctx.fillText(label,12,18)}
 function addObstacle(arr){const h=24+Math.random()*25,w=15+Math.random()*14;arr.push({x:W+10,w,h})}
 function collision(y,arr){return arr.some(o=>o.x<94&&o.x+o.w>65&&ground-34+y+34>ground-o.h+2)}
-function loop(now){if(!running)return;const dt=Math.min(2.2,(now-(last||now-16.67))/16.67);last=now;t+=dt/60;const ramp=1+Math.min(1.7,t/30*1.7),ps=4.0*ramp,cs=3.8*Math.min(1.8,1+t/24*1.4);
+function loop(now){if(!running)return;const dt=Math.min(2.2,(now-(last||now-16.67))/16.67);last=now;t+=dt/60;const ramp=1+Math.min(1.7,t/30*1.7),ps=4.0*ramp,cs=ps;
 pvy+=.58*dt;py=Math.min(0,py+pvy*dt);if(py===0)pvy=0;
 cvy+=.58*dt;cy=Math.min(0,cy+cvy*dt);if(cy===0)cvy=0;
-spawnP-=dt;spawnC-=dt;
-if(spawnP<=0){addObstacle(pobs);spawnP=Math.max(20,58/ramp+Math.random()*23)}
-if(spawnC<=0){addObstacle(cobs);spawnC=Math.max(22,62/(1+t/22)+Math.random()*25)}
-pobs.forEach(o=>o.x-=ps*dt);cobs.forEach(o=>o.x-=cs*dt);pobs=pobs.filter(o=>o.x>-40);cobs=cobs.filter(o=>o.x>-40);
+spawnP-=dt;
+if(spawnP<=0){const h=24+Math.random()*25,w=15+Math.random()*14,x=W+10;pobs.push({x,w,h});cobs.push({x,w,h});spawnP=Math.max(20,58/ramp+Math.random()*23)}
+pobs.forEach(o=>o.x-=ps*dt);cobs.forEach(o=>o.x-=ps*dt);pobs=pobs.filter(o=>o.x>-40);cobs=cobs.filter(o=>o.x>-40);
 // CPU times jumps for approaching obstacles, with occasional late reaction at higher speeds.
 const next=cobs.find(o=>o.x>75);if(next&&next.x<150&&cy===0&&cpuNextJump<=t){cvy=-10.1;cpuNextJump=t+(Math.random()<Math.min(.42,t/80)?0.75:0.28)}
 draw(pctx,py,pobs,ps,'PLAYER');draw(cctx,cy,cobs,cs,'COMPUTER');
-document.getElementById('time').textContent=Math.min(finishAt,t).toFixed(1);document.getElementById('playerSpeed').textContent='속도 '+ramp.toFixed(1)+'×';document.getElementById('cpuSpeed').textContent='속도 '+(cs/3.8).toFixed(1)+'×';
+document.getElementById('time').textContent=Math.min(finishAt,t).toFixed(1);document.getElementById('playerSpeed').textContent='속도 '+ramp.toFixed(1)+'×';document.getElementById('cpuSpeed').textContent='속도 '+ramp.toFixed(1)+'×';
 if(collision(py,pobs)){end('opp');return}if(collision(cy,cobs)){end('me');return}if(t>=finishAt){end('me');return}raf=requestAnimationFrame(loop)}
 function end(winner){if(ended)return;ended=true;running=false;const elapsed=Math.min(finishAt,t),me=Math.round(elapsed*10),opp=winner==='me'?me:Math.round(Math.max(0,elapsed-.8)*10);document.getElementById('message').textContent=winner==='me'?'승리 · 목표 시간 완주':'패배 · 컴퓨터가 더 오래 생존했습니다.';document.getElementById('cpuState').textContent=winner==='me'?'패배':'승리';localStorage.setItem('miniGameResult',JSON.stringify({game:'🦖 점프 러너',winner,me,opp}));document.getElementById('done').hidden=false}
 document.getElementById('start').onclick=reset;document.getElementById('jump').onclick=jump;pCanvas.onclick=jump;document.addEventListener('keydown',e=>{if(e.code==='Space'||e.key==='ArrowUp'){e.preventDefault();jump()}});
