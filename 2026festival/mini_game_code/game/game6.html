@@ -7,13 +7,13 @@ body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 12% 0%,#174
 <div class="top"><span>MINI GAME / 06</span><span id="round"></span></div>
 <div class="heading"><div><h1>장애물 슈팅</h1><p>캐릭터는 화면 위아래를 왕복합니다. Space로 내 이동 방향을 바꾸고 Enter로 발사하세요.</p></div><div class="status"><small>승리 조건</small><br><strong>4 HIT</strong></div></div>
 <div class="arena"><canvas id="arena" width="960" height="480" aria-label="장애물 슈팅 게임 화면"></canvas></div>
-<div class="scores"><div class="score"><small>플레이어 · SPACE 방향 전환 / ENTER 발사</small><strong>나 <span id="hits1">0</span>/4</strong></div><div class="vs">VS</div><div class="score right"><small id="opponentLabel">컴퓨터 · 자동 조작</small><strong>상대 <span id="hits2">0</span>/4</strong></div></div>
+<div class="scores"><div class="score"><small>플레이어 · SPACE 방향 전환 / ENTER 발사</small><strong><span id="playerScoreLabel">플레이어</span> <span id="hits1">0</span>/4</strong></div><div class="vs">VS</div><div class="score right"><small id="opponentLabel">컴퓨터 · 자동 조작</small><strong><span id="opponentScoreLabel">상대</span> <span id="hits2">0</span>/4</strong></div></div>
 <div class="controls"><button class="btn" id="up">▲ 위</button><button class="btn" id="down">▼ 아래</button><button class="btn primary" id="fire">발사 ENTER</button><button class="btn hidden" id="done">결과 확인 →</button><span class="hint">장애물에 총알이 닿으면 효과가 랜덤 발동</span></div>
 <div id="message">플레이어는 화면 위아래를 왕복합니다. Space: 방향 전환 · Enter: 발사</div><div class="legend"><span><i class="dot" style="background:#ffcf67"></i>굴절: 탄환 방향 변경</span><span><i class="dot" style="background:#79aaff"></i>분열: 탄환 2개 생성</span><span><i class="dot" style="background:#f07d8b"></i>소멸: 탄환 사라짐</span><span><i class="dot" style="background:#53e88a"></i>장애물은 맞으면 재배치</span></div>
 </main><script>
 const s=JSON.parse(localStorage.getItem('miniGameSettings')||'null')||{mode:'cpu'};
 const mode=s.mode||'cpu';document.getElementById('round').textContent=s.round?s.round+'번째 게임':'';
-document.getElementById('opponentLabel').textContent=mode==='local'?'상대 · 자동 왕복 + ENTER':'컴퓨터 · 자동 조작';
+document.getElementById('opponentLabel').textContent=mode==='local'?'2P · 자동 왕복 + ENTER':'컴퓨터 · 자동 조작';if(mode==='local'){document.getElementById('playerScoreLabel').textContent='1P';document.getElementById('opponentScoreLabel').textContent='2P'}
 const cv=document.getElementById('arena'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
 let y1=H*.5,y2=H*.5,h1=0,h2=0,bullets=[],obstacles=[],tick=0,playing=true,flash=[],playerDir=1,cpuDir=1;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
