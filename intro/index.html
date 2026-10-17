@@ -61,9 +61,9 @@ let musicStarted=false, musicFadeRaf=0, musicStartTime=0;
 function startMusic(){
   if(!bgMusic || musicStarted) return;
   bgMusic.loop=false;
-  // 인트로 전체 길이(약 22초)에 맞춰 음악을 한 번만 재생한다.
+  // 약 22초 인트로에 맞춰 한 번 재생한다.
   bgMusic.playbackRate=0.72;
-  bgMusic.volume=0;
+  bgMusic.volume=1;
   const playAttempt=bgMusic.play();
   if(playAttempt && typeof playAttempt.then==="function"){
     playAttempt.then(()=>{
@@ -72,16 +72,21 @@ function startMusic(){
       const fadeMusic=()=>{
         if(!musicStarted) return;
         const elapsed=(performance.now()-musicStartTime)/1000;
-        const remaining=Number.isFinite(bgMusic.duration)
-          ? (bgMusic.duration-bgMusic.currentTime)/bgMusic.playbackRate : 99;
+        const duration=bgMusic.duration;
+        // 메타데이터가 아직 없으면 페이드 아웃을 적용하지 않아 무음으로 고정되지 않게 한다.
+        const remaining=(Number.isFinite(duration)&&duration>0)
+          ? (duration-bgMusic.currentTime)/Math.max(bgMusic.playbackRate,0.01) : 99;
         const fadeIn=Math.min(1,elapsed/.35);
-        const fadeOut=Math.max(0,Math.min(1,remaining/.8));
+        const fadeOut=remaining<.8 ? Math.max(0,remaining/.8) : 1;
         bgMusic.volume=Math.max(0,Math.min(1,fadeIn,fadeOut));
-        if(!bgMusic.ended && remaining>0) musicFadeRaf=requestAnimationFrame(fadeMusic);
+        if(!bgMusic.ended && bgMusic.volume>0) musicFadeRaf=requestAnimationFrame(fadeMusic);
       };
       cancelAnimationFrame(musicFadeRaf);
       musicFadeRaf=requestAnimationFrame(fadeMusic);
-    }).catch(()=>{ musicStarted=false; });
+    }).catch(()=>{
+      musicStarted=false;
+      bgMusic.volume=1;
+    });
   }else{
     musicStarted=true;
   }
