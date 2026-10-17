@@ -50,3 +50,6 @@ body.damaged #game:before{content:"";position:fixed;inset:0;z-index:3;pointer-ev
 #roundOverlay p{color:#d4dce1;line-height:1.5}
 #rematch{background:var(--gold);color:#182027}
 #changeClass{background:#38434d;color:#fff}
+
+/* Class-specific feedback */
+#hud .weapon-name{transition:transform .12s,color .12s}.center-message{font-weight:900;text-shadow:0 2px 8px #000}body.cloaked #hud{opacity:.58}body.cloaked #game{filter:saturate(.45) brightness(.72)}
