@@ -461,10 +461,10 @@ function frame(now){
   renderer.render(fadeScene,fadeCam); renderer.clearDepth(); renderer.render(scene,camera);
 }
 
-/* ---------- 임베드 표시 처리 ---------- */
-if(window.__introEmbedded){
-  $("startScreen").classList.add("hide");
-}
+/* ---------- 임베드 표시 처리 ----------
+   임베드 상태에서도 START 화면을 유지한다.
+   임베드 자체가 재생 트리거가 되어서는 안 된다.
+*/
 $("finalStart").addEventListener("click",()=>{
   if(window.__introEmbedded) notifyParent();
   $("finalStart").classList.remove("visible");
@@ -491,7 +491,7 @@ function begin(){
   }
 }
 $("startBtn").addEventListener("click",begin);
-if(window.__introEmbedded) begin();
+// 임베드되어도 사용자가 START 버튼을 누를 때까지 자동 재생하지 않는다.
 $("skip").addEventListener("click",showEnd);
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&state==="run") showEnd(); });
 addEventListener("pointerdown",()=>{ if(state==="run" && bgMusic.paused) startMusic(); },{passive:true});
