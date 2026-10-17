@@ -20,24 +20,47 @@ const s=JSON.parse(localStorage.getItem('miniGameSettings')||'null')||{mode:'cpu
 document.getElementById('round').textContent=s.round?s.round+'번째 게임':'연습 모드';if(s.mode==='local'){document.getElementById('playerLabel').textContent='1P';document.getElementById('cpuLabel').textContent='2P'}
 const pCanvas=document.getElementById('player'),cCanvas=document.getElementById('cpu'),pctx=pCanvas.getContext('2d'),cctx=cCanvas.getContext('2d');
 const W=480,H=220,ground=178,finishAt=30;
-let running=false,ended=false,t=0,last=0,raf=0,spawnP=30,py=0,pvy=0,cy=0,cvy=0,pobs=[],cobs=[],cpuNextJump=0;
-function reset(){cancelAnimationFrame(raf);running=true;ended=false;t=0;last=0;spawnP=28;py=cy=pvy=cvy=0;pobs=[];cobs=[];cpuNextJump=0;document.getElementById('done').hidden=true;document.getElementById('message').textContent='달리는 중!';document.getElementById('cpuState').textContent='AI 주행 중';raf=requestAnimationFrame(loop)}
-function jump(){if(running&&py>=-0.5)pvy=-10.5}
+let running=false,ended=false,t=0,last=0,raf=0,spawnP=30,py=0,pvy=0,cy=0,cvy=0,pobs=[],cobs=[],cpuNextJump=0,pAlive=true,cAlive=true,pEndTime=null,cEndTime=null;
+function reset(){cancelAnimationFrame(raf);running=true;ended=false;t=0;last=0;spawnP=28;py=cy=pvy=cvy=0;pobs=[];cobs=[];cpuNextJump=0;pAlive=cAlive=true;pEndTime=cEndTime=null;document.getElementById('done').hidden=true;document.getElementById('message').textContent='달리는 중! 두 주행이 모두 끝나면 결과가 확정됩니다.';document.getElementById('cpuState').textContent='AI 주행 중';raf=requestAnimationFrame(loop)}
+function jump(){if(running&&pAlive&&py>=-0.5)pvy=-10.5}
 function draw(ctx,y,obs,speed,label){ctx.clearRect(0,0,W,H);ctx.fillStyle='#0a1b11';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#31583b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,ground);ctx.lineTo(W,ground);ctx.stroke();ctx.fillStyle='#1a3825';for(let i=0;i<12;i++){let x=((i*53-t*speed*28)%W+W)%W;ctx.fillRect(x,ground+10,22,2)}ctx.fillStyle='#53e88a';ctx.fillRect(65,ground-34+y,29,34);ctx.fillRect(83,ground-45+y,13,15);ctx.fillStyle='#07110d';ctx.fillRect(91,ground-40+y,3,3);ctx.fillStyle='#ffcf67';for(const o of obs){ctx.fillRect(o.x,ground-o.h,o.w,o.h);ctx.fillRect(o.x+o.w*.2,ground-o.h-5,o.w*.6,5)}ctx.fillStyle='#9ab6a1';ctx.font='11px Arial';ctx.fillText(label,12,18)}
 function addObstacle(arr){const h=24+Math.random()*25,w=15+Math.random()*14;arr.push({x:W+10,w,h})}
 function collision(y,arr){return arr.some(o=>o.x<94&&o.x+o.w>65&&ground-34+y+34>ground-o.h+2)}
-function loop(now){if(!running)return;const dt=Math.min(2.2,(now-(last||now-16.67))/16.67);last=now;t+=dt/60;const ramp=1+Math.min(1.7,t/30*1.7),ps=4.0*ramp,cs=ps;
-pvy+=.58*dt;py=Math.min(0,py+pvy*dt);if(py===0)pvy=0;
-cvy+=.58*dt;cy=Math.min(0,cy+cvy*dt);if(cy===0)cvy=0;
+function loop(now){
+if(!running)return;
+const dt=Math.min(2.2,(now-(last||now-16.67))/16.67);last=now;t+=dt/60;
+const ramp=1+Math.min(1.7,t/30*1.7),speed=4.0*ramp;
+if(pAlive){pvy+=.58*dt;py=Math.min(0,py+pvy*dt);if(py===0)pvy=0}
+if(cAlive){cvy+=.58*dt;cy=Math.min(0,cy+cvy*dt);if(cy===0)cvy=0}
 spawnP-=dt;
-if(spawnP<=0){const h=24+Math.random()*25,w=15+Math.random()*14,x=W+10;pobs.push({x,w,h});cobs.push({x,w,h});spawnP=Math.max(20,58/ramp+Math.random()*23)}
-pobs.forEach(o=>o.x-=ps*dt);cobs.forEach(o=>o.x-=ps*dt);pobs=pobs.filter(o=>o.x>-40);cobs=cobs.filter(o=>o.x>-40);
-// CPU times jumps for approaching obstacles, with occasional late reaction at higher speeds.
-const next=cobs.find(o=>o.x>75);if(next&&next.x<150&&cy===0&&cpuNextJump<=t){cvy=-10.1;cpuNextJump=t+(Math.random()<Math.min(.42,t/80)?0.75:0.28)}
-draw(pctx,py,pobs,ps,'PLAYER');draw(cctx,cy,cobs,cs,'COMPUTER');
-document.getElementById('time').textContent=Math.min(finishAt,t).toFixed(1);document.getElementById('playerSpeed').textContent='속도 '+ramp.toFixed(1)+'×';document.getElementById('cpuSpeed').textContent='속도 '+ramp.toFixed(1)+'×';
-if(collision(py,pobs)){end('opp');return}if(collision(cy,cobs)){end('me');return}if(t>=finishAt){end('me');return}raf=requestAnimationFrame(loop)}
-function end(winner){if(ended)return;ended=true;running=false;const elapsed=Math.min(finishAt,t),me=Math.round(elapsed*10),opp=winner==='me'?me:Math.round(Math.max(0,elapsed-.8)*10);document.getElementById('message').textContent=winner==='me'?'승리 · 목표 시간 완주':'패배 · 컴퓨터가 더 오래 생존했습니다.';document.getElementById('cpuState').textContent=winner==='me'?'패배':'승리';localStorage.setItem('miniGameResult',JSON.stringify({game:'🦖 점프 러너',winner,me,opp}));document.getElementById('done').hidden=false}
+if(spawnP<=0){
+ const h=24+Math.random()*25,w=15+Math.random()*14,x=W+10;
+ if(pAlive)pobs.push({x,w,h});if(cAlive)cobs.push({x,w,h});
+ spawnP=Math.max(20,58/ramp+Math.random()*23)
+}
+if(pAlive){pobs.forEach(o=>o.x-=speed*dt);pobs=pobs.filter(o=>o.x>-40)}
+if(cAlive){cobs.forEach(o=>o.x-=speed*dt);cobs=cobs.filter(o=>o.x>-40)}
+if(cAlive){const next=cobs.find(o=>o.x>75);if(next&&next.x<150&&cy===0&&cpuNextJump<=t){cvy=-10.1;cpuNextJump=t+(Math.random()<Math.min(.42,t/80)?0.75:0.28)}}
+if(pAlive&&collision(py,pobs)){pAlive=false;pEndTime=t;document.getElementById('message').textContent='플레이어 주행 종료 · 컴퓨터 주행이 끝날 때까지 진행합니다.'}
+if(cAlive&&collision(cy,cobs)){cAlive=false;cEndTime=t;document.getElementById('cpuState').textContent='주행 종료'}
+if(t>=finishAt){if(pAlive){pAlive=false;pEndTime=finishAt}if(cAlive){cAlive=false;cEndTime=finishAt}}
+draw(pctx,py,pobs,speed,pAlive?'PLAYER':'PLAYER · OUT');draw(cctx,cy,cobs,speed,cAlive?'COMPUTER':'COMPUTER · OUT');
+if(!pAlive){pctx.fillStyle='#ffcf67';pctx.font='bold 17px Arial';pctx.fillText('FINISHED',W/2-35,48)}
+if(!cAlive){cctx.fillStyle='#ffcf67';cctx.font='bold 17px Arial';cctx.fillText('FINISHED',W/2-35,48)}
+document.getElementById('time').textContent=Math.min(finishAt,t).toFixed(1);
+document.getElementById('playerSpeed').textContent='속도 '+ramp.toFixed(1)+'×';document.getElementById('cpuSpeed').textContent='속도 '+ramp.toFixed(1)+'×';
+if(!pAlive&&!cAlive){finishRace();return}
+raf=requestAnimationFrame(loop)
+}
+function finishRace(){
+if(ended)return;ended=true;running=false;
+const me=Math.round((pEndTime??finishAt)*10),opp=Math.round((cEndTime??finishAt)*10);
+const winner=me>opp?'me':me<opp?'opp':'draw';
+document.getElementById('message').textContent=winner==='me'?'승리 · 컴퓨터보다 더 오래 주행했습니다.':winner==='opp'?'패배 · 컴퓨터가 더 오래 주행했습니다.':'무승부 · 두 주행 시간이 같습니다.';
+document.getElementById('cpuState').textContent=winner==='me'?'패배':winner==='opp'?'승리':'무승부';
+localStorage.setItem('miniGameResult',JSON.stringify({game:'🦖 점프 러너',winner,me,opp}));
+document.getElementById('done').hidden=false
+}
 document.getElementById('start').onclick=reset;document.getElementById('jump').onclick=jump;pCanvas.onclick=jump;document.addEventListener('keydown',e=>{if(e.code==='Space'||e.key==='ArrowUp'){e.preventDefault();jump()}});
 document.getElementById('done').onclick=()=>location.href='../index.html';
 draw(pctx,0,[] ,4,'PLAYER');draw(cctx,0,[],3.8,'COMPUTER');
