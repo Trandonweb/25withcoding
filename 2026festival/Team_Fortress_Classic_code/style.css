@@ -42,3 +42,11 @@ body.damaged #game:before{content:"";position:fixed;inset:0;z-index:3;pointer-ev
 @media(max-width:600px){.scoreboard-card{padding:12px}.scoreboard-card h2{font-size:22px}.roster-columns{gap:6px}.roster-row{font-size:10px;grid-template-columns:1fr auto;gap:4px}.roster-row small:last-child{display:none}}
 
 .ability-hud{margin-top:6px;padding-top:6px;border-top:1px solid #ffffff26;color:#f5d46c;font-size:10px;letter-spacing:.08em;font-weight:900}
+
+.round-timer{font-size:clamp(18px,2vw,27px);font-weight:900;letter-spacing:.08em;color:#fff;background:#111b;padding:6px 12px;border:1px solid #ffffff35;min-width:72px;text-align:center}
+#roundOverlay{z-index:12;background:#070b10d9;backdrop-filter:blur(7px)}
+#roundOverlay .overlay-card{min-width:min(420px,90vw);text-align:center;border-top:5px solid var(--gold)}
+#roundOverlay h2{font-size:clamp(38px,7vw,64px);margin:12px 0;color:var(--gold)}
+#roundOverlay p{color:#d4dce1;line-height:1.5}
+#rematch{background:var(--gold);color:#182027}
+#changeClass{background:#38434d;color:#fff}
