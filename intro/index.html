@@ -33,6 +33,7 @@
 </head>
 <body>
 <canvas id="gl"></canvas>
+<audio id="bgMusic" src="/intro/bgmusic.mp3" preload="auto" loop></audio>
 <div id="flash"></div>
 
 <div id="startScreen" class="fade"><button id="startBtn" disabled>START</button></div>
@@ -55,6 +56,12 @@ const THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.mi
 (async () => {
 const $ = id => document.getElementById(id);
 window.__introEmbedded = window.parent !== window;
+const bgMusic = $("bgMusic");
+function startMusic(){
+  if(!bgMusic) return;
+  const playAttempt=bgMusic.play();
+  if(playAttempt && typeof playAttempt.catch==="function") playAttempt.catch(()=>{});
+}
 let signalSent=false;
 function notifyParent(){
   if(!window.__introEmbedded || signalSent) return;
@@ -432,6 +439,7 @@ $("finalStart").addEventListener("click",()=>{
 /* ---------- 제어 ---------- */
 function begin(){
   if(state==="run") return;
+  startMusic();
   try{
     cancelAnimationFrame(raf);
     resize();
@@ -451,6 +459,7 @@ $("startBtn").addEventListener("click",begin);
 if(window.__introEmbedded) begin();
 $("skip").addEventListener("click",showEnd);
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&state==="run") showEnd(); });
+addEventListener("pointerdown",()=>{ if(state==="run" && bgMusic.paused) startMusic(); },{passive:true});
 addEventListener("resize",resize);
 document.addEventListener("visibilitychange",()=>{
   if(document.hidden){ cancelAnimationFrame(raf); }
