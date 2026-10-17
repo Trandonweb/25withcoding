@@ -1,74 +1,46 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>활쏘기 대결 | MINI GAME</title>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>장애물 슈팅 | MINI GAME</title>
 <style>
 *{box-sizing:border-box}:root{color-scheme:dark;--green:#53e88a;--line:rgba(150,255,190,.18)}
 body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 12% 0%,#17442c,transparent 42%),#050b08;color:#f3fff6;font-family:Inter,'Noto Sans KR',Arial,sans-serif;display:grid;place-items:center;padding:20px}.wrap{width:min(1000px,100%)}.top{display:flex;justify-content:space-between;color:#a9c5b2;font-size:12px;letter-spacing:.1em}.heading{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:14px 0 20px}.heading h1{font-size:clamp(30px,5vw,46px);letter-spacing:-.05em;margin:0}.heading p{color:#b8cdbf;margin:8px 0 0;line-height:1.6}.status{padding:12px 18px;border:1px solid var(--line);border-radius:15px;background:#ffffff08;white-space:nowrap}.status strong{font-size:22px}.arena{border:1px solid var(--line);background:#07100b;border-radius:20px;padding:10px;box-shadow:0 22px 60px #0005}canvas{display:block;width:100%;height:auto;border-radius:12px;touch-action:manipulation}.scores{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin:15px 0}.score{border:1px solid var(--line);border-radius:14px;padding:12px 16px;background:#ffffff06}.score.right{text-align:right}.score small{display:block;color:#b8cdbf;font-size:12px}.score strong{font-size:23px}.vs{color:#83a991;font-size:12px;letter-spacing:.1em}.controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center}.btn{border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:#ffffff0a;color:#f3fff6;font-weight:750;cursor:pointer;transition:.18s}.btn:hover{transform:translateY(-2px);background:#ffffff14}.btn.primary{background:var(--green);color:#062012;border-color:transparent}.btn:focus-visible{outline:2px solid var(--green);outline-offset:3px}.hint{color:#a9c5b2;font-size:12px;margin-left:auto}#message{min-height:24px;margin:15px 0 0;font-weight:750}.legend{display:flex;flex-wrap:wrap;gap:10px 18px;color:#a9c5b2;font-size:12px;margin-top:10px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}.hidden{display:none!important}@media(max-width:620px){body{padding:12px}.heading{display:block}.status{display:inline-block;margin-top:12px}.scores{gap:6px}.score{padding:10px}.score strong{font-size:19px}.hint{width:100%;margin:4px 0 0}}
 </style></head><body><main class="wrap">
 <div class="top"><span>MINI GAME / 06</span><span id="round"></span></div>
-<div class="heading"><div><h1>활쏘기 대결</h1><p>상대에게 화살을 맞히세요. 최대 3발을 장전하며, 화살은 1초마다 1발씩 보충됩니다.</p></div><div class="status"><small>승리 조건</small><br><strong>4회 명중</strong></div></div>
-<div class="arena"><canvas id="arena" width="960" height="480" aria-label="활쏘기 대결 화면"></canvas></div>
-<div class="scores"><div class="score"><small id="playerControls">플레이어 · W/S 조준 / SPACE 발사</small><strong><span id="playerScoreLabel">플레이어</span> <span id="hits1">0</span>/4</strong></div><div class="vs">VS</div><div class="score right"><small id="opponentLabel">컴퓨터 · 자동 조준</small><strong><span id="opponentScoreLabel">상대</span> <span id="hits2">0</span>/4</strong></div></div>
-<div class="controls"><button class="btn" id="up">▲ 위</button><button class="btn" id="down">▼ 아래</button><button class="btn primary" id="fire">화살 발사 SPACE</button><button class="btn hidden" id="done">결과 확인 →</button><span class="hint">화살 장전: 1초마다 1발 · 최대 3발</span></div>
-<div id="message">조작: W/S 조준 · Space 발사. 한 컴퓨터 2P: ↑/↓ 조준 · Enter 발사.</div>
+<div class="heading"><div><h1>장애물 슈팅</h1><p>캐릭터는 화면 위아래를 왕복합니다. Space로 내 이동 방향을 바꾸고 Enter로 발사하세요.</p></div><div class="status"><small>승리 조건</small><br><strong>4 HIT</strong></div></div>
+<div class="arena"><canvas id="arena" width="960" height="480" aria-label="장애물 슈팅 게임 화면"></canvas></div>
+<div class="scores"><div class="score"><small>플레이어 · SPACE 방향 전환 / ENTER 발사</small><strong>나 <span id="hits1">0</span>/4</strong></div><div class="vs">VS</div><div class="score right"><small id="opponentLabel">컴퓨터 · 자동 조작</small><strong>상대 <span id="hits2">0</span>/4</strong></div></div>
+<div class="controls"><button class="btn" id="up">▲ 위</button><button class="btn" id="down">▼ 아래</button><button class="btn primary" id="fire">발사 ENTER</button><button class="btn hidden" id="done">결과 확인 →</button><span class="hint">장애물에 총알이 닿으면 효과가 랜덤 발동</span></div>
+<div id="message">플레이어는 화면 위아래를 왕복합니다. Space: 방향 전환 · Enter: 발사</div><div class="legend"><span><i class="dot" style="background:#ffcf67"></i>굴절: 탄환 방향 변경</span><span><i class="dot" style="background:#79aaff"></i>분열: 탄환 2개 생성</span><span><i class="dot" style="background:#f07d8b"></i>소멸: 탄환 사라짐</span><span><i class="dot" style="background:#53e88a"></i>장애물은 맞으면 재배치</span></div>
 </main><script>
 const s=JSON.parse(localStorage.getItem('miniGameSettings')||'null')||{mode:'cpu'};
-const mode=s.mode||'cpu';
-document.getElementById('round').textContent=s.round?s.round+'번째 게임':'';
-document.getElementById('opponentLabel').textContent=mode==='local'?'2P · 방향키 조준 / 오른쪽 Shift 발사':'컴퓨터 · 자동 조준';
-if(mode==='local'){document.getElementById('playerScoreLabel').textContent='1P';document.getElementById('opponentScoreLabel').textContent='2P';document.getElementById('playerControls').textContent='1P · W/S 조준 / Space 발사';document.getElementById('opponentLabel').textContent='2P · ↑/↓ 조준 / Enter 발사';}
+const mode=s.mode||'cpu';document.getElementById('round').textContent=s.round?s.round+'번째 게임':'';
+document.getElementById('opponentLabel').textContent=mode==='local'?'상대 · 자동 왕복 + ENTER':'컴퓨터 · 자동 조작';
 const cv=document.getElementById('arena'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
-let y1=H*.5,y2=H*.5,h1=0,h2=0,arrows=[],tick=0,playing=true,flash=[],playerDir=1,cpuDir=1;
-let ammo1=3,ammo2=3,lastReload1=performance.now(),lastReload2=performance.now(),lastCpuShot=0;
+let y1=H*.5,y2=H*.5,h1=0,h2=0,bullets=[],obstacles=[],tick=0,playing=true,flash=[],playerDir=1,cpuDir=1;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function fire(p){
- if(!playing)return;
- const now=performance.now();
- if(p===1){if(ammo1<=0){document.getElementById('message').textContent='화살이 없습니다. 1초마다 한 발씩 장전됩니다.';return}ammo1--;arrows.push({x:125,y:y1,vx: p===1?10:-10,p,life:0});}
- else {if(ammo2<=0)return;ammo2--;arrows.push({x:W-125,y:y2,vx:-10,p,life:0});}
- updateAmmo();
-}
-function updateAmmo(){
- document.getElementById('playerScoreLabel').textContent=(mode==='local'?'1P':'플레이어')+' · 화살 '+ammo1+'/3';
- document.getElementById('opponentScoreLabel').textContent=(mode==='local'?'2P':'상대')+' · 화살 '+ammo2+'/3';
-}
-function move(p,d){if(p===1)y1=clamp(y1+d,30,H-30);else if(mode==='local')y2=clamp(y2+d,30,H-30)}
-function end(w){if(!playing)return;playing=false;localStorage.setItem('miniGameResult',JSON.stringify({game:'🏹 활쏘기 대결',winner:w,me:h2,opp:h1}));document.getElementById('message').textContent=w==='me'?'승리 · 상대에게 화살을 4회 명중시켰습니다.':w==='opp'?'패배 · 상대에게 화살을 4회 명중당했습니다.':'무승부';document.getElementById('done').classList.remove('hidden');draw()}
-function draw(){
- ctx.clearRect(0,0,W,H);ctx.fillStyle='#07110b';ctx.fillRect(0,0,W,H);
- ctx.strokeStyle='#ffffff0a';ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
- ctx.fillStyle='#214632';ctx.fillRect(W/2-1,0,2,H);
- // Archers
- ctx.strokeStyle='#53e88a';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(92,y1-22);ctx.lineTo(92,y1+22);ctx.stroke();ctx.beginPath();ctx.arc(92,y1,22,-Math.PI/2,Math.PI/2);ctx.stroke();ctx.fillStyle='#53e88a';ctx.beginPath();ctx.arc(72,y1-19,10,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle='#ffcf67';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(W-92,y2-22);ctx.lineTo(W-92,y2+22);ctx.stroke();ctx.beginPath();ctx.arc(W-92,y2,22,Math.PI/2,Math.PI*1.5);ctx.stroke();ctx.fillStyle='#ffcf67';ctx.beginPath();ctx.arc(W-72,y2-19,10,0,Math.PI*2);ctx.fill();
- for(const a of arrows){ctx.save();ctx.translate(a.x,a.y);ctx.scale(a.p===1?1:-1,1);ctx.strokeStyle=a.p===1?'#b6ffcf':'#ffe4a3';ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-18,0);ctx.lineTo(16,0);ctx.stroke();ctx.beginPath();ctx.moveTo(16,0);ctx.lineTo(7,-7);ctx.lineTo(7,7);ctx.closePath();ctx.fill();ctx.restore()}
- for(const f of flash){ctx.globalAlpha=Math.min(1,f.life/10);ctx.strokeStyle=f.color;ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y,Math.max(8,30-f.life*.4),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
- ctx.fillStyle='#a9c5b2';ctx.font='bold 16px Arial';ctx.fillText(mode==='local'?'1P':'PLAYER',24,26);ctx.textAlign='right';ctx.fillText(mode==='local'?'2P':'CPU',W-24,26);ctx.textAlign='left';
-}
-function frame(){
- if(!playing)return;tick++;
- const now=performance.now();
- if(now-lastReload1>=1000){const n=Math.floor((now-lastReload1)/1000);ammo1=Math.min(3,ammo1+n);lastReload1+=n*1000;updateAmmo()}
- if(now-lastReload2>=1000){const n=Math.floor((now-lastReload2)/1000);ammo2=Math.min(3,ammo2+n);lastReload2+=n*1000;updateAmmo()}
- if(mode==='cpu'){
-   y2+=cpuDir*2.1;if(y2>=H-30){y2=H-30;cpuDir=-1}else if(y2<=30){y2=30;cpuDir=1}
-   if(now-lastCpuShot>950+Math.random()*650&&ammo2>0){fire(2);lastCpuShot=now}
- }else if(mode==='local'){y2+=cpuDir*2.2;if(y2>=H-30){y2=H-30;cpuDir=-1}else if(y2<=30){y2=30;cpuDir=1}}
- for(const a of arrows){a.x+=a.vx;a.life++;if(a.p===1&&a.x>=W-110&&Math.abs(a.y-y2)<24){a.dead=true;h2++;document.getElementById('hits2').textContent=h2;flash.push({x:W-92,y:y2,color:'#ffcf67',life:25});document.getElementById('message').textContent=(mode==='local'?'2P':'컴퓨터')+' 피격!';if(h2>=4){end('me');return}}else if(a.p===2&&a.x<=110&&Math.abs(a.y-y1)<24){a.dead=true;h1++;document.getElementById('hits1').textContent=h1;flash.push({x:92,y:y1,color:'#53e88a',life:25});document.getElementById('message').textContent='플레이어 피격!';if(h1>=4){end('opp');return}}}
- arrows=arrows.filter(a=>!a.dead&&a.x>0&&a.x<W&&a.life<150);flash.forEach(f=>f.life--);flash=flash.filter(f=>f.life>0);draw();requestAnimationFrame(frame)
-}
-document.addEventListener('keydown',e=>{
- if(e.repeat)return;
- if(e.key.toLowerCase()==='w')move(1,-28);
- if(e.key.toLowerCase()==='s')move(1,28);
- if(e.key==='ArrowUp'&&mode==='local'){e.preventDefault();move(2,-28)}
- if(e.key==='ArrowDown'&&mode==='local'){e.preventDefault();move(2,28)}
- if(e.code==='Space'){e.preventDefault();fire(1)}
- if(e.key==='Enter'&&mode==='local'){e.preventDefault();fire(2)}
-});
-document.getElementById('up').onclick=()=>move(1,-28);
-document.getElementById('down').onclick=()=>move(1,28);
-document.getElementById('fire').onclick=()=>fire(1);
-document.getElementById('done').onclick=()=>location.href='../index.html';
-document.getElementById('message').textContent=mode==='local'?'1P: W/S 조준 · Space 발사  |  2P: ↑/↓ 조준 · Enter 발사':'W/S로 조준하고 Space로 발사하세요. 화살은 최대 3발이며 1초마다 1발씩 보충됩니다.';
-updateAmmo();draw();requestAnimationFrame(frame);
+function placeObstacle(o){o.x=W*.5-35+Math.random()*70;o.y=35+Math.random()*(H-115);o.w=22+Math.random()*15;o.h=38+Math.random()*56;o.kind=['block','block','block'][Math.floor(Math.random()*3)];}
+for(let i=0;i<5;i++){const o={};placeObstacle(o);let attempts=0;while(obstacles.some(q=>Math.abs(q.y-o.y)<75)&&attempts++<15)placeObstacle(o);obstacles.push(o)}
+function fire(p,y){if(!playing)return;bullets.push({x:p===1?130:W-130,y:y??(p===1?y1:y2),vx:p===1?8:-8,vy:0,p,life:0})}
+function move(p,d){if(p===1)y1=clamp(y1+d,28,H-28);else if(mode==='local')y2=clamp(y2+d,28,H-28)}
+function reversePlayer(){if(playing)playerDir*=-1;}
+function relocate(o){placeObstacle(o);let attempts=0;while(obstacles.some(q=>q!==o&&Math.abs(q.y-o.y)<48)&&attempts++<12)placeObstacle(o)}
+function obstacleEffect(b,o){const roll=Math.random();if(roll<.38){b.vy=(Math.random()<.5?-1:1)*(2.5+Math.random()*2.8);b.vx*=.82;flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#ffcf67',life:18});document.getElementById('message').textContent='↗ 총알 굴절!';}
+else if(roll<.72){for(const sign of [-1,1])bullets.push({x:b.x,y:b.y,vx:b.vx,vy:sign*(2.1+Math.random()*1.4),p:b.p,life:0});b.dead=true;flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#79aaff',life:18});document.getElementById('message').textContent='✳ 총알 분열! 두 발로 나뉘었다';}
+else{b.dead=true;flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#f07d8b',life:18});document.getElementById('message').textContent='× 총알 소멸!';}
+relocate(o);flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#53e88a',life:18})}
+function end(w){if(!playing)return;playing=false;const winner=w;localStorage.setItem('miniGameResult',JSON.stringify({game:'🚀 장애물 슈팅',winner,me:4-h1,opp:4-h2}));document.getElementById('message').textContent=winner==='me'?'승리 · 상대의 피격 횟수가 한도에 도달했습니다.':'패배 · 피격 횟수가 한도에 도달했습니다.';document.getElementById('done').classList.remove('hidden');draw()}
+function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#07110b';ctx.fillRect(0,0,W,H);
+// subtle star/grid
+ctx.strokeStyle='#ffffff08';ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ctx.fillStyle='#214632';ctx.fillRect(W/2-2,0,4,H);
+ctx.fillStyle='#53e88a';ctx.fillRect(70,y1-18,38,36);ctx.fillStyle='#07110b';ctx.fillRect(91,y1-7,12,14);ctx.fillStyle='#ffcf67';ctx.fillRect(W-108,y2-18,38,36);ctx.fillStyle='#07110b';ctx.fillRect(W-103,y2-7,12,14);
+for(const o of obstacles){ctx.fillStyle='#183b28';ctx.fillRect(o.x-4,o.y-4,o.w+8,o.h+8);ctx.fillStyle='#2d6945';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.strokeStyle='#53e88a';ctx.lineWidth=2;ctx.strokeRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#a8ffc4';ctx.fillRect(o.x+o.w*.25,o.y+o.h*.25,o.w*.5,3)}
+for(const b of bullets){ctx.strokeStyle=b.p===1?'#a8ffc4':'#ffe2a0';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(b.x-b.vx*1.8,b.y-b.vy*1.8);ctx.stroke();ctx.fillStyle=b.p===1?'#53e88a':'#ffcf67';ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fill()}
+for(const f of flash){ctx.globalAlpha=Math.max(0,f.life/18);ctx.strokeStyle=f.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(f.x,f.y,22-f.life*.5,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
+ctx.fillStyle='#a9c5b2';ctx.font='14px Arial';ctx.fillText('PLAYER',24,24);ctx.textAlign='right';ctx.fillText(mode==='cpu'?'CPU':'PLAYER 2',W-24,24);ctx.textAlign='left'}
+function frame(){if(!playing)return;tick++;y1+=playerDir*3.4;if(y1>=H-28){y1=H-28;playerDir=-1}else if(y1<=28){y1=28;playerDir=1}if(mode==='cpu'){y2+=cpuDir*2.8;if(y2>=H-28){y2=H-28;cpuDir=-1}else if(y2<=28){y2=28;cpuDir=1}}else if(mode==='local'){y2+=cpuDir*3;if(y2>=H-28){y2=H-28;cpuDir=-1}else if(y2<=28){y2=28;cpuDir=1}}
+if(mode==='cpu'&&tick%38===0)fire(2,y2+(Math.random()-.5)*12);
+for(const b of bullets){b.x+=b.vx;b.y+=b.vy;b.life++;for(const o of obstacles){if(!b.dead&&b.x>=o.x&&b.x<=o.x+o.w&&b.y>=o.y&&b.y<=o.y+o.h){obstacleEffect(b,o);break}}if(!b.dead){if(b.p===1&&b.x>=W-125&&Math.abs(b.y-y2)<27){h2++;b.dead=true;document.getElementById('hits2').textContent=h2;if(h2>=4){end('me');return}}else if(b.p===2&&b.x<=125&&Math.abs(b.y-y1)<27){h1++;b.dead=true;document.getElementById('hits1').textContent=h1;if(h1>=4){end('opp');return}}}}
+bullets=bullets.filter(b=>!b.dead&&b.x>-15&&b.x<W+15&&b.y>-15&&b.y<H+15&&b.life<180);flash.forEach(f=>f.life--);flash=flash.filter(f=>f.life>0);draw();requestAnimationFrame(frame)}
+document.addEventListener('keydown',e=>{if(e.repeat)return;if(e.code==='Space'){e.preventDefault();reversePlayer()}if(e.key==='Enter'){e.preventDefault();fire(1)}if(e.key.toLowerCase()==='w')move(1,-24);if(e.key.toLowerCase()==='s')move(1,24);if(e.key==='ArrowUp'&&mode==='local')move(2,-24);if(e.key==='ArrowDown'&&mode==='local')move(2,24);if(e.key==='Enter'&&mode==='local')fire(2)});
+document.getElementById('up').onclick=()=>move(1,-26);document.getElementById('down').onclick=()=>move(1,26);document.getElementById('fire').onclick=()=>fire(1);document.getElementById('done').onclick=()=>location.href='../index.html';if(mode==='local')document.getElementById('message').textContent='양쪽 캐릭터가 화면 위아래를 왕복합니다. Space: 내 방향 전환 · Enter: 내 발사';draw();requestAnimationFrame(frame);
 </script></body></html>
