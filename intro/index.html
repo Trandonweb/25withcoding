@@ -11,7 +11,7 @@
     font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
   canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000}
   #flash{position:fixed;inset:0;background:#d8fff0;opacity:0;pointer-events:none}
-  .fade{transition:opacity .9s ease}
+  .fade{transition:opacity .7s ease}
   .hide{opacity:0;pointer-events:none}
   #startScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
   button,a.btn{font:inherit;color:#9dffd4;background:transparent;border:1px solid rgba(80,255,180,.55);
@@ -33,7 +33,7 @@
 </head>
 <body>
 <canvas id="gl"></canvas>
-<audio id="bgMusic" src="/intro/bgmusic.mp3" preload="auto" loop></audio>
+<audio id="bgMusic" src="/intro/bgmusic.mp3" preload="auto"></audio>
 <div id="flash"></div>
 
 <div id="startScreen" class="fade"><button id="startBtn" disabled>START</button></div>
@@ -57,11 +57,40 @@ const THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.mi
 const $ = id => document.getElementById(id);
 window.__introEmbedded = window.parent !== window;
 const bgMusic = $("bgMusic");
+let musicStarted=false, musicFadeRaf=0, musicStartTime=0;
 function startMusic(){
-  if(!bgMusic) return;
+  if(!bgMusic || musicStarted) return;
+  bgMusic.loop=false;
+  // 인트로 전체 길이(약 22초)에 맞춰 음악을 한 번만 재생한다.
+  bgMusic.playbackRate=0.72;
+  bgMusic.volume=0;
   const playAttempt=bgMusic.play();
-  if(playAttempt && typeof playAttempt.catch==="function") playAttempt.catch(()=>{});
+  if(playAttempt && typeof playAttempt.then==="function"){
+    playAttempt.then(()=>{
+      musicStarted=true;
+      musicStartTime=performance.now();
+      const fadeMusic=()=>{
+        if(!musicStarted) return;
+        const elapsed=(performance.now()-musicStartTime)/1000;
+        const remaining=Number.isFinite(bgMusic.duration)
+          ? (bgMusic.duration-bgMusic.currentTime)/bgMusic.playbackRate : 99;
+        const fadeIn=Math.min(1,elapsed/.35);
+        const fadeOut=Math.max(0,Math.min(1,remaining/.8));
+        bgMusic.volume=Math.max(0,Math.min(1,fadeIn,fadeOut));
+        if(!bgMusic.ended && remaining>0) musicFadeRaf=requestAnimationFrame(fadeMusic);
+      };
+      cancelAnimationFrame(musicFadeRaf);
+      musicFadeRaf=requestAnimationFrame(fadeMusic);
+    }).catch(()=>{ musicStarted=false; });
+  }else{
+    musicStarted=true;
+  }
 }
+bgMusic?.addEventListener("ended",()=>{
+  musicStarted=false;
+  cancelAnimationFrame(musicFadeRaf);
+  bgMusic.volume=0;
+});
 let signalSent=false;
 function notifyParent(){
   if(!window.__introEmbedded || signalSent) return;
@@ -398,7 +427,7 @@ function update(dt){
     }
     cg.attributes.position.needsUpdate=true;
     tubeU.uOpacity.value=1-sm(0,.7,t4); tubeRU.uOpacity.value=1-sm(0,.7,t4);
-    ptsU.uO.value=sm(0,.7,t4)*(1-sm(2.65,3.55,t4));
+    ptsU.uO.value=sm(0,.7,t4)*(1-sm(2.4,3.0,t4));
     let f=0; if(t4>2.0&&t4<2.45) f=t4<2.15?(t4-2.0)/.15:1-(t4-2.15)/.3;
     $("flash").style.opacity=clamp(f)*.9;
     // 입자에서 최종 Caveat 로고로 한 번만 이어지며 별도 폰트/색상 전환은 하지 않는다.
