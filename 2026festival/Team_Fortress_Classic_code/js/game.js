@@ -68,12 +68,14 @@ function updatePickups(dt){
  }
  for(let i=tracers.length-1;i>=0;i--){tracers[i].life-=dt;if(tracers[i].life<=0){scene.remove(tracers[i].line);tracers.splice(i,1)}}
 }
-\nfunction resetWeapon(){wi=0;ammoState=cls.weapons.map(w=>w.ammo);reserveState=cls.weapons.map(w=>w.reserve);ammo=ammoState[0];reserve=reserveState[0];reloading=false;buildViewWeapon();updateHud()}
+
+function resetWeapon(){wi=0;ammoState=cls.weapons.map(w=>w.ammo);reserveState=cls.weapons.map(w=>w.reserve);ammo=ammoState[0];reserve=reserveState[0];reloading=false;buildViewWeapon();updateHud()}
 function renderScoreboard(){
  const row=(name,clsName,hp,max,alive,you=false)=>'<div class="roster-row '+(!alive?'dead ':'')+(you?'you':'')+'"><span>'+name+' · '+clsName+'</span><small>'+Math.max(0,Math.ceil(hp))+'/'+max+'</small><small>'+(alive?'ACTIVE':'RESPAWN')+'</small></div>';
  $('#redRoster').innerHTML=(team==='red'?[row('YOU',cls.name,health,cls.hp,true,true)]:[]).concat(bots.filter(b=>b.side==='red').map(b=>row(b.cls.name,b.cls.ko,b.hp,b.max,b.alive))).join('');
  $('#blueRoster').innerHTML=(team==='blue'?[row('YOU',cls.name,health,cls.hp,true,true)]:[]).concat(bots.filter(b=>b.side==='blue').map(b=>row(b.cls.name,b.cls.ko,b.hp,b.max,b.alive))).join('');
-}\nfunction start(){cls=CLASSES.find(c=>c.id===$('.class-card.active')?.dataset.id)||CLASSES[0];team=$('.team.active').dataset.team;health=cls.hp;player.set(team==='red'?-36:36,0,0);yaw=team==='red'?-Math.PI/2:Math.PI/2;pitch=0;camera.position.set(player.x,1.7,player.z);scoreR=scoreB=0;cap=50;capOwner='neutral';clock=0;makeBots();makePickups();resetWeapon();$('#menu').style.display='none';$('#hud').style.display='block';$('#pause').style.display='none';running=true;renderer.domElement.requestPointerLock?.();say(team.toUpperCase()+' TEAM — TAKE THE POINT',2200);updateHud()}
+}
+function start(){cls=CLASSES.find(c=>c.id===$('.class-card.active')?.dataset.id)||CLASSES[0];team=$('.team.active').dataset.team;health=cls.hp;player.set(team==='red'?-36:36,0,0);yaw=team==='red'?-Math.PI/2:Math.PI/2;pitch=0;camera.position.set(player.x,1.7,player.z);scoreR=scoreB=0;cap=50;capOwner='neutral';clock=0;makeBots();makePickups();resetWeapon();$('#menu').style.display='none';$('#hud').style.display='block';$('#pause').style.display='none';running=true;renderer.domElement.requestPointerLock?.();say(team.toUpperCase()+' TEAM — TAKE THE POINT',2200);updateHud()}
 function pause(){if(!running)return;running=false;$('#pause').style.display='flex';document.exitPointerLock?.()}
 function menu(){running=false;$('#pause').style.display='none';$('#hud').style.display='none';$('#menu').style.display='flex';document.exitPointerLock?.()}
 CLASSES.forEach((c,i)=>{const el=document.createElement('button');el.className='class-card'+(i===0?' active':'');el.dataset.id=c.id;const glyph={scout:'⚡',soldier:'🚀',pyro:'♨',demoman:'💣',heavy:'✚',engineer:'🔧',medic:'✚',sniper:'⌖',spy:'♠'};el.innerHTML='<span class="class-icon">'+glyph[c.id]+'</span><b>'+c.name+'</b><small>'+c.desc+'</small><small class="class-weapons">'+c.weapons.map(w=>w.name).join(' / ')+'</small><strong>'+c.hp+' HP</strong>';el.onclick=()=>{$$('.class-card').forEach(x=>x.classList.remove('active'));el.classList.add('active')};$('#classes').append(el)});
