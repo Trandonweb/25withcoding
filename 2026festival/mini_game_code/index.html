@@ -28,6 +28,6 @@ function continueMatch(){if(match.scoreMe>=match.need||match.scoreOpp>=match.nee
 function showFinal(){document.getElementById('finalScore').textContent=`${match.scoreMe} : ${match.scoreOpp}`;document.getElementById('finalText').textContent=match.scoreMe>match.scoreOpp?'최종 승리':match.scoreMe<match.scoreOpp?'최종 패배':'무승부';document.getElementById('history').innerHTML=match.history.map((x,i)=>`${i+1}. ${x.game} — ${x.winner==='me'?'승리':x.winner==='opp'?'패배':'무승부'} (${x.me}:${x.opp})`).join('<br>');localStorage.removeItem('miniGameSettings');show('finalScreen')}
 function backToMode(){show('modeScreen')}
 function backToSettings(){show('settingsScreen')}
-function backToSetup(){show('settingsScreen')}
+function backToSetup(){show('gameSelectScreen')}
 if(localStorage.getItem('miniGameResult')){const s=JSON.parse(localStorage.getItem('miniGameSettings')||'null');if(s){match=s;consumeResult();show('resultScreen');renderResult()}}
 </script></body></html>
