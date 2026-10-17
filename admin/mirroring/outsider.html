@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>화면 공유 접속</title>
+<style>
+:root{--primary:#27ae60;--bg:#f0f0f0;--panel:#fff;--text:#171717}
+body.dark-mode{--bg:#121212;--panel:#1e1e1e;--text:#fff}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:24px;display:grid;place-items:center;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+.card{width:min(100%,480px);padding:28px;border-radius:20px;background:var(--panel);border:2px solid var(--primary);box-shadow:0 8px 28px #0001}
+h1{margin:0 0 10px;color:var(--primary);font-size:26px}
+p{line-height:1.6}
+label{display:block;margin:22px 0 8px;font-weight:bold}
+input{width:100%;padding:14px;border:1px solid #aaa;border-radius:10px;background:var(--panel);color:var(--text);font-size:18px}
+button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:10px;background:var(--primary);color:#fff;font-size:16px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+#status{margin-top:18px;line-height:1.6;font-weight:bold;overflow-wrap:anywhere}
+.note{font-size:13px;color:gray}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>화면 공유</h1>
+<p>공유할 컴퓨터의 ID를 입력하세요. ID는 <b>1~30 사이의 정수</b>입니다.</p>
+<form id="shareForm">
+<label for="computerId">컴퓨터 ID</label>
+<input id="computerId" type="number" min="1" max="30" step="1" inputmode="numeric" placeholder="예: 12" required>
+<button id="startBtn" type="submit">화면 선택 및 공유 시작</button>
+</form>
+<div id="status" role="status" aria-live="polite">ID를 입력한 뒤 화면 공유를 시작하세요.</div>
+<p class="note">브라우저의 화면 선택창에서 공유할 화면을 선택해야 합니다. 이 페이지를 닫으면 공유가 종료됩니다.</p>
+</main>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import{getFirestore,doc,setDoc,getDoc,updateDoc,onSnapshot,arrayUnion,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
+const db=getFirestore(initializeApp(firebaseConfig));
+try{const s=JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}");document.body.classList.toggle("dark-mode",!!s.darkMode);if(s.primaryColor)document.documentElement.style.setProperty("--primary",s.primaryColor)}catch(e){}
+const rtcConfig={iceServers:[
+ {urls:"stun:stun.relay.metered.ca:80"},
+ {urls:"turn:standard.relay.metered.ca:80",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},
+ {urls:"turn:standard.relay.metered.ca:80?transport=tcp",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},
+ {urls:"turn:standard.relay.metered.ca:443",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"},
+ {urls:"turns:standard.relay.metered.ca:443?transport=tcp",username:"cc29acf1a234c7ca3a5ae899",credential:"CW4V8T/D1+AnGnED"}
+]};
+const form=document.getElementById("shareForm"),idInput=document.getElementById("computerId"),startBtn=document.getElementById("startBtn"),statusEl=document.getElementById("status");
+const setStatus=t=>statusEl.textContent=t;
+let pc=null,stream=null,unsubscribe=null,heartbeat=null,ref=null,sessionId=null,stopping=false,started=false,settingAnswer=false;
+const addedCandidates=new Set();
+function closePeer(){if(pc){try{pc.close()}catch(e){}pc=null}}
+async function stopShare(){
+ if(stopping)return;stopping=true;
+ if(heartbeat)clearInterval(heartbeat);
+ if(unsubscribe){unsubscribe();unsubscribe=null}
+ if(stream)stream.getTracks().forEach(t=>t.stop());
+ closePeer();
+ if(ref){try{await setDoc(ref,{online:false,state:"offline",mode:"webrtc",sharing:false,sharingStartedAt:null,sessionId:null,clientOffer:null,adminAnswer:null,clientCandidates:[],adminCandidates:[],updatedAt:serverTimestamp()},{merge:true})}catch(e){console.warn("공유 종료 신호 실패",e)}}
+}
+window.addEventListener("pagehide",()=>{void stopShare()});
+form.addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(started)return;
+ const raw=idInput.value.trim(),id=Number(raw);
+ if(!/^(?:[1-9]|[12][0-9]|30)$/.test(raw)||!Number.isInteger(id)){setStatus("ID는 1부터 30 사이의 정수만 입력할 수 있습니다.");idInput.focus();return}
+ if(!window.isSecureContext||!navigator.mediaDevices?.getDisplayMedia){setStatus("이 브라우저에서 화면 공유를 사용할 수 없습니다. HTTPS 환경의 최신 브라우저를 이용하세요.");return}
+ started=true;startBtn.disabled=true;idInput.disabled=true;stopping=false;
+ ref=doc(db,"users",String(id));
+ try{
+  setStatus("화면 선택창을 여는 중...");
+  stream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:false});
+  if(!stream?.getVideoTracks().length)throw new Error("화면 공유 트랙을 가져오지 못했습니다.");
+  stream.getVideoTracks()[0].addEventListener("ended",()=>{void stopShare();setStatus("화면 공유가 종료되었습니다.")},{once:true});
+  sessionId="outsider_"+id+"_"+Math.random().toString(36).slice(2)+Date.now();
+  pc=new RTCPeerConnection(rtcConfig);
+  stream.getTracks().forEach(track=>pc.addTrack(track,stream));
+  pc.onconnectionstatechange=()=>{if(!pc)return;const s=pc.connectionState;if(s==="connected")setStatus("컴퓨터 ID "+id+"의 화면을 관리자에게 공유 중입니다.");else if(s==="failed")setStatus("연결에 실패했습니다. 화면 공유를 다시 시작해 주세요.");else if(s==="connecting")setStatus("관리자와 연결 중...")};
+  pc.onicecandidate=async ev=>{if(ev.candidate&&ref)try{await updateDoc(ref,{clientCandidates:arrayUnion(ev.candidate.toJSON()),updatedAt:serverTimestamp()})}catch(err){console.error("ICE 후보 저장 실패",err)}};
+  await setDoc(ref,{name:"컴퓨터 ID "+id,online:true,state:"connecting",mode:"webrtc",sharing:false,sessionId,clientOffer:null,clientCandidates:[],adminAnswer:null,adminCandidates:[],updatedAt:serverTimestamp()},{merge:true});
+  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+  await updateDoc(ref,{clientOffer:{type:offer.type,sdp:offer.sdp,sessionId},updatedAt:serverTimestamp()});
+  unsubscribe=onSnapshot(ref,async snap=>{
+   if(!snap.exists()||!pc||stopping)return;
+   const d=snap.data();if(d.sessionId!==sessionId)return;
+   if(d.adminAnswer&&!pc.currentRemoteDescription&&!settingAnswer&&d.adminAnswer.sessionId===sessionId){
+    settingAnswer=true;try{await pc.setRemoteDescription(new RTCSessionDescription({type:d.adminAnswer.type,sdp:d.adminAnswer.sdp}))}catch(err){console.error(err);setStatus("관리자 응답을 처리하지 못했습니다.")}finally{settingAnswer=false}
+   }
+   if(Array.isArray(d.adminCandidates)&&pc.currentRemoteDescription){
+    for(const c of d.adminCandidates){const key=JSON.stringify(c);if(addedCandidates.has(key))continue;try{await pc.addIceCandidate(new RTCIceCandidate(c));addedCandidates.add(key)}catch(err){console.warn("ICE 후보 추가 실패",err)}}
+   }
+   if(d.sharing===true&&pc.connectionState==="connected")setStatus("컴퓨터 ID "+id+"의 화면을 관리자에게 공유 중입니다.");
+  });
+  heartbeat=setInterval(async()=>{if(!stopping&&ref&&pc)try{await updateDoc(ref,{online:true,state:pc.connectionState==="connected"?"live":"connecting",mode:"webrtc",sessionId,updatedAt:serverTimestamp()})}catch(err){console.warn("연결 상태 갱신 실패",err)}},10000);
+  setStatus("컴퓨터 ID "+id+"로 공유 요청을 보냈습니다. 관리자 화면에서 연결을 기다리는 중...");
+ }catch(err){
+  console.error("[OUTSIDER] 공유 시작 실패",err);
+  if(err.name==="NotAllowedError")setStatus("화면 선택이 취소되었습니다. 다시 시도하려면 페이지를 새로고침하세요.");
+  else setStatus("화면 공유를 시작하지 못했습니다: "+(err.message||"알 수 없는 오류"));
+  if(stream)stream.getTracks().forEach(t=>t.stop());closePeer();
+  started=false;startBtn.disabled=false;idInput.disabled=false;
+ }
+});
+</script>
+</body>
+</html>
