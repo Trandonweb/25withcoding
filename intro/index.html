@@ -479,8 +479,10 @@ $("finalStart").addEventListener("click",()=>{
 });
 
 /* ---------- 제어 ---------- */
+let manualStartRequested=false;
 function begin(){
-  if(state==="run") return;
+  // 자동 호출이나 임베드 초기화로는 시작하지 않는다. START 클릭만 허용한다.
+  if(!manualStartRequested || state==="run") return;
   startMusic();
   try{
     cancelAnimationFrame(raf);
@@ -498,7 +500,10 @@ function begin(){
     showEnd();
   }
 }
-$("startBtn").addEventListener("click",begin);
+$("startBtn").addEventListener("click",()=>{
+  manualStartRequested=true;
+  begin();
+});
 // 임베드되어도 사용자가 START 버튼을 누를 때까지 자동 재생하지 않는다.
 $("skip").addEventListener("click",showEnd);
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&state==="run") showEnd(); });
