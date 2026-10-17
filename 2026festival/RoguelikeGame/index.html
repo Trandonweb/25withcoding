@@ -104,6 +104,16 @@ footer strong{color:#a6aea5;font-weight:750}
  .viewer{width:min(100%,900px,calc((100dvh - 155px) * 640 / 420));aspect-ratio:640 / 420;height:auto;min-height:0;grid-template-rows:33px minmax(0,1fr) 25px}
  .details{padding:12px}.section-label{margin-bottom:5px}.details h2{font-size:14px;margin-bottom:5px}.meta{padding:5px 0;margin-top:5px}.info{padding-top:7px}.info h3{margin-bottom:3px}.tip{padding:5px;font-size:8px}
 }
+
+/* 축제 이용 시간 표시 */
+#viewerRemainingTimer{position:fixed;top:12px;right:14px;z-index:99999;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #356b49;border-radius:10px;background:rgba(20,22,25,.96);box-shadow:0 6px 22px rgba(0,0,0,.28);color:#dfe8df;font:700 12px/1.2 Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif;backdrop-filter:blur(8px)}
+#viewerRemainingTimer strong{font:800 15px/1 monospace;color:#b5ef69;font-variant-numeric:tabular-nums}
+#viewerRemainingTimer.warning{border-color:#ffb74d}
+#viewerRemainingTimer.warning strong{color:#ffcc80}
+#viewerRemainingTimer.danger{border-color:#ff5252;animation:viewerTimerPulse .6s infinite alternate}
+#viewerRemainingTimer.danger strong{color:#ff7777}
+@keyframes viewerTimerPulse{to{transform:scale(1.035)}}
+@media(max-width:600px){#viewerRemainingTimer{top:8px;right:8px;padding:6px 8px;font-size:10px;gap:6px}#viewerRemainingTimer strong{font-size:13px}}
 </style>
 </head>
 <body>
@@ -385,5 +395,36 @@ async function loadRecommendations(){
 }
 loadRecommendations();
 </script>
+
+<div id="viewerRemainingTimer" role="status" aria-live="off" aria-label="축제 이용 남은 시간">
+  <span>남은 시간</span><strong id="viewerRemainingTimerValue">--:--</strong>
+</div>
+<script>
+(function(){
+  const box=document.getElementById("viewerRemainingTimer");
+  const value=document.getElementById("viewerRemainingTimerValue");
+  const KEY="festival2026AccessExpiresAt";
+  function update(){
+    const expiresAt=Number(sessionStorage.getItem(KEY));
+    if(!Number.isFinite(expiresAt)||expiresAt<=0){
+      box.hidden=true;
+      return;
+    }
+    box.hidden=false;
+    const remaining=Math.max(0,expiresAt-Date.now());
+    const seconds=Math.ceil(remaining/1000);
+    const minutes=Math.floor(seconds/60);
+    const rest=seconds%60;
+    value.textContent=String(minutes).padStart(2,"0")+":"+String(rest).padStart(2,"0");
+    box.classList.toggle("warning",remaining<=5*60*1000&&remaining>60*1000);
+    box.classList.toggle("danger",remaining<=60*1000);
+    if(remaining<=0) value.textContent="00:00";
+  }
+  update();
+  setInterval(update,250);
+  window.addEventListener("storage",update);
+})();
+</script>
+
 </body>
 </html>
