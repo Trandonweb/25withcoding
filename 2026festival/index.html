@@ -1535,14 +1535,25 @@ function startNewCodeSession(
       )
     );
 
-  // 이용 횟수만 예약한다. 실제 시간은 인트로 START를 누를 때부터 차감한다.
-  sessionStorage.removeItem(
-    "festival2026AccessExpiresAt"
+  const expiresAt=
+    Date.now()+
+    count*
+    30*
+    60*
+    1000;
+
+  sessionStorage.setItem(
+    "festival2026AccessExpiresAt",
+    String(expiresAt)
   );
 
   sessionStorage.setItem(
     "festival2026AccessSessions",
     String(count)
+  );
+
+  startFestivalTimer(
+    expiresAt
   );
 
 }
@@ -1554,22 +1565,12 @@ function startNewCodeSession(
 
 function restoreCodeSession(){
 
-  const storedExpiresAt=
-    sessionStorage.getItem(
-      "festival2026AccessExpiresAt"
-    );
-
-  // 인트로 START를 아직 누르지 않은 대기 세션은 만료된 세션이 아니다.
-  if(!storedExpiresAt){
-    const sessions=Number(
+  const expiresAt=
+    Number(
       sessionStorage.getItem(
-        "festival2026AccessSessions"
+        "festival2026AccessExpiresAt"
       )
     );
-    return Number.isFinite(sessions) && sessions>=1 && sessions<=5;
-  }
-
-  const expiresAt=Number(storedExpiresAt);
 
   if(
     !Number.isFinite(expiresAt) ||
