@@ -2,6 +2,12 @@
 
 Before changing code, read this file and `.github/copilot-instructions.md` (if present). This is the main production website repository for https://25withcoding.kr/.
 
+## Mandatory repository and branch rule
+
+- **Make all requested changes directly in this repository's `main` branch.** Do not work in, switch to, create, or target `COBY Preview Artifact`, any COBY preview artifact/workspace, a preview repository, or another branch for ordinary edits.
+- `COBY Preview Artifact` is not the source of truth and must never be used as the editing/deployment target. Fetch the latest file from `main`, make the smallest necessary change, and commit it to `main`.
+- If a tool or environment opens a preview/artifact context by default, do not edit there; use the canonical `Trandonweb/25withcoding` repository on `main` instead.
+
 ## Critical production-site protection
 
 - **Never let `.github/workflows/coby-preview.yml` deploy to GitHub Pages.** It may package `AI/` as a downloadable artifact only. Deploying `./AI` with `actions/deploy-pages` replaces the whole production site root with COBY; this was the confirmed cause of the incident.
