@@ -41,9 +41,9 @@ if(spawnP<=0){
 if(pAlive){pobs.forEach(o=>o.x-=speed*dt);pobs=pobs.filter(o=>o.x>-40)}
 if(cAlive){cobs.forEach(o=>o.x-=speed*dt);cobs=cobs.filter(o=>o.x>-40)}
 if(cAlive){const next=cobs.find(o=>o.x>75);if(next&&next.x<150&&cy===0&&cpuNextJump<=t){cvy=-10.1;cpuNextJump=t+(Math.random()<Math.min(.42,t/80)?0.75:0.28)}}
-if(pAlive&&collision(py,pobs)){pAlive=false;pEndTime=t;document.getElementById('message').textContent='플레이어 주행 종료 · 컴퓨터 주행이 끝날 때까지 진행합니다.'}
+if(pAlive&&collision(py,pobs)){pAlive=false;pEndTime=t;document.getElementById('message').textContent='플레이어 주행 종료 · 컴퓨터는 계속 달립니다.'}
 if(cAlive&&collision(cy,cobs)){cAlive=false;cEndTime=t;document.getElementById('cpuState').textContent='주행 종료'}
-if(t>=finishAt){if(pAlive){pAlive=false;pEndTime=finishAt}if(cAlive){cAlive=false;cEndTime=finishAt}}
+if(t>=finishAt){if(pAlive){pAlive=false;pEndTime=finishAt;document.getElementById('message').textContent='플레이어 완주 · 컴퓨터는 계속 달립니다.'}if(cAlive){cAlive=false;cEndTime=finishAt}}
 draw(pctx,py,pobs,speed,pAlive?'PLAYER':'PLAYER · OUT');draw(cctx,cy,cobs,speed,cAlive?'COMPUTER':'COMPUTER · OUT');
 if(!pAlive){pctx.fillStyle='#ffcf67';pctx.font='bold 17px Arial';pctx.fillText('FINISHED',W/2-35,48)}
 if(!cAlive){cctx.fillStyle='#ffcf67';cctx.font='bold 17px Arial';cctx.fillText('FINISHED',W/2-35,48)}
