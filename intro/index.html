@@ -155,7 +155,7 @@ if(typeof THREE==="undefined"){
 }
 // 모션 감소 설정과 관계없이 모바일·태블릿·데스크톱에서 동일한 인트로를 재생한다.
 try{
-  renderer=new THREE.WebGLRenderer({canvas:$("gl"),antialias:true,preserveDrawingBuffer:true});
+  renderer=new THREE.WebGLRenderer({canvas:$("gl"),antialias:true,preserveDrawingBuffer:false,powerPreference:"high-performance"});
   glReady=true;
 }catch(_){ $("err").textContent="WebGL을 사용할 수 없어 결과 화면만 표시합니다."; showEnd(); return; }
 renderer.autoClear=false; renderer.setClearColor(0x000000,1);
