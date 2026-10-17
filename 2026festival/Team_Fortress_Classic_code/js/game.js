@@ -68,14 +68,24 @@ function buildViewWeapon(){
  camera.remove(viewWeapon);viewWeapon=new THREE.Group();camera.add(viewWeapon);
  const w=weapon(),metal=mat(0x4b555c,.38),dark=mat(0x20262b,.6),wood=mat(0x72513a),accent=mat(team==='red'?0xb84738:0x3e7eb9),skin=mat(0xc59c7c);
  const add=(x,y,z,a,b,c,m)=>box(viewWeapon,x,y,z,a,b,c,m);
- add(.39,-.34,-.72,.26,.28,.42,dark);add(.4,-.24,-.75,.18,.1,.32,accent);
- if(w.kind==='rocket'||w.kind==='grenade'){add(.35,-.28,-1.02,.2,.2,.75,metal);add(.35,-.28,-1.43,.28,.28,.18,dark);add(.35,-.16,-.99,.08,.08,.6,accent)}
- else if(w.kind==='flame'){add(.34,-.3,-.94,.25,.24,.5,metal);add(.34,-.29,-1.27,.18,.18,.42,dark);add(.34,-.19,-1.48,.25,.13,.2,accent)}
- else if(w.kind==='shotgun'||w.kind==='sniper'){add(.36,-.28,-1,.15,.16,.78,metal);add(.36,-.28,-1.42,.21,.2,.2,dark);if(w.kind==='sniper')add(.36,-.16,-.85,.12,.1,.32,accent)}
- else if(w.kind==='melee'){add(.36,-.18,-.91,.12,.58,.14,wood);const blade=add(.36,.18,-.93,.11,.48,.08,metal);blade.rotation.z=-.12}
- else if(w.kind==='heal'){add(.35,-.3,-.86,.25,.28,.42,mat(0xdedbd0));add(.35,-.3,-1.13,.12,.12,.2,mat(0xb9443d))}
- else {add(.35,-.28,-.95,.19,.18,.68,metal);add(.35,-.28,-1.34,.24,.2,.18,dark)}
- add(.18,-.43,-.67,.22,.16,.25,skin);
+ if(cls.id==='heavy'&&w.kind==='melee'){
+  for(const x of [-.17,.22]){ball(viewWeapon,x,-.33,-.83,.14,skin);add(x,-.47,-.8,.18,.13,.18,skin);for(let k=0;k<3;k++)add(x+(k-1)*.05,-.28,-.94,.03,.055,.07,mat(0xead8c5))}
+ }else if(w.kind==='pda'){
+  add(.35,-.3,-.91,.34,.34,.12,dark);add(.35,-.3,-.99,.25,.23,.025,accent);add(.35,-.3,-1.01,.13,.035,.03,M.gold);
+ }else if(['rocket','grenade','sticky'].includes(w.kind)){
+  add(.35,-.28,-1.02,.2,.2,.75,metal);add(.35,-.28,-1.43,.28,.28,.18,dark);add(.35,-.16,-.99,.08,.08,.6,accent);
+ }else if(w.kind==='flame'){
+  add(.34,-.3,-.94,.25,.24,.5,metal);add(.34,-.29,-1.27,.18,.18,.42,dark);add(.34,-.19,-1.48,.25,.13,.2,accent);
+ }else if(['shotgun','sniper','syringe'].includes(w.kind)){
+  add(.36,-.28,-1,.15,.16,.78,metal);add(.36,-.28,-1.42,.21,.2,.2,dark);if(w.kind==='sniper')add(.36,-.16,-.85,.12,.1,.32,accent);if(w.kind==='syringe')for(let i=0;i<3;i++)add(.31+i*.05,-.2,-1.1,.025,.025,.36,M.gold);
+ }else if(w.kind==='melee'){
+  add(.36,-.18,-.91,.12,.58,.14,wood);const blade=add(.36,.18,-.93,.11,.48,.08,metal);blade.rotation.z=-.12;
+ }else if(w.kind==='heal'){
+  add(.35,-.3,-.86,.25,.28,.42,mat(0xdedbd0));add(.35,-.3,-1.13,.12,.12,.2,mat(0xb9443d));add(.35,-.16,-1.05,.06,.06,.52,M.gold);
+ }else{
+  add(.35,-.28,-.95,.19,.18,.68,metal);add(.35,-.28,-1.34,.24,.2,.18,dark);add(.35,-.16,-.9,.07,.06,.25,accent);
+ }
+ if(!(cls.id==='heavy'&&w.kind==='melee')&&w.kind!=='pda')add(.18,-.43,-.67,.22,.16,.25,skin);
 }
 function tracer(from,to,color=0xffe5a1){const g=new THREE.BufferGeometry().setFromPoints([from,to]);const line=new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity:.8}));scene.add(line);tracers.push({line,life:.075})}
 function makePickups(){
@@ -133,13 +143,46 @@ function finishReload(){const take=Math.min(weapon().clip-ammo,reserve);ammo+=ta
 function killBot(b,attacker='YOU'){if(!b.alive)return;b.hp=0;b.alive=false;b.mesh.visible=false;b.respawn=5+Math.random()*3;if(b.side==='red')scoreB++;else scoreR++;feed(attacker+' ✕ '+b.cls.name+' ['+b.side.toUpperCase()+']');if(b.side!==team)health=Math.min(cls.hp,health+8);updateHud()}
 function hurtBot(b,d,attacker='YOU'){if(!b.alive)return;b.hp-=d;const h=$('.hitmarker');h.classList.add('show');setTimeout(()=>h.classList.remove('show'),90);if(b.hp<=0)killBot(b,attacker)}
 function harmPlayer(d){if(clock<heavyGuardUntil)d*=.48;if(clock<medicUberUntil)d=0;health-=d;document.body.classList.add('damaged');clearTimeout(harmPlayer.flash);harmPlayer.flash=setTimeout(()=>document.body.classList.remove('damaged'),170);if(health<=0){deathCount++;feed('YOU WERE ELIMINATED');respawn()}updateHud()}
-function makeProjectile(origin,dir,owner,damage,speed,radius,side){const mesh=new THREE.Mesh(new THREE.SphereGeometry(.17,8,8),mat(owner==='player'?0xffb64c:side==='red'?0xf46d4e:0x69b9ff));mesh.position.copy(origin);scene.add(mesh);projectiles.push({mesh,dir:dir.clone(),owner,damage,speed,radius,side,life:3.4})}
-function shoot(){const w=weapon(),now=performance.now()/1000;if(now-lastShot<w.rate||reloading)return;lastShot=now;if(w.kind!=='melee'&&w.kind!=='heal'){if(ammo<=0){say('PRESS R TO RELOAD',650);return}ammo--;ammoState[wi]=ammo}const dir=new THREE.Vector3(0,0,-1).applyEuler(camera.rotation).normalize(),origin=camera.position.clone();
-if(w.kind==='heal'){const ally=bots.filter(b=>b.alive&&b.side===team&&b.pos.distanceTo(player)<w.range).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];if(ally)ally.hp=Math.min(ally.max,ally.hp+12);else health=Math.min(cls.hp,health+4);updateHud();return}
-if(w.kind==='melee'){const t=bots.filter(b=>b.alive&&b.side!==team).sort((a,b)=>a.pos.distanceTo(player)-b.pos.distanceTo(player))[0];if(t&&t.pos.distanceTo(player)<(w.range||2.8)+1)hurtBot(t,w.damage);updateHud();return}
-if(w.kind==='rocket'||w.kind==='grenade')makeProjectile(origin.clone().addScaledVector(dir,.8),dir,'player',w.damage,w.speed,w.radius,team);
-else if(w.kind==='flame'){for(const b of bots.filter(b=>b.alive&&b.side!==team)){const d=b.pos.clone().add(new THREE.Vector3(0,1.25,0)).sub(origin),dist=d.length();if(dist<(w.range||9)&&d.normalize().dot(dir)>.77)hurtBot(b,w.damage*2)}}
-else{const pellets=w.kind==='shotgun'?(w.pellets||9):1;for(let i=0;i<pellets;i++){const d=dir.clone();d.x+=(Math.random()-.5)*(w.spread||.02);d.y+=(Math.random()-.5)*(w.spread||.02);d.z+=(Math.random()-.5)*(w.spread||.02);d.normalize();ray.set(origin,d);ray.far=w.kind==='sniper'?130:75;const hits=ray.intersectObjects(bots.filter(b=>b.alive&&b.side!==team).flatMap(b=>b.mesh.children),false);tracer(origin,origin.clone().addScaledVector(d,w.kind==='sniper'?85:24),team==='red'?0xff8071:0x7fc3ff);if(hits.length){const b=bots.find(b=>b.alive&&b.side!==team&&b.mesh.children.includes(hits[0].object));if(b)hurtBot(b,w.damage*(w.kind==='shotgun'?.62:1))}}}updateHud()}
+function makeProjectile(origin,dir,owner,damage,speed,radius,side,kind='normal'){
+ const sticky=kind==='sticky',mesh=new THREE.Mesh(new THREE.SphereGeometry(sticky?.24:.17,sticky?12:8,8),mat(sticky?0x343b42:owner==='player'?0xffb64c:side==='red'?0xf46d4e:0x69b9ff));
+ mesh.position.copy(origin);if(sticky){const ring=new THREE.Mesh(new THREE.TorusGeometry(.24,.045,6,12),mat(0xe4c75b));ring.rotation.x=Math.PI/2;mesh.add(ring)}
+ scene.add(mesh);projectiles.push({mesh,dir:dir.clone(),owner,damage,speed,radius,side,kind,life:kind==='sticky'?18:kind==='grenade'?3.5:3.4,gravity:['sticky','grenade'].includes(kind)?.22:0,stuck:false})
+}
+function applyBurn(b){b.burnUntil=clock+3.4;b.burnNext=clock+.45;if(!b.burnMesh){const fire=new THREE.Mesh(new THREE.ConeGeometry(.22,.7,7),mat(0xff6a22));fire.position.set(0,1.7,0);b.mesh.add(fire);b.burnMesh=fire}}
+function detonateStickies(){const mines=projectiles.filter(p=>p.kind==='sticky'&&p.owner==='player'&&p.stuck);if(!mines.length){say('NO STICKY BOMBS DEPLOYED',750);return}for(const p of mines){const pos=p.mesh.position.clone();for(const b of bots)if(b.alive&&b.side!==team){const d=b.pos.distanceTo(pos);if(d<p.radius)hurtBot(b,p.damage*Math.max(.15,1-d/p.radius),'STICKY TRAP')}scene.remove(p.mesh);projectiles.splice(projectiles.indexOf(p),1)}say('STICKY BOMBS DETONATED',850);updateHud()}
+function setSpecial(mode){specialMode=specialMode===mode?'':mode;buildViewWeapon();say(specialMode?mode.toUpperCase()+' PDA · LEFT CLICK TO USE':'PDA CLOSED',900);updateHud()}
+function placeBuilding(){const dir=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),pos=player.clone().addScaledVector(dir,3);if(blocked(pos.x,pos.z)||Math.abs(pos.x)>42||Math.abs(pos.z)>42){say('CANNOT BUILD HERE',800);return}if(buildings.some(b=>b.pos.distanceTo(pos)<2.8)){say('TOO CLOSE TO ANOTHER BUILDING',900);return}const g=new THREE.Group();g.position.set(pos.x,0,pos.z);box(g,0,.35,0,1.35,.7,1.15,M.dark);box(g,0,.88,0,.88,.42,.8,team==='red'?M.red:M.blue);box(g,0,1.2,-.15,.45,.2,.45,M.metal);for(const x of [-.22,0,.22])box(g,x,.9,.43,.09,.09,.2,M.gold);scene.add(g);buildings.push({mesh:g,pos:new THREE.Vector3(pos.x,0,pos.z),side:team,hp:150,kind:'sentry',next:clock});say('SENTRY BUILT',900);specialMode='';buildViewWeapon()}
+function removeBuilding(){const b=buildings.filter(x=>x.side===team).sort((a,z)=>a.pos.distanceTo(player)-z.pos.distanceTo(player))[0];if(!b||b.pos.distanceTo(player)>8){say('NO FRIENDLY BUILDING NEARBY',900);return}scene.remove(b.mesh);buildings=buildings.filter(x=>x!==b);say('BUILDING DISMANTLED',900);specialMode='';buildViewWeapon()}
+function updateBuildings(){for(const b of buildings){if(clock>=b.next){const t=bots.filter(x=>x.alive&&x.side!==b.side&&x.pos.distanceTo(b.pos)<20).sort((a,z)=>a.pos.distanceTo(b.pos)-z.pos.distanceTo(b.pos))[0];if(t){b.next=clock+.35;hurtBot(t,11,'SENTRY');tracer(b.pos.clone().add(new THREE.Vector3(0,1.2,0)),t.pos.clone().add(new THREE.Vector3(0,1.1,0)),b.side==='red'?0xff8071:0x7fc3ff)}}}}
+function shoot(){
+ if(specialMode){if(specialMode==='build')placeBuilding();else if(specialMode==='destroy')removeBuilding();else if(specialMode==='disguise'){spyDisguiseSide=team==='red'?'blue':'red';spyDisguiseClass=['SCOUT','SOLDIER','PYRO','DEMOMAN','HEAVY','ENGINEER','MEDIC','SNIPER','SPY'][Math.floor(Math.random()*9)];specialMode='';say('DISGUISED AS '+spyDisguiseSide.toUpperCase()+' '+spyDisguiseClass,1100);updateHud()}return}
+ const w=weapon(),now=performance.now()/1000;if(now-lastShot<w.rate||reloading)return;lastShot=now;
+ if(!['melee','heal','pda'].includes(w.kind)){if(ammo<=0){reload();return}ammo--;ammoState[wi]=ammo}
+ const dir=new THREE.Vector3(0,0,-1).applyEuler(camera.rotation).normalize(),origin=camera.position.clone();
+ if(w.kind==='heal'){
+  ray.set(origin,dir);ray.far=w.range;const allies=bots.filter(b=>b.alive&&b.side===team),hits=ray.intersectObjects(allies.flatMap(b=>b.mesh.children),false);
+  if(hits.length){const ally=allies.find(b=>b.mesh.children.includes(hits[0].object));ally.hp=Math.min(ally.max,ally.hp+22);tracer(origin,ally.pos.clone().add(new THREE.Vector3(0,1.2,0)),0x77ffb1);say('HEALING '+ally.cls.ko.toUpperCase(),450)}
+  else{const ally=allies.filter(b=>b.pos.distanceTo(player)<w.range).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];if(ally){ally.hp=Math.min(ally.max,ally.hp+12);tracer(origin,ally.pos.clone().add(new THREE.Vector3(0,1.2,0)),0x77ffb1)}}
+  updateHud();return
+ }
+ if(w.kind==='syringe'){
+  ray.set(origin,dir);ray.far=45;const candidates=bots.filter(b=>b.alive),hits=ray.intersectObjects(candidates.flatMap(b=>b.mesh.children),false);
+  if(hits.length){const target=candidates.find(b=>b.mesh.children.includes(hits[0].object));if(target.side===team){target.hp=Math.min(target.max,target.hp+14);say('ALLY HEALED +14',400)}else hurtBot(target,w.damage,'YOU')}
+  else makeProjectile(origin.clone().addScaledVector(dir,.5),dir,'player',w.damage,w.speed,0,team,'syringe');updateHud();return
+ }
+ if(w.kind==='melee'){const t=bots.filter(b=>b.alive&&b.side!==team).sort((a,b)=>a.pos.distanceTo(player)-b.pos.distanceTo(player))[0];if(t&&t.pos.distanceTo(player)<(w.range||2.8)+1)hurtBot(t,w.damage);updateHud();return}
+ if(['rocket','grenade','sticky'].includes(w.kind)){
+  makeProjectile(origin.clone().addScaledVector(dir,.8),dir,'player',w.damage,w.speed,w.radius,team,w.kind);
+  if(cls.id==='soldier'&&w.kind==='rocket'&&jumpHeight>.25&&dir.y<-.35){vy=12.2;jumpCount=1;health=Math.max(1,health-10);say('ROCKET JUMP!',700)}
+ }else if(w.kind==='flame'){
+  for(let n=0;n<5;n++){const pos=origin.clone().addScaledVector(dir,1.2+n*.75);pos.x+=(Math.random()-.5)*.45;pos.y+=(Math.random()-.5)*.35;pos.z+=(Math.random()-.5)*.45;const fire=new THREE.Mesh(new THREE.SphereGeometry(.1+Math.random()*.09,6,5),mat(n%2?0xff8a22:0xffd052));fire.position.copy(pos);scene.add(fire);burnEffects.push({mesh:fire,life:.14+Math.random()*.18})}
+  for(const b of bots.filter(b=>b.alive&&b.side!==team)){const d=b.pos.clone().add(new THREE.Vector3(0,1.25,0)).sub(origin),dist=d.length();if(dist<(w.range||10)&&d.normalize().dot(dir)>.72){hurtBot(b,w.damage);applyBurn(b)}}
+ }else{
+  const pellets=w.kind==='shotgun'?(w.pellets||9):1;
+  for(let i=0;i<pellets;i++){const d=dir.clone();d.x+=(Math.random()-.5)*(w.spread||.02);d.y+=(Math.random()-.5)*(w.spread||.02);d.z+=(Math.random()-.5)*(w.spread||.02);d.normalize();ray.set(origin,d);ray.far=w.kind==='sniper'?130:75;const targets=bots.filter(b=>b.alive&&(b.side!==team||w.kind==='syringe'));const hits=ray.intersectObjects(targets.flatMap(b=>b.mesh.children),false);tracer(origin,origin.clone().addScaledVector(d,w.kind==='sniper'?85:24),team==='red'?0xff8071:0x7fc3ff);if(hits.length){const b=targets.find(b=>b.mesh.children.includes(hits[0].object));if(b){if(b.side===team&&cls.id==='medic')b.hp=Math.min(b.max,b.hp+10);else if(b.side!==team)hurtBot(b,w.damage*(w.kind==='shotgun'?.62:1))}}}
+ }
+ if(ammo<=0&&!['melee','heal','pda'].includes(w.kind)&&reserve>0)reload();updateHud()
+}
 function respawn(){health=cls.hp;player.set(team==='red'?-36:36,0,0);vy=0;camera.position.set(player.x,1.7,player.z);say('RESPAWNING',950);updateHud()}
 function blocked(x,z){if(Math.abs(x)>45||Math.abs(z)>45)return true;return obstacles.some(o=>Math.abs(x-o.x)<o.w/2+.5&&Math.abs(z-o.z)<o.d/2+.5)}
 function closestEnemy(b){let best=null,dist=Infinity;for(const t of bots){if(!t.alive||t.side===b.side)continue;const d=t.pos.distanceTo(b.pos);if(d<dist){dist=d;best=t}}const pd=player.distanceTo(b.pos);if(team!==b.side&&pd<dist&&!(cls.id==='spy'&&(clock<spyCloakUntil||spyDisguiseSide===b.side))){dist=pd;best={isPlayer:true,pos:player,hp:health,alive:true,side:team}}return best?{target:best,dist}:null}
