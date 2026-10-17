@@ -26,7 +26,7 @@
   </div>
 </section>
 <section id="hud" aria-hidden="true">
-  <div class="topbar"><b class="team-score red">0</b><span class="mode" id="objectiveText">FIGHT FOR CONTROL</span><div class="point-bar"><div class="point-fill"></div></div><b class="team-score blue">0</b></div>
+  <div class="topbar"><b class="team-score red">0</b><span class="mode" id="objectiveText">FIGHT FOR CONTROL</span><span id="roundTimer" class="round-timer">5:00</span><div class="point-bar"><div class="point-fill"></div></div><b class="team-score blue">0</b></div>
   <div class="class-tag"><span class="team-hud">RED</span> · <span class="class-hud">SCOUT</span><span class="alive-count">9v9</span></div>
   <div class="crosshair"><i></i></div><div class="hitmarker">✕</div>
   <div class="bottom-left"><div class="health-line"><span class="health">125</span><span class="health-max">/ 125</span><span class="health-label">HEALTH</span></div><div class="health-track"><div class="health-fill"></div></div><div class="hint">SPACE JUMP · SHIFT SPRINT</div><div class="pickup-hint">MEDKITS + AMMO CRATES ON MAP</div><div class="ability-hud">Q · CLASS ABILITY READY</div></div>
@@ -35,6 +35,7 @@
 </section>
 <section id="scoreboard" class="overlay scoreboard"><div class="scoreboard-card"><h2>TEAM SCOREBOARD</h2><div class="roster-columns"><div><h3 class="red-title">RED TEAM</h3><div id="redRoster"></div></div><div><h3 class="blue-title">BLU TEAM</h3><div id="blueRoster"></div></div></div><p>HOLD TAB TO VIEW · FIGHT FOR THE CONTROL POINT</p></div></section>
 <section id="pause" class="overlay"><div class="overlay-card"><h2>PAUSED</h2><p>전장으로 돌아갈 준비가 되면 계속하세요.</p><button id="resume">RESUME</button><button id="back">CHANGE CLASS</button></div></section>
+<section id="roundOverlay" class="overlay"><div class="overlay-card"><div class="eyebrow">ROUND COMPLETE</div><h2 id="roundTitle">VICTORY</h2><p id="roundSummary">Control the point to win.</p><button id="rematch">PLAY AGAIN</button><button id="changeClass">CHANGE CLASS</button></div></section>
 <script type="module" src="./js/game.js"></script>
 </body>
 </html>
