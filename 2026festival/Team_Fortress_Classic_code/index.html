@@ -14,7 +14,7 @@
   <div class="menu-card">
     <div class="eyebrow">CLASS-BASED TEAM COMBAT</div>
     <h1>TEAM FORTRESS<br><span>FRONTLINE</span></h1>
-    <p class="subtitle">RED vs BLU · CONTROL POINT · FIRST-PERSON COMBAT</p>
+    <p class="subtitle">RED vs BLU · ATTACK / DEFEND · 2 CONTROL POINTS · 3 STAGES</p>
     <div class="team-pick">
       <button class="team red active" data-team="red">RED TEAM</button>
       <button class="team blue" data-team="blue">BLU TEAM</button>
@@ -22,7 +22,7 @@
     <h2>SELECT YOUR CLASS</h2>
     <div id="classes" class="classes"></div>
     <button id="start" class="start">DEPLOY TO BATTLE</button>
-    <p class="controls">WASD 이동 · 마우스 조준 · 좌클릭 발사 · 우클릭 유지: 스나이퍼 줌/충전 · 솔저: Ctrl+Space 점프 + 아래 조준 + 로켓 발사 = 로켓 점프 · R 재장전 · 1/2/3 무기 · 엔지니어 4 건설 PDA(1 센트리/2 디스펜서/3 입구/4 출구), 5 철거 PDA · 렌치로 구조물 조준 후 클릭해 업그레이드(최대 3단계) · 스파이 4 변장 PDA(1–9) · Q 능력 · Space 점프 · Shift 달리기 · Tab 팀 현황</p>
+    <p class="controls">WASD 이동 · 마우스 조준 · 좌클릭 발사 · 15초 준비 시간 · RED는 자유 수비 / BLU는 기지 대기 후 공격 · A를 점령하면 B 해금 · 3개 스테이지 승리 · R 재장전 · 1/2/3 무기 · 엔지니어 4 건설 PDA(1 센트리/2 디스펜서/3 입구/4 출구), 5 철거 PDA · 렌치로 구조물 조준 후 클릭해 업그레이드(최대 3단계) · 스파이 4 변장 PDA(1–9) · Q 능력 · Space 점프 · Shift 달리기 · Tab 팀 현황</p>
   </div>
 </section>
 <section id="hud" aria-hidden="true">
@@ -40,6 +40,6 @@
 <section id="scoreboard" class="overlay scoreboard"><div class="scoreboard-card"><h2>TEAM SCOREBOARD</h2><div class="roster-columns"><div><h3 class="red-title">RED TEAM</h3><div id="redRoster"></div></div><div><h3 class="blue-title">BLU TEAM</h3><div id="blueRoster"></div></div></div><p>HOLD TAB TO VIEW · FIGHT FOR THE CONTROL POINT</p></div></section>
 <section id="pause" class="overlay"><div class="overlay-card"><h2>PAUSED</h2><p>전장으로 돌아갈 준비가 되면 계속하세요.</p><button id="resume">RESUME</button><button id="back">CHANGE CLASS</button></div></section>
 <section id="roundOverlay" class="overlay"><div class="overlay-card"><div class="eyebrow">ROUND COMPLETE</div><h2 id="roundTitle">VICTORY</h2><p id="roundSummary">Control the point to win.</p><button id="rematch">PLAY AGAIN</button><button id="changeClass">CHANGE CLASS</button></div></section>
-<script type="module" src="./js/game.js?v=20261018-fix1"></script>
+<script type="module" src="./js/game.js?v=20261018-dustbowl2"></script>
 </body>
 </html>
