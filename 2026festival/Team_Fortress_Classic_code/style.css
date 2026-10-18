@@ -53,3 +53,15 @@ body.damaged #game:before{content:"";position:fixed;inset:0;z-index:3;pointer-ev
 
 /* Class-specific feedback */
 #hud .weapon-name{transition:transform .12s,color .12s}.center-message{font-weight:900;text-shadow:0 2px 8px #000}body.cloaked #hud{opacity:.58}body.cloaked #game{filter:saturate(.45) brightness(.72)}
+
+
+/* Context-sensitive teammate voice/chat, placed above the health HUD like TF2. */
+.team-chat{position:fixed;left:22px;bottom:205px;width:min(340px,42vw);display:flex;flex-direction:column;gap:4px;z-index:4;pointer-events:none;text-shadow:1px 2px 3px #000}
+.team-chat-line{display:flex;align-items:baseline;gap:8px;padding:6px 9px;background:linear-gradient(90deg,#101820ef,#101820a8);border-left:3px solid #d8dfe4;font-size:13px;line-height:1.25;animation:chat-in .16s ease-out}
+.team-chat-line b{font-size:10px;letter-spacing:.08em;color:#e9d17a;flex-shrink:0}
+.team-chat-line.red-chat{border-left-color:#e86a5d}.team-chat-line.blue-chat{border-left-color:#72b8f7}
+.team-chat-line.player-chat{background:linear-gradient(90deg,#35301bfa,#101820c7);border-left-color:#ffdb55}
+.team-chat-line span{color:#f2f4f6}.team-chat-line.fading{opacity:0;transition:opacity .6s}
+.medic-call-hint{margin-top:5px;color:#f3d16f;font-size:10px;font-weight:900;letter-spacing:.08em}
+@keyframes chat-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+@media(max-width:650px){.team-chat{left:8px;bottom:185px;width:min(290px,70vw)}.team-chat-line{font-size:11px;padding:5px 7px}.team-chat-line b{font-size:9px}.medic-call-hint{font-size:9px}}
