@@ -61,4 +61,5 @@ if (active && room.role === "guest") {
   };
   ["pointerdown","click","keydown","touchstart"].forEach(type => document.addEventListener(type, lock, true));
 }
+window.dispatchEvent(new Event("mg-online-ready"));
 window.addEventListener("beforeunload", () => { if (unsub) unsub(); });
