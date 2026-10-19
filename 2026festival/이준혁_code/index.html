@@ -332,7 +332,11 @@ function getAudio() {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return null;
         if (!audioContext) audioContext = new AudioCtx();
-        if (audioContext.state === 'suspended') audioContext.resume();
+        // 브라우저의 자동재생 제한으로 오디오가 멈춰 있으면 사용자 입력 중 다시 활성화합니다.
+        if (audioContext.state === 'suspended') {
+            const resumeResult = audioContext.resume();
+            if (resumeResult && typeof resumeResult.catch === 'function') resumeResult.catch(() => {});
+        }
         return audioContext;
     } catch (e) { return null; }
 }
@@ -345,7 +349,8 @@ function playTone(freq, duration, type = 'sine', volume = 0.04, delay = 0) {
     osc.type = type;
     osc.frequency.setValueAtTime(Math.max(30, freq), start);
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), start + 0.012);
+    // 작은 스피커에서도 효과음이 잘 들리도록 전체 음량을 보정합니다.
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, Math.min(0.22, volume * 2.5)), start + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     osc.connect(gain);
     gain.connect(ac.destination);
@@ -404,6 +409,21 @@ function playDeathSound(deathType) {
     };
     (presets[deathType] || presets.fall).forEach((p,i) => playTone(p[0],p[1],p[2],0.04,i*0.09));
 }
+// 첫 사용자 입력 시 오디오를 미리 활성화해 브라우저 자동재생 차단을 피합니다.
+document.addEventListener('pointerdown', () => {
+    const ac = getAudio();
+    if (ac && ac.state === 'suspended') {
+        const resumeResult = ac.resume();
+        if (resumeResult && typeof resumeResult.catch === 'function') resumeResult.catch(() => {});
+    }
+}, true);
+document.addEventListener('keydown', () => {
+    const ac = getAudio();
+    if (ac && ac.state === 'suspended') {
+        const resumeResult = ac.resume();
+        if (resumeResult && typeof resumeResult.catch === 'function') resumeResult.catch(() => {});
+    }
+}, true);
 document.addEventListener('click', (event) => {
     if (event.target.closest('button') && !event.target.closest('.action-select-btn')) playUiSound('tap');
 });
