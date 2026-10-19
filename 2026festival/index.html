@@ -767,6 +767,7 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  setDoc,
   increment,
   getDoc,
   runTransaction
@@ -2541,27 +2542,28 @@ function renderProjects(){
     info.appendChild(makeText("div","likes","응원 "+likes.toLocaleString()+"회"));
     const likeButton=makeText("button","like-btn","응원하기");
     likeButton.type="button";
-    likeButton.disabled=!projectDocs.has(p.id);
-    if(!projectDocs.has(p.id)){
-      likeButton.title="Firebase projects 문서가 등록되어야 응원할 수 있습니다.";
-    }
+    // 문서가 아직 없는 작품도 응원할 수 있도록 merge 방식으로 생성/증가합니다.
+    likeButton.disabled=false;
     likeButton.addEventListener("click",async event=>{
       event.preventDefault();
       event.stopPropagation();
       if(likeButton.disabled) return;
       likeButton.disabled=true;
       likeButton.textContent="처리 중...";
+      likeButton.title="";
       try{
-        await updateDoc(doc(db,"projects",p.id),{likes:increment(1)});
+        await setDoc(doc(db,"projects",p.id),{likes:increment(1)},{merge:true});
         likeButton.textContent="응원 완료";
+        likeButton.title="응원해 주셔서 감사합니다!";
       }catch(error){
         console.error("선택창 응원 처리 실패:",error);
-        likeButton.textContent="다시 시도";
+        likeButton.textContent="실패";
+        likeButton.title="Firebase 쓰기 권한 또는 연결을 확인해 주세요: "+(error?.message||error);
       }finally{
         setTimeout(()=>{
           likeButton.textContent="응원하기";
-          likeButton.disabled=!projectDocs.has(p.id);
-        },900);
+          likeButton.disabled=false;
+        },1500);
       }
     });
     info.appendChild(likeButton);
