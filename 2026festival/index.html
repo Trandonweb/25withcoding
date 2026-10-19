@@ -2533,30 +2533,8 @@ function renderProjects(){
     info.appendChild(makeText("div","title",medal+p.title));
     const description=p.description||String(existing.detail||"");
     const madeBy=p.madeBy||String(existing.madeby||existing.madeBy||existing.author||"");
-    const how=p.how||String(existing.howto||existing.how||"");
-    info.appendChild(makeText("div","desc",description||"작품 설명이 등록되지 않았습니다."));
+    info.appendChild(makeText("div","desc",description||"작품 소개가 등록되지 않았습니다."));
     if(madeBy) info.appendChild(makeText("div","project-maker","제작자 · "+madeBy));
-    if(how) info.appendChild(makeText("div","project-how","작동법 · "+how));
-    info.appendChild(makeText("div","likes","❤️ "+(projectLikes.get(p.id)||0)));
-
-    const likeButton=makeText("button","like-btn","응원하기");
-    likeButton.type="button";
-    likeButton.addEventListener("click",async event=>{
-      event.stopPropagation();
-      likeButton.disabled=true;
-      const oldLabel=likeButton.textContent;
-      likeButton.textContent="반영 중...";
-      try{
-        await updateDoc(doc(db,"projects",p.id),{likes:increment(1)});
-      }catch(error){
-        console.error("응원 처리 실패:",error);
-        showNotice("응원을 반영하지 못했습니다. 잠시 후 다시 시도해주세요.",true);
-        likeButton.textContent=oldLabel;
-      }finally{
-        likeButton.disabled=false;
-      }
-    });
-    info.appendChild(likeButton);
     card.appendChild(info);
     grid.appendChild(card);
   });
