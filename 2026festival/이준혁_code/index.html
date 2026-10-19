@@ -191,7 +191,9 @@ canvas {
     <!-- 맵 선택 화면 -->
     <div id="mapScreen" class="overlay" style="display: none;">
         <h1 style="color: #1abc9c;">맵 변경 (무료)</h1>
-        <div id="map-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+        <div id="map-list" style="max-height: 170px; overflow-y: auto; margin-bottom: 8px;"></div>
+        <div style="font-weight:bold;font-size:13px;margin:4px 0 6px;">계단 색상 선택</div>
+        <div id="stair-color-list" style="display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:270px;margin-bottom:8px;"></div>
         <button class="menu-btn" style="background-color: #7f8c8d; box-shadow: 0 4px 0px #7f8c8d;" onclick="closeMapSelect()">돌아가기</button>
     </div>
 
@@ -250,7 +252,7 @@ maxScoreEl.textContent = maxScore;
 
 let savedSkinsState = JSON.parse(localStorage.getItem('infiniteStairs_skins')) || {};
 let skins = [
-    { id: 0, name: "기본이", price: 0, unlocked: true, bodyColor: "#9b59b6", faceColor: "#fdb45c", hairColor: "#4a2306", hairType: "short", deathType: "fall" },
+    { id: 0, name: "기본이", price: 0, unlocked: true, bodyColor: "#9b59b6", faceColor: "#fdb45c", hairColor: "#4a2306", hairType: "short", deathType: "springBounce" },
     { id: 1, name: "유리인간", price: 0, unlocked: savedSkinsState[1] || false, specialUnlock: "유리계단 150계단", bodyColor: "rgba(255,255,255,0.25)", faceColor: "rgba(255,255,255,0.25)", hairColor: "rgba(255,255,255,0.4)", hairType: "none", deathType: "shatter", isGlass: true },
     { id: 2, name: "파이어맨", price: 0, unlocked: savedSkinsState[2] || false, specialUnlock: "피버모드 클리어", bodyColor: "#e74c3c", faceColor: "#fffa65", hairColor: "#c0392b", hairType: "ninja", deathType: "burnUp" },
     { id: 3, name: "사이버 닌자", price: 150, unlocked: savedSkinsState[3] !== undefined ? savedSkinsState[3] : false, bodyColor: "#111111", faceColor: "#111111", hairColor: "#111111", hairType: "ninja", deathType: "shadowDash" },
@@ -267,10 +269,25 @@ let currentSkinId = 0;
 let maps = [
     { id: 0, name: "밝은 도시", theme: "city" },
     { id: 1, name: "초록 정글", theme: "jungle" },
-    { id: 2, name: "고대 피라미드", theme: "pyramid" },
-    { id: 3, name: "푸른 바다", theme: "ocean" }
+    { id: 2, name: "고대 이집트", theme: "pyramid" },
+    { id: 3, name: "푸른 바다", theme: "ocean" },
+    { id: 4, name: "벚꽃 정원", theme: "sakura" },
+    { id: 5, name: "오로라 설원", theme: "aurora" },
+    { id: 6, name: "달빛 우주", theme: "space" },
+    { id: 7, name: "화산 지대", theme: "volcano" }
 ];
 let currentMapId = 0;
+let stairPalettes = [
+    { name: "기본 빨강", top: "#e74c3c", side: "#c0392b", current: "#f1c40f", currentSide: "#d4ac0d" },
+    { name: "하늘색", top: "#48dbfb", side: "#0abde3", current: "#fff200", currentSide: "#f6b93b" },
+    { name: "초록", top: "#2ecc71", side: "#219150", current: "#ffe66d", currentSide: "#f1c40f" },
+    { name: "보라", top: "#a55eea", side: "#8854d0", current: "#fed330", currentSide: "#f7b731" },
+    { name: "분홍", top: "#ff6bcb", side: "#c44569", current: "#fff200", currentSide: "#f6b93b" },
+    { name: "금색", top: "#f6b93b", side: "#b7791f", current: "#ffffff", currentSide: "#dfe6e9" },
+    { name: "민트", top: "#55efc4", side: "#00b894", current: "#ffeaa7", currentSide: "#fdcb6e" },
+    { name: "흰색", top: "#f5f6fa", side: "#a4b0be", current: "#70a1ff", currentSide: "#1e90ff" }
+];
+let currentStairPalette = Number(localStorage.getItem("infiniteStairs_stairPalette") || 0);
 
 let isPlaying = false;
 let deathTimer = 0;
@@ -468,8 +485,28 @@ function renderMapList() {
         let btnHTML = map.id === currentMapId ? 
             `<span style="color:#2ecc71; font-weight:bold; font-size:11px;">사용 중</span>` : 
             `<button class="action-select-btn" style="background:#1abc9c; color:white;" onclick="selectMap(${map.id})">선택</button>`;
-        card.innerHTML = `<div style="text-align:left;"><div style="font-weight:bold; font-size:13px;">${map.name} <span style="font-size:10px; color:#2ecc71;">(무료)</span></div></div><div>${btnHTML}</div>`;
+        const descriptions = { city:"네온 빌딩과 도시 야경", jungle:"깊은 숲과 거대한 나무", pyramid:"모래언덕·피라미드·스핑크스", ocean:"물고기가 헤엄치는 바닷속", sakura:"벚꽃잎이 흩날리는 정원", aurora:"오로라가 빛나는 얼음 평원", space:"별과 행성이 떠 있는 우주", volcano:"용암이 흐르는 화산" };
+        card.innerHTML = `<div style="text-align:left;"><div style="font-weight:bold; font-size:13px;">${map.name} <span style="font-size:10px; color:#2ecc71;">(무료)</span></div><div style="font-size:10px;color:#aaa;margin-top:3px;">${descriptions[map.theme] || ""}</div></div><div>${btnHTML}</div>`;
         listContainer.appendChild(card);
+    });
+    renderStairPaletteList();
+}
+
+function renderStairPaletteList() {
+    const container = document.getElementById('stair-color-list');
+    if (!container) return;
+    container.innerHTML = '';
+    stairPalettes.forEach((palette, index) => {
+        const button = document.createElement('button');
+        button.title = palette.name;
+        button.setAttribute('aria-label', palette.name);
+        button.style.cssText = `width:29px;height:29px;border-radius:50%;border:3px solid ${index === currentStairPalette ? '#ffffff' : '#555'};background:${palette.top};box-shadow:inset 0 -7px 0 ${palette.side};cursor:pointer;`;
+        button.onclick = () => {
+            currentStairPalette = index;
+            localStorage.setItem('infiniteStairs_stairPalette', String(index));
+            renderStairPaletteList();
+        };
+        container.appendChild(button);
     });
 }
 
@@ -819,21 +856,27 @@ function draw() {
             ctx.fillStyle = pyrGrad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 거대한 피라미드 배경 실루엣
-            ctx.fillStyle = 'rgba(180, 80, 0, 0.4)';
-            ctx.beginPath();
-            ctx.moveTo(180, 80);
-            ctx.lineTo(330, 320);
-            ctx.lineTo(30, 320);
-            ctx.closePath();
-            ctx.fill();
-
-            // 스핑크스 조각상 실루엣 표현
-            ctx.fillStyle = 'rgba(150, 60, 0, 0.5)';
-            ctx.fillRect(40, 260, 70, 40); // 몸체
-            ctx.beginPath();
-            ctx.arc(45, 245, 18, 0, Math.PI * 2); // 머리
-            ctx.fill();
+            // 겹겹이 쌓인 피라미드와 햇빛이 비치는 사면
+            ctx.fillStyle = "#c77b35";
+            ctx.beginPath(); ctx.moveTo(205,72); ctx.lineTo(348,318); ctx.lineTo(62,318); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "#f6d28b";
+            ctx.beginPath(); ctx.moveTo(205,72); ctx.lineTo(205,318); ctx.lineTo(62,318); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = "rgba(120,72,32,.45)"; ctx.lineWidth = 2;
+            for(let row=0;row<8;row++){const y=115+row*25;ctx.beginPath();ctx.moveTo(205-(y-72)*.58,y);ctx.lineTo(205+(y-72)*.58,y);ctx.stroke();}
+            for(let row=0;row<7;row++){const y=128+row*25;const half=(y-72)*.58;for(let x=205-half;x<205+half;x+=24){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+12);ctx.stroke();}}
+            ctx.fillStyle = "rgba(158,91,38,.75)";
+            ctx.beginPath();ctx.moveTo(35,155);ctx.lineTo(110,270);ctx.lineTo(-15,270);ctx.closePath();ctx.fill();
+            ctx.fillStyle = "#e7bd76";ctx.beginPath();ctx.moveTo(35,155);ctx.lineTo(35,270);ctx.lineTo(-15,270);ctx.closePath();ctx.fill();
+            // 스핑크스: 받침대, 사자 몸통, 앞발, 머리와 네메스 머리장식
+            ctx.fillStyle = "#9f632f";ctx.fillRect(18,304,150,13);
+            ctx.fillStyle = "#c58a4b";ctx.fillRect(30,273,103,32);ctx.fillRect(115,292,18,28);ctx.fillRect(48,298,12,25);ctx.fillRect(77,298,12,25);
+            ctx.beginPath();ctx.ellipse(55,269,25,20,-.08,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle = "#d9a45e";ctx.fillRect(37,224,34,45);
+            ctx.beginPath();ctx.moveTo(35,228);ctx.lineTo(31,214);ctx.lineTo(45,222);ctx.lineTo(68,214);ctx.lineTo(73,231);ctx.closePath();ctx.fill();
+            ctx.fillStyle = "#6f3f25";ctx.fillRect(45,239,4,4);ctx.fillRect(59,239,4,4);ctx.fillRect(51,252,10,2);
+            ctx.strokeStyle = "rgba(255,230,170,.75)";ctx.lineWidth=2;ctx.strokeRect(37,224,34,45);
+            // 모래 언덕과 바람결
+            ctx.fillStyle = "rgba(255,214,140,.25)";ctx.beginPath();ctx.ellipse(180,390,210,55,0,Math.PI,Math.PI*2);ctx.fill();
 
             // 미라 관 (석관) 장식 표현
             ctx.fillStyle = '#f1c40f';
@@ -854,6 +897,29 @@ function draw() {
                     ctx.strokeRect(x, y, 40, 30);
                 }
             }
+        } else if (mapTheme === "sakura") {
+            const sky = ctx.createLinearGradient(0,0,0,canvas.height);
+            sky.addColorStop(0,"#f8cdda"); sky.addColorStop(1,"#fceff5");
+            ctx.fillStyle=sky; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle="#684b4b"; ctx.fillRect(25,110,20,260); ctx.fillRect(18,145,80,13); ctx.fillRect(38,170,65,10);
+            ctx.fillStyle="#e84393";
+            [[32,105,36],[78,130,30],[55,82,28],[285,125,38],[320,95,30],[300,160,26]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,Math.PI*2);ctx.fill();});
+            for(let i=0;i<24;i++){const x=(i*47+Date.now()*.025)%400-20,y=(i*67+Date.now()*.04)%canvas.height;ctx.fillStyle=i%2?"#ff7eb6":"#fff0f6";ctx.save();ctx.translate(x,y);ctx.rotate(i);ctx.beginPath();ctx.ellipse(0,0,3,6,.4,0,Math.PI*2);ctx.fill();ctx.restore();}
+        } else if (mapTheme === "aurora") {
+            const sky=ctx.createLinearGradient(0,0,0,canvas.height);sky.addColorStop(0,"#071a35");sky.addColorStop(1,"#3c6382");ctx.fillStyle=sky;ctx.fillRect(0,0,canvas.width,canvas.height);
+            for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(i*80-40,0);ctx.bezierCurveTo(i*80+90,80,i*80-20,140,i*80+50,230);ctx.strokeStyle=["rgba(85,239,196,.22)","rgba(116,185,255,.24)","rgba(162,155,254,.22)"][i%3];ctx.lineWidth=24;ctx.stroke();}
+            ctx.fillStyle="#dfe6e9";ctx.beginPath();ctx.moveTo(0,370);ctx.lineTo(70,270);ctx.lineTo(130,365);ctx.lineTo(220,250);ctx.lineTo(310,370);ctx.lineTo(360,300);ctx.lineTo(360,540);ctx.lineTo(0,540);ctx.closePath();ctx.fill();
+            for(let i=0;i<38;i++){ctx.fillStyle="rgba(255,255,255,.8)";ctx.fillRect((i*83)%360,(i*47)%250,2,2);}
+        } else if (mapTheme === "space") {
+            const sky=ctx.createLinearGradient(0,0,0,canvas.height);sky.addColorStop(0,"#09051f");sky.addColorStop(1,"#30105e");ctx.fillStyle=sky;ctx.fillRect(0,0,canvas.width,canvas.height);
+            for(let i=0;i<90;i++){const tw=.35+.65*Math.abs(Math.sin(Date.now()*.002+i));ctx.fillStyle=`rgba(255,255,255,${tw})`;ctx.fillRect((i*67)%360,(i*97)%500,1.5,1.5);}
+            ctx.fillStyle="#8e44ad";ctx.beginPath();ctx.arc(285,125,43,0,Math.PI*2);ctx.fill();ctx.fillStyle="rgba(255,255,255,.2)";ctx.beginPath();ctx.ellipse(285,125,63,12,-.3,0,Math.PI*2);ctx.strokeStyle="#d7bde2";ctx.lineWidth=5;ctx.stroke();
+            ctx.fillStyle="#2e86de";ctx.beginPath();ctx.arc(65,250,25,0,Math.PI*2);ctx.fill();ctx.fillStyle="rgba(255,255,255,.35)";ctx.beginPath();ctx.arc(57,242,8,0,Math.PI*2);ctx.fill();
+        } else if (mapTheme === "volcano") {
+            const sky=ctx.createLinearGradient(0,0,0,canvas.height);sky.addColorStop(0,"#210b16");sky.addColorStop(1,"#7f1d1d");ctx.fillStyle=sky;ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle="#2d3436";ctx.beginPath();ctx.moveTo(0,360);ctx.lineTo(70,200);ctx.lineTo(130,290);ctx.lineTo(180,155);ctx.lineTo(245,300);ctx.lineTo(310,205);ctx.lineTo(360,330);ctx.lineTo(360,540);ctx.lineTo(0,540);ctx.closePath();ctx.fill();
+            ctx.strokeStyle="#ff6b35";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(178,180);ctx.lineTo(190,270);ctx.lineTo(155,320);ctx.moveTo(195,255);ctx.lineTo(235,330);ctx.stroke();
+            for(let i=0;i<20;i++){const x=(i*53+Date.now()*.03)%360,y=canvas.height-((i*71+Date.now()*.04)%canvas.height);ctx.fillStyle="rgba(255,100,30,.8)";ctx.fillRect(x,y,3,5);}
         } else if (mapTheme === "ocean") {
             let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
             gradient.addColorStop(0, '#00d2d3');
@@ -907,10 +973,14 @@ function draw() {
             ctx.lineWidth = 2;
             ctx.strokeRect(drawX - STAIR_WIDTH/2, drawY - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
         } else {
-            ctx.fillStyle = isCurrent ? '#f1c40f' : '#e74c3c';
+            const palette = stairPalettes[currentStairPalette] || stairPalettes[0];
+            ctx.fillStyle = isCurrent ? palette.current : palette.top;
             ctx.fillRect(drawX - STAIR_WIDTH/2, drawY - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
-            ctx.fillStyle = isCurrent ? '#d4ac0d' : '#c0392b';
+            ctx.fillStyle = isCurrent ? palette.currentSide : palette.side;
             ctx.fillRect(drawX - STAIR_WIDTH/2, drawY, STAIR_WIDTH, 4);
+            ctx.strokeStyle = "rgba(255,255,255,.22)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(drawX - STAIR_WIDTH/2, drawY - STAIR_HEIGHT, STAIR_WIDTH, STAIR_HEIGHT);
         }
 
         if (stair.hasItem) {
@@ -926,7 +996,16 @@ function draw() {
     ctx.translate(CENTER_X, CENTER_Y);
 
     if (deathTimer > 0) {
-        if (activeDeathType === "rainbowFade") {
+        if (activeDeathType === "springBounce") {
+            ctx.rotate(Math.sin(deathTimer * 0.65) * 0.22);
+            ctx.translate(0, deathTimer * 5);
+            ctx.globalAlpha = Math.max(0, 1 - deathTimer / 24);
+            ctx.strokeStyle = "#c084fc";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, -20, 7 + deathTimer * 1.4, 0, Math.PI * 2);
+            ctx.stroke();
+        } else if (activeDeathType === "rainbowFade") {
             ctx.globalAlpha = Math.max(0, 1 - deathTimer / 32);
             for (let i = 0; i < 7; i++) {
                 ctx.strokeStyle = ["#ff0000","#ff8c00","#ffe600","#00c853","#00b0ff","#304ffe","#aa00ff"][i];
@@ -977,15 +1056,18 @@ function draw() {
             ctx.arc(0, -20, deathTimer * 1.2, 0, Math.PI * 2);
             ctx.fill();
         } else if (activeDeathType === "shadowDash") {
+            for(let trail=0;trail<4;trail++){ctx.fillStyle=`rgba(20,20,35,${.45-trail*.08})`;ctx.fillRect(-deathTimer*15-trail*12,-42+trail*7,18,22);}
             ctx.translate(deathTimer * 15, 0);
             ctx.globalAlpha = Math.max(0, 1 - deathTimer / 20);
         } else if (activeDeathType === "dizzySpin") {
+            ctx.strokeStyle="#ffcc80";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,-56,12+deathTimer*.4,4,deathTimer*.3,0,Math.PI*2);ctx.stroke();
             ctx.rotate(deathTimer * 0.5);
             ctx.translate(0, deathTimer * 8);
         } else if (activeDeathType === "broomFly") {
             ctx.translate(deathTimer * 10, -deathTimer * 12);
             ctx.rotate(-0.3);
         } else if (activeDeathType === "spinDrop") {
+            ctx.strokeStyle="#ff4757";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-25,10+deathTimer,deathTimer*.2,deathTimer*.2+Math.PI*1.5);ctx.stroke();
             ctx.translate(-deathTimer * 6, deathTimer * 12);
             ctx.rotate(deathTimer * 0.3);
         } else {
