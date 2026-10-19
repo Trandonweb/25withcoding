@@ -99,6 +99,7 @@ draw(pctx,0,[] ,4,'PLAYER');draw(cctx,0,[],3.8,'COMPUTER');
 <script>
 /* Tablet keyboard focus and automatic result display */
 (function(){
+  try{localStorage.removeItem('miniGameResult')}catch(e){}
   document.body.tabIndex=0;
   const focusGame=()=>{try{document.body.focus({preventScroll:true})}catch(e){document.body.focus()}};
   window.addEventListener('pageshow',()=>setTimeout(focusGame,100));
