@@ -512,6 +512,8 @@ header{
   margin-top:auto
 }
 
+.like-btn:disabled{opacity:.45;cursor:not-allowed;filter:saturate(.45)}
+
 .like-btn{
   margin-top:8px;
   padding:8px;
@@ -2465,6 +2467,17 @@ let projectLikes=new Map();
 let projectDocs=new Map();
 let projectsLoading=true;
 
+// 한국 시간 기준 2026년 10월 23일 00:00부터 응원 활성화
+const SUPPORT_START_AT = new Date("2026-10-23T00:00:00+09:00").getTime();
+function supportAllowed(){ return Date.now() >= SUPPORT_START_AT; }
+function updateSupportButtons(){
+  document.querySelectorAll(".like-btn").forEach(button=>{
+    button.disabled = !supportAllowed();
+    button.title = supportAllowed() ? "" : "응원하기는 2026년 10월 23일 00:00부터 가능합니다.";
+  });
+}
+setInterval(updateSupportButtons, 1000);
+
 function fileText(path){
   return fetch(RAW_GITHUB_ROOT+path)
     .then(response=>response.ok?response.text():"")
@@ -2542,12 +2555,13 @@ function renderProjects(){
     info.appendChild(makeText("div","likes","응원 "+likes.toLocaleString()+"회"));
     const likeButton=makeText("button","like-btn","응원하기");
     likeButton.type="button";
-    // 문서가 아직 없는 작품도 응원할 수 있도록 merge 방식으로 생성/증가합니다.
-    likeButton.disabled=false;
+    // 2026-10-23 00:00(KST) 전까지는 응원 기능을 비활성화합니다.
+    likeButton.disabled=!supportAllowed();
+    likeButton.title=supportAllowed()?"":"응원하기는 2026년 10월 23일 00:00부터 가능합니다.";
     likeButton.addEventListener("click",async event=>{
       event.preventDefault();
       event.stopPropagation();
-      if(likeButton.disabled) return;
+      if(likeButton.disabled || !supportAllowed()) { updateSupportButtons(); return; }
       likeButton.disabled=true;
       likeButton.textContent="처리 중...";
       likeButton.title="";
@@ -2562,7 +2576,7 @@ function renderProjects(){
       }finally{
         setTimeout(()=>{
           likeButton.textContent="응원하기";
-          likeButton.disabled=false;
+          updateSupportButtons();
         },1500);
       }
     });
