@@ -131,6 +131,8 @@ header{
 
 /* 버튼 */
 
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
 .btn{
 
   margin-top:15px;
@@ -413,7 +415,19 @@ game.innerHTML=`
 
 
 </script>
-
+<script>
+(function(){
+  const button=document.querySelector(".info .btn");
+  const startAt=new Date("2026-10-23T00:00:00+09:00").getTime();
+  function update(){
+    const allowed=Date.now()>=startAt;
+    button.disabled=!allowed;
+    button.title=allowed?"":"응원하기는 2026년 10월 23일 00:00부터 가능합니다.";
+  }
+  update();
+  setInterval(update,1000);
+})();
+</script>
 
 </body>
 </html>
