@@ -2535,6 +2535,36 @@ function renderProjects(){
     const madeBy=p.madeBy||String(existing.madeby||existing.madeBy||existing.author||"");
     info.appendChild(makeText("div","desc",description||"작품 소개가 등록되지 않았습니다."));
     if(madeBy) info.appendChild(makeText("div","project-maker","제작자 · "+madeBy));
+
+    // 선택창에서도 뷰어와 동일한 Firebase projects 문서의 응원 수를 사용합니다.
+    const likes=Number(projectLikes.get(p.id)||0);
+    info.appendChild(makeText("div","likes","응원 "+likes.toLocaleString()+"회"));
+    const likeButton=makeText("button","like-btn","응원하기");
+    likeButton.type="button";
+    likeButton.disabled=!projectDocs.has(p.id);
+    if(!projectDocs.has(p.id)){
+      likeButton.title="Firebase projects 문서가 등록되어야 응원할 수 있습니다.";
+    }
+    likeButton.addEventListener("click",async event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      if(likeButton.disabled) return;
+      likeButton.disabled=true;
+      likeButton.textContent="처리 중...";
+      try{
+        await updateDoc(doc(db,"projects",p.id),{likes:increment(1)});
+        likeButton.textContent="응원 완료";
+      }catch(error){
+        console.error("선택창 응원 처리 실패:",error);
+        likeButton.textContent="다시 시도";
+      }finally{
+        setTimeout(()=>{
+          likeButton.textContent="응원하기";
+          likeButton.disabled=!projectDocs.has(p.id);
+        },900);
+      }
+    });
+    info.appendChild(likeButton);
     card.appendChild(info);
     grid.appendChild(card);
   });
