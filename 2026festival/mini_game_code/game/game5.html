@@ -112,19 +112,23 @@ draw(pctx,0,[] ,4,'PLAYER');draw(cctx,0,[],3.8,'COMPUTER');
   document.body.appendChild(overlay);
   document.getElementById('mgAutoBack').onclick=()=>location.href='../index.html';
   let shown=false;
-  function checkResult(){
-    if(shown)return;
-    let raw;try{raw=localStorage.getItem('miniGameResult')}catch(e){return}
-    if(!raw)return;
-    let data;try{data=JSON.parse(raw)}catch(e){return}
-    if(!data||!data.winner)return;
+
+  function showResult(data){
+    if(shown||!data||!data.winner)return;
     shown=true;
     document.getElementById('mgAutoHeadline').textContent=data.winner==='me'?'승리':data.winner==='opp'?'패배':'무승부';
     const score=data.me!==undefined||data.opp!==undefined?'최종 점수 '+(data.me??0)+' : '+(data.opp??0):'';
     document.getElementById('mgAutoDetail').textContent=[data.game||'미니게임',score].filter(Boolean).join(' · ');
     overlay.style.display='grid';
   }
-  const observer=new MutationObserver(checkResult);observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','style']});
+  function checkResult(){let raw;try{raw=localStorage.getItem('miniGameResult')}catch(e){return}if(raw){try{showResult(JSON.parse(raw))}catch(e){}}}
+  const originalSetItem=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(key,value){
+    originalSetItem.call(this,key,value);
+    if(key==='miniGameResult'){try{showResult(JSON.parse(value))}catch(e){}}
+  };
+  const observer=new MutationObserver(checkResult);
+  observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','style']});
   // On-screen backup controls for touchscreen tablets
   const n=(location.pathname.match(/game([1-9])\.html/)||[])[1];
   const keys={'1':[['A','KeyA'],['L','KeyL']],'2':[['A','KeyA'],['L','KeyL']],'3':[['반응','Enter']],'5':[['점프','Space']],'6':[['위','ArrowUp'],['아래','ArrowDown'],['발사','Enter'],['방향','Space']],'7':[['왼쪽','KeyA'],['오른쪽','KeyD'],['발사','KeyS'],['P2 ←','ArrowLeft'],['P2 →','ArrowRight'],['P2 발사','ArrowDown']],'8':[['위','ArrowUp'],['아래','ArrowDown'],['시작','Enter']],'9':[['왼쪽','ArrowLeft'],['오른쪽','ArrowRight'],['점프','Space'],['P2 점프','ArrowUp']]};
