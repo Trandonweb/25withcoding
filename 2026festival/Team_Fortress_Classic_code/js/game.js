@@ -125,7 +125,7 @@ else if(id==='pyro'){box(g,.42,1.03,.4,.3,.28,.58,M.metal);box(g,.42,1.04,.8,.2,
 else if(id==='medic'){box(g,.42,1.05,.35,.22,.22,.5,M.white);box(g,.42,1.05,.65,.13,.13,.25,M.red)}
 else box(g,.4,1.05,.35,.19,.18,.42,id==='spy'?M.black:M.metal);
 g.position.copy(b.pos);scene.add(g);b.mesh=g}
-function spawnBot(i,side){const c=CLASSES[Math.floor(i/2)%CLASSES.length],b={id:i,side,role:side==='blue'?(i%4===1?'support':'attacker'):'defender',cls:c,hp:c.hp,max:c.hp,pos:new THREE.Vector3(side==='red'?96-Math.random()*5:-96+Math.random()*5,0,(Math.random()-.5)*8),alive:true,cd:Math.random(),respawn:0,mesh:null,nextRoleAction:1+Math.random()*3,disguiseUntil:0,flankSide:i%2?1:-1};buildBotModel(b);return b}
+function spawnBot(i,side){const c=CLASSES[Math.floor(i/2)%CLASSES.length],b={id:i,side,role:side==='blue'?(i%8===1?'support':'attacker'):'defender',cls:c,hp:c.hp,max:c.hp,pos:new THREE.Vector3(side==='red'?96-Math.random()*5:-96+Math.random()*5,0,(Math.random()-.5)*8),alive:true,cd:Math.random(),respawn:0,mesh:null,nextRoleAction:1+Math.random()*3,disguiseUntil:0,flankSide:i%2?1:-1};buildBotModel(b);return b}
 function makeBots(){for(const b of bots)scene.remove(b.mesh);bots=[];for(let i=0;i<18;i++)bots.push(spawnBot(i,i%2?'blue':'red'));for(const b of bots){b.navPath=null;b.navGoal=null;b.navIndex=0;b.jumpY=0;b.jumpVy=0}}
 function say(t,ms=1400){const e=$('.center-message');e.textContent=t;e.style.opacity='1';clearTimeout(say.timer);say.timer=setTimeout(()=>e.style.opacity='0',ms)}
 function feed(t){const el=$('.killfeed'),n=document.createElement('div');n.className='feed';n.textContent=t;el.prepend(n);while(el.children.length>4)el.lastChild.remove();setTimeout(()=>n.remove(),4300)}
