@@ -11,7 +11,7 @@ const cfg = {
 };
 
 function renderHostMirror(data) {
-  if ((!data.images || !data.images.length) && data.page !== "game3.html" && data.page !== "index.html") {
+  if ((!data.images || !data.images.length) && data.page !== "game3.html" && !(data.page === "index.html" && data.screen !== "onlineRoomScreen")) {
     if (mirrorRoot) mirrorRoot.style.display = "none";
     return;
   }
@@ -60,7 +60,7 @@ if (active) {
       handler?.(data.gameState.payload, data.gameState.updatedAt);
     }
     if (room.role === "guest" && data.mirror) {
-      if (data.mirror.page === "index.html" && location.pathname.includes("/game/game")) {
+      if (data.mirror.page === "index.html" && data.mirror.screen !== "onlineRoomScreen" && location.pathname.includes("/game/game")) {
         location.href = "../index.html";
         return;
       }
@@ -118,7 +118,8 @@ if (active && room.role === "host") {
       try { images.push(canvas.toDataURL("image/jpeg", 0.42)); } catch {}
     });
     const text = (document.body.innerText || "").replace(/\s+/g, " ").trim().slice(0, 850);
-    try { await updateDoc(ref, { mirror: { page: location.pathname.split("/").pop(), text, images, updatedAt: now } }); }
+    const screen = document.querySelector(".screen:not(.hidden)")?.id || "";
+    try { await updateDoc(ref, { mirror: { page: location.pathname.split("/").pop(), screen, text, images, updatedAt: now } }); }
     catch (e) { console.warn("MINI GAME mirror update failed", e); }
   }, 650);
 }
