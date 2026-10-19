@@ -11,6 +11,10 @@ const cfg = {
 };
 
 function renderHostMirror(data) {
+  if ((!data.images || !data.images.length) && data.page !== "game3.html") {
+    if (mirrorRoot) mirrorRoot.style.display = "none";
+    return;
+  }
   if (!mirrorRoot) {
     mirrorRoot = document.createElement("section");
     mirrorRoot.id = "mgHostMirror";
@@ -27,6 +31,7 @@ function renderHostMirror(data) {
     mirrorRoot.append(heading,status,shots);
     document.body.appendChild(mirrorRoot);
   }
+  mirrorRoot.style.display = "block";
   const status = mirrorRoot.querySelector("#mgHostMirrorStatus");
   status.textContent = data.text || "방장이 게임을 진행하고 있습니다.";
   const shots = mirrorRoot.querySelector("#mgHostMirrorShots");
