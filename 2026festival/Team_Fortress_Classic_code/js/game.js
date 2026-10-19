@@ -167,7 +167,7 @@ function activateAbility(){
  else if(cls.id==='demoman'){let n=0;for(const b of bots)if(b.alive&&b.side!==team){const d=b.pos.distanceTo(player);if(d<7){hurtBot(b,Math.round(80*(1-d/7)),'DETONATION');n++}}setCd(11);say('DETONATE! · '+n+' TARGETS',950)}
  else if(cls.id==='heavy'){heavyGuardUntil=clock+4;setCd(12);say('SANDVICH BREAK · DAMAGE RESIST',1100)}
  else if(cls.id==='engineer'){if(sentryMesh)scene.remove(sentryMesh);sentryMesh=new THREE.Group();sentryMesh.position.set(player.x,0,player.z);box(sentryMesh,0,.35,0,1.1,.7,1.1,M.dark);box(sentryMesh,0,.9,0,.7,.5,.7,M.metal);box(sentryMesh,0,.95,.48,.22,.22,.8,M.gold);scene.add(sentryMesh);sentryUntil=clock+12;sentryNext=clock;setCd(18);say('MINI-SENTRY DEPLOYED',1100)}
- else if(cls.id==='medic'){health=Math.min(cls.hp,health+45);for(const b of bots)if(b.alive&&b.side===team&&b.pos.distanceTo(player)<16)b.hp=Math.min(b.max,b.hp+70);medicUberUntil=clock+3;setCd(18);say('ÜBERCHARGE! TEAM HEALED',1200)}
+ else if(cls.id==='medic'){playSfx('uber',player,.55);health=Math.min(cls.hp,health+45);for(const b of bots)if(b.alive&&b.side===team&&b.pos.distanceTo(player)<16)b.hp=Math.min(b.max,b.hp+70);medicUberUntil=clock+3;setCd(18);say('ÜBERCHARGE! TEAM HEALED',1200)}
  else if(cls.id==='sniper'){aiming=!aiming;camera.fov=aiming?34:76;camera.updateProjectionMatrix();document.body.classList.toggle('scoped',aiming);setCd(5);say(aiming?'ZOOM READY':'ZOOM RELEASED',700)}
  else if(cls.id==='spy'){spyCloakUntil=clock+4;setCd(14);say('CLOAK ENGAGED',900)}
  updateHud()
