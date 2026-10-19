@@ -148,17 +148,88 @@ canvas {
     font-weight: bold;
     border: 1px solid #666;
 }
+
+/* 상단 HUD: 계단 수를 크게, 시간은 중앙, 보석은 오른쪽에 고정 */
+#ui {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(560px, calc(100vw - 24px));
+    margin: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    pointer-events: none;
+}
+#score-board {
+    font-size: 14px;
+    line-height: 1.15;
+    text-align: center;
+    width: 100%;
+}
+#current-score-line {
+    font-size: clamp(28px, 4vw, 38px);
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 1px;
+    text-shadow: 0 3px 6px rgba(0,0,0,.8), 0 0 10px rgba(255,255,255,.18);
+}
+#current-score {
+    color: #ffd32a;
+    font-size: inherit;
+}
+#max-score-line {
+    margin-top: 2px;
+    color: #dfe6e9;
+    font-size: 12px;
+    text-shadow: 1px 2px 4px rgba(0,0,0,.75);
+}
+#timer-bar-container {
+    width: min(360px, calc(100vw - 100px));
+    height: 14px;
+    margin-top: 1px;
+    box-sizing: border-box;
+    border-width: 2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.55);
+}
+#gem-counter {
+    position: absolute;
+    top: 4px;
+    right: 0;
+    padding: 7px 11px;
+    border: 1px solid rgba(0,232,255,.65);
+    border-radius: 12px;
+    background: rgba(8,20,35,.88);
+    color: #00e8ff;
+    font-size: 20px;
+    font-weight: 900;
+    text-shadow: 0 2px 5px #000;
+    white-space: nowrap;
+}
+@media (max-width: 420px) {
+    #ui { top: 8px; width: calc(100vw - 16px); }
+    #current-score-line { font-size: 28px; }
+    #max-score-line { font-size: 11px; }
+    #timer-bar-container { width: calc(100vw - 112px); }
+    #gem-counter { top: 3px; right: 0; padding: 6px 8px; font-size: 17px; }
+}
+
 </style>
 </head>
 <body>
 
 <div id="ui">
     <div id="score-board">
-        MAX: <span id="max-score" style="color:#ffd32a;">0</span> | SCORE: <span id="current-score">0</span> | GEM: <span id="current-gems" style="color:#00e8ff;">0</span>
+        <div id="current-score-line">계단 <span id="current-score">0</span></div>
+        <div id="max-score-line">최고 기록 <span id="max-score" style="color:#ffd32a;">0</span></div>
     </div>
     <div id="timer-bar-container">
         <div id="timer-bar"></div>
     </div>
+    <div id="gem-counter">💎 <span id="current-gems" style="color:#00e8ff;">0</span></div>
 </div>
 
 <div id="canvas-container">
