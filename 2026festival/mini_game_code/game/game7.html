@@ -67,6 +67,7 @@ document.getElementById('done').onclick=()=>location.href='../index.html';if(mod
 <script>
 /* Tablet keyboard focus and automatic result display */
 (function(){
+  try{localStorage.removeItem('miniGameResult')}catch(e){}
   document.body.tabIndex=0;
   const focusGame=()=>{try{document.body.focus({preventScroll:true})}catch(e){document.body.focus()}};
   window.addEventListener('pageshow',()=>setTimeout(focusGame,100));
