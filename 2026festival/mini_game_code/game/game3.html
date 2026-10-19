@@ -90,7 +90,7 @@ randomize();requestAnimationFrame(tick);
   const keys={'1':[['A','KeyA'],['L','KeyL']],'2':[['A','KeyA'],['L','KeyL']],'3':[['반응','Enter']],'5':[['점프','Space']],'6':[['위','ArrowUp'],['아래','ArrowDown'],['발사','Enter'],['방향','Space']],'7':[['왼쪽','KeyA'],['오른쪽','KeyD'],['발사','KeyS'],['P2 ←','ArrowLeft'],['P2 →','ArrowRight'],['P2 발사','ArrowDown']],'8':[['위','ArrowUp'],['아래','ArrowDown'],['시작','Enter']],'9':[['왼쪽','ArrowLeft'],['오른쪽','ArrowRight'],['점프','Space'],['P2 점프','ArrowUp']]};
   if(keys[n]){
     const pad=document.createElement('div');pad.id='mgTabletPad';
-    keys[n].forEach(([label,code])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{focusGame();const key=code==='Space'?' ':code==='Enter'?'Enter':code.startsWith('Key')?code.slice(3).toLowerCase():code;document.dispatchEvent(new KeyboardEvent('keydown',{key,code,bubbles:true,cancelable:true}));if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyS'].includes(code))document.dispatchEvent(new KeyboardEvent('keyup',{key,code,bubbles:true,cancelable:true}))};pad.appendChild(b)});
+    keys[n].forEach(([label,code])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{focusGame();const key=(n==='3'&&label==='반응')?targetKey:code==='Space'?' ':code==='Enter'?'Enter':code.startsWith('Key')?code.slice(3).toLowerCase():code;document.dispatchEvent(new KeyboardEvent('keydown',{key,code,bubbles:true,cancelable:true}));if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyS'].includes(code))document.dispatchEvent(new KeyboardEvent('keyup',{key,code,bubbles:true,cancelable:true}))};pad.appendChild(b)});
     document.body.appendChild(pad);
   }
 })();
