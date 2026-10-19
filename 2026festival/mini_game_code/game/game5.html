@@ -87,7 +87,7 @@ function finishRace(){
 if(ended)return;ended=true;running=false;
 const me=Math.round((pEndTime??finishAt)*10),opp=Math.round((cEndTime??finishAt)*10);
 const winner=me>opp?'me':me<opp?'opp':'draw';
-document.getElementById('message').textContent=winner==='me'?'승리 · 컴퓨터보다 더 오래 주행했습니다.':winner==='opp'?'패배 · 컴퓨터가 더 오래 주행했습니다.':'무승부 · 두 주행 시간이 같습니다.';
+document.getElementById('message').textContent=mode==='local'?(winner==='me'?'1P 승':winner==='opp'?'2P 승':'무승부'):(winner==='me'?'승리 · 컴퓨터보다 더 오래 주행했습니다.':winner==='opp'?'패배 · 컴퓨터가 더 오래 주행했습니다.':'무승부 · 두 주행 시간이 같습니다.');
 document.getElementById('cpuState').textContent=winner==='me'?'패배':winner==='opp'?'승리':'무승부';
 localStorage.setItem('miniGameResult',JSON.stringify({game:' 점프 러너',winner,me,opp}));
 document.getElementById('done').hidden=false
@@ -116,7 +116,7 @@ draw(pctx,0,[] ,4,'PLAYER');draw(cctx,0,[],3.8,'COMPUTER');reset();
   function showResult(data){
     if(shown||!data||!data.winner)return;
     shown=true;
-    document.getElementById('mgAutoHeadline').textContent=data.winner==='me'?'승리':data.winner==='opp'?'패배':'무승부';
+    const settings=JSON.parse(localStorage.getItem('miniGameSettings')||'null');document.getElementById('mgAutoHeadline').textContent=settings?.mode==='local'?(data.winner==='me'?'1P 승':data.winner==='opp'?'2P 승':'무승부'):(data.winner==='me'?'승리':data.winner==='opp'?'패배':'무승부');
     const score=data.me!==undefined||data.opp!==undefined?'최종 점수 '+(data.me??0)+' : '+(data.opp??0):'';
     document.getElementById('mgAutoDetail').textContent=[data.game||'미니게임',score].filter(Boolean).join(' · ');
     overlay.style.display='grid';
