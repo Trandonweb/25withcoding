@@ -58,7 +58,7 @@ function obstacleEffect(b,o){const roll=Math.random();if(roll<.38){b.vy=(Math.ra
 else if(roll<.72){for(const sign of [-1,1])bullets.push({x:b.x,y:b.y,vx:b.vx,vy:sign*(2.1+Math.random()*1.4),p:b.p,life:0});b.dead=true;flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#79aaff',life:18});document.getElementById('message').textContent=' 총알 분열! 두 발로 나뉘었다';}
 else{b.dead=true;flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#f07d8b',life:18});document.getElementById('message').textContent='× 총알 소멸!';}
 relocate(o);flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#53e88a',life:18})}
-function end(w){if(!playing)return;playing=false;const winner=w;localStorage.setItem('miniGameResult',JSON.stringify({game:' 장애물 슈팅',winner,me:4-h1,opp:4-h2}));document.getElementById('message').textContent=winner==='me'?'승리 · 상대의 피격 횟수가 한도에 도달했습니다.':'패배 · 피격 횟수가 한도에 도달했습니다.';document.getElementById('done').classList.remove('hidden');draw()}
+function end(w){if(!playing)return;playing=false;const winner=w;localStorage.setItem('miniGameResult',JSON.stringify({game:' 장애물 슈팅',winner,me:4-h1,opp:4-h2}));document.getElementById('message').textContent=mode==='local'?(winner==='me'?'1P 승':'2P 승'):(winner==='me'?'승리 · 상대의 피격 횟수가 한도에 도달했습니다.':'패배 · 피격 횟수가 한도에 도달했습니다.');document.getElementById('done').classList.remove('hidden');draw()}
 function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#07110b';ctx.fillRect(0,0,W,H);
 // subtle star/grid
 ctx.strokeStyle='#ffffff08';ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
@@ -95,7 +95,7 @@ document.getElementById('up').onclick=()=>move(1,-26);document.getElementById('d
   function showResult(data){
     if(shown||!data||!data.winner)return;
     shown=true;
-    document.getElementById('mgAutoHeadline').textContent=data.winner==='me'?'승리':data.winner==='opp'?'패배':'무승부';
+    const settings=JSON.parse(localStorage.getItem('miniGameSettings')||'null');document.getElementById('mgAutoHeadline').textContent=settings?.mode==='local'?(data.winner==='me'?'1P 승':data.winner==='opp'?'2P 승':'무승부'):(data.winner==='me'?'승리':data.winner==='opp'?'패배':'무승부');
     const score=data.me!==undefined||data.opp!==undefined?'최종 점수 '+(data.me??0)+' : '+(data.opp??0):'';
     document.getElementById('mgAutoDetail').textContent=[data.game||'미니게임',score].filter(Boolean).join(' · ');
     overlay.style.display='grid';
