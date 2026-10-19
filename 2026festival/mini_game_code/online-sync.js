@@ -11,7 +11,7 @@ const cfg = {
 };
 
 function renderHostMirror(data) {
-  if ((!data.images || !data.images.length) && data.page !== "game3.html") {
+  if ((!data.images || !data.images.length) && data.page !== "game3.html" && data.page !== "index.html") {
     if (mirrorRoot) mirrorRoot.style.display = "none";
     return;
   }
@@ -59,7 +59,13 @@ if (active) {
       lastStateAt = data.gameState.updatedAt;
       handler?.(data.gameState.payload, data.gameState.updatedAt);
     }
-    if (room.role === "guest" && data.mirror) renderHostMirror(data.mirror);
+    if (room.role === "guest" && data.mirror) {
+      if (data.mirror.page === "index.html" && location.pathname.includes("/game/game")) {
+        location.href = "../index.html";
+        return;
+      }
+      renderHostMirror(data.mirror);
+    }
     if (room.role === "guest" && data.matchConfig) {
       const old = JSON.parse(localStorage.getItem("miniGameSettings") || "null");
       const cfg = data.matchConfig;
