@@ -42,10 +42,16 @@ body {
 }
 #canvas-container {
     position: relative;
-    width: 360px;
-    height: 540px;
+    width: min(480px, calc((100vh - 120px) * 2 / 3), calc(100vw - 32px));
+    aspect-ratio: 2 / 3;
+    height: auto;
+    flex: 0 0 auto;
 }
 canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
     border: 4px solid #fff;
     border-radius: 12px;
     box-shadow: 0 15px 30px rgba(0,0,0,0.8);
