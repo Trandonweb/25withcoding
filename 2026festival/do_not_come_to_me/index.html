@@ -260,6 +260,15 @@ $("fullscreen-button").addEventListener("click", async () => {
   catch { $("status-text").textContent = "전체 화면을 사용할 수 없습니다"; }
 });
 
+const recommendationFirebaseConfig = {
+  apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
+  authDomain: "festivallikes.firebaseapp.com",
+  projectId: "festivallikes",
+  storageBucket: "festivallikes.firebasestorage.app",
+  messagingSenderId: "782245120700",
+  appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
+};
+
 // 축제 메인 페이지와 동일한 projects 문서의 likes를 실시간으로 표시하고 증가시킵니다.
 const likeButton = $("like-button");
 const likeCount = $("like-count");
@@ -307,14 +316,7 @@ import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async 
 
 // 추천 작품: 실제 작품 폴더와 메타데이터를 기준으로 표시하고, 응원 수가 높은 순으로 정렬합니다.
 const recommendationList = $("recommendation-list");
-const recommendationFirebaseConfig = {
-  apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
-  authDomain: "festivallikes.firebaseapp.com",
-  projectId: "festivallikes",
-  storageBucket: "festivallikes.firebasestorage.app",
-  messagingSenderId: "782245120700",
-  appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
-};
+
 async function loadRecommendations(){
   try {
     const [appModule, dbModule, treeResponse] = await Promise.all([
