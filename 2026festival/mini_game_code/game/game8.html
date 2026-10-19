@@ -61,7 +61,7 @@ document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','Space'].inclu
   function showResult(data){
     if(shown||!data||!data.winner)return;
     shown=true;
-    document.getElementById('mgAutoHeadline').textContent=data.winner==='me'?'승리':data.winner==='opp'?'패배':'무승부';
+    const settings=JSON.parse(localStorage.getItem('miniGameSettings')||'null');document.getElementById('mgAutoHeadline').textContent=settings?.mode==='local'?(data.winner==='me'?'1P 승':data.winner==='opp'?'2P 승':'무승부'):(data.winner==='me'?'승리':data.winner==='opp'?'패배':'무승부');
     const score=data.me!==undefined||data.opp!==undefined?'최종 점수 '+(data.me??0)+' : '+(data.opp??0):'';
     document.getElementById('mgAutoDetail').textContent=[data.game||'미니게임',score].filter(Boolean).join(' · ');
     overlay.style.display='grid';
