@@ -311,6 +311,103 @@ const shopScreen = document.getElementById('shopScreen');
 const mapScreen = document.getElementById('mapScreen');
 const gameOverScreen = document.getElementById('gameOverScreen');
 
+// 오디오: 외부 음원 없이 Web Audio로 생성하는 오리지널 BGM 및 효과음
+let audioContext = null;
+let musicTimer = null;
+let musicStep = 0;
+let soundEnabled = true;
+const mapMusic = {
+    city:    { notes: [523,659,784,659,587,698,880,698], bass: 131 },
+    jungle:  { notes: [392,494,587,494,440,523,659,523], bass: 110 },
+    pyramid: { notes: [440,523,659,523,392,494,587,494], bass: 98 },
+    ocean:   { notes: [494,587,740,587,440,523,659,523], bass: 123 },
+    sakura:  { notes: [587,698,880,698,523,659,784,659], bass: 147 },
+    aurora:  { notes: [392,587,784,587,440,659,880,659], bass: 98 },
+    space:   { notes: [659,784,988,784,587,698,880,698], bass: 82 },
+    volcano: { notes: [330,392,494,392,349,440,523,440], bass: 82 }
+};
+function getAudio() {
+    if (!soundEnabled) return null;
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        if (!audioContext) audioContext = new AudioCtx();
+        if (audioContext.state === 'suspended') audioContext.resume();
+        return audioContext;
+    } catch (e) { return null; }
+}
+function playTone(freq, duration, type = 'sine', volume = 0.04, delay = 0) {
+    const ac = getAudio();
+    if (!ac) return;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    const start = ac.currentTime + delay;
+    osc.type = type;
+    osc.frequency.setValueAtTime(Math.max(30, freq), start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), start + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    osc.connect(gain);
+    gain.connect(ac.destination);
+    osc.start(start);
+    osc.stop(start + duration + 0.025);
+}
+function playUiSound(kind = 'tap') {
+    const patterns = {
+        tap: [[660,0.07,'sine',0.025]],
+        select: [[660,0.08,'triangle',0.035],[880,0.12,'triangle',0.03]],
+        purchase: [[523,0.1,'triangle',0.035],[659,0.1,'triangle',0.035],[784,0.16,'triangle',0.04]],
+        map: [[392,0.12,'sine',0.03],[523,0.12,'sine',0.03],[659,0.18,'sine',0.03]],
+        start: [[440,0.08,'square',0.018],[660,0.08,'square',0.02],[880,0.16,'triangle',0.035]],
+        gem: [[880,0.07,'sine',0.025],[1175,0.13,'sine',0.025]]
+    };
+    (patterns[kind] || patterns.tap).forEach((p,i) => playTone(p[0],p[1],p[2],p[3],i*0.075));
+}
+function stopMusic() {
+    if (musicTimer !== null) { clearInterval(musicTimer); musicTimer = null; }
+}
+function startMusic() {
+    const ac = getAudio();
+    if (!ac) return;
+    stopMusic();
+    musicStep = 0;
+    const theme = mapMusic[(maps.find(m => m.id === currentMapId) || maps[0]).theme] || mapMusic.city;
+    // 빠르고 경쾌한 8비트 아케이드풍 루프. 짧은 오리지널 멜로디이며 원곡을 사용하지 않습니다.
+    const beatMs = 150;
+    const tick = () => {
+        if (!isPlaying) return;
+        const step = musicStep % 8;
+        const note = theme.notes[step];
+        playTone(note, 0.115, 'square', 0.018);
+        if (step % 2 === 0) playTone(theme.bass * (step === 4 ? 1.5 : 1), 0.19, 'triangle', 0.028);
+        if (step === 0 || step === 4) playTone(65, 0.09, 'sine', 0.045);
+        else if (step === 2 || step === 6) playTone(180, 0.045, 'triangle', 0.012);
+        musicStep++;
+    };
+    tick();
+    musicTimer = setInterval(tick, beatMs);
+}
+function playDeathSound(deathType) {
+    const presets = {
+        springBounce: [[420,0.1,'triangle'],[620,0.13,'triangle'],[350,0.18,'sine']],
+        shatter: [[1100,0.07,'square'],[760,0.1,'triangle'],[420,0.22,'sine']],
+        burnUp: [[180,0.1,'sawtooth'],[260,0.12,'sawtooth'],[390,0.2,'triangle']],
+        shadowDash: [[220,0.06,'sawtooth'],[120,0.12,'sawtooth']],
+        explode: [[100,0.2,'sawtooth'],[70,0.25,'triangle']],
+        dizzySpin: [[660,0.1,'sine'],[523,0.1,'sine'],[392,0.2,'sine']],
+        flyAway: [[440,0.1,'triangle'],[660,0.12,'triangle'],[990,0.2,'sine']],
+        broomFly: [[392,0.1,'triangle'],[587,0.1,'triangle'],[784,0.18,'sine']],
+        spinDrop: [[700,0.07,'square'],[480,0.1,'square'],[180,0.2,'sawtooth']],
+        rainbowFade: [[523,0.11,'sine'],[659,0.11,'sine'],[784,0.11,'sine'],[1047,0.28,'sine']],
+        heavenAscend: [[392,0.12,'sine'],[523,0.14,'sine'],[659,0.16,'sine'],[784,0.3,'sine']],
+        fall: [[300,0.1,'triangle'],[150,0.22,'sine']]
+    };
+    (presets[deathType] || presets.fall).forEach((p,i) => playTone(p[0],p[1],p[2],0.04,i*0.09));
+}
+document.addEventListener('click', (event) => {
+    if (event.target.closest('button') && !event.target.closest('.action-select-btn')) playUiSound('tap');
+});
+
 const STAIR_WIDTH = 42;
 const STAIR_HEIGHT = 12;
 const STEP_X = 35;
@@ -464,6 +561,7 @@ function checkSpecialUnlocks() {
 
 
 function goHome() {
+    stopMusic();
     gameOverScreen.style.display = 'none';
     shopScreen.style.display = 'none';
     mapScreen.style.display = 'none';
@@ -526,6 +624,7 @@ function renderShopList() {
 
 function selectSkin(id) {
     currentSkinId = id;
+    playUiSound('select');
     renderShopList();
 }
 
@@ -535,6 +634,7 @@ function buySkin(id) {
         totalGems -= skin.price;
         skin.unlocked = true;
         currentSkinId = id;
+        playUiSound('purchase');
         updateGemsDisplay();
         saveSkinsData();
         renderShopList();
@@ -580,6 +680,7 @@ function renderStairPaletteList() {
         button.style.cssText = `width:29px;height:29px;border-radius:50%;border:3px solid ${index === currentStairPalette ? '#ffffff' : '#555'};background:${palette.top};box-shadow:inset 0 -7px 0 ${palette.side};cursor:pointer;`;
         button.onclick = () => {
             currentStairPalette = index;
+            playUiSound('select');
             localStorage.setItem('infiniteStairs_stairPalette', String(index));
             renderStairPaletteList();
         };
@@ -589,11 +690,13 @@ function renderStairPaletteList() {
 
 function selectMap(id) {
     currentMapId = id;
+    playUiSound('map');
     renderMapList();
 }
 
 function startGame(mode) {
     gameMode = mode;
+    playUiSound('start');
     startScreen.style.display = 'none';
     modeScreen.style.display = 'none';
     shopScreen.style.display = 'none';
@@ -635,6 +738,7 @@ function startGame(mode) {
     }
 
     isPlaying = true;
+    startMusic();
     requestAnimationFrame(gameLoop);
 }
 
@@ -743,6 +847,9 @@ window.addEventListener('keydown', (e) => {
 
 function triggerDeath() {
     isPlaying = false;
+    stopMusic();
+    const dyingSkin = skins.find(s => s.id === currentSkinId) || skins[0];
+    playDeathSound(dyingSkin.deathType || 'fall');
 
     if (score > maxScore) {
         maxScore = score;
