@@ -34,6 +34,7 @@ h1{margin:0;font-size:clamp(20px,2.2vw,30px);line-height:1.15;letter-spacing:-.0
 .actions{display:flex;gap:6px;flex:none}
 .btn{border:1px solid #3a3d43;background:#22252a;color:#e5e8e3;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}
 .btn:hover{background:#2d3036}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:saturate(.45)}
 .btn.primary{background:var(--green);border-color:var(--green);color:#08140c}
 .btn.primary:hover{background:#48cf7c}
 .screen{position:relative;min-height:0;min-width:0;background:#08090a;overflow:hidden}
@@ -272,6 +273,15 @@ const recommendationFirebaseConfig = {
 // 축제 메인 페이지와 동일한 projects 문서의 likes를 실시간으로 표시하고 증가시킵니다.
 const likeButton = $("like-button");
 const likeCount = $("like-count");
+// 한국 시간 기준 2026년 10월 23일 00:00부터 응원 활성화
+const SUPPORT_START_AT = new Date("2026-10-23T00:00:00+09:00").getTime();
+function supportAllowed(){ return Date.now() >= SUPPORT_START_AT; }
+function updateSupportButtonAvailability(){
+  likeButton.disabled = !supportAllowed() || !likeDocRef;
+  likeButton.title = supportAllowed() ? "" : "응원하기는 2026년 10월 23일 00:00부터 가능합니다.";
+}
+updateSupportButtonAvailability();
+setInterval(updateSupportButtonAvailability, 1000);
 let likeDb = null;
 let likeDocRef = null;
 let likeSubmitting = false;
@@ -283,19 +293,19 @@ import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async 
   dbModule.onSnapshot(likeDocRef, snap => {
     if (!snap.exists()) {
       likeCount.textContent = "등록 대기 중";
-      likeButton.disabled = true;
-      likeButton.title = "메인 축제 목록에 이 작품의 projects 문서가 등록되어야 응원할 수 있습니다.";
+      likeButton.disabled = !supportAllowed();
+      likeButton.title = supportAllowed() ? "메인 축제 목록에 이 작품의 projects 문서가 등록되어야 응원할 수 있습니다." : "응원하기는 2026년 10월 23일 00:00부터 가능합니다.";
       return;
     }
     likeCount.textContent = Number(snap.data().likes || 0).toLocaleString();
-    likeButton.disabled = false;
+    updateSupportButtonAvailability();
   }, error => {
     console.error("응원 수 불러오기 실패:", error);
     likeCount.textContent = "오류";
   });
   likeButton.addEventListener("click", async event => {
     event.stopPropagation();
-    if (likeSubmitting || !likeDocRef) return;
+    if (likeSubmitting || !likeDocRef || !supportAllowed()) { updateSupportButtonAvailability(); return; }
     likeSubmitting = true;
     likeButton.disabled = true;
     try {
@@ -306,7 +316,7 @@ import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async 
       likeButton.title = "응원에 실패했습니다. 잠시 후 다시 시도해 주세요.";
     } finally {
       likeSubmitting = false;
-      likeButton.disabled = false;
+      updateSupportButtonAvailability();
     }
   });
 }).catch(error => {
