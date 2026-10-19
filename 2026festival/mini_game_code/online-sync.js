@@ -106,7 +106,7 @@ if (active && room.role === "host") {
       if (images.length >= 2) return;
       try { images.push(canvas.toDataURL("image/jpeg", 0.42)); } catch {}
     });
-    const text = (document.body.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 850);
+    const text = (document.body.innerText || "").replace(/\s+/g, " ").trim().slice(0, 850);
     try { await updateDoc(ref, { mirror: { page: location.pathname.split("/").pop(), text, images, updatedAt: now } }); }
     catch (e) { console.warn("MINI GAME mirror update failed", e); }
   }, 650);
