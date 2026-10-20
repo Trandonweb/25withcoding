@@ -42,7 +42,7 @@ body {
 }
 #canvas-container {
     position: relative;
-    width: min(480px, calc((100vh - 120px) * 2 / 3), calc(100vw - 32px));
+    width: min(560px, calc((100vh - 100px) * 2 / 3), calc(100vw - 24px));
     aspect-ratio: 2 / 3;
     height: auto;
     flex: 0 0 auto;
@@ -350,7 +350,7 @@ function playTone(freq, duration, type = 'sine', volume = 0.04, delay = 0) {
     osc.frequency.setValueAtTime(Math.max(30, freq), start);
     gain.gain.setValueAtTime(0.0001, start);
     // 작은 스피커에서도 효과음이 잘 들리도록 전체 음량을 보정합니다.
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, Math.min(0.22, volume * 2.5)), start + 0.012);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, Math.min(0.22, volume * 4.5)), start + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     osc.connect(gain);
     gain.connect(ac.destination);
@@ -364,12 +364,34 @@ function playUiSound(kind = 'tap') {
         purchase: [[523,0.1,'triangle',0.035],[659,0.1,'triangle',0.035],[784,0.16,'triangle',0.04]],
         map: [[392,0.12,'sine',0.03],[523,0.12,'sine',0.03],[659,0.18,'sine',0.03]],
         start: [[440,0.08,'square',0.018],[660,0.08,'square',0.02],[880,0.16,'triangle',0.035]],
-        gem: [[880,0.07,'sine',0.025],[1175,0.13,'sine',0.025]]
+        gem: [[880,0.07,'sine',0.025],[1175,0.13,'sine',0.025]],
+        step: [[330,0.045,'triangle',0.022],[494,0.055,'triangle',0.018]],
+        gameOver: [[392,0.12,'triangle',0.04],[330,0.14,'triangle',0.04],[262,0.25,'sine',0.045]],
+        back: [[587,0.08,'sine',0.025],[440,0.12,'sine',0.025]]
     };
     (patterns[kind] || patterns.tap).forEach((p,i) => playTone(p[0],p[1],p[2],p[3],i*0.075));
 }
 function stopMusic() {
     if (musicTimer !== null) { clearInterval(musicTimer); musicTimer = null; }
+}
+function startMenuMusic() {
+    const ac = getAudio();
+    if (!ac || isPlaying || musicTimer !== null) return;
+    musicStep = 0;
+    // 홈 화면용 오리지널 아케이드 음악: 32박 루프라 반복 간격이 길고, 메뉴 이동 중에도 계속 재생됩니다.
+    const notes = [523,659,784,659,587,698,880,784,659,784,988,784,698,880,1047,880,523,659,784,880,784,698,659,587,659,784,880,988,880,784,659,523];
+    const bass = [131,131,165,147,110,110,147,165];
+    const tick = () => {
+        if (isPlaying) return;
+        const step = musicStep % notes.length;
+        playTone(notes[step], 0.22, 'square', 0.042);
+        if (step % 2 === 0) playTone(bass[Math.floor(step / 4) % bass.length], 0.32, 'triangle', 0.055);
+        if (step % 4 === 0) playTone(65, 0.12, 'sine', 0.055);
+        else if (step % 4 === 2) playTone(180, 0.07, 'triangle', 0.022);
+        musicStep++;
+    };
+    tick();
+    musicTimer = setInterval(tick, 240);
 }
 function startMusic() {
     const ac = getAudio();
@@ -409,13 +431,14 @@ function playDeathSound(deathType) {
     };
     (presets[deathType] || presets.fall).forEach((p,i) => playTone(p[0],p[1],p[2],0.04,i*0.09));
 }
-// 첫 사용자 입력 시 오디오를 미리 활성화해 브라우저 자동재생 차단을 피합니다.
+// 브라우저 자동재생 정책 때문에 첫 사용자 입력 직후 홈 배경음악을 시작합니다.
 document.addEventListener('pointerdown', () => {
     const ac = getAudio();
     if (ac && ac.state === 'suspended') {
         const resumeResult = ac.resume();
         if (resumeResult && typeof resumeResult.catch === 'function') resumeResult.catch(() => {});
     }
+    if (!isPlaying && musicTimer === null) startMenuMusic();
 }, true);
 document.addEventListener('keydown', () => {
     const ac = getAudio();
@@ -589,6 +612,7 @@ function goHome() {
     startScreen.style.display = 'flex';
     isPlaying = false;
     deathTimer = 0;
+    startMenuMusic();
 }
 
 function openModeSelect() {
@@ -833,9 +857,11 @@ window.addEventListener('keydown', (e) => {
         score++;
         checkSpecialUnlocks();
 
+        playUiSound('step');
         if (nextStair.hasItem) {
             gameGems++;
             totalGems++;
+            playUiSound('gem');
             updateGemsDisplay();
             nextStair.hasItem = false;
         }
@@ -893,6 +919,7 @@ function triggerDeath() {
 
 function endGame() {
     deathTimer = 0;
+    playUiSound('gameOver');
     finalScoreEl.textContent = score;
     earnedGemsEl.textContent = gameGems;
 
