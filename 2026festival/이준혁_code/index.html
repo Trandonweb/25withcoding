@@ -488,7 +488,7 @@ let deathTimer = 0;
 let activeDeathType = "fall";
 
 let timeLimit = 100;
-let timeDecreaseRate = 0.18;
+let timeDecreaseRate = 0.035;
 
 let player = {
     direction: 1,
@@ -850,7 +850,8 @@ window.addEventListener('keydown', (e) => {
         } else {
             timeLimit = Math.min(100, timeLimit + 5);
             let hundredMultiplier = Math.floor(score / 100);
-            timeDecreaseRate = 0.18 + (score * 0.0006) + (hundredMultiplier * 0.05);
+            // 일반 모드: 시간 감소를 완만하게 하고, 점수가 높아져도 급격히 빨라지지 않도록 제한합니다.
+            timeDecreaseRate = 0.035 + (Math.min(score, 3000) * 0.000002) + (hundredMultiplier * 0.001);
         }
 
         const targetStair = stairs[player.currentIndex];
