@@ -293,8 +293,8 @@ function shoot(){
  if(w.kind==='sniper'){sniperCharge=0;const fill=$('#sniperChargeFill');if(fill)fill.style.width='0%'}if(ammo<=0&&!['melee','heal','pda'].includes(w.kind)&&reserve>0)reload();updateHud()
 }
 function respawn(){spectatorTimer=5;spectatorTarget=null;health=0;vy=0;jumpHeight=0;jumpPressed=false;locked=false;document.exitPointerLock?.();say('부활까지 5초...',1100);let overlay=$('#respawnOverlay');if(!overlay){overlay=document.createElement('div');overlay.id='respawnOverlay';overlay.innerHTML='<strong>전투 불능</strong><span id="respawnCountdown">부활까지 5초...</span><small>아군 시점 관전 중 · 자동 부활</small>';document.body.appendChild(overlay)}overlay.style.display='flex';updateHud()}
-function insideBlueSpawn(x,z){return x>=80&&x<=108&&Math.abs(z)<=12}
-function insideTeamBase(x,z,side){return side==='red'?x>=-108&&x<=-79&&Math.abs(z)<=12:x>=79&&x<=108&&Math.abs(z)<=12}
+function insideBlueSpawn(x,z){return x>=-108&&x<=-80&&Math.abs(z)<=12}
+function insideTeamBase(x,z,side){return side==='red'?x>=79&&x<=108&&Math.abs(z)<=12:x>=-108&&x<=-79&&Math.abs(z)<=12}
 function blocked(x,z,side=team){if(Math.abs(x)>109||Math.abs(z)>79)return true;for(const base of Object.values(teamBases)){if(Math.abs(x-base.front)<.9&&Math.abs(z)<4.2&&!base.doorOpen&&side!==base.side)return true;const f=base.fridge.position;if(Math.abs(x-f.x)<1.25&&Math.abs(z-f.z)<.95)return true}if(buildings.some(b=>{const r=b.kind.startsWith('teleporter')?.38:(b.sizeX||1.4)/2+.45;return Math.abs(x-b.pos.x)<r&&Math.abs(z-b.pos.z)<r}))return true;return obstacles.some(o=>{for(const base of Object.values(teamBases)){if(side===base.side&&Math.abs(x-base.front)<1.65&&Math.abs(z)<5.6&&Math.abs(o.x-base.front)<.9&&Math.abs(Math.abs(o.z)-8.5)<.2)return false}return Math.abs(x-o.x)<o.w/2+.55&&Math.abs(z-o.z)<o.d/2+.55})}
 function groundHeightAt(x,z){if(x>=-34.5&&x<=-25&&z>=-24.8&&z<=-16.2)return Math.max(0,Math.min(2.55,(x+34.5)/9.5*2.55));if(x>-25&&x<=-16&&z>=-20.4&&z<=-15.6)return 2.55;return 0}
 // Grid-based tactical navigation; a rule-based controller rather than a trained neural network.
