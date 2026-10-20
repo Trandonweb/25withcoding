@@ -204,14 +204,7 @@ async function loadFolderMetadata(){
   if(explanation) $("description").textContent = explanation;
   if(madeBy) $("author").textContent = madeBy;
   if(how) $("how-to").textContent = how;
-  const thumbnail = $("project-thumbnail");
-  try {
-    const response = await fetch("./thubnail.png", {method:"HEAD", cache:"no-store"});
-    if(response.ok){
-      thumbnail.src = "./thubnail.png";
-      thumbnail.classList.add("visible");
-    }
-  } catch {}
+  // 썸네일 파일이 없는 작품도 있으므로 존재하지 않는 이미지에 HEAD 요청을 보내지 않습니다.
 }
 loadFolderMetadata();
 
@@ -364,7 +357,7 @@ async function loadRecommendations(){
       const [title,description,thumbnail]=await Promise.all([
         files.has(folder+"title.txt")?readText(folder+"title.txt"):Promise.resolve(""),
         files.has(folder+"explanation.txt")?readText(folder+"explanation.txt"):Promise.resolve(""),
-        Promise.resolve(files.has(folder+"thubnail.png")?rawRoot+folder+"thubnail.png":"")
+        Promise.resolve(files.has(folder+"thumbnail.png")?rawRoot+folder+"thumbnail.png":"")
       ]);
       return {id,title:title||id,description:description||"축제 작품을 체험해 보세요.",thumbnail,likes:likes.get(id)||0};
     }));
