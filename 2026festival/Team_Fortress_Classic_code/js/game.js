@@ -177,7 +177,8 @@ function buildViewWeapon(){
  else{add(.35,-.28,-.95,.19,.18,.68,metal);add(.35,-.28,-1.34,.24,.2,.18,dark);add(.35,-.16,-.9,.07,.06,.25,accent)}
  if(!(cls.id==='heavy'&&w.kind==='melee')&&w.kind!=='pda')add(.18,-.43,-.67,.22,.16,.25,skin);
 }
-function tracer(from,to,color=0xffe5a1){const g=new THREE.BufferGeometry().setFromPoints([from,to]);const line=new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity:.8}));scene.add(line);tracers.push({line,life:.075})}\n function healBeam(from,to){const delta=to.clone().sub(from),len=delta.length();if(len<.01)return;const mesh=new THREE.Mesh(new THREE.CylinderGeometry(.105,.105,len,10,1,true),new THREE.MeshBasicMaterial({color:0x77ffb1,transparent:true,opacity:.78,depthWrite:false}));mesh.position.copy(from).add(to).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());scene.add(mesh);tracers.push({line:mesh,life:.13})}
+function tracer(from,to,color=0xffe5a1){const g=new THREE.BufferGeometry().setFromPoints([from,to]);const line=new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity:.8}));scene.add(line);tracers.push({line,life:.075})}
+function healBeam(from,to){const delta=to.clone().sub(from),len=delta.length();if(len<.01)return;const mesh=new THREE.Mesh(new THREE.CylinderGeometry(.105,.105,len,10,1,true),new THREE.MeshBasicMaterial({color:0x77ffb1,transparent:true,opacity:.78,depthWrite:false}));mesh.position.copy(from).add(to).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());scene.add(mesh);tracers.push({line:mesh,life:.13})}
 function makePickups(){
  for(const p of pickups)scene.remove(p.mesh);pickups.length=0;
  for(const [i,pos] of [[0,[-13,0,-11]],[1,[13,0,11]],[2,[-34,0,0]],[3,[34,0,0]],[4,[0,0,-31]],[5,[0,0,31]]]){
