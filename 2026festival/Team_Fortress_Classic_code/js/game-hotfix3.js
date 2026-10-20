@@ -1,3 +1,4 @@
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import {CLASSES} from './data.js';
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9baeb8);scene.fog=new THREE.Fog(0x9baeb8,48,120);
