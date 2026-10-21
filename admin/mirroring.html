@@ -106,7 +106,7 @@ async function stopSession(id,clear=true){
  try{s.pc.close()}catch(e){}
  sessions.delete(id);
  if(selectedId===id)closeViewer();
- if(clear){try{await updateDoc(doc(db,"users",id),{sharing:false,sharingStartedAt:null,adminAnswer:null,adminCandidates:[]})}catch(e){console.warn("[ADMIN] 상태 정리 실패",id,e)}}
+ if(clear){try{await updateDoc(doc(db,"temporaryMirroring",id),{sharing:false,sharingStartedAt:null,adminAnswer:null,adminCandidates:[]})}catch(e){console.warn("[ADMIN] 상태 정리 실패",id,e)}}
 }
 
 async function connectStudent(id,d){
@@ -114,7 +114,7 @@ async function connectStudent(id,d){
  const sid=d.clientOffer.sessionId||d.sessionId;if(!sid)return;
  busy.add(id);
  try{
-  const ref=doc(db,"users",id);
+  const ref=doc(db,"temporaryMirroring",id);
   const pc=new RTCPeerConnection(rtcConfig);
   const s={pc,sessionId:sid,candidates:new Set(),remoteClientCandidates:new Set(),unsubscribe:null,statsTimer:null,stream:null,receiving:false};
   sessions.set(id,s);
@@ -197,7 +197,7 @@ document.getElementById("back").onclick=()=>location.href="/admin/index.html";
 
 function renderEmpty(){const g=document.getElementById("grid");if(!g.children.length)g.innerHTML='<div class="empty">현재 접속 중인 학생이 없습니다.</div>'}
 
-// 사용자 계정 문서는 절대 삭제하지 않는다. 화면 공유용 임시 신호 필드만 정리한다.
+// 화면 공유 신호는 temporaryMirroring 전용 컬렉션에서만 관리한다. 실제 사용자 계정과 상벌점 데이터에는 접근하지 않는다.
 const TEMP_SIGNAL_FIELDS={
  mode:deleteField(),sharing:deleteField(),sharingStartedAt:deleteField(),
  sessionId:deleteField(),clientOffer:deleteField(),adminAnswer:deleteField(),
@@ -209,7 +209,7 @@ async function clearStaleShareData(id,reason){
  if(cleanupInProgress.has(id))return;
  cleanupInProgress.add(id);
  try{
-  await updateDoc(doc(db,"users",id),{...TEMP_SIGNAL_FIELDS});
+  await updateDoc(doc(db,"temporaryMirroring",id),{...TEMP_SIGNAL_FIELDS});
   console.info("[ADMIN] 화면 공유 임시 데이터 정리:",id,reason);
  }catch(e){console.warn("[ADMIN] 임시 데이터 정리 실패:",id,e)}
  finally{cleanupInProgress.delete(id)}
@@ -221,7 +221,7 @@ function isStaleShareSession(d){
  return Date.now()-t.toMillis()>45000;
 }
 function loadUsers(){
- onSnapshot(collection(db,"users"),snap=>{
+ onSnapshot(collection(db,"temporaryMirroring"),snap=>{
   const g=document.getElementById("grid");const seen=new Set();let online=0;
   for(const u of snap.docs){
    const id=u.id;if(id===adminId)continue;
