@@ -2616,8 +2616,7 @@ async function discoverProjectFolders(){
         title:folder+"/title.txt",
         description:folder+"/explanation.txt",
         madeBy:folder+"/madeby.txt",
-        how:folder+"/how.txt",
-        thumbnail:folder+"/thubnail.png"
+        how:folder+"/how.txt"
       };
       const [title,description,madeBy,how]=await Promise.all([
         files.has(metaPaths.title)?fileText(metaPaths.title):Promise.resolve(""),
@@ -2627,9 +2626,27 @@ async function discoverProjectFolders(){
       ]);
 
       const existing=projectDocs.get(id)||{};
-      const thumbnail=files.has(metaPaths.thumbnail)
-        ?safeImageUrl(metaPaths.thumbnail)
-        :String(existing.thum||"");
+      // 파일명 오타(thubnail)와 정상 표기(thumbnail), 확장자 차이를 모두 허용합니다.
+      const thumbnailCandidates=[
+        folder+"/thumbnail.png",
+        folder+"/thubnail.png",
+        folder+"/thumbnail.jpg",
+        folder+"/thumbnail.jpeg",
+        folder+"/thumbnail.webp",
+        folder+"/thumb.png",
+        folder+"/thumb.jpg",
+        folder+"/thumb.webp"
+      ];
+      const thumbnailPath=thumbnailCandidates.find(path=>files.has(path))
+        ||[...files].find(path=>
+          path.startsWith(folder+"/") &&
+          !path.slice(folder.length+1).includes("/") &&
+          /thumb(nail)?\.(png|jpe?g|webp|gif)$/i.test(path)
+        );
+      const savedThumbnail=String(existing.thum||existing.thumbnail||"");
+      const thumbnail=thumbnailPath
+        ?safeImageUrl(thumbnailPath)
+        :savedThumbnail;
 
       return {
         id,
