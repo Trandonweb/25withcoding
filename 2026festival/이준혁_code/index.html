@@ -411,29 +411,31 @@ function startMenuMusic() {
     const ac = getAudio();
     if (!ac || isPlaying || musicTimer !== null) return;
     musicStep = 0;
-    // 홈 화면 전용: 빠른 멜로디, 베이스와 드럼이 함께 나오는 긴 오리지널 곡
-    const phraseA = [
-        659,784,988,784,659,784,1047,988, 784,988,1175,988,784,659,784,880,
-        880,1047,1318,1047,880,784,880,1047, 988,880,784,698,784,880,988,784,
-        523,659,784,988,880,784,659,784, 880,988,1175,1047,988,880,784,698,
-        659,784,880,1047,988,880,784,659, 587,698,880,784,659,587,523,659
-    ];
-    const notes = phraseA.concat(phraseA.slice(16), phraseA.slice(0,16));
-    const bass = [131,165,196,165,147,185,220,185,110,147,175,147,123,165,196,165];
+    // 메뉴: 밝고 장난스러운 아케이드 펑크. 멜로디의 빈칸에 짧은 응답음이 들어옵니다.
+    const lead = [784,0,988,0,1175,988,784,659,784,0,988,1318,0,1175,988,784,698,0,880,0,1047,880,698,587,659,784,880,0,1047,988,880,0,784,0,988,1175,1318,0,1175,988,880,0,1047,1318,0,1175,1047,880,784,880,988,0,1175,0,1047,988,880,784,659,0,784,880,988,0];
+    const reply = [0,659,0,784,0,659,587,0,0,784,0,988,880,0,784,659,0,587,0,698,0,587,523,0,523,0,659,0,784,0,659,587,0,659,784,0,880,0,988,0,0,698,880,0,1047,0,880,784,0,659,784,0,988,0,880,0,659,0,587,523,0,659,784,0];
+    const bass = [131,0,131,196,147,0,147,220,110,0,110,165,123,0,123,185];
+    const chord = [[523,659,784],[440,523,659],[349,440,523],[392,494,587]];
     const tick = () => {
         if (isPlaying) return;
-        const step = musicStep % notes.length;
-        const phrase = Math.floor(step / 32);
-        playTone(notes[step], 0.13, 'square', 0.035 + phrase * 0.002);
-        if (step % 2 === 0) playTone(bass[Math.floor(step / 2) % bass.length], 0.17, 'triangle', 0.032);
-        if (step % 4 === 0) playTone(notes[step] * 1.5, 0.095, 'triangle', 0.014, 0.025);
-        if (step % 4 === 0) playBeatSound('kick', 0.85);
-        if (step % 8 === 4) playBeatSound('snare', 0.75);
-        if (step % 2 === 1) playBeatSound('hat', 0.7);
-        if (step % 32 === 0 && step > 0) playBeatSound('crash', 0.65);
+        const s = musicStep % 64, b = s % 16, bar = Math.floor(s / 16);
+        if (lead[s]) playTone(lead[s],0.085,'square',0.026);
+        if (reply[s] && s % 2) playTone(reply[s],0.065,'triangle',0.018,0.018);
+        if (s % 4 === 0 && bass[Math.floor(s / 4)]) {
+            const n = bass[Math.floor(s / 4)];
+            playTone(n,0.19,'triangle',0.045);
+            playTone(n*2,0.09,'sine',0.012,0.025);
+        }
+        if (b === 0) chord[bar].forEach((n,i)=>playTone(n,0.14,i?'square':'triangle',0.009,i*0.014));
+        if (b === 8) { playTone(chord[bar][1]*2,0.08,'triangle',0.012); playTone(chord[bar][2]*2,0.07,'square',0.008,0.025); }
+        if (b === 0 || b === 8) playBeatSound('kick',0.8);
+        if (b === 6 || b === 14) playBeatSound('kick',0.34);
+        if (b === 4 || b === 12) playBeatSound('snare',0.68);
+        if (s % 2) playBeatSound('hat',b % 8 === 7 ? 0.85 : 0.42);
+        if (b === 15 && lead[s]) playTone(lead[s]*1.5,0.07,'sine',0.009,0.018);
         musicStep++;
     };
-    musicTimer = setInterval(tick, 145);
+    musicTimer = setInterval(tick,102);
     tick();
 }
 function startMusic() {
@@ -441,47 +443,39 @@ function startMusic() {
     if (!ac) return;
     stopMusic();
     musicStep = 0;
-    // 게임 전용: 더 빠른 128박 루프. 진행할수록 템포, 드럼, 화음이 더 강해집니다.
-    const phraseA = [
-        392,523,659,784,659,784,988,784, 587,698,880,698,587,784,988,1175,
-        440,587,698,880,698,880,1047,880, 659,784,988,784,659,880,1047,1318,
-        392,523,659,784,880,784,659,523, 587,698,784,988,1047,988,784,698,
-        440,587,698,880,988,880,698,587, 659,784,988,1175,1047,988,784,659
-    ];
-    const melody = phraseA.concat(phraseA.slice(32), phraseA.slice(0,32));
-    const bass = [98,131,165,196,147,185,220,196,110,147,175,220,123,165,196,247];
+    // 플레이: 더 낮고 거친 네온 체이스 사운드. 싱코페이션과 마이너 리프로 압박감을 줍니다.
+    const melody = [587,0,698,0,880,698,0,523,587,698,0,988,880,0,698,587,523,0,659,784,0,698,587,494,523,659,0,784,698,659,587,0,587,0,698,880,0,1047,880,698,659,0,784,988,880,0,784,659,523,587,659,0,784,698,587,0,494,0,587,698,0,659,523,0];
+    const bass = [73,0,73,98,0,73,87,0,65,0,65,98,69,0,82,0];
+    const roots = [220,196,175,208];
     const tick = () => {
         if (!isPlaying) return;
-        const step = musicStep % melody.length;
-        const intensity = Math.min(1, score / 350);
-        const tempo = Math.max(95, 155 - Math.min(score, 1000) * 0.06);
-        const note = melody[step];
-        const phrase = Math.floor(step / 32);
-        playTone(note, 0.12, 'square', 0.026 + intensity * 0.025);
-        // 베이스는 매 박을 받치고, 점수가 오르면 옥타브가 추가됩니다.
-        if (step % 2 === 0) {
-            const base = bass[Math.floor(step / 2) % bass.length];
-            playTone(base, 0.16, 'triangle', 0.035 + intensity * 0.018);
-            if (score >= 150) playTone(base * 2, 0.09, 'sawtooth', 0.008 + intensity * 0.01, 0.025);
+        const s = musicStep % 64, b = s % 16, bar = Math.floor(s/16);
+        const heat = Math.min(1,score/320), n = melody[s], root = roots[bar];
+        const tempo = Math.max(76,94-Math.min(score,1000)*0.018);
+        if (n) {
+            playTone(n,0.075,'square',0.024+heat*0.014);
+            if (score >= 100 && s%8 === 6) playTone(n*2,0.06,'sawtooth',0.008+heat*0.009,0.018);
+            if (score >= 360 && s%16 === 15) playTone(n*1.5,0.055,'triangle',0.012,0.022);
         }
-        // 반짝이는 상단 멜로디와 박자마다 달라지는 드럼
-        if (step % 2 === 1) playTone(note * 1.5, 0.085, 'triangle', 0.012 + intensity * 0.015, 0.025);
-        if (step % 4 === 0) playBeatSound('kick', 0.8 + intensity * 0.35);
-        if (step % 8 === 4) playBeatSound('snare', 0.75 + intensity * 0.4);
-        if (step % 2 === 1) playBeatSound('hat', 0.65 + intensity * 0.5);
-        if (step % 16 === 12) playTone(note * 2, 0.08, 'square', 0.008 + intensity * 0.018, 0.035);
-        if (step % 32 === 0 && step > 0) playBeatSound('crash', 0.65 + intensity * 0.5);
-        if (score >= 100 && step % 4 === 2) playTone(note * 2, 0.075, 'square', 0.009 + intensity * 0.012, 0.02);
-        if (score >= 300 && step % 2 === 0) playTone(note * 1.25, 0.065, 'triangle', 0.007 + intensity * 0.01, 0.035);
-        if (score >= 700 && step % 2 === 1) playTone(note * 2, 0.06, 'square', 0.008, 0.04);
+        if (s%2 === 0 && bass[s%16]) {
+            playTone(bass[s%16],0.15,'sawtooth',0.045+heat*0.018);
+            playTone(bass[s%16]*2,0.09,'square',0.009+heat*0.009,0.018);
+        }
+        if (b === 0) {
+            playTone(root,0.16,'sawtooth',0.016+heat*0.008);
+            playTone(root*1.189,0.13,'square',0.012,0.012);
+            playTone(root*1.498,0.12,'square',0.01,0.025);
+        } else if (b === 8) playTone(root*2,0.07,'triangle',0.012+heat*0.01);
+        if (b === 0 || b === 8) playBeatSound('kick',0.9+heat*0.35);
+        if (b === 6 || b === 14) playBeatSound('kick',0.38+heat*0.25);
+        if (b === 4 || b === 12) playBeatSound('snare',0.78+heat*0.38);
+        if (s%2) playBeatSound('hat',0.48+heat*0.36);
+        if (score >= 180 && s%4 === 3) playBeatSound('hat',0.22+heat*0.22);
+        if (s === 0 && musicStep > 0) playBeatSound('crash',0.55+heat*0.4);
         musicStep++;
-        if (musicTimer !== null) {
-            clearInterval(musicTimer);
-            musicTimer = setInterval(tick, tempo);
-        }
+        if (musicTimer !== null) { clearInterval(musicTimer); musicTimer = setInterval(tick,tempo); }
     };
-    const initialTempo = Math.max(95, 155 - Math.min(score, 1000) * 0.06);
-    musicTimer = setInterval(tick, initialTempo);
+    musicTimer = setInterval(tick,Math.max(76,94-Math.min(score,1000)*0.018));
     tick();
 }
 function playDeathSound(deathType) {
