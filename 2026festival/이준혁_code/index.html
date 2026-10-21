@@ -315,6 +315,7 @@ const gameOverScreen = document.getElementById('gameOverScreen');
 let audioContext = null;
 let musicTimer = null;
 let musicStep = 0;
+let gameplayAudio = null;
 let soundEnabled = true;
 const mapMusic = {
     city:    { notes: [523,659,784,659,587,698,880,698], bass: 131 },
@@ -389,6 +390,11 @@ function playUiSound(kind = 'tap') {
 }
 function stopMusic() {
     if (musicTimer !== null) { clearInterval(musicTimer); musicTimer = null; }
+    if (gameplayAudio) {
+        gameplayAudio.pause();
+        try { gameplayAudio.currentTime = 0; } catch (e) {}
+        gameplayAudio = null;
+    }
 }
 function playBeatSound(kind, strength = 1) {
     // 외부 음원 없이 만드는 짧은 아케이드 드럼 효과
@@ -439,6 +445,30 @@ function startMenuMusic() {
     tick();
 }
 function startMusic() {
+    stopMusic();
+    musicStep = 0;
+
+    // Put a properly licensed copy named stereo-madness.mp3 beside index.html.
+    // If it is not present or cannot play, keep gameplay audible with the existing synth track.
+    const track = new Audio("./stereo-madness.mp3");
+    track.loop = true;
+    track.volume = 0.72;
+    gameplayAudio = track;
+
+    let fallbackStarted = false;
+    const fallbackToSynth = () => {
+        if (fallbackStarted || !isPlaying || gameplayAudio !== track) return;
+        fallbackStarted = true;
+        gameplayAudio = null;
+        startSynthGameMusic();
+    };
+    track.addEventListener("error", fallbackToSynth, { once: true });
+    const playResult = track.play();
+    if (playResult && typeof playResult.catch === "function") {
+        playResult.catch(fallbackToSynth);
+    }
+}
+function startSynthGameMusic() {
     const ac = getAudio();
     if (!ac) return;
     stopMusic();
