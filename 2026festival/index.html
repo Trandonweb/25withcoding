@@ -1046,6 +1046,15 @@ function enterFestival(){
     "gate-open"
   );
 
+  // 이용 코드로 입장한 경우에는 Home 버튼을 표시하지 않습니다.
+  const homeLink = document.querySelector(".home-link");
+  if(homeLink){
+    homeLink.style.display =
+      sessionStorage.getItem("festival2026CodeAccess")==="true"
+        ? "none"
+        : "";
+  }
+
 }
 
 
