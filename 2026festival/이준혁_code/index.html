@@ -366,6 +366,13 @@ function playTone(freq, duration, type = 'sine', volume = 0.04, delay = 0) {
     osc.start(start);
     osc.stop(start + duration + 0.025);
 }
+function playStepSound(stepScore = 0) {
+    // 계단을 밟을 때마다 나는 짧고 경쾌한 소리. 점수가 오를수록 음이 조금 높아집니다.
+    const scale = [392, 494, 587, 659, 784, 659, 587, 494];
+    const freq = scale[Math.floor(stepScore) % scale.length] + Math.min(250, stepScore * 0.18);
+    playTone(freq, 0.055, 'triangle', 0.032);
+    playTone(freq * 1.5, 0.045, 'sine', 0.012, 0.018);
+}
 function playUiSound(kind = 'tap') {
     const patterns = {
         tap: [[660,0.07,'sine',0.025]],
@@ -387,71 +394,69 @@ function startMenuMusic() {
     const ac = getAudio();
     if (!ac || isPlaying || musicTimer !== null) return;
     musicStep = 0;
-    // 홈 화면용 오리지널 아케이드 음악: 32박 루프라 반복 간격이 길고, 메뉴 이동 중에도 계속 재생됩니다.
-    const notes = [523,659,784,659,587,698,880,784,659,784,988,784,698,880,1047,880,523,659,784,880,784,698,659,587,659,784,880,988,880,784,659,523];
-    const bass = [131,131,165,147,110,110,147,165];
+    // 홈 화면 전용: 밝고 장난스러운 오리지널 아케이드 음악, 64박 후 반복
+    const melody = [
+        659,784,988,784,659,523,587,659, 784,988,1175,988,784,659,698,784,
+        880,1047,880,784,698,587,659,698, 784,880,988,880,784,698,659,587,
+        523,659,784,988,880,784,659,784, 880,988,1175,1047,988,880,784,698,
+        659,784,880,1047,988,880,784,659, 587,698,880,784,659,587,523,659
+    ];
+    const bass = [131,165,196,165,147,185,220,185, 110,147,175,147,123,165,196,165];
     const tick = () => {
         if (isPlaying) return;
-        const step = musicStep % notes.length;
-        playTone(notes[step], 0.22, 'square', 0.042);
-        if (step % 2 === 0) playTone(bass[Math.floor(step / 4) % bass.length], 0.32, 'triangle', 0.055);
-        if (step % 4 === 0) playTone(65, 0.12, 'sine', 0.055);
-        else if (step % 4 === 2) playTone(180, 0.07, 'triangle', 0.022);
+        const step = musicStep % melody.length;
+        const phrase = Math.floor(step / 16);
+        playTone(melody[step], 0.19, 'square', 0.025 + phrase * 0.0015);
+        if (step % 2 === 0) playTone(bass[Math.floor(step / 2) % bass.length], 0.24, 'triangle', 0.025);
+        if (step % 8 === 0) playTone(melody[step] / 2, 0.3, 'sine', 0.018);
         musicStep++;
     };
     tick();
-    musicTimer = setInterval(tick, 240);
-}
-function playPianoNote(freq, duration = 0.8, volume = 0.035, delay = 0) {
-    const ac = getAudio();
-    if (!ac) return;
-    const start = ac.currentTime + delay;
-    // 피아노처럼 빠르게 시작하고 자연스럽게 사라지는 오리지널 음색
-    [1, 2.01, 3.9].forEach((partial, index) => {
-        const osc = ac.createOscillator();
-        const gain = ac.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq * partial, start);
-        const partialVolume = volume / (index === 0 ? 1 : index === 1 ? 3.2 : 6.5);
-        gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, partialVolume), start + 0.008);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration * (index === 0 ? 1 : 0.68));
-        osc.connect(gain);
-        gain.connect(ac.destination);
-        osc.start(start);
-        osc.stop(start + duration + 0.03);
-    });
+    musicTimer = setInterval(tick, 285);
 }
 function startMusic() {
     const ac = getAudio();
     if (!ac) return;
     stopMusic();
     musicStep = 0;
-    // 잔잔하고 쓸쓸한 분위기의 오리지널 피아노 루프 (기존 곡의 멜로디를 사용하지 않음)
+    // 게임 전용 오리지널 신나는 곡. 64박 루프이며 계단을 많이 오를수록 속도와 화성이 강해집니다.
     const melody = [
-        440, 523.25, 659.25, 587.33, 523.25, 440, 392, 440,
-        523.25, 587.33, 659.25, 523.25, 493.88, 440, 392, 329.63,
-        440, 523.25, 587.33, 523.25, 440, 392, 349.23, 392,
-        440, 493.88, 523.25, 440, 392, 349.23, 329.63, 392
+        392,523,659,784,659,523,587,698, 784,698,587,523,659,784,988,784,
+        440,587,698,880,698,587,659,784, 880,784,659,587,698,880,1047,880,
+        392,523,659,784,880,784,659,523, 587,698,784,988,1047,988,784,698,
+        440,587,698,880,988,880,698,587, 659,784,988,1175,1047,988,784,659
     ];
-    const chords = [
-        [220, 261.63, 329.63],
-        [196, 246.94, 293.66],
-        [174.61, 220, 261.63],
-        [196, 246.94, 329.63]
-    ];
+    const bass = [98,131,165,196,147,185,220,196, 110,147,175,220,123,165,196,247];
     const tick = () => {
         if (!isPlaying) return;
         const step = musicStep % melody.length;
-        playPianoNote(melody[step], 0.72, 0.075);
+        const intensity = Math.min(1, score / 500);
+        const tempo = Math.max(165, 310 - Math.min(score, 1000) * 0.13);
+        const note = melody[step];
+        playTone(note * (score >= 250 ? 2 : 1), 0.20, 'square', 0.018 + intensity * 0.012);
+        if (step % 2 === 0) {
+            playTone(bass[Math.floor(step / 2) % bass.length], 0.25, 'triangle', 0.024 + intensity * 0.012);
+        }
         if (step % 4 === 0) {
-            const chord = chords[Math.floor(step / 8) % chords.length];
-            chord.forEach((note, index) => playPianoNote(note, 1.25, 0.028, index * 0.045));
+            playTone(note * 1.5, 0.14, 'triangle', 0.008 + intensity * 0.014, 0.035);
+        }
+        if (score >= 100 && step % 8 === 4) {
+            playTone(note * 2, 0.11, 'square', 0.012, 0.06);
+        }
+        if (score >= 300 && step % 4 === 2) {
+            playTone(bass[Math.floor(step / 2) % bass.length] * 2, 0.16, 'triangle', 0.018, 0.025);
+        }
+        if (score >= 700 && step % 2 === 1) {
+            playTone(note * 1.25, 0.1, 'square', 0.009, 0.045);
         }
         musicStep++;
+        if (musicTimer !== null) {
+            clearInterval(musicTimer);
+            musicTimer = setInterval(tick, tempo);
+        }
     };
     tick();
-    musicTimer = setInterval(tick, 360);
+    musicTimer = setInterval(tick, 310);
 }
 function playDeathSound(deathType) {
     const presets = {
@@ -896,7 +901,7 @@ window.addEventListener('keydown', (e) => {
         score++;
         checkSpecialUnlocks();
 
-        playUiSound('step');
+        playStepSound(score);
         if (nextStair.hasItem) {
             gameGems++;
             totalGems++;
