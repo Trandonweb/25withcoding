@@ -292,6 +292,7 @@ canvas {
 <div id="controls">
     [방향 전환] : <span class="btn-hint">A</span> / <span class="btn-hint">←</span> |
     [그대로 오르기] : <span class="btn-hint">D</span> / <span class="btn-hint">→</span>
+    <div style="font-size:10px;color:#888;margin-top:4px;">플레이 BGM: Stay Inside Me — OcularNebula (Newgrounds)</div>
 </div>
 
 <script>
@@ -448,24 +449,20 @@ function startMusic() {
     stopMusic();
     musicStep = 0;
 
-    // Put a properly licensed copy named stereo-madness.mp3 beside index.html.
-    // If it is not present or cannot play, keep gameplay audible with the existing synth track.
-    const track = new Audio("./stereo-madness.mp3");
+    // Gameplay BGM: Stay Inside Me by OcularNebula, streamed from the artist's Newgrounds page.
+    // The track loops; the main menu's existing music is unchanged.
+    const track = new Audio("https://www.newgrounds.com/audio/download/535331");
     track.loop = true;
     track.volume = 0.72;
+    track.preload = "auto";
     gameplayAudio = track;
 
-    let fallbackStarted = false;
-    const fallbackToSynth = () => {
-        if (fallbackStarted || !isPlaying || gameplayAudio !== track) return;
-        fallbackStarted = true;
-        gameplayAudio = null;
-        startSynthGameMusic();
-    };
-    track.addEventListener("error", fallbackToSynth, { once: true });
+    track.addEventListener("error", () => {
+        console.error("Stay Inside Me could not be loaded. Check the network connection.");
+    }, { once: true });
     const playResult = track.play();
     if (playResult && typeof playResult.catch === "function") {
-        playResult.catch(fallbackToSynth);
+        playResult.catch(error => console.warn("Gameplay BGM playback was blocked:", error));
     }
 }
 function startSynthGameMusic() {
