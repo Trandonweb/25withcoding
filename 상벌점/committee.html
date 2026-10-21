@@ -86,7 +86,7 @@ function escapeHtml(value) { return String(value).replace(/[&<>'"]/g,c=>({"&":"&
 async function loadUsers() {
   const snap=await getDocs(collection(db,"users"));
   const users=[];
-  snap.forEach(d=>users.push({id:d.id,...d.data()}));
+  snap.forEach(d=>{const data=d.data();if(/^\d{5}$/.test(d.id)&&data.role)users.push({id:d.id,...data});});
   users.sort((a,b)=>Number(a.id)-Number(b.id));
   const targets=users.filter(u=>u.id!==myId);
   $("targetSelect").innerHTML=targets.map(u=>`<option value="${u.id}">${u.id} ${escapeHtml(u.name)} (${Number(u.score||0)}점)</option>`).join("");
