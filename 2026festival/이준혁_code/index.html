@@ -332,14 +332,23 @@ function getAudio() {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return null;
         if (!audioContext) audioContext = new AudioCtx();
-        // 브라우저의 자동재생 제한으로 오디오가 멈춰 있으면 사용자 입력 중 다시 활성화합니다.
-        if (audioContext.state === 'suspended') {
+        // 브라우저가 오디오 재생을 막았을 때도 사용자 입력 후 다시 활성화합니다.
+        if (audioContext.state !== 'running') {
             const resumeResult = audioContext.resume();
             if (resumeResult && typeof resumeResult.catch === 'function') resumeResult.catch(() => {});
         }
         return audioContext;
     } catch (e) { return null; }
 }
+
+// 첫 사용자 입력에서 오디오를 미리 활성화해 브라우저 자동재생 제한을 피합니다.
+function unlockAudio() {
+    if (!soundEnabled) return;
+    const ac = getAudio();
+    if (ac && ac.state !== 'running') ac.resume().catch(() => {});
+}
+document.addEventListener('pointerdown', unlockAudio, true);
+document.addEventListener('keydown', unlockAudio, true);
 function playTone(freq, duration, type = 'sine', volume = 0.04, delay = 0) {
     const ac = getAudio();
     if (!ac) return;
@@ -434,10 +443,10 @@ function startMusic() {
     const tick = () => {
         if (!isPlaying) return;
         const step = musicStep % melody.length;
-        playPianoNote(melody[step], 0.72, 0.028);
+        playPianoNote(melody[step], 0.72, 0.075);
         if (step % 4 === 0) {
             const chord = chords[Math.floor(step / 8) % chords.length];
-            chord.forEach((note, index) => playPianoNote(note, 1.25, 0.012, index * 0.045));
+            chord.forEach((note, index) => playPianoNote(note, 1.25, 0.028, index * 0.045));
         }
         musicStep++;
     };
