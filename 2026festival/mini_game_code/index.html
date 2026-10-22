@@ -157,7 +157,7 @@ input{background:#fff!important;color:var(--mg-ink)!important;border:1px solid #
   else wireModeButtons();
 })();
 </script>
-<section id="onlineRoomScreen" class="screen hidden"><div class="round">ONLINE / ROOM</div><h1>온라인 대전</h1><div class="sub">방을 만들거나 친구가 만든 방에 참가하세요.</div><div class="setting"><h2>방 만들기</h2><p class="desc">새 방을 만들고 코드를 친구에게 공유합니다.</p><button class="next" id="createRoomBtn" onclick="createOnlineRoom()">방 만들기 +</button></div><div class="setting"><h2>방 참가하기</h2><input id="roomCodeInput" maxlength="3" inputmode="numeric" pattern="[0-9]{3}" placeholder="3자리 방 코드" autocomplete="off" style="width:min(300px,100%);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#09150e;color:#fff;text-align:center;font-size:20px;letter-spacing:.18em;text-transform:uppercase"><br><button class="next" id="joinRoomBtn" onclick="joinOnlineRoom()">방 참가</button></div><div class="summary hidden" id="roomStatus" aria-live="polite"></div><button class="next hidden" id="roomContinueBtn" onclick="continueFromOnlineRoom()">연결 후 설정 →</button><br><button class="back" onclick="backToMode()">← 대전 방식 선택</button></section>
+<section id="onlineRoomScreen" class="screen hidden"><div class="round">ONLINE / ROOM</div><h1>온라인 대전</h1><div class="sub">방을 만들거나 친구가 만든 방에 참가하세요.<br>새로고침해도 방은 유지됩니다. 방에서 나가려면 <b>Ctrl + Shift + L</b>을 누르세요. (브라우저에 따라 Ctrl + L은 주소창 단축키일 수 있습니다.)</div><div class="setting"><h2>방 만들기</h2><p class="desc">새 방을 만들고 코드를 친구에게 공유합니다.</p><button class="next" id="createRoomBtn" onclick="createOnlineRoom()">방 만들기 +</button></div><div class="setting"><h2>방 참가하기</h2><input id="roomCodeInput" maxlength="3" inputmode="numeric" pattern="[0-9]{3}" placeholder="3자리 방 코드" autocomplete="off" style="width:min(300px,100%);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#09150e;color:#fff;text-align:center;font-size:20px;letter-spacing:.18em;text-transform:uppercase"><br><button class="next" id="joinRoomBtn" onclick="joinOnlineRoom()">방 참가</button></div><div class="summary hidden" id="roomStatus" aria-live="polite"></div><button class="next hidden" id="roomContinueBtn" onclick="continueFromOnlineRoom()">연결 후 설정 →</button><br><button class="back" onclick="backToMode()">← 대전 방식 선택</button></section>
 <section id="onlineWaitScreen" class="screen hidden"><div class="round">ONLINE</div><h1>방장 진행 대기</h1><div class="summary">방장이 게임과 진행을 조작합니다. 게임이 시작되면 자동으로 연결됩니다.</div></section><section id="settingsScreen" class="screen hidden"><div class="round">STEP 2</div><h1>게임 설정</h1><div class="sub" id="modeLabel"></div><div class="setting"><h2>몇 판으로 승부할까요?</h2><div class="sets"><button class="setbtn selected" onclick="chooseRounds(this,1)">단판</button><button class="setbtn" onclick="chooseRounds(this,3)">3판 2선승</button><button class="setbtn" onclick="chooseRounds(this,5)">5판 3선승</button><button class="setbtn" onclick="chooseRounds(this,7)">7판 4선승</button></div></div><div class="setting"><h2>게임</h2><div class="cards"><button class="card" onclick="chooseGame(this,'select','게임 선택')"><div class="icon"></div><div class="title">게임 선택</div><div class="desc">플레이할 게임을 직접 선택</div></button><button class="card" onclick="chooseGame(this,'random','랜덤')"><div class="icon"></div><div class="title">랜덤</div><div class="desc">게임을 무작위로 결정</div></button></div></div><button id="startBtn" class="next" disabled onclick="startSetup()">게임 시작 →</button><br><button class="back" onclick="backToMode()">← 이전</button></section>
 <section id="gameSelectScreen" class="screen hidden"><div class="round">STEP 3</div><h1>게임 선택</h1><div class="sub">이번 매치에서 플레이할 게임을 골라주세요.</div><div class="cards"><button class="card" onclick="pickActualGame('game1',' 줄다리기')"><div class="icon"></div><div class="title">줄다리기</div><div class="desc">빠르게 당기기</div></button><button class="card" onclick="pickActualGame('game2',' 영역 채우기')"><div class="icon"></div><div class="title">영역 채우기</div><div class="desc">20초 영역 싸움</div></button><button class="card" onclick="pickActualGame('game3',' 키 반응 대결')"><div class="icon"></div><div class="title">키 반응 대결</div><div class="desc">키보드 반응 속도</div></button><button class="card" onclick="pickActualGame('game4',' 4목')"><div class="icon"></div><div class="title">4목</div><div class="desc">네 개를 먼저 연결</div></button><button class="card" onclick="pickActualGame('game5',' 점프 러너')"><div class="icon"></div><div class="title">점프 러너</div><div class="desc">장애물을 피하며 점프</div></button><button class="card" onclick="pickActualGame('game6',' 장애물 슈팅')"><div class="icon"></div><div class="title">장애물 슈팅</div><div class="desc">장애물 효과를 활용한 슈팅 대결</div></button><button class="card" onclick="pickActualGame('game7',' 활쏘기 대결')"><div class="icon"></div><div class="title">활쏘기 대결</div><div class="desc">각도 조준 · 활시위 당겼다 놓기</div></button><button class="card" onclick="pickActualGame('game8',' 탁구 대결')"><div class="icon"></div><div class="title">탁구 대결</div><div class="desc">패들을 움직여 공을 받아치기</div></button><button class="card" onclick="pickActualGame('game9',' 회피 서바이벌')"><div class="icon"></div><div class="title">회피 서바이벌</div><div class="desc">떨어지는 장애물을 피해 생존</div></button></div><button class="back" onclick="backToSettings()">← 게임 재선택</button></section>
 <section id="readyScreen" class="screen hidden"><div class="round">READY</div><h1>게임 준비 완료!</h1><div class="summary" id="summary"></div><button class="next" onclick="startMatch()">플레이 시작 ▶</button><br><button class="back" onclick="backToSetup()">← 게임 재선택</button></section>
@@ -214,5 +214,41 @@ function watchRoom(code,role){if(roomUnsub)roomUnsub();activeRoom={code,role};lo
 window.createOnlineRoom=async()=>{const btn=document.getElementById('createRoomBtn');btn.disabled=true;try{let code,ref;for(let tries=0;tries<8;tries++){code=randomCode();ref=doc(db,'miniGameRooms',code);if(!(await getDoc(ref)).exists())break;code=null}if(!code)throw new Error('코드 생성 실패');await setDoc(ref,{code,hostId:crypto.randomUUID(),guestId:null,status:'waiting',hostSeenAt:Date.now(),guestSeenAt:null,createdAt:Date.now(),updatedAt:Date.now()});watchRoom(code,'host')}catch(e){showRoomStatus('방을 만들지 못했습니다. Firestore 권한 또는 연결을 확인해 주세요. ('+(e.code||e.message)+')')}finally{btn.disabled=false}};
 window.joinOnlineRoom=async()=>{const btn=document.getElementById('joinRoomBtn');const code=document.getElementById('roomCodeInput').value.trim().toUpperCase();if(!/^[0-9]{3}$/.test(code)){showRoomStatus('방 코드는 숫자 3자리여야 합니다.');return}btn.disabled=true;try{const ref=doc(db,'miniGameRooms',code);const guestId=crypto.randomUUID();await runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())throw new Error('NOT_FOUND');const data=snap.data();if(data.status!=='waiting'||data.guestId)throw new Error('FULL');tx.update(ref,{guestId,status:'connected',guestSeenAt:Date.now(),updatedAt:Date.now()})});watchRoom(code,'guest')}catch(e){const message=e.message==='NOT_FOUND'?'해당 방이 없습니다. 코드를 다시 확인하세요.':e.message==='FULL'?'이미 참가자가 있거나 시작할 수 없는 방입니다.':'방 참가에 실패했습니다. Firestore 권한 또는 연결을 확인해 주세요. ('+(e.code||e.message)+')';showRoomStatus(message)}finally{btn.disabled=false}};
 window.addEventListener('beforeunload',()=>{if(roomUnsub)roomUnsub();if(window.__mgRoomHeartbeatTimer)clearInterval(window.__mgRoomHeartbeatTimer)});
+// Reloading keeps the room code in localStorage; reconnect the live watcher after refresh.
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=JSON.parse(localStorage.getItem('miniGameRoom')||'null');
+  if(saved?.code&&saved?.role&&!localStorage.getItem('miniGameResult')){
+    show('onlineRoomScreen');
+    watchRoom(saved.code,saved.role);
+  }
+});
+window.leaveMiniGameRoom=async()=>{
+  const saved=JSON.parse(localStorage.getItem('miniGameRoom')||'null');
+  if(saved?.code&&saved?.role){
+    try{
+      const ref=doc(db,'miniGameRooms',saved.code);
+      if(saved.role==='host'){
+        await updateDoc(ref,{status:'closed',updatedAt:Date.now()});
+      }else{
+        await updateDoc(ref,{guestId:null,guestSeenAt:null,status:'waiting',updatedAt:Date.now()});
+      }
+    }catch(e){console.warn('Room exit update failed',e)}
+  }
+  if(roomUnsub)roomUnsub();roomUnsub=null;
+  if(window.__mgRoomHeartbeatTimer)clearInterval(window.__mgRoomHeartbeatTimer);
+  localStorage.removeItem('miniGameRoom');
+  localStorage.removeItem('miniGameSettings');
+  localStorage.removeItem('miniGameSelected');
+  localStorage.removeItem('miniGameResult');
+  window.dispatchEvent(new Event('mini-game-room-updated'));
+  location.href=location.pathname;
+};
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key.toLowerCase()==='l'){
+    e.preventDefault();
+    window.leaveMiniGameRoom?.();
+  }
+},true);
+
 </script>
 <script type="module" src="online-sync.js"></script></body></html>
