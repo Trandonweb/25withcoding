@@ -72,7 +72,7 @@ if(spawnP<=0){
 }
 if(pAlive){pobs.forEach(o=>o.x-=speed*dt);pobs=pobs.filter(o=>o.x>-40)}
 if(cAlive){cobs.forEach(o=>o.x-=speed*dt);cobs=cobs.filter(o=>o.x>-40)}
-if(cAlive&&mode==='cpu'){const next=cobs.find(o=>o.x>75);if(next&&next.x<150&&cy===0&&cpuNextJump<=t){cvy=-10.1;cpuNextJump=t+(Math.random()<Math.min(.42,t/80)?0.75:0.28)}}
+if(cAlive&&mode==='cpu'){const next=cobs.find(o=>o.x>75);const d=s.difficulty||'normal',trigger=d==='easy'?125:d==='hard'?175:150;if(next&&next.x<trigger&&cy===0&&cpuNextJump<=t){cvy=d==='easy'?-9.4:-10.1;cpuNextJump=t+(Math.random()<(d==='easy'?.18:d==='hard'?.7:Math.min(.42,t/80))?(d==='hard'?.35:.75):.28)}}
 if(pAlive&&collision(py,pobs)){pAlive=false;pEndTime=t;document.getElementById('message').textContent='1P 주행 종료 · 2P는 계속 달립니다.'}
 if(cAlive&&collision(cy,cobs)){cAlive=false;cEndTime=t;document.getElementById('cpuState').textContent='주행 종료'}
 if(t>=finishAt){if(pAlive){pAlive=false;pEndTime=finishAt;document.getElementById('message').textContent='1P 완주 · 2P는 계속 달립니다.'}if(cAlive){cAlive=false;cEndTime=finishAt}}
