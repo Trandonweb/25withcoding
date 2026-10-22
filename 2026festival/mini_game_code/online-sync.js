@@ -12,7 +12,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig, "miniGameSyncShared");
 const db = getFirestore(app);
 let room = null, ref = null, unsub = null, handler = null, lastStateAt = 0;
-let lastRemoteInputId = null, appliedRemoteKeys = new Set(), mirrorRoot = null;
+let lastRemoteInputId = null, processedRemoteInputs = new Set(), mirrorRoot = null;
 let remotePressed = new Set(), lastMirrorAt = 0, mirrorTimer = null;
 
 function readRoom() {
@@ -70,21 +70,16 @@ function dispatchRemotePointer(data) {
   if (!target || target.closest("#miniSoundPanel,#mgOnlineStatus,#mgHostMirror")) return;
   if (typeof target.click === "function") target.click();
 }
-function applyRemoteKeys(keys) {
-  const next = new Set(Array.isArray(keys) ? keys : []);
-  for (const code of appliedRemoteKeys) {
-    if (!next.has(code)) {
-      const key = code === "Space" ? " " : code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Arrow") ? code : code === "Enter" ? "Enter" : code;
-      dispatchKey("keyup", key, code);
+function processRemoteInputQueue(queue) {
+  if (!Array.isArray(queue)) return;
+  for (const input of queue) {
+    if (!input || !input.id || processedRemoteInputs.has(input.id)) continue;
+    if (["keydown","keyup"].includes(input.type) && typeof input.key === "string" && typeof input.code === "string") {
+      dispatchKey(input.type,input.key,input.code,!!input.repeat);
+      processedRemoteInputs.add(input.id);
+      if (processedRemoteInputs.size > 500) processedRemoteInputs = new Set([...processedRemoteInputs].slice(-250));
     }
   }
-  for (const code of next) {
-    if (!appliedRemoteKeys.has(code)) {
-      const key = code === "Space" ? " " : code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Arrow") ? code : code === "Enter" ? "Enter" : code;
-      dispatchKey("keydown", key, code);
-    }
-  }
-  appliedRemoteKeys = next;
 }
 function ensureSubscription() {
   const nextRoom = readRoom();
@@ -94,7 +89,7 @@ function ensureSubscription() {
   if (unsub) { unsub(); unsub = null; }
   if (mirrorTimer) { clearInterval(mirrorTimer); mirrorTimer = null; }
   room = nextRoom;
-  ref = null; lastStateAt = 0; lastRemoteInputId = null; appliedRemoteKeys = new Set();
+  ref = null; lastStateAt = 0; lastRemoteInputId = null; processedRemoteInputs = new Set();
   if (!nextKey) {
     if (document.getElementById("mgOnlineStatus")) document.getElementById("mgOnlineStatus").remove();
     return;
@@ -109,7 +104,7 @@ function ensureSubscription() {
     setStatus((room.role === "host" ? "방장" : "참가자") + " · 방 " + room.code + (bothLive ? " · 실시간 연결됨" : " · 상대 연결 확인 중"));
     if (room.role === "host") {
       if (data.remotePointer && data.remotePointer.id !== lastRemoteInputId) { lastRemoteInputId = data.remotePointer.id; dispatchRemotePointer(data.remotePointer); }
-      if (data.remoteKeys && Array.isArray(data.remoteKeys.keys)) applyRemoteKeys(data.remoteKeys.keys);
+      processRemoteInputQueue(data.remoteInputQueue);
       if (data.remoteInput && data.remoteInput.id !== lastRemoteInputId) {
         lastRemoteInputId = data.remoteInput.id;
         const input = data.remoteInput;
@@ -190,23 +185,27 @@ window.mgOnline = {
 function installGuestInputRelay() {
   const remoteKeys = new Set(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space","Enter","KeyA","KeyD","KeyS","KeyW","KeyL","KeyQ","KeyP"]);
   const pressed = new Set();
-  const sendKeys = () => {
+  let queue = [], writeChain = Promise.resolve();
+  const enqueue = (type,e) => {
     const r = readRoom(); if (!roomKey(r) || r.role !== "guest") return;
-    updateDoc(doc(db,"miniGameRooms",r.code),{remoteKeys:{keys:[...pressed],updatedAt:Date.now()},updatedAt:Date.now()})
-      .catch(err=>console.warn("MINI GAME remote keys failed",err));
+    const input = { id:Date.now().toString(36)+"-"+Math.random().toString(36).slice(2), type, key:e.key, code:e.code, repeat:!!e.repeat, at:Date.now() };
+    queue = [...queue,input].slice(-40);
+    const snapshot = queue.slice();
+    writeChain = writeChain.then(()=>updateDoc(doc(db,"miniGameRooms",r.code),{remoteInputQueue:snapshot,updatedAt:Date.now()}))
+      .catch(err=>console.warn("MINI GAME remote input failed",err));
   };
   const onKeyDown = e => {
     if (e.target?.closest?.("#miniSoundPanel")) return;
     if (!remoteKeys.has(e.code)) return;
     const r = readRoom(); if (!roomKey(r) || r.role !== "guest") return;
     e.preventDefault(); e.stopImmediatePropagation();
-    pressed.add(e.code); sendKeys();
+    if (!pressed.has(e.code)) { pressed.add(e.code); enqueue("keydown",e); }
   };
   const onKeyUp = e => {
     if (!remoteKeys.has(e.code)) return;
     const r = readRoom(); if (!roomKey(r) || r.role !== "guest") return;
     e.preventDefault(); e.stopImmediatePropagation();
-    pressed.delete(e.code); sendKeys();
+    if (pressed.delete(e.code)) enqueue("keyup",e);
   };
   const blockLocal = e => {
     const r = readRoom(); if (!roomKey(r) || r.role !== "guest") return;
@@ -219,7 +218,7 @@ function installGuestInputRelay() {
   };
   ["keydown","keyup"].forEach(type=>document.addEventListener(type,type==="keydown"?onKeyDown:onKeyUp,true));
   ["pointerdown","click","touchstart"].forEach(type=>document.addEventListener(type,blockLocal,true));
-  window.addEventListener("blur",()=>{if(pressed.size){pressed.clear();sendKeys();}});
+  window.addEventListener("blur",()=>{for(const code of [...pressed]){const key=code==="Space"?" ":code.startsWith("Key")?code.slice(3).toLowerCase():code;enqueue("keyup",{key,code,repeat:false});}pressed.clear();});
 }
 window.addEventListener("mini-game-room-updated",ensureSubscription);
 window.addEventListener("storage",e=>{if(e.key==="miniGameRoom")ensureSubscription();});
