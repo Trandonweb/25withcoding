@@ -31,7 +31,7 @@
 <section id="hud" aria-hidden="true">
   <div class="topbar"><b class="team-score red">0</b><span class="mode" id="objectiveText">FIGHT FOR CONTROL</span><span id="roundTimer" class="round-timer">5:00</span><div class="point-bar"><div class="point-fill"></div></div><b class="team-score blue">0</b></div>
   <div class="class-tag"><span class="team-hud">RED</span> · <span class="class-hud">SCOUT</span><span class="alive-count">9v9</span></div>
-  <div class="crosshair"><i></i></div><div id="weaponSidebar" class="weapon-sidebar"></div><div class="hitmarker">✕</div>
+  <div class="crosshair"><i></i></div><div id="weaponSidebar" class="weapon-sidebar"></div><div id="captureProgressHud" class="capture-progress-hud" aria-label="점령 지점 진행 상황"><span class="capture-point-square" aria-label="점령 지점 1"></span><span class="capture-point-square" aria-label="점령 지점 2"></span><span class="capture-point-square" aria-label="점령 지점 3"></span></div><div class="hitmarker">✕</div>
   <div class="bottom-left"><div class="health-line"><span class="health">125</span><span class="health-max">/ 125</span><span class="health-label">HEALTH</span></div><div class="health-track"><div class="health-fill"></div></div><div class="hint">SPACE JUMP · SCOUT DOUBLE TAP · SHIFT SPRINT</div><div class="pickup-hint">MEDKITS + AMMO CRATES ON MAP</div><div class="medic-call-hint">E · CALL MEDIC</div><div class="ability-hud">Q · CLASS ABILITY READY</div></div>
   <div class="bottom-right"><div class="weapon-name">Scattergun</div><div class="ammo">6 <small>/ 32</small></div><div class="metal-line">METAL <b id="metalAmount">200 / 200</b></div><div class="hint">AUTO RELOAD · R RELOAD · 1 / 2 / 3 · WHEEL SWITCH</div></div>
   <div id="targetInfo" class="target-info"></div><div class="sniper-charge"><span>CHARGE</span><div><i id="sniperChargeFill"></i></div></div>
@@ -64,6 +64,6 @@
  });
 })();
 </script>
-<script type="module" src="./js/game-hotfix4.js?v=20261022-syntaxfix3"></script>
+<script type="module" src="./js/game-hotfix5.js?v=20261022-attackdefend1"></script>
 </body>
 </html>
