@@ -61,7 +61,13 @@ function renderHostMirror(data) {
   });
 }
 function dispatchKey(type, key, code, repeat=false) {
-  try { document.dispatchEvent(new KeyboardEvent(type, { key, code, bubbles:true, cancelable:true, repeat })); } catch {}
+  try { const event = new KeyboardEvent(type, { key, code, bubbles:true, cancelable:true, repeat }); Object.defineProperty(event,"mgRemote",{value:true}); document.dispatchEvent(event); } catch {}
+}
+function dispatchRemotePointer(data) {
+  if (!data || !Number.isFinite(data.x) || !Number.isFinite(data.y)) return;
+  const target = document.elementFromPoint(Math.round(data.x * innerWidth), Math.round(data.y * innerHeight));
+  if (!target || target.closest("#miniSoundPanel,#mgOnlineStatus,#mgHostMirror")) return;
+  if (typeof target.click === "function") target.click();
 }
 function applyRemoteKeys(keys) {
   const next = new Set(Array.isArray(keys) ? keys : []);
@@ -101,6 +107,7 @@ function ensureSubscription() {
     const bothLive = !!data.hostSeenAt && !!data.guestSeenAt && now-data.hostSeenAt<7000 && now-data.guestSeenAt<7000 && data.status === "connected" && !!data.guestId;
     setStatus((room.role === "host" ? "방장" : "참가자") + " · 방 " + room.code + (bothLive ? " · 실시간 연결됨" : " · 상대 연결 확인 중"));
     if (room.role === "host") {
+      if (data.remotePointer && data.remotePointer.id !== lastRemoteInputId) { lastRemoteInputId = data.remotePointer.id; dispatchRemotePointer(data.remotePointer); }
       if (data.remoteKeys && Array.isArray(data.remoteKeys.keys)) applyRemoteKeys(data.remoteKeys.keys);
       if (data.remoteInput && data.remoteInput.id !== lastRemoteInputId) {
         lastRemoteInputId = data.remoteInput.id;
@@ -201,6 +208,10 @@ function installGuestInputRelay() {
   const blockLocal = e => {
     const r = readRoom(); if (!roomKey(r) || r.role !== "guest") return;
     if (e.target?.closest?.("#miniSoundPanel")) return;
+    if (e.type === "click") {
+      const remotePointer = { id: Date.now().toString(36)+"-"+Math.random().toString(36).slice(2), x: Math.max(0,Math.min(1,e.clientX/Math.max(1,innerWidth))), y: Math.max(0,Math.min(1,e.clientY/Math.max(1,innerHeight))), at:Date.now() };
+      updateDoc(doc(db,"miniGameRooms",r.code),{remotePointer,updatedAt:Date.now()}).catch(err=>console.warn("MINI GAME remote click failed",err));
+    }
     if (e.type === "pointerdown" || e.type === "click" || e.type === "touchstart") { e.preventDefault(); e.stopImmediatePropagation(); }
   };
   ["keydown","keyup"].forEach(type=>document.addEventListener(type,type==="keydown"?onKeyDown:onKeyUp,true));
