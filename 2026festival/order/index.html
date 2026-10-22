@@ -73,6 +73,7 @@ async function changeQty(id,delta){
  writeQueues[kiosk]=(writeQueues[kiosk]||Promise.resolve()).then(()=>setDoc(orderDoc(kiosk),next));
  try{await writeQueues[kiosk];}catch(e){console.error('ORDER_WRITE_ERROR',e);alert('주문 저장 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. '+e.message);}
 }
+let clientOrderSuccessTimer=null;function showClientOrderSuccess(orderNo){const overlay=document.getElementById("orderSuccess");document.getElementById("orderSuccessNumber").textContent=orderNo;document.getElementById("orderSuccessTitle").textContent=language==="en"?"Order completed successfully":"주문이 완료되었습니다";document.getElementById("orderSuccessLabel").textContent=language==="en"?"Order number":"주문번호";document.getElementById("orderSuccessNote").textContent=language==="en"?"Returning to the menu in 3 seconds…":"3초 후 메뉴 선택 화면으로 돌아갑니다.";overlay.style.display="flex";if(clientOrderSuccessTimer)clearTimeout(clientOrderSuccessTimer);clientOrderSuccessTimer=setTimeout(()=>{overlay.style.display="none";},3000);}
 function renderClient(o){menus.forEach(m=>{const el=document.getElementById("qty-"+m.id);if(el)el.textContent=m.voucher?voucherDrinks.reduce((n,d)=>n+Number(o.items?.[voucherItemId(d)]||0),0):o.items?.[m.id]||0});const rows=orderLines(o).map(line=>`<div class="cart-item"><div class="cart-item-row"><b>${line.name}</b><b>${money(line.price*line.qty)}원</b></div><div class="qty">${line.qty}개 × ${money(line.price)}원</div></div>`).join("");document.getElementById("cartList").innerHTML=rows||'<div class="empty">아직 담은 메뉴가 없습니다.</div>';document.getElementById("total").textContent=money(o.total);document.getElementById("paidBox").innerHTML=o.status==='paid'?'<div class="paidbox">결제 완료</div>':o.status==='cancelled'?'<div class="paidbox" style="background:#fdecec;color:#b42318">결제 취소</div>':'';document.querySelectorAll('.qty-btn').forEach(b=>b.disabled=o.status==='paid'||o.status==='cancelled');}
 function itemCount(o){return Object.values(o.items||{}).reduce((n,v)=>n+Number(v||0),0);}
 function historyFor(k){return Array.isArray((orders[k]||{}).history)?orders[k].history:[];}
@@ -107,18 +108,9 @@ async function completePayment(k){
  const orderNo=o.orderNo||nextOrderNo(k);
  const archived={id:orderNo,orderNo,kiosk:k,items:{...(o.items||{})},total:Number(o.total||0),status:"paid",updatedAt:Date.now()};
  history.push(archived);
- const next={...emptyOrder(),orderNo:nextOrderNo(k,history),history,updatedAt:Date.now(),kiosk:k,lastAction:"paid",nextOrderSeq:Number(orderNo.slice(String(k).length))+1};
- try{
-  await setDoc(orderDoc(k),next);
-  orders[k]=next;renderHost();sendRtc(k,{type:"order",order:next});
-  document.getElementById("orderSuccessNumber").textContent=orderNo;
-  document.getElementById("orderSuccessTitle").textContent=language==="en"?"Order completed successfully":"주문이 완료되었습니다";
-  document.getElementById("orderSuccessLabel").textContent=language==="en"?"Order number":"주문번호";
-  document.getElementById("orderSuccessNote").textContent=language==="en"?"Returning to the admin screen in 3 seconds…":"3초 후 관리자 화면으로 돌아갑니다.";
-  document.getElementById("orderSuccess").style.display="flex";
-  if(window.orderSuccessTimer)clearTimeout(window.orderSuccessTimer);
-  window.orderSuccessTimer=setTimeout(()=>{document.getElementById("orderSuccess").style.display="none";},3000);
- }catch(e){console.error("ORDER_COMPLETE_ERROR",e);alert((language==="en"?"Could not complete the order. ":"주문 완료 처리에 실패했습니다. ")+e.message);}
+ const next={...emptyOrder(),orderNo:nextOrderNo(k,history),history,updatedAt:Date.now(),kiosk:k,lastAction:"paid",lastCompletedOrder:{orderNo,completedAt:Date.now()},nextOrderSeq:Number(orderNo.slice(String(k).length))+1};
+ try{await saveOrder(k,next);}
+ catch(e){console.error("ORDER_COMPLETE_ERROR",e);alert((language==="en"?"Could not complete the order. ":"주문 완료 처리에 실패했습니다. ")+e.message);}
 }
 async function cancelHistoryOrder(k,id){const o=orders[k]||emptyOrder(),history=historyFor(k),h=history.find(x=>x.id===id);if(!h||h.status!=="paid")return;if(!confirm("이 주문의 결제를 취소할까요? 주문 기록은 유지됩니다."))return;await saveOrder(k,{...o,history:history.map(x=>x.id===id?{...x,status:"cancelled",updatedAt:Date.now()}:x),updatedAt:Date.now(),kiosk:k,lastAction:"payment-cancelled"});}
 async function undoHistoryCompletion(k,id){const o=orders[k]||emptyOrder(),history=historyFor(k),h=history.find(x=>x.id===id);if(!h||h.status!=="paid")return;if(itemCount(o)){alert("현재 진행 중인 주문이 있어 되돌릴 수 없습니다. 먼저 현재 주문을 비워 주세요.");return;}await saveOrder(k,{...o,items:{...(h.items||{})},total:Number(h.total||0),status:"waiting",orderNo:h.orderNo,history:history.filter(x=>x.id!==id),updatedAt:Date.now(),kiosk:k,lastAction:"payment-undone"});}
@@ -192,7 +184,7 @@ function start(){
   const k=kiosks[0];
   startClientRtc(k);
   try{
-   onSnapshot(orderDoc(k),s=>{orders[k]=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();renderClient(orders[k]);},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기 실패: "+e.message);});
+   let clientSnapshotInitialized=false;const knownPaidOrders=new Set();const knownHistoryStatuses=new Map();onSnapshot(orderDoc(k),s=>{const incoming=s.exists()?{...emptyOrder(),...s.data()}:emptyOrder();const history=Array.isArray(incoming.history)?incoming.history:[];if(clientSnapshotInitialized){let completed=null;for(const h of history){const id=String(h.id||h.orderNo||"");if(!id)continue;const previous=knownHistoryStatuses.get(id);if(h.status==="paid"&&(!previous||previous!=="paid")&&!knownPaidOrders.has(id)){completed=h;break;}}if(completed){knownPaidOrders.add(String(completed.id||completed.orderNo));showClientOrderSuccess(completed.orderNo||completed.id||"-");}}else{history.forEach(h=>{if(h.status==="paid")knownPaidOrders.add(String(h.id||h.orderNo||""));});clientSnapshotInitialized=true;}history.forEach(h=>{const id=String(h.id||h.orderNo||"");if(id)knownHistoryStatuses.set(id,h.status);});orders[k]=incoming;renderClient(orders[k]);},e=>{console.error("ORDER_LISTEN_ERROR",e);alert("주문 데이터 읽기失败: "+e.message);});
   }catch(e){console.error("ORDER_LISTEN_SETUP_ERROR",e);alert("주문 연결 실패: "+e.message);}
  }else{
   document.getElementById("hostApp").style.display="block";
