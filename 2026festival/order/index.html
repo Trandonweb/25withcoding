@@ -10,7 +10,7 @@
 <body>
 <div class="language-bar"><label for="languageSelect">언어 / Language</label><select id="languageSelect" aria-label="Language"><option value="ko">한국어</option><option value="en">English</option></select></div>
 <div id="roleScreen" class="role-screen"><div class="setup-card"><h1>축제 주문 시스템</h1><p>사용할 화면과 키오스크를 선택하세요.</p><div class="setup-label">화면 선택</div><div class="setup-buttons"><button type="button" class="setup-btn selected" id="chooseClient">주문 키오스크</button><button type="button" class="setup-btn" id="chooseHost">관리자</button></div><div class="setup-label">키오스크 번호</div><div class="setup-buttons" id="kioskChoices"><button type="button" class="setup-btn selected" data-kiosk="1">1번</button><button type="button" class="setup-btn" data-kiosk="2">2번</button><button type="button" class="setup-btn" data-kiosk="3">3번</button><button type="button" class="setup-btn" data-kiosk="4">4번</button></div><p class="hint" id="setupHint">주문할 키오스크 번호를 하나 선택하세요.</p><label class="setup-label" for="setupPassword">접속 비밀번호</label><input id="setupPassword" type="password" autocomplete="current-password" placeholder="비밀번호 입력"><button type="button" class="setup-start" id="setupStart">시작하기</button><p class="setup-error" id="setupError" role="alert"></p></div></div>
-<div id="clientApp" class="app"><div class="client"><main class="menu"><div id="clientKiosk" class="kiosk"></div><div id="rtcStatus" class="hint">P2P 연결 준비 중...</div><h1>주문하기</h1><div id="menus" class="menus"></div></main><aside class="cart"><h2>담은 메뉴</h2><div id="cartList" class="cart-list"><div class="empty">아직 담은 메뉴가 없습니다.</div></div><div class="total">총 <span id="total">0</span>원</div><div id="paidBox"></div><button id="confirmOrderBtn" class="confirm-order-btn" type="button" disabled>주문 확정</button></aside></div></div><div id="orderSuccess" class="order-success" role="status" aria-live="polite"><div class="order-success-card"><div class="order-success-mark">✓</div><h2 id="orderSuccessTitle">주문이 완료되었습니다</h2><div class="order-success-label" id="orderSuccessLabel">주문번호</div><div id="orderSuccessNumber" class="order-success-number">-</div><div class="order-success-note" id="orderSuccessNote">3초 후 메뉴 선택 화면으로 돌아갑니다.</div></div></div>
+<div id="clientApp" class="app"><div class="client"><main class="menu"><div id="clientKiosk" class="kiosk"></div><div id="rtcStatus" class="hint">P2P 연결 준비 중...</div><h1>주문하기</h1><div id="menus" class="menus"></div></main><aside class="cart"><h2>담은 메뉴</h2><div id="cartList" class="cart-list"><div class="empty">아직 담은 메뉴가 없습니다.</div></div><div class="total">총 <span id="total">0</span>원</div><div id="paidBox"></div></aside></div></div><div id="orderSuccess" class="order-success" role="status" aria-live="polite"><div class="order-success-card"><div class="order-success-mark">✓</div><h2 id="orderSuccessTitle">주문이 완료되었습니다</h2><div class="order-success-label" id="orderSuccessLabel">주문번호</div><div id="orderSuccessNumber" class="order-success-number">-</div><div class="order-success-note" id="orderSuccessNote">3초 후 메뉴 선택 화면으로 돌아갑니다.</div></div></div>
 <div id="hostApp" class="app"><div class="host"><div class="host-top"><div><h1>주문 관리자</h1><div class="hint" id="hostInfo"></div><div class="hint" id="rtcHostStatus">WebRTC 연결 준비 중...</div></div><div class="host-total">총 매출 <span id="hostTotal">0</span>원</div></div><div class="host-content"><div class="host-list"><div class="order-row header"><div>키오스크</div><div>주문 번호</div><div>메뉴</div><div>수량</div><div>금액</div><div>상태</div><div>처리</div></div><div id="hostList"></div></div><section class="history-wrap"><h2>이전 주문 기록 · 불러오기로 키오스크에 복원</h2><div class="history-list"><div class="order-row header"><div>키오스크</div><div>주문 번호</div><div>메뉴</div><div>수량</div><div>금액</div><div>상태</div><div>처리</div></div><div id="historyList"></div></div></section></div></div></div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
@@ -73,7 +73,7 @@ async function changeQty(id,delta){
  writeQueues[kiosk]=(writeQueues[kiosk]||Promise.resolve()).then(()=>setDoc(orderDoc(kiosk),next));
  try{await writeQueues[kiosk];}catch(e){console.error('ORDER_WRITE_ERROR',e);alert('주문 저장 실패: Firestore Rules에서 order 문서 쓰기를 허용해야 합니다. '+e.message);}
 }
-function renderClient(o){menus.forEach(m=>{const el=document.getElementById("qty-"+m.id);if(el)el.textContent=m.voucher?voucherDrinks.reduce((n,d)=>n+Number(o.items?.[voucherItemId(d)]||0),0):o.items?.[m.id]||0});const rows=orderLines(o).map(line=>`<div class="cart-item"><div class="cart-item-row"><b>${line.name}</b><b>${money(line.price*line.qty)}원</b></div><div class="qty">${line.qty}개 × ${money(line.price)}원</div></div>`).join("");document.getElementById("cartList").innerHTML=rows||'<div class="empty">아직 담은 메뉴가 없습니다.</div>';document.getElementById("total").textContent=money(o.total);document.getElementById("paidBox").innerHTML=o.status==='paid'?'<div class="paidbox">결제 완료</div>':o.status==='cancelled'?'<div class="paidbox" style="background:#fdecec;color:#b42318">결제 취소</div>':'';const confirmBtn=document.getElementById("confirmOrderBtn");if(confirmBtn)confirmBtn.disabled=!itemCount(o)||o.status==='paid'||o.status==='cancelled';document.querySelectorAll('.qty-btn').forEach(b=>b.disabled=o.status==='paid'||o.status==='cancelled');}
+function renderClient(o){menus.forEach(m=>{const el=document.getElementById("qty-"+m.id);if(el)el.textContent=m.voucher?voucherDrinks.reduce((n,d)=>n+Number(o.items?.[voucherItemId(d)]||0),0):o.items?.[m.id]||0});const rows=orderLines(o).map(line=>`<div class="cart-item"><div class="cart-item-row"><b>${line.name}</b><b>${money(line.price*line.qty)}원</b></div><div class="qty">${line.qty}개 × ${money(line.price)}원</div></div>`).join("");document.getElementById("cartList").innerHTML=rows||'<div class="empty">아직 담은 메뉴가 없습니다.</div>';document.getElementById("total").textContent=money(o.total);document.getElementById("paidBox").innerHTML=o.status==='paid'?'<div class="paidbox">결제 완료</div>':o.status==='cancelled'?'<div class="paidbox" style="background:#fdecec;color:#b42318">결제 취소</div>':'';document.querySelectorAll('.qty-btn').forEach(b=>b.disabled=o.status==='paid'||o.status==='cancelled');}
 function itemCount(o){return Object.values(o.items||{}).reduce((n,v)=>n+Number(v||0),0);}
 function historyFor(k){return Array.isArray((orders[k]||{}).history)?orders[k].history:[];}
 function nextOrderNo(k,sourceHistory=historyFor(k)){const maxSeq=sourceHistory.reduce((max,h)=>{const raw=String(h.orderNo||h.id||"");const n=Number(raw.slice(String(k).length));return raw.startsWith(String(k))&&Number.isFinite(n)?Math.max(max,n):max;},0);return String(k)+String(maxSeq+1).padStart(2,"0");}
@@ -107,41 +107,24 @@ async function completePayment(k){
  const orderNo=o.orderNo||nextOrderNo(k);
  const archived={id:orderNo,orderNo,kiosk:k,items:{...(o.items||{})},total:Number(o.total||0),status:"paid",updatedAt:Date.now()};
  history.push(archived);
- await saveOrder(k,{...emptyOrder(),orderNo:nextOrderNo(k,history),history,updatedAt:Date.now(),kiosk:k,lastAction:"paid",nextOrderSeq:Number(orderNo.slice(String(k).length))+1});
+ const next={...emptyOrder(),orderNo:nextOrderNo(k,history),history,updatedAt:Date.now(),kiosk:k,lastAction:"paid",nextOrderSeq:Number(orderNo.slice(String(k).length))+1};
+ try{
+  await setDoc(orderDoc(k),next);
+  orders[k]=next;renderHost();sendRtc(k,{type:"order",order:next});
+  document.getElementById("orderSuccessNumber").textContent=orderNo;
+  document.getElementById("orderSuccessTitle").textContent=language==="en"?"Order completed successfully":"주문이 완료되었습니다";
+  document.getElementById("orderSuccessLabel").textContent=language==="en"?"Order number":"주문번호";
+  document.getElementById("orderSuccessNote").textContent=language==="en"?"Returning to the admin screen in 3 seconds…":"3초 후 관리자 화면으로 돌아갑니다.";
+  document.getElementById("orderSuccess").style.display="flex";
+  if(window.orderSuccessTimer)clearTimeout(window.orderSuccessTimer);
+  window.orderSuccessTimer=setTimeout(()=>{document.getElementById("orderSuccess").style.display="none";},3000);
+ }catch(e){console.error("ORDER_COMPLETE_ERROR",e);alert((language==="en"?"Could not complete the order. ":"주문 완료 처리에 실패했습니다. ")+e.message);}
 }
 async function cancelHistoryOrder(k,id){const o=orders[k]||emptyOrder(),history=historyFor(k),h=history.find(x=>x.id===id);if(!h||h.status!=="paid")return;if(!confirm("이 주문의 결제를 취소할까요? 주문 기록은 유지됩니다."))return;await saveOrder(k,{...o,history:history.map(x=>x.id===id?{...x,status:"cancelled",updatedAt:Date.now()}:x),updatedAt:Date.now(),kiosk:k,lastAction:"payment-cancelled"});}
 async function undoHistoryCompletion(k,id){const o=orders[k]||emptyOrder(),history=historyFor(k),h=history.find(x=>x.id===id);if(!h||h.status!=="paid")return;if(itemCount(o)){alert("현재 진행 중인 주문이 있어 되돌릴 수 없습니다. 먼저 현재 주문을 비워 주세요.");return;}await saveOrder(k,{...o,items:{...(h.items||{})},total:Number(h.total||0),status:"waiting",orderNo:h.orderNo,history:history.filter(x=>x.id!==id),updatedAt:Date.now(),kiosk:k,lastAction:"payment-undone"});}
 async function loadHistory(k,id){const o=orders[k]||emptyOrder(),h=historyFor(k).find(x=>x.id===id);if(!h){alert("해당 주문 기록을 찾을 수 없습니다.");return;}if(itemCount(o)&&!confirm("현재 주문을 이전 주문으로 덮어쓸까요? 현재 주문은 기록에 보존되지 않습니다."))return;await saveOrder(k,{...o,items:{...(h.items||{})},total:Number(h.total||0),status:"waiting",orderNo:null,status:"waiting",updatedAt:Date.now(),kiosk:k,lastAction:"history-loaded"});}
 async function pay(k){await completePayment(k);}
 
-let orderSuccessTimer=null,confirmingOrder=false;
-async function confirmClientOrder(){
- const k=kiosks[0];if(!k||confirmingOrder)return;
- const current=orders[k]||emptyOrder();
- if(!itemCount(current)||current.status==='paid'||current.status==='cancelled')return;
- confirmingOrder=true;const button=document.getElementById("confirmOrderBtn");if(button){button.disabled=true;button.textContent=language==='en'?'Submitting…':'주문 처리 중…';}
- try{
-  await (writeQueues[k]||Promise.resolve());
-  const latest=orders[k]||current;
-  if(!itemCount(latest))throw new Error("주문 항목이 없습니다.");
-  const orderNo=latest.orderNo||nextOrderNo(k);
-  const history=[...historyFor(k)];
-  history.push({id:orderNo,orderNo,kiosk:k,items:{...(latest.items||{})},total:Number(latest.total||0),status:"waiting",updatedAt:Date.now()});
-  const next={...emptyOrder(),orderNo:nextOrderNo(k,history),history,updatedAt:Date.now(),kiosk:k,lastAction:"order-submitted"};
-  await setDoc(orderDoc(k),next);
-  orders[k]=next;
-  document.getElementById("orderSuccessNumber").textContent=orderNo;
-  document.getElementById("orderSuccessTitle").textContent=language==='en'?'Order completed successfully':'주문이 완료되었습니다';
-  document.getElementById("orderSuccessLabel").textContent=language==='en'?'Order number':'주문번호';
-  document.getElementById("orderSuccessNote").textContent=language==='en'?'Returning to the menu in 3 seconds…':'3초 후 메뉴 선택 화면으로 돌아갑니다.';
-  document.getElementById("orderSuccess").style.display="flex";
-  renderClient(next);
-  if(orderSuccessTimer)clearTimeout(orderSuccessTimer);
-  orderSuccessTimer=setTimeout(()=>{document.getElementById("orderSuccess").style.display="none";renderClient(orders[k]||next);const b=document.getElementById("confirmOrderBtn");if(b){b.textContent=language==='en'?'Confirm Order':'주문 확정';b.disabled=true;}},3000);
- }catch(e){console.error("ORDER_CONFIRM_ERROR",e);alert((language==='en'?'Order could not be saved. Please try again. ':'주문 저장에 실패했습니다. 다시 시도해 주세요. ')+e.message);}
- finally{confirmingOrder=false;const b=document.getElementById("confirmOrderBtn");if(b){b.textContent=language==='en'?'Confirm Order':'주문 확정';const o=orders[k]||emptyOrder();b.disabled=!itemCount(o)||o.status==='paid'||o.status==='cancelled';}}
-}
-document.getElementById("confirmOrderBtn").addEventListener("click",confirmClientOrder);
 async function completeHistoryPayment(k,id){const o=orders[k]||emptyOrder(),history=historyFor(k),h=history.find(x=>x.id===id);if(!h||h.status!=='waiting')return;await saveOrder(k,{...o,history:history.map(x=>x.id===id?{...x,status:"paid",updatedAt:Date.now()}:x),updatedAt:Date.now(),kiosk:k,lastAction:"history-paid"});}
 
 
