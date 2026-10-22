@@ -48,6 +48,7 @@ input{background:#fff!important;color:var(--mg-ink)!important;border:1px solid #
 <div id="message">시작을 눌러 대결하세요.</div><div class="note">두 주행 코스는 같은 속도와 같은 장애물 배치를 사용합니다. 시간이 지날수록 속도가 증가하며, 30초 생존 시 완주합니다.</div>
 </main><script>
 const s=JSON.parse(localStorage.getItem('miniGameSettings')||'null')||{mode:'cpu'};
+const mode=s.mode||'cpu';
 document.getElementById('round').textContent=s.round?s.round+'번째 게임':'연습 모드';if(s.mode==='local'){document.getElementById('playerLabel').textContent='1P';document.getElementById('cpuLabel').textContent='2P'}
 const pCanvas=document.getElementById('player'),cCanvas=document.getElementById('cpu'),pctx=pCanvas.getContext('2d'),cctx=cCanvas.getContext('2d');
 const W=480,H=220,ground=178,finishAt=30;
