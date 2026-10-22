@@ -13,7 +13,7 @@ const app = initializeApp(firebaseConfig, "miniGameSyncShared");
 const db = getFirestore(app);
 let room = null, ref = null, unsub = null, handler = null, lastStateAt = 0;
 let lastRemoteInputId = null, processedRemoteInputs = new Set(), mirrorRoot = null;
-let remotePressed = new Set(), lastMirrorAt = 0, mirrorTimer = null;
+let remotePressed = new Set(), lastMirrorAt = 0, mirrorTimer = null, heartbeatTimer = null;
 
 function readRoom() {
   try { return JSON.parse(localStorage.getItem("miniGameRoom") || "null"); }
@@ -145,6 +145,7 @@ function ensureSubscription() {
   if (nextKey === currentKey && (nextKey ? !!unsub : true)) return;
   if (unsub) { unsub(); unsub = null; }
   if (mirrorTimer) { clearInterval(mirrorTimer); mirrorTimer = null; }
+  if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
   room = nextRoom;
   ref = null; lastStateAt = 0; lastRemoteInputId = null; processedRemoteInputs = new Set();
   if (!nextKey) {
@@ -152,6 +153,9 @@ function ensureSubscription() {
     return;
   }
   ref = doc(db, "miniGameRooms", room.code);
+  const heartbeatField = room.role === "host" ? "hostSeenAt" : "guestSeenAt";
+  const heartbeat = () => updateDoc(ref, { [heartbeatField]: Date.now(), updatedAt: Date.now() }).catch(err => console.warn("MINI GAME heartbeat failed", err));
+  heartbeat(); heartbeatTimer = setInterval(heartbeat, 2000);
   setStatus("온라인 대전 연결 중 · 방 " + room.code);
   unsub = onSnapshot(ref, snap => {
     if (!snap.exists()) { setStatus("방이 삭제되었거나 연결이 끊겼습니다."); return; }
@@ -282,6 +286,7 @@ async function leaveOnlineRoom(){
   }
   if(unsub)unsub();unsub=null;
   if(mirrorTimer)clearInterval(mirrorTimer);mirrorTimer=null;
+  if(heartbeatTimer)clearInterval(heartbeatTimer);heartbeatTimer=null;
   localStorage.removeItem("miniGameRoom");
   localStorage.removeItem("miniGameSettings");
   localStorage.removeItem("miniGameSelected");
@@ -299,7 +304,7 @@ document.addEventListener("keydown",e=>{
 },true);
 window.addEventListener("mini-game-room-updated",ensureSubscription);
 window.addEventListener("storage",e=>{if(e.key==="miniGameRoom")ensureSubscription();});
-window.addEventListener("beforeunload",()=>{if(unsub)unsub();if(mirrorTimer)clearInterval(mirrorTimer);});
+window.addEventListener("beforeunload",()=>{if(unsub)unsub();if(mirrorTimer)clearInterval(mirrorTimer);if(heartbeatTimer)clearInterval(heartbeatTimer);});
 installGuestInputRelay();
 ensureSubscription();
 window.dispatchEvent(new Event("mg-online-ready"));
