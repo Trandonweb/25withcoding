@@ -39,10 +39,10 @@ input{background:#fff!important;color:var(--mg-ink)!important;border:1px solid #
 @media(max-width:650px){.card .desc{display:none!important}#projectShortDescription,#projectCreator{display:block!important}.wrap{padding:0!important}}
 @keyframes mgCountPop{0%{opacity:0;transform:scale(.65)}35%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}#mgRaceCountdown{position:fixed;inset:0;z-index:15000;display:none;place-items:center;background:#06100ddd;backdrop-filter:blur(8px);color:#f5fff7;font-size:clamp(72px,18vw,150px);font-weight:1000;letter-spacing:-.06em;text-shadow:0 8px 50px #53e88a66}#mgRaceCountdown.go{color:#53e88a;font-size:clamp(58px,14vw,112px)}#mgRaceCountdown.show{animation:mgCountPop .42s ease-out}</style></head><body><div id="mgRaceCountdown" aria-live="assertive">3!</div><main class="wrap">
 <div class="top"><span>MINI GAME / 05</span><span id="round"></span></div>
-<div class="heading"><div><h1>점프 러너</h1><p>나와 컴퓨터의 주행 거리와 속도는 동일합니다.</p></div><div class="timerbox"><small>경과 시간</small><strong><span id="time">0.0</span>s</strong></div></div>
+<div class="heading"><div><h1>점프 러너</h1><p>1P와 2P의 주행 거리와 속도는 동일합니다.</p></div><div class="timerbox"><small>경과 시간</small><strong><span id="time">0.0</span>s</strong></div></div>
 <div class="lanes">
 <section class="lane"><div class="lanehead"><strong id="playerLabel">플레이어</strong><span class="pill">P1</span></div><canvas id="player" width="480" height="220" aria-label="플레이어 점프 러너"></canvas><div class="lanefoot"><span>스페이스 / ↑ / 탭</span><span id="playerSpeed">속도 1.0×</span></div></section>
-<section class="lane computer"><div class="lanehead"><strong id="cpuLabel">컴퓨터</strong><span class="pill">CPU</span></div><canvas id="cpu" width="480" height="220" aria-label="컴퓨터 점프 러너"></canvas><div class="lanefoot"><span id="cpuState">AI 대기 중</span><span id="cpuSpeed">속도 1.0×</span></div></section>
+<section class="lane computer"><div class="lanehead"><strong id="cpuLabel">2P</strong><span class="pill">CPU</span></div><canvas id="cpu" width="480" height="220" aria-label="컴퓨터 점프 러너"></canvas><div class="lanefoot"><span id="cpuState">AI 대기 중</span><span id="cpuSpeed">속도 1.0×</span></div></section>
 </div>
 <div class="controls"><button class="btn primary" id="start">시작 / 다시 시작</button><button class="btn" id="jump">점프 ↑</button><button class="btn" id="done" hidden>결과 확인 →</button><span class="hint">먼저 장애물에 부딪히면 패배</span></div>
 <div id="message">시작을 눌러 대결하세요.</div><div class="note">두 주행 코스는 같은 속도와 같은 장애물 배치를 사용합니다. 시간이 지날수록 속도가 증가하며, 30초 생존 시 완주합니다.</div>
@@ -53,7 +53,7 @@ document.getElementById('round').textContent=s.round?s.round+'번째 게임':'�
 const pCanvas=document.getElementById('player'),cCanvas=document.getElementById('cpu'),pctx=pCanvas.getContext('2d'),cctx=cCanvas.getContext('2d');
 const W=480,H=220,ground=178,finishAt=30;
 let running=false,ended=false,t=0,last=0,raf=0,spawnP=30,py=0,pvy=0,cy=0,cvy=0,pobs=[],cobs=[],cpuNextJump=0,pAlive=true,cAlive=true,pEndTime=null,cEndTime=null;
-function reset(){cancelAnimationFrame(raf);running=false;ended=false;t=0;last=0;spawnP=28;py=cy=pvy=cvy=0;pobs=[];cobs=[];cpuNextJump=0;pAlive=cAlive=true;pEndTime=cEndTime=null;document.getElementById('done').hidden=true;document.getElementById('message').textContent='곧 시작합니다. 준비하세요.';document.getElementById('cpuState').textContent='준비 중';const cd=document.getElementById('mgRaceCountdown');cd.style.display='grid';let step=0;const seq=['3!','2!','1!','GO!'];function next(){cd.textContent=seq[step];cd.className=step===3?'show go':'show';void cd.offsetWidth;cd.classList.add('show');if(step===3){document.getElementById('message').textContent='달리는 중! 두 주행이 모두 끝나면 결과가 확정됩니다.';document.getElementById('cpuState').textContent=mode==='local'?'2P 주행 중':'AI 주행 중';setTimeout(()=>{cd.style.display='none';if(mode==='online'&&window.mgOnline?.role==='guest'){running=false;return}running=true;last=0;raf=requestAnimationFrame(loop)},420);return}step++;setTimeout(next,650)}next()}
+function reset(){cancelAnimationFrame(raf);running=false;ended=false;t=0;last=0;spawnP=28;py=cy=pvy=cvy=0;pobs=[];cobs=[];cpuNextJump=0;pAlive=cAlive=true;pEndTime=cEndTime=null;document.getElementById('done').hidden=true;document.getElementById('message').textContent='곧 시작합니다. 준비하세요.';document.getElementById('cpuState').textContent='준비 중';const cd=document.getElementById('mgRaceCountdown');cd.style.display='grid';let step=0;const seq=['3!','2!','1!','GO!'];function next(){cd.textContent=seq[step];cd.className=step===3?'show go':'show';void cd.offsetWidth;cd.classList.add('show');if(step===3){document.getElementById('message').textContent='달리는 중! 두 주행이 모두 끝나면 결과가 확정됩니다.';document.getElementById('cpuState').textContent=mode==='local'?'2P 주행 중':'2P 주행 중';setTimeout(()=>{cd.style.display='none';if(mode==='online'&&window.mgOnline?.role==='guest'){running=false;return}running=true;last=0;raf=requestAnimationFrame(loop)},420);return}step++;setTimeout(next,650)}next()}
 function jump(side=0){if(!running)return;if(side===0&&pAlive&&py>=-0.5)pvy=-10.5;if(side===1&&cAlive&&cy>=-0.5)cvy=-10.5}
 function draw(ctx,y,obs,speed,label){ctx.clearRect(0,0,W,H);ctx.fillStyle='#0a1b11';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#31583b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,ground);ctx.lineTo(W,ground);ctx.stroke();ctx.fillStyle='#1a3825';for(let i=0;i<12;i++){let x=((i*53-t*speed*28)%W+W)%W;ctx.fillRect(x,ground+10,22,2)}ctx.fillStyle='#53e88a';ctx.fillRect(65,ground-34+y,29,34);ctx.fillRect(83,ground-45+y,13,15);ctx.fillStyle='#07110d';ctx.fillRect(91,ground-40+y,3,3);ctx.fillStyle='#ffcf67';for(const o of obs){ctx.fillRect(o.x,ground-o.h,o.w,o.h);ctx.fillRect(o.x+o.w*.2,ground-o.h-5,o.w*.6,5)}ctx.fillStyle='#9ab6a1';ctx.font='11px Arial';ctx.fillText(label,12,18)}
 function addObstacle(arr){const h=24+Math.random()*25,w=15+Math.random()*14;arr.push({x:W+10,w,h})}
@@ -73,10 +73,10 @@ if(spawnP<=0){
 if(pAlive){pobs.forEach(o=>o.x-=speed*dt);pobs=pobs.filter(o=>o.x>-40)}
 if(cAlive){cobs.forEach(o=>o.x-=speed*dt);cobs=cobs.filter(o=>o.x>-40)}
 if(cAlive&&mode==='cpu'){const next=cobs.find(o=>o.x>75);if(next&&next.x<150&&cy===0&&cpuNextJump<=t){cvy=-10.1;cpuNextJump=t+(Math.random()<Math.min(.42,t/80)?0.75:0.28)}}
-if(pAlive&&collision(py,pobs)){pAlive=false;pEndTime=t;document.getElementById('message').textContent='플레이어 주행 종료 · 컴퓨터는 계속 달립니다.'}
+if(pAlive&&collision(py,pobs)){pAlive=false;pEndTime=t;document.getElementById('message').textContent='1P 주행 종료 · 2P는 계속 달립니다.'}
 if(cAlive&&collision(cy,cobs)){cAlive=false;cEndTime=t;document.getElementById('cpuState').textContent='주행 종료'}
-if(t>=finishAt){if(pAlive){pAlive=false;pEndTime=finishAt;document.getElementById('message').textContent='플레이어 완주 · 컴퓨터는 계속 달립니다.'}if(cAlive){cAlive=false;cEndTime=finishAt}}
-draw(pctx,py,pobs,speed,pAlive?'PLAYER':'PLAYER · OUT');draw(cctx,cy,cobs,speed,cAlive?'COMPUTER':'COMPUTER · OUT');
+if(t>=finishAt){if(pAlive){pAlive=false;pEndTime=finishAt;document.getElementById('message').textContent='1P 완주 · 2P는 계속 달립니다.'}if(cAlive){cAlive=false;cEndTime=finishAt}}
+draw(pctx,py,pobs,speed,pAlive?'PLAYER':'PLAYER · OUT');draw(cctx,cy,cobs,speed,cAlive?'2P':'2P · OUT');
 if(!pAlive){pctx.fillStyle='#ffcf67';pctx.font='bold 17px Arial';pctx.fillText('FINISHED',W/2-35,48)}
 if(!cAlive){cctx.fillStyle='#ffcf67';cctx.font='bold 17px Arial';cctx.fillText('FINISHED',W/2-35,48)}
 document.getElementById('time').textContent=Math.min(finishAt,t).toFixed(1);
@@ -88,7 +88,7 @@ function finishRace(){
 if(ended)return;ended=true;running=false;
 const me=Math.round((pEndTime??finishAt)*10),opp=Math.round((cEndTime??finishAt)*10);
 const winner=me>opp?'me':me<opp?'opp':'draw';
-document.getElementById('message').textContent=mode==='local'?(winner==='me'?'1P 승':winner==='opp'?'2P 승':'무승부'):(winner==='me'?'승리 · 컴퓨터보다 더 오래 주행했습니다.':winner==='opp'?'패배 · 컴퓨터가 더 오래 주행했습니다.':'무승부 · 두 주행 시간이 같습니다.');
+document.getElementById('message').textContent=mode==='local'?(winner==='me'?'1P 승':winner==='opp'?'2P 승':'무승부'):(winner==='me'?'승리 · 2P보다 더 오래 주행했습니다.':winner==='opp'?'패배 · 2P가 더 오래 주행했습니다.':'무승부 · 두 주행 시간이 같습니다.');
 document.getElementById('cpuState').textContent=winner==='me'?'패배':winner==='opp'?'승리':'무승부';
 localStorage.setItem('miniGameResult',JSON.stringify({game:' 점프 러너',winner,me,opp}));
 document.getElementById('done').hidden=false
