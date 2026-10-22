@@ -57,7 +57,7 @@ function renderHostMirror(data) {
     const img = document.createElement("img");
     img.alt = "방장 게임 화면";
     img.src = src;
-    Object.assign(img.style, { display:"block", maxWidth:"min(100%,900px)", maxHeight:"62dvh", objectFit:"contain", background:"#fff", border:"1px solid #dbe5dc", borderRadius:"14px", boxShadow:"0 8px 24px #203b2810" });
+    Object.assign(img.style, { display:"block", maxWidth:data.images.length > 1 ? "min(48%,700px)" : "min(100%,900px)", maxHeight:"62dvh", objectFit:"contain", background:"#fff", border:"1px solid #dbe5dc", borderRadius:"14px", boxShadow:"0 8px 24px #203b2810" });
     shots.appendChild(img);
   });
 }
@@ -145,14 +145,14 @@ function ensureSubscription() {
       lastMirrorAt = now;
       const images = [];
       document.querySelectorAll("canvas").forEach(canvas => {
-        if (images.length >= 1) return;
+        if (images.length >= 2) return;
         try {
-          const maxW = 900, scale = Math.min(1, maxW / canvas.width);
+          const maxW = 700, scale = Math.min(1, maxW / canvas.width);
           const tmp = document.createElement("canvas");
           tmp.width = Math.max(1, Math.round(canvas.width * scale));
           tmp.height = Math.max(1, Math.round(canvas.height * scale));
           tmp.getContext("2d").drawImage(canvas,0,0,tmp.width,tmp.height);
-          images.push(tmp.toDataURL("image/jpeg",0.24));
+          images.push(tmp.toDataURL("image/jpeg",0.22));
         } catch {}
       });
       const text = (document.body.innerText || "").replace(/\s+/g," ").trim().slice(0,500);
