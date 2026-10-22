@@ -72,6 +72,7 @@ let cls=CLASSES[0],team='red',running=false,locked=false,aiming=false,classChang
 let audioCtx=null,masterGain=null,lastFootstep=0,audioReady=false;
 const soundCooldowns=new Map();
 function unlockAudio(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;if(!audioCtx)audioCtx=new C();if(!masterGain){masterGain=audioCtx.createGain();masterGain.gain.value=1;masterGain.connect(audioCtx.destination)}if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});audioReady=true;return true}catch(e){return false}}
+function activateMusicFromGesture(){if(!unlockAudio()||!audioCtx)return;const ctx=audioCtx;const resume=ctx.state==='suspended'?ctx.resume():Promise.resolve();resume.then(()=>{if(ctx!==audioCtx||ctx.state!=='running')return;if(menuMusicTimer!==null){clearInterval(menuMusicTimer);menuMusicTimer=null}if(menuMusicGain){try{menuMusicGain.disconnect()}catch(e){}menuMusicGain=null}startMenuMusic()}).catch(()=>{});}
 function playSfx(kind,pos=null,volume=1){if(!audioReady)unlockAudio();if(!audioCtx||!masterGain)return;if(audioCtx.state==='suspended'){audioCtx.resume().then(()=>{if(audioCtx&&audioCtx.state==='running')playSfx(kind,pos,volume)}).catch(()=>{});return;}
  const now=audioCtx.currentTime,prev=soundCooldowns.get(kind)||0;
  const minGap=(kind==='gun'||kind==='footstep'||kind==='botstep')?.075:(kind==='heal'?.22:0);
@@ -125,8 +126,8 @@ function startMenuMusic(){
 }
 // Start preparing the soundtrack as soon as the game module loads. Browsers may wait for the first user gesture before allowing audible playback.
 startMenuMusic();
-document.addEventListener('pointerdown',()=>{unlockAudio();startMenuMusic()},{capture:true,passive:true});
-document.addEventListener('keydown',()=>{unlockAudio();startMenuMusic()},{capture:true,once:true});
+document.addEventListener('pointerdown',activateMusicFromGesture,{capture:true,passive:true,once:true});
+document.addEventListener('keydown',activateMusicFromGesture,{capture:true,once:true});
 function announce(line,priority='normal'){return;/* all voice and announcer audio disabled */
 
  const messages={'Prepare for battle.':'전투 준비. 전투가 곧 시작됩니다.','Red team has successfully defended the stage!':'레드 팀이 거점을 방어했습니다.','Control points captured! Blue team wins the stage!':'블루 팀이 거점을 점령했습니다. 블루 팀 승리.','The match is a draw!':'무승부입니다.','Victory! Red team wins the match!':'레드 팀이 승리했습니다.','Defeat! Blue team wins the match!':'블루 팀이 승리했습니다.','Control point A has been captured!':'A 거점이 점령되었습니다.','Control point B has been captured!':'B 거점이 점령되었습니다.','The gates are open! Move out!':'출격하십시오. 전투 구역이 개방되었습니다.','Thirty seconds remaining!':'남은 시간 30초.','Ten seconds remaining!':'남은 시간 10초.','Five seconds remaining!':'남은 시간 5초.','One!':'하나!'};
