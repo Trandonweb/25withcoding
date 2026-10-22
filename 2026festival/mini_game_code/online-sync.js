@@ -31,6 +31,7 @@ function setStatus(text) {
   el.textContent = text;
 }
 function renderHostMirror(data) {
+  if (!data.images || !data.images.length) { if (mirrorRoot) mirrorRoot.style.display = "none"; return; }
   if (!mirrorRoot) {
     mirrorRoot = document.createElement("section");
     mirrorRoot.id = "mgHostMirror";
