@@ -129,8 +129,10 @@ function ensureSubscription() {
     if (room.role === "guest" && data.matchConfig) {
       const cfg = data.matchConfig;
       const target = "game/" + cfg.currentGame + ".html";
-      const old = JSON.parse(localStorage.getItem("miniGameSettings") || "null");
-      if (cfg.currentGame && (!location.pathname.endsWith(target) || !old || old.currentGame !== cfg.currentGame || old.round !== cfg.round)) {
+      const launchId = String(cfg.launchId || "");
+      const seenLaunchId = localStorage.getItem("miniGameLastLaunchId") || "";
+      if (cfg.currentGame && launchId && launchId !== seenLaunchId) {
+        localStorage.setItem("miniGameLastLaunchId", launchId);
         localStorage.setItem("miniGameSettings", JSON.stringify({ ...cfg, mode:"online", modeName:"온라인 대전 · 방 " + room.code }));
         localStorage.setItem("miniGameSelected", cfg.currentGame);
         if (!location.pathname.endsWith(target)) location.href = target;
