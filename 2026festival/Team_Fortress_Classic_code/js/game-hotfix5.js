@@ -413,32 +413,36 @@ if(running&&spectatorTimer<=0){const f=new THREE.Vector3(-Math.sin(yaw),0,-Math.
 for(const b of bots){if(b.alive&&b.burnUntil>clock&&clock>=(b.burnNext||0)){b.burnNext=clock+.45;b.hp-=5;if(b.hp<=0)killBot(b,'BURNING')}if(b.burnUntil&&b.burnUntil<=clock){b.burnUntil=0;if(b.burnMesh){b.mesh.remove(b.burnMesh);b.burnMesh=null}}if(!b.alive){b.respawn-=dt;if(b.mesh.visible){b.ragdollVel.y-=16*dt;b.mesh.position.addScaledVector(b.ragdollVel,dt);b.mesh.rotation.x+=dt*1.8;b.mesh.rotation.z+=(b.mesh.rotation.z>0?1:-1)*dt*.35;if(b.mesh.position.y<.2){b.mesh.position.y=.2;b.ragdollVel.y=0;b.ragdollVel.x*=.72;b.ragdollVel.z*=.72}}if(b.respawn<=0){b.burnUntil=0;b.burnNext=0;if(b.burnMesh){b.mesh.remove(b.burnMesh);b.burnMesh=null}b.hp=b.max;b.alive=true;if(b.side==='blue'&&activePoint>0&&controlPoints[activePoint-1]?.captured){const forward=controlPoints[activePoint-1],ang=Math.random()*Math.PI*2,rad=7+Math.random()*2;b.pos.set(forward.x+Math.cos(ang)*rad,0,forward.z+Math.sin(ang)*rad);if(blocked(b.pos.x,b.pos.z,'blue'))b.pos.set(forward.x-8,0,forward.z+(Math.random()-.5)*8)}else b.pos.set(b.side==='red'?96-Math.random()*5:-96+Math.random()*5,0,(Math.random()-.5)*8);rebuildBotModelForRespawn(b);b.navPath=null;b.navGoal=null;b.navIndex=0;b.jumpY=0;b.jumpVy=0;b.disguiseUntil=0;b.mesh.position.copy(b.pos);b.cd=.5}continue}
 
 if(setupRemaining>0&&b.side==='blue'&&insideTeamBase(b.pos.x,b.pos.z,b.side)&&b.cls.id!=='engineer'){b.jumpY=0;b.jumpVy=0;b.mesh.position.set(b.pos.x,groundHeightAt(b.pos.x,b.pos.z),b.pos.z);continue}
-// RED DEFENDER EXIT PRIORITY: first line up with the doorway, then cross the doorway along the X axis.
-if(b.side==='red'&&b.role==='defender'&&setupRemaining<=0&&insideTeamBase(b.pos.x,b.pos.z,'red')){
- const base=teamBases.red;
- if(base&&!base.doorOpen){base.doorOpen=true;base.door.position.z=-5.2;refreshNavBlocked()}
- const step=b.cls.speed*.9*dt;
- // The front wall has solid sections at z <= -5 and z >= 5. Never push toward it while off-center.
- if(Math.abs(b.pos.z)>2.6){
-  const nz=b.pos.z-Math.sign(b.pos.z)*Math.min(Math.abs(b.pos.z)-1.2,step);
-  if(!blocked(b.pos.x,nz,'red',b.jumpY||0))b.pos.z=nz;
-  else {b.navPath=null;b.navGoal=null;b.navRefresh=0;}
- }else{
-  const nx=Math.max(73.5,b.pos.x-step);
-  if(!blocked(nx,b.pos.z,'red',b.jumpY||0))b.pos.x=nx;
-  else {
-   // If a nearby ally/building blocks the straight line, sidestep toward the center of the doorway.
-   const options=[b.pos.z+Math.sign(-b.pos.z||1)*step,b.pos.z+step,b.pos.z-step];
-   let moved=false;
-   for(const nz of options){if(Math.abs(nz)<=2.6&&!blocked(b.pos.x,nz,'red',b.jumpY||0)){b.pos.z=nz;moved=true;break}}
-   if(!moved){b.stuckFor=(b.stuckFor||0)+dt;if(b.stuckFor>.4){b.pos.z=0;b.stuckFor=0;b.navPath=null;b.navGoal=null;b.navRefresh=0}}
+// RED BASE EXIT: every Red AI must physically pass through the real front doorway.
+ // Align to the doorway center first, then walk straight through the opening; never route into the wall.
+ if(b.side==='red'&&setupRemaining<=0&&insideTeamBase(b.pos.x,b.pos.z,'red')){
+  const base=teamBases.red;
+  if(base&&!base.doorOpen){base.doorOpen=true;base.door.position.z=-5.2;refreshNavBlocked()}
+  const step=Math.max(.01,b.cls.speed*.9*dt);
+  let moved=false;
+  if(Math.abs(b.pos.z)>1.45){
+   const nz=b.pos.z-Math.sign(b.pos.z)*Math.min(Math.abs(b.pos.z)-.65,step);
+   if(!blocked(b.pos.x,nz,'red',b.jumpY||0)){b.pos.z=nz;moved=true}
+  }else{
+   // The doorway is centered at z=0; cross the front wall only along this clear center lane.
+   const nx=Math.max(73.5,b.pos.x-step);
+   if(!blocked(nx,b.pos.z,'red',b.jumpY||0)){b.pos.x=nx;moved=true}
+   else{
+    for(const nz of [0,b.pos.z*.5,-.6,.6]){
+     if(Math.abs(nz)<=1.45&&!blocked(b.pos.x,nz,'red',b.jumpY||0)){b.pos.z=nz;moved=true;break}
+    }
+   }
   }
+  if(moved)b.stuckFor=0;
+  else{
+   b.stuckFor=(b.stuckFor||0)+dt;
+   if(b.stuckFor>.45){b.pos.z=0;b.navPath=null;b.navGoal=null;b.navRefresh=0;b.stuckFor=0}
+  }
+  b.navPath=null;b.navGoal=null;b.navRefresh=0;
+  b.mesh.position.set(b.pos.x,(b.jumpY||0)+groundHeightAt(b.pos.x,b.pos.z),b.pos.z);
+  b.mesh.lookAt(-52,1,0);
+  continue;
  }
- b.navPath=null;b.navGoal=null;b.navRefresh=0;b.stuckFor=0;
- b.mesh.position.set(b.pos.x,(b.jumpY||0)+groundHeightAt(b.pos.x,b.pos.z),b.pos.z);
- b.mesh.lookAt(-52,1,0);
- continue;
-}
 // BLU ATTACKER EXIT PRIORITY: once setup ends, leave the spawn bay before doing any combat/support task.
 if(b.side==='blue'&&b.role==='attacker'&&setupRemaining<=0&&insideTeamBase(b.pos.x,b.pos.z,'blue')){
  const base=teamBases.blue;
