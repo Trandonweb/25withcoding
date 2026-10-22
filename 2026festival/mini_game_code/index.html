@@ -111,8 +111,28 @@ input{background:#fff!important;color:var(--mg-ink)!important;border:1px solid #
   font-weight:900;
   letter-spacing:.02em;
 }
+
+/* Mode selection redesigned for the two remaining ways to play. */
+#modeScreen{width:100%;max-width:780px;margin:0 auto}
+#modeScreen .logo{font-size:clamp(34px,6vh,58px);letter-spacing:-.055em;color:#173b26;margin-bottom:5px}
+#modeScreen .sub{margin:0 auto clamp(18px,3vh,30px);max-width:560px;color:#5a6d60!important;line-height:1.6}
+#modeScreen .mode-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,2vw,22px);max-width:720px;margin:0 auto}
+#modeScreen .mode-card{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:clamp(190px,29vh,270px);padding:clamp(18px,3vh,30px)!important;border:2px solid #d4e0d6!important;border-radius:22px!important;background:linear-gradient(160deg,#fff,#f8fbf8)!important;color:#203b29!important;box-shadow:0 12px 28px #203b2810!important;transform:none!important}
+#modeScreen .mode-card .mode-kicker{display:inline-block;margin-bottom:14px;padding:6px 11px;border-radius:999px;background:#edf4ee;color:#55715d;font-size:11px;font-weight:900;letter-spacing:.12em}
+#modeScreen .mode-card .title{font-size:clamp(19px,2.6vw,27px)!important;color:#203b29!important}
+#modeScreen .mode-card .desc{display:block!important;margin-top:12px;color:#5a6d60!important;font-size:clamp(12px,1.5vw,15px)!important;line-height:1.5}
+#modeScreen .mode-card .mode-detail{margin-top:18px;padding:8px 12px;border-radius:10px;background:#f0f5f1;color:#486451;font-size:12px;font-weight:800}
+#modeScreen .mode-card:not(.selected)::after{content:"선택하기";display:block;margin-top:16px;padding:8px 20px;border:1px solid #cad8cd;border-radius:10px;background:#fff;color:#526457;font-size:13px;font-weight:800}
+#modeScreen .mode-card.selected{background:linear-gradient(145deg,#e8f9ed,#d9f3e1)!important;border:3px solid #08783b!important;box-shadow:0 0 0 5px #13874718,0 18px 35px #08783b20!important;transform:translateY(-3px)!important}
+#modeScreen .mode-card.selected .mode-kicker{background:#c9efd4;color:#176b3d}
+#modeScreen .mode-card.selected .mode-detail{background:#c9efd4;color:#145c32}
+#modeScreen .mode-card.selected::after{content:"✓ 선택됨";display:block;margin-top:16px;padding:8px 20px;border:1px solid #08783b;border-radius:10px;background:#08783b;color:#fff;font-size:13px;font-weight:900}
+#modeScreen #modeNext{min-width:220px;margin-top:clamp(16px,3vh,26px)}
+#modeScreen #modeNext:disabled{background:#b9c8bd!important;border-color:#b9c8bd!important;color:#fff!important;opacity:1!important}
+@media(max-width:560px){#modeScreen .mode-cards{gap:9px}#modeScreen .mode-card{min-height:190px;padding:15px 9px!important;border-radius:15px!important}#modeScreen .mode-card .title{font-size:17px!important}#modeScreen .mode-card .desc{font-size:12px!important}#modeScreen .mode-card .mode-detail{font-size:10px;padding:7px 8px}#modeScreen .mode-card:not(.selected)::after,#modeScreen .mode-card.selected::after{padding:7px 12px;margin-top:12px;font-size:11px}}
+@media(max-width:360px){#modeScreen .mode-cards{grid-template-columns:1fr}#modeScreen .mode-card{min-height:145px}}
 </style></head><body><div class="wrap">
-<section id="modeScreen" class="screen"><div class="logo"> MINI GAME</div><div class="sub" id="projectShortDescription">친구 또는 컴퓨터와 다양한 미니게임 대결을 즐겨 보세요.</div><div class="cards"><button class="card" onclick="chooseMode(this,'cpu','컴퓨터와 대전')"><div class="icon"></div><div class="title">컴퓨터와 대전</div><div class="desc">AI와 1대1</div></button><button class="card" onclick="chooseMode(this,'local','한 컴퓨터로 1대1')"><div class="icon"></div><div class="title">한 컴퓨터로 1대1</div><div class="desc">친구와 같은 컴퓨터</div></button></div><button id="modeNext" class="next" disabled onclick="showSettings()">다음 →</button></section>
+<section id="modeScreen" class="screen"><div class="logo"> MINI GAME</div><div class="sub" id="projectShortDescription">친구 또는 컴퓨터와 다양한 미니게임 대결을 즐겨 보세요.</div><div class="cards mode-cards"><button class="card mode-card" onclick="chooseMode(this,'cpu','컴퓨터와 대전')"><span class="mode-kicker">1 PLAYER</span><div class="title">컴퓨터와 대전</div><div class="desc">AI 상대와 실력을 겨뤄 보세요.</div><span class="mode-detail">난이도 설정 가능</span></button><button class="card mode-card" onclick="chooseMode(this,'local','한 컴퓨터로 1대1')"><span class="mode-kicker">2 PLAYERS</span><div class="title">한 컴퓨터로 1대1</div><div class="desc">한 기기에서 친구와 대결하세요.</div><span class="mode-detail">키보드로 함께 플레이</span></button></div><button id="modeNext" class="next" disabled onclick="showSettings()">다음 →</button></section>
 <script>
 /* Fail-safe for the first mode-selection screen: keep its buttons usable even if a later script fails. */
 (function(){
@@ -123,8 +143,7 @@ input{background:#fff!important;color:var(--mg-ink)!important;border:1px solid #
     const next=document.getElementById('modeNext');
     const choices=[
       {value:'cpu',name:'컴퓨터와 대전'},
-      {value:'local',name:'한 컴퓨터로 1대1'},
-      {value:'online',name:'온라인 대전'}
+      {value:'local',name:'한 컴퓨터로 1대1'}
     ];
     cards.forEach((card,index)=>{
       card.onclick=function(){
@@ -143,23 +162,15 @@ input{background:#fff!important;color:var(--mg-ink)!important;border:1px solid #
       if(!value){return}
       try{
         if(typeof window.showSettings==='function'){
-          if(value==='online'){
-            const room=JSON.parse(localStorage.getItem('miniGameRoom')||'null');
-            if(!room||!room.connected){document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById('onlineRoomScreen').classList.remove('hidden');return}
-          }
           window.showSettings();
           return;
         }
       }catch(error){console.error(error)}
       document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));
-      if(value==='online'){
-        document.getElementById('onlineRoomScreen').classList.remove('hidden');
-      }else{
-        const settings=document.getElementById('settingsScreen');
-        settings.classList.remove('hidden');
-        const label=document.getElementById('modeLabel');
-        if(label)label.textContent=window.__mgFallbackModeName;
-      }
+      const settings=document.getElementById('settingsScreen');
+      settings.classList.remove('hidden');
+      const label=document.getElementById('modeLabel');
+      if(label)label.textContent=window.__mgFallbackModeName;
     };
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireModeButtons,{once:true});
