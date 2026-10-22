@@ -2642,6 +2642,7 @@ async function discoverProjectFolders(){
         folder+"/thumbnail.jpg",
         folder+"/thumbnail.jpeg",
         folder+"/thumbnail.webp",
+        folder+"/thumbnail.svg",
         folder+"/thumb.png",
         folder+"/thumb.jpg",
         folder+"/thumb.webp"
@@ -2650,7 +2651,7 @@ async function discoverProjectFolders(){
         ||[...files].find(path=>
           path.startsWith(folder+"/") &&
           !path.slice(folder.length+1).includes("/") &&
-          /thumb(nail)?\.(png|jpe?g|webp|gif)$/i.test(path)
+          /thumb(nail)?\.(png|jpe?g|webp|gif|svg)$/i.test(path)
         );
       const savedThumbnail=String(existing.thum||existing.thumbnail||"");
       const thumbnail=thumbnailPath
