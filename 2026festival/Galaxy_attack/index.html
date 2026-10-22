@@ -169,7 +169,7 @@ const PROJECT = {
   description: "우주를 침공하는 적들을 격추하고 은하계를 지켜라.",
   howTo: "방향키 또는 A/D로 이동하고 스페이스바로 발사하세요.",
   notes: "작품을 즐긴 뒤 응원하기를 눌러 주세요.",
-  type: "entry",
+  type: "game",
   codeUrl: "/2026festival/Galaxy_attack_code/index.html",
   embed: '<iframe src="/2026festival/Galaxy_attack_code/index.html" allowfullscreen></iframe>',
   url: ""
@@ -238,7 +238,13 @@ function external(url) {
   openLink.style.opacity = safe ? "1" : ".45";
   openLink.style.pointerEvents = safe ? "auto" : "none";
 }
-if (PROJECT.type === "entry") {
+if (PROJECT.type === "game") {
+  frame.src = PROJECT.codeUrl;
+  $("project-type").textContent = "HTML 게임";
+  $("type-label").textContent = "HTML GAME";
+  $("status-text").textContent = "작품 실행 준비 완료";
+  empty.hidden = true;
+} else if (PROJECT.type === "entry") {
   const src = getEmbedUrl(PROJECT.embed);
   if (src) {
     frame.src = src;
