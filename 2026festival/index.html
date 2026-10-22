@@ -2544,10 +2544,19 @@ function renderProjects(){
     const thumbnail=p.thumbnail||String(existing.thum||"");
     if(thumbnail){
       const img=document.createElement("img");
-      img.src=thumbnail;
       img.alt=p.title+" 썸네일";
       img.loading="lazy";
-      img.onerror=()=>img.remove();
+      const imageCandidates=p.thumbnailCandidates||[thumbnail];
+      let imageCandidateIndex=0;
+      img.onerror=()=>{
+        imageCandidateIndex++;
+        if(imageCandidateIndex<imageCandidates.length){
+          img.src=imageCandidates[imageCandidateIndex];
+        }else{
+          img.remove();
+        }
+      };
+      img.src=imageCandidates[0]||thumbnail;
       card.appendChild(img);
     }
 
@@ -2647,16 +2656,20 @@ async function discoverProjectFolders(){
         folder+"/thumb.jpg",
         folder+"/thumb.webp"
       ];
-      const thumbnailPath=thumbnailCandidates.find(path=>files.has(path))
-        ||[...files].find(path=>
+      // GitHub tree에 존재하는 첫 이미지가 실제 raw URL에서는 열리지 않을 수 있어
+      // 모든 후보를 보관하고, 브라우저에서 로드 실패 시 다음 후보를 시도합니다.
+      const discoveredThumbnailPaths=[
+        ...thumbnailCandidates.filter(path=>files.has(path)),
+        ...[...files].filter(path=>
           path.startsWith(folder+"/") &&
           !path.slice(folder.length+1).includes("/") &&
-          /thumb(nail)?\.(png|jpe?g|webp|gif|svg)$/i.test(path)
-        );
+          /thumb(nail)?\.(png|jpe?g|webp|gif|svg)$/i.test(path) &&
+          !thumbnailCandidates.includes(path)
+        )
+      ];
       const savedThumbnail=String(existing.thum||existing.thumbnail||"");
-      const thumbnail=thumbnailPath
-        ?safeImageUrl(thumbnailPath)
-        :savedThumbnail;
+      const thumbnailCandidatesUrls=discoveredThumbnailPaths.map(safeImageUrl);
+      const thumbnail=thumbnailCandidatesUrls[0]||savedThumbnail;
 
       return {
         id,
@@ -2664,7 +2677,10 @@ async function discoverProjectFolders(){
         description:description||String(existing.detail||""),
         madeBy:madeBy||String(existing.madeby||existing.madeBy||existing.author||""),
         how:how||String(existing.howto||existing.how||""),
-        thumbnail
+        thumbnail,
+        thumbnailCandidates:thumbnailCandidatesUrls.length
+          ?thumbnailCandidatesUrls
+          :(savedThumbnail?[savedThumbnail]:[])
       };
     }));
 
