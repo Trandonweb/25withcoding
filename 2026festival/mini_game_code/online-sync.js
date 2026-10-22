@@ -158,7 +158,7 @@ function ensureSubscription() {
     const data = snap.data();
     const now = Date.now();
     const bothLive = !!data.hostSeenAt && !!data.guestSeenAt && now-data.hostSeenAt<7000 && now-data.guestSeenAt<7000 && data.status === "connected" && !!data.guestId;
-    setStatus((room.role === "host" ? "방장" : "참가자") + " · 방 " + room.code + (bothLive ? " · 실시간 연결됨" : " · 상대 연결 확인 중"));
+    setStatus((room.role === "host" ? "방장" : "참가자") + " · 방 " + room.code + (bothLive ? " · 실시간 연결됨" : " · 상대 연결 확인 중") + " · 새로고침 유지 / 나가기: Ctrl+Shift+L");
     if (room.role === "host") {
       if (data.remotePointer && data.remotePointer.id !== lastRemoteInputId) { lastRemoteInputId = data.remotePointer.id; dispatchRemotePointer(data.remotePointer); }
       processRemoteInputQueue(data.remoteInputQueue);
@@ -271,6 +271,32 @@ function installGuestInputRelay() {
   ["pointerdown","click","touchstart"].forEach(type=>document.addEventListener(type,blockLocal,true));
   window.addEventListener("blur",()=>{for(const code of [...pressed]){const key=code==="Space"?" ":code.startsWith("Key")?code.slice(3).toLowerCase():code;enqueue("keyup",{key,code,repeat:false});}pressed.clear();});
 }
+async function leaveOnlineRoom(){
+  const r=readRoom();
+  if(r?.code&&r?.role){
+    try{
+      const roomRef=doc(db,"miniGameRooms",r.code);
+      if(r.role==="host") await updateDoc(roomRef,{status:"closed",updatedAt:Date.now()});
+      else await updateDoc(roomRef,{guestId:null,guestSeenAt:null,status:"waiting",updatedAt:Date.now()});
+    }catch(err){console.warn("MINI GAME room exit update failed",err);}
+  }
+  if(unsub)unsub();unsub=null;
+  if(mirrorTimer)clearInterval(mirrorTimer);mirrorTimer=null;
+  localStorage.removeItem("miniGameRoom");
+  localStorage.removeItem("miniGameSettings");
+  localStorage.removeItem("miniGameSelected");
+  localStorage.removeItem("miniGameResult");
+  window.dispatchEvent(new Event("mini-game-room-updated"));
+  location.href="../index.html";
+}
+document.addEventListener("keydown",e=>{
+  if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==="l"){
+    e.preventDefault();e.stopImmediatePropagation();leaveOnlineRoom();
+  }else if(e.ctrlKey&&!e.shiftKey&&e.key.toLowerCase()==="l"){
+    // Best effort only: browsers reserve Ctrl+L for focusing the address bar.
+    e.preventDefault();e.stopImmediatePropagation();leaveOnlineRoom();
+  }
+},true);
 window.addEventListener("mini-game-room-updated",ensureSubscription);
 window.addEventListener("storage",e=>{if(e.key==="miniGameRoom")ensureSubscription();});
 window.addEventListener("beforeunload",()=>{if(unsub)unsub();if(mirrorTimer)clearInterval(mirrorTimer);});
