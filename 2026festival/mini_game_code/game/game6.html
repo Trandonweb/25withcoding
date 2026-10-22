@@ -51,7 +51,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function placeObstacle(o){const palette=[{fill:'#2d6945',edge:'#53e88a',glow:'#a8ffc4'},{fill:'#315c91',edge:'#79aaff',glow:'#c6ddff'},{fill:'#8b4c2f',edge:'#ffad73',glow:'#ffe0c4'},{fill:'#7b426d',edge:'#f09be0',glow:'#ffd6f7'},{fill:'#8a7130',edge:'#ffcf67',glow:'#fff0b8'}];const color=palette[Math.floor(Math.random()*palette.length)];o.x=W*.5-35+Math.random()*70;o.y=35+Math.random()*(H-115);o.w=22+Math.random()*15;o.h=38+Math.random()*56;o.kind='block';o.color=color;}
 for(let i=0;i<5;i++){const o={};placeObstacle(o);let attempts=0;while(obstacles.some(q=>Math.abs(q.y-o.y)<75)&&attempts++<15)placeObstacle(o);obstacles.push(o)}
 function fire(p,y){if(!playing)return;bullets.push({x:p===1?130:W-130,y:y??(p===1?y1:y2),vx:p===1?8:-8,vy:0,p,life:0})}
-function move(p,d){if(p===1)y1=clamp(y1+d,28,H-28);else if(mode==='local')y2=clamp(y2+d,28,H-28)}
+function move(p,d){if(p===1)y1=clamp(y1+d,28,H-28);else if(mode==='local'||mode==='online')y2=clamp(y2+d,28,H-28)}
 function reversePlayer(){if(playing)playerDir*=-1;}
 function relocate(o){placeObstacle(o);let attempts=0;while(obstacles.some(q=>q!==o&&Math.abs(q.y-o.y)<48)&&attempts++<12)placeObstacle(o)}
 function obstacleEffect(b,o){const roll=Math.random();if(roll<.38){b.vy=(Math.random()<.5?-1:1)*(2.5+Math.random()*2.8);b.vx*=.82;flash.push({x:o.x+o.w/2,y:o.y+o.h/2,color:'#ffcf67',life:18});document.getElementById('message').textContent='↗ 총알 굴절!';}
