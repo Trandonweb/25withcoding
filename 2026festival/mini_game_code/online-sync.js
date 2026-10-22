@@ -49,12 +49,19 @@ const app = initializeApp(cfg, "miniGameSyncShared");
 const db = getFirestore(app);
 const room = JSON.parse(localStorage.getItem("miniGameRoom") || "null");
 const active = !!(room && room.connected && room.code && room.role);
-let ref = null, unsub = null, lastStateAt = 0, handler = null, mirrorRoot = null;
+let ref = null, unsub = null, lastStateAt = 0, handler = null, mirrorRoot = null, lastRemoteInputId = null;
 if (active) {
   ref = doc(db, "miniGameRooms", room.code);
   unsub = onSnapshot(ref, snap => {
     if (!snap.exists()) return;
     const data = snap.data();
+    if (room.role === "host" && data.remoteInput && data.remoteInput.id !== lastRemoteInputId) {
+      lastRemoteInputId = data.remoteInput.id;
+      const input = data.remoteInput;
+      if (["keydown", "keyup"].includes(input.type) && typeof input.key === "string" && typeof input.code === "string") {
+        document.dispatchEvent(new KeyboardEvent(input.type, { key: input.key, code: input.code, bubbles: true, cancelable: true, repeat: !!input.repeat }));
+      }
+    }
     if (room.role === "guest" && data.gameState && data.gameState.updatedAt !== lastStateAt) {
       lastStateAt = data.gameState.updatedAt;
       handler?.(data.gameState.payload, data.gameState.updatedAt);
@@ -97,12 +104,23 @@ window.mgOnline = {
 };
 if (active && room.role === "guest") {
   document.documentElement.classList.add("mg-online-guest");
+  const remoteKeys = new Set(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," ","Enter","a","A","d","D","s","S","w","W","l","L","q","Q","p","P"]);
   const lock = e => {
     if (e.target.closest("#miniSoundPanel")) return;
-    if (e.type === "keydown" && !["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," ","Enter","a","A","d","D","s","S","w","W","l","L"].includes(e.key)) return;
-    e.preventDefault(); e.stopImmediatePropagation();
+    if (e.type === "keydown" || e.type === "keyup") {
+      if (!remoteKeys.has(e.key)) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (ref) {
+        const input = { id: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2), type: e.type, key: e.key, code: e.code, repeat: !!e.repeat, at: Date.now() };
+        updateDoc(ref, { remoteInput: input, updatedAt: Date.now() }).catch(err => console.warn("MINI GAME remote input failed", err));
+      }
+      return;
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
   };
-  ["pointerdown","click","keydown","touchstart"].forEach(type => document.addEventListener(type, lock, true));
+  ["pointerdown","click","keydown","keyup","touchstart"].forEach(type => document.addEventListener(type, lock, true));
 }
 window.dispatchEvent(new Event("mg-online-ready"));
 if (active && room.role === "host") {
