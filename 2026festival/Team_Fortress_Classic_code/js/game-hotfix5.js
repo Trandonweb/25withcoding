@@ -413,6 +413,27 @@ if(running&&spectatorTimer<=0){const f=new THREE.Vector3(-Math.sin(yaw),0,-Math.
 for(const b of bots){if(b.alive&&b.burnUntil>clock&&clock>=(b.burnNext||0)){b.burnNext=clock+.45;b.hp-=5;if(b.hp<=0)killBot(b,'BURNING')}if(b.burnUntil&&b.burnUntil<=clock){b.burnUntil=0;if(b.burnMesh){b.mesh.remove(b.burnMesh);b.burnMesh=null}}if(!b.alive){b.respawn-=dt;if(b.mesh.visible){b.ragdollVel.y-=16*dt;b.mesh.position.addScaledVector(b.ragdollVel,dt);b.mesh.rotation.x+=dt*1.8;b.mesh.rotation.z+=(b.mesh.rotation.z>0?1:-1)*dt*.35;if(b.mesh.position.y<.2){b.mesh.position.y=.2;b.ragdollVel.y=0;b.ragdollVel.x*=.72;b.ragdollVel.z*=.72}}if(b.respawn<=0){b.burnUntil=0;b.burnNext=0;if(b.burnMesh){b.mesh.remove(b.burnMesh);b.burnMesh=null}b.hp=b.max;b.alive=true;b.pos.set(b.side==='red'?96-Math.random()*5:-96+Math.random()*5,0,(Math.random()-.5)*8);rebuildBotModelForRespawn(b);b.navPath=null;b.navGoal=null;b.navIndex=0;b.jumpY=0;b.jumpVy=0;b.disguiseUntil=0;b.mesh.position.copy(b.pos);b.cd=.5}continue}
 
 if(setupRemaining>0&&b.side==='blue'&&insideTeamBase(b.pos.x,b.pos.z,b.side)){b.jumpY=0;b.jumpVy=0;b.mesh.position.set(b.pos.x,groundHeightAt(b.pos.x,b.pos.z),b.pos.z);continue}
+// BLU ATTACKER EXIT PRIORITY: once setup ends, leave the spawn bay before doing any combat/support task.
+if(b.side==='blue'&&b.role==='attacker'&&setupRemaining<=0&&insideTeamBase(b.pos.x,b.pos.z,'blue')){
+ const base=teamBases.blue;
+ if(base&&!base.doorOpen){base.doorOpen=true;base.door.position.z=5.2;refreshNavBlocked()}
+ const exit=new THREE.Vector3(-76.5,0,0),dx=exit.x-b.pos.x,dz=exit.z-b.pos.z,len=Math.hypot(dx,dz);
+ if(len>.35){
+  const step=Math.min(len,b.cls.speed*.9*dt),sx=dx/(len||1),sz=dz/(len||1);
+  const candidates=[[sx,sz],[sx,0],[0,Math.sign(-b.pos.z)],[sx,Math.sign(-b.pos.z)*.45]];
+  let moved=false;
+  for(const [vx,vz] of candidates){
+   const mag=Math.hypot(vx,vz)||1,nx=b.pos.x+vx/mag*step,nz=b.pos.z+vz/mag*step;
+   if(!blocked(nx,b.pos.z,'blue',b.jumpY||0)&&!blocked(nx,nz,'blue',b.jumpY||0)){b.pos.x=nx;b.pos.z=nz;moved=true;break}
+   if(!blocked(b.pos.x,nz,'blue',b.jumpY||0)){b.pos.z=nz;moved=true;break}
+  }
+  if(!moved){b.stuckFor=(b.stuckFor||0)+dt;if(b.stuckFor>.35){b.pos.z=Math.max(-4,Math.min(4,b.pos.z));b.navPath=null;b.navGoal=null;b.navRefresh=0;b.stuckFor=0}}
+ }
+ b.navPath=null;b.navGoal=null;b.navRefresh=0;
+ b.mesh.position.set(b.pos.x,(b.jumpY||0)+groundHeightAt(b.pos.x,b.pos.z),b.pos.z);
+ b.mesh.lookAt(-52,1,0);
+ continue;
+}
  // Shared gravity update keeps bot jump arcs finite during combat, strafing, and navigation.
  if(!Number.isFinite(b.jumpY))b.jumpY=0;if(!Number.isFinite(b.jumpVy))b.jumpVy=0;if(Math.abs(b.jumpVy)>.001||b.jumpY>.001){b.jumpY+=b.jumpVy*dt;b.jumpVy-=18*dt;if(b.jumpY<=0){b.jumpY=0;b.jumpVy=0}}else{b.jumpY=0;b.jumpVy=0}
 // Context-aware teammate voice lines: speak only when a tactical condition is met.
