@@ -20,7 +20,7 @@ const db=getFirestore(initializeApp(firebaseConfig));
 let language=document.getElementById("languageSelect").value==="en"?"en":"ko";
 document.getElementById("languageSelect").addEventListener("change",e=>{language=e.target.value==="en"?"en":"ko";});
 const PASSWORD="25withcoding";
-const menus=[{id:"m1",name:"아이스티",price:1500,description:"구매 시 코딩과 함께라면 부스 무료 체험 가능"},{id:"m2",name:"레몬에이드",price:1500,description:"구매 시 코딩과 함께라면 부스 무료 체험 가능"},{id:"m3",name:"물",price:1500,description:"구매 시 코딩과 함께라면 부스 무료 체험 가능"},{id:"m4",name:"음료 교환권 사용",price:0,description:"원하는 음료 1개를 선택하세요",voucher:true}];
+const menus=[{id:"m1",name:"아이스티",price:1500,description:"구매 시 코딩과 함께라면 부스 무료 체험 가능"},{id:"m2",name:"레몬에이드",price:1500,description:"구매 시 코딩과 함께라면 부스 무료 체험 가능"},{id:"m3",name:"물",price:500,description:"구매 시 코딩과 함께라면 부스 무료 체험 가능"},{id:"m4",name:"음료 교환권 사용",price:0,description:"원하는 음료 1개를 선택하세요",voucher:true}];
 const voucherDrinks=["아이스티","레몬에이드","물"];
 const drinkIds={1:"m1",2:"m2",3:"m3"};
 let soldOut={m1:false,m2:false,m3:false};
