@@ -415,7 +415,7 @@ for(const b of bots){if(b.alive&&b.burnUntil>clock&&clock>=(b.burnNext||0)){b.bu
 if(setupRemaining>0&&b.side==='blue'&&insideTeamBase(b.pos.x,b.pos.z,b.side)&&b.cls.id!=='engineer'){b.jumpY=0;b.jumpVy=0;b.mesh.position.set(b.pos.x,groundHeightAt(b.pos.x,b.pos.z),b.pos.z);continue}
 // RED BASE EXIT: every Red AI must physically pass through the real front doorway.
  // Align to the doorway center first, then walk straight through the opening; never route into the wall.
- if(b.side==='red'&&setupRemaining<=0&&insideTeamBase(b.pos.x,b.pos.z,'red')){
+ if(b.side==='red'&&teamBases.red?.doorOpen&&insideTeamBase(b.pos.x,b.pos.z,'red')){
   const base=teamBases.red;
   if(base&&!base.doorOpen){base.doorOpen=true;base.door.position.z=-5.2;refreshNavBlocked()}
   const step=Math.max(.01,b.cls.speed*.9*dt);
