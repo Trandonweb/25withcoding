@@ -83,7 +83,8 @@ input{background:#fff!important;color:var(--mg-ink)!important;border:1px solid #
 </script>
 <script>
 let mode=null,modeName='',rounds=1,gameChoice=null,gameName='';let match=null;const games=['game1','game2','game3','game4','game5','game6','game7','game8','game9'];
-function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}\nfunction onlineRoomReady(){const r=JSON.parse(localStorage.getItem('miniGameRoom')||'null');return !!(r&&r.connected&&r.hostLive&&r.guestLive)}
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}
+function onlineRoomReady(){const r=JSON.parse(localStorage.getItem('miniGameRoom')||'null');return !!(r&&r.connected&&r.hostLive&&r.guestLive)}
 function chooseMode(el,v,n){document.querySelectorAll('#modeScreen .card').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');mode=v;modeName=n;document.getElementById('modeNext').disabled=false}
 function showSettings(){const room=JSON.parse(localStorage.getItem('miniGameRoom')||'null');if(mode==='online'&&(!room||!room.connected)){show('onlineRoomScreen');return}if(mode==='online'&&room?.role==='guest'){show('onlineWaitScreen');return}document.getElementById('modeLabel').textContent=modeName;show('settingsScreen')}
 function chooseRounds(el,v){document.querySelectorAll('.setbtn').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');rounds=v}
