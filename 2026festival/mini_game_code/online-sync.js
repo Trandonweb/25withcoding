@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getFirestore, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const cfg = {
+const firebaseConfig = {
   apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
   authDomain: "points2026-f5e50.firebaseapp.com",
   projectId: "points2026-f5e50",
@@ -9,18 +9,34 @@ const cfg = {
   messagingSenderId: "248724251417",
   appId: "1:248724251417:web:02d85cdc4addac98069b88"
 };
+const app = initializeApp(firebaseConfig, "miniGameSyncShared");
+const db = getFirestore(app);
+let room = null, ref = null, unsub = null, handler = null, lastStateAt = 0;
+let lastRemoteInputId = null, appliedRemoteKeys = new Set(), mirrorRoot = null;
+let remotePressed = new Set(), lastMirrorAt = 0, mirrorTimer = null;
 
-function renderHostMirror(data) {
-  if ((!data.images || !data.images.length) && data.page !== "game3.html" && !(data.page === "index.html" && data.screen !== "onlineRoomScreen")) {
-    if (mirrorRoot) mirrorRoot.style.display = "none";
-    return;
+function readRoom() {
+  try { return JSON.parse(localStorage.getItem("miniGameRoom") || "null"); }
+  catch { return null; }
+}
+function roomKey(r) { return r && r.connected && r.code && r.role ? r.code + ":" + r.role : ""; }
+function setStatus(text) {
+  let el = document.getElementById("mgOnlineStatus");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "mgOnlineStatus";
+    Object.assign(el.style, { position:"fixed", left:"10px", top:"10px", zIndex:"9500", maxWidth:"min(94vw,420px)", padding:"8px 12px", borderRadius:"10px", background:"#173d28", color:"#f4fff6", border:"1px solid #8bd5a2", font:"700 12px/1.4 Arial,'Noto Sans KR',sans-serif", boxShadow:"0 4px 18px #0002", pointerEvents:"none" });
+    document.body.appendChild(el);
   }
+  el.textContent = text;
+}
+function renderHostMirror(data) {
   if (!mirrorRoot) {
     mirrorRoot = document.createElement("section");
     mirrorRoot.id = "mgHostMirror";
     Object.assign(mirrorRoot.style, { position:"fixed", inset:"0", zIndex:"9000", overflow:"auto", padding:"clamp(12px,3vw,28px)", background:"#f2f5f1", color:"#17251c", fontFamily:"Inter,'Noto Sans KR',sans-serif", pointerEvents:"none", display:"block" });
     const heading = document.createElement("div");
-    heading.textContent = "방장 화면 동기화";
+    heading.textContent = "온라인 대전 · 방장 화면";
     Object.assign(heading.style, { fontWeight:"850", fontSize:"clamp(20px,4vw,30px)", marginBottom:"8px" });
     const status = document.createElement("div");
     status.id = "mgHostMirrorStatus";
@@ -40,26 +56,56 @@ function renderHostMirror(data) {
     const img = document.createElement("img");
     img.alt = "방장 게임 화면";
     img.src = src;
-    Object.assign(img.style, { display:"block", maxWidth:"min(100%,720px)", maxHeight:"48dvh", objectFit:"contain", background:"#fff", border:"1px solid #dbe5dc", borderRadius:"14px", boxShadow:"0 8px 24px #203b2810" });
+    Object.assign(img.style, { display:"block", maxWidth:"min(100%,900px)", maxHeight:"62dvh", objectFit:"contain", background:"#fff", border:"1px solid #dbe5dc", borderRadius:"14px", boxShadow:"0 8px 24px #203b2810" });
     shots.appendChild(img);
   });
 }
-
-const app = initializeApp(cfg, "miniGameSyncShared");
-const db = getFirestore(app);
-const room = JSON.parse(localStorage.getItem("miniGameRoom") || "null");
-const active = !!(room && room.connected && room.code && room.role);
-let ref = null, unsub = null, lastStateAt = 0, handler = null, mirrorRoot = null, lastRemoteInputId = null;
-if (active) {
+function dispatchKey(type, key, code, repeat=false) {
+  try { document.dispatchEvent(new KeyboardEvent(type, { key, code, bubbles:true, cancelable:true, repeat })); } catch {}
+}
+function applyRemoteKeys(keys) {
+  const next = new Set(Array.isArray(keys) ? keys : []);
+  for (const code of appliedRemoteKeys) {
+    if (!next.has(code)) {
+      const key = code === "Space" ? " " : code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Arrow") ? code : code === "Enter" ? "Enter" : code;
+      dispatchKey("keyup", key, code);
+    }
+  }
+  for (const code of next) {
+    if (!appliedRemoteKeys.has(code)) {
+      const key = code === "Space" ? " " : code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Arrow") ? code : code === "Enter" ? "Enter" : code;
+      dispatchKey("keydown", key, code);
+    }
+  }
+  appliedRemoteKeys = next;
+}
+function ensureSubscription() {
+  const nextRoom = readRoom();
+  const nextKey = roomKey(nextRoom);
+  const currentKey = roomKey(room);
+  if (nextKey === currentKey && (nextKey ? !!unsub : true)) return;
+  if (unsub) { unsub(); unsub = null; }
+  if (mirrorTimer) { clearInterval(mirrorTimer); mirrorTimer = null; }
+  room = nextRoom;
+  ref = null; lastStateAt = 0; lastRemoteInputId = null; appliedRemoteKeys = new Set();
+  if (!nextKey) {
+    if (document.getElementById("mgOnlineStatus")) document.getElementById("mgOnlineStatus").remove();
+    return;
+  }
   ref = doc(db, "miniGameRooms", room.code);
+  setStatus("온라인 대전 연결 중 · 방 " + room.code);
   unsub = onSnapshot(ref, snap => {
-    if (!snap.exists()) return;
+    if (!snap.exists()) { setStatus("방이 삭제되었거나 연결이 끊겼습니다."); return; }
     const data = snap.data();
-    if (room.role === "host" && data.remoteInput && data.remoteInput.id !== lastRemoteInputId) {
-      lastRemoteInputId = data.remoteInput.id;
-      const input = data.remoteInput;
-      if (["keydown", "keyup"].includes(input.type) && typeof input.key === "string" && typeof input.code === "string") {
-        document.dispatchEvent(new KeyboardEvent(input.type, { key: input.key, code: input.code, bubbles: true, cancelable: true, repeat: !!input.repeat }));
+    const now = Date.now();
+    const bothLive = !!data.hostSeenAt && !!data.guestSeenAt && now-data.hostSeenAt<7000 && now-data.guestSeenAt<7000 && data.status === "connected" && !!data.guestId;
+    setStatus((room.role === "host" ? "방장" : "참가자") + " · 방 " + room.code + (bothLive ? " · 실시간 연결됨" : " · 상대 연결 확인 중"));
+    if (room.role === "host") {
+      if (data.remoteKeys && Array.isArray(data.remoteKeys.keys)) applyRemoteKeys(data.remoteKeys.keys);
+      if (data.remoteInput && data.remoteInput.id !== lastRemoteInputId) {
+        lastRemoteInputId = data.remoteInput.id;
+        const input = data.remoteInput;
+        if (["keydown","keyup"].includes(input.type) && typeof input.key === "string" && typeof input.code === "string") dispatchKey(input.type,input.key,input.code,!!input.repeat);
       }
     }
     if (room.role === "guest" && data.gameState && data.gameState.updatedAt !== lastStateAt) {
@@ -68,77 +114,102 @@ if (active) {
     }
     if (room.role === "guest" && data.mirror) {
       if (data.mirror.page === "index.html" && data.mirror.screen !== "onlineRoomScreen" && location.pathname.includes("/game/game")) {
-        location.href = "../index.html";
-        return;
+        location.href = "../index.html"; return;
       }
       renderHostMirror(data.mirror);
     }
     if (room.role === "guest" && data.matchConfig) {
-      const old = JSON.parse(localStorage.getItem("miniGameSettings") || "null");
       const cfg = data.matchConfig;
-      if (cfg.currentGame && (!old || old.currentGame !== cfg.currentGame || old.round !== cfg.round)) {
-        localStorage.setItem("miniGameSettings", JSON.stringify({ ...cfg, mode: "online", modeName: "온라인 대전 · 방 " + room.code }));
+      const target = "game/" + cfg.currentGame + ".html";
+      const old = JSON.parse(localStorage.getItem("miniGameSettings") || "null");
+      if (cfg.currentGame && (!location.pathname.endsWith(target) || !old || old.currentGame !== cfg.currentGame || old.round !== cfg.round)) {
+        localStorage.setItem("miniGameSettings", JSON.stringify({ ...cfg, mode:"online", modeName:"온라인 대전 · 방 " + room.code }));
         localStorage.setItem("miniGameSelected", cfg.currentGame);
-        const target = "game/" + cfg.currentGame + ".html";
         if (!location.pathname.endsWith(target)) location.href = target;
       }
     }
-  }, err => console.warn("MINI GAME sync error", err));
+  }, err => {
+    console.error("MINI GAME sync error", err);
+    setStatus("온라인 연결 오류 · " + (err.code || "네트워크/권한 확인 필요"));
+  });
+  if (room.role === "host") {
+    mirrorTimer = setInterval(async () => {
+      if (document.visibilityState === "hidden" || !ref) return;
+      const now = Date.now();
+      if (now - lastMirrorAt < 1000) return;
+      lastMirrorAt = now;
+      const images = [];
+      document.querySelectorAll("canvas").forEach(canvas => {
+        if (images.length >= 1) return;
+        try {
+          const maxW = 900, scale = Math.min(1, maxW / canvas.width);
+          const tmp = document.createElement("canvas");
+          tmp.width = Math.max(1, Math.round(canvas.width * scale));
+          tmp.height = Math.max(1, Math.round(canvas.height * scale));
+          tmp.getContext("2d").drawImage(canvas,0,0,tmp.width,tmp.height);
+          images.push(tmp.toDataURL("image/jpeg",0.24));
+        } catch {}
+      });
+      const text = (document.body.innerText || "").replace(/\s+/g," ").trim().slice(0,500);
+      const screen = document.querySelector(".screen:not(.hidden)")?.id || "";
+      try { await updateDoc(ref,{ mirror:{page:location.pathname.split("/").pop(),screen,text,images,updatedAt:now} }); }
+      catch (e) { console.warn("MINI GAME mirror update failed",e); }
+    },1000);
+  }
 }
 window.mgOnline = {
-  active, role: active ? room.role : null, code: active ? room.code : null,
-  isHost: !active || room.role === "host",
+  get active() { return !!roomKey(readRoom()); },
+  get role() { return readRoom()?.role || null; },
+  get code() { return readRoom()?.code || null; },
+  get isHost() { return !roomKey(readRoom()) || readRoom()?.role === "host"; },
   async publish(payload) {
-    if (!active || room.role !== "host" || !ref) return;
-    const updatedAt = Date.now();
-    try { await updateDoc(ref, { gameState: { payload, updatedAt }, updatedAt }); }
-    catch (e) { console.warn("MINI GAME state publish failed", e); }
+    ensureSubscription();
+    const r = readRoom(); if (!roomKey(r) || r.role !== "host") return;
+    try { await updateDoc(doc(db,"miniGameRooms",r.code),{gameState:{payload,updatedAt:Date.now()},updatedAt:Date.now()}); }
+    catch(e) { console.warn("MINI GAME state publish failed",e); }
   },
   listen(fn) { handler = fn; },
   async setMatchConfig(config) {
-    if (!active || room.role !== "host" || !ref) return;
-    try { await updateDoc(ref, { matchConfig: config, updatedAt: Date.now() }); }
-    catch (e) { console.warn("MINI GAME match config failed", e); }
+    ensureSubscription();
+    const r = readRoom(); if (!roomKey(r) || r.role !== "host") throw new Error("온라인 방장 연결이 준비되지 않았습니다.");
+    try { await updateDoc(doc(db,"miniGameRooms",r.code),{matchConfig:config,updatedAt:Date.now()}); }
+    catch(e) { console.error("MINI GAME match config failed",e); throw e; }
   },
-  destroy() { if (unsub) unsub(); }
+  destroy() { if (unsub) unsub(); unsub=null; if(mirrorTimer)clearInterval(mirrorTimer); }
 };
-if (active && room.role === "guest") {
-  document.documentElement.classList.add("mg-online-guest");
-  const remoteKeys = new Set(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," ","Enter","a","A","d","D","s","S","w","W","l","L","q","Q","p","P"]);
-  const lock = e => {
-    if (e.target.closest("#miniSoundPanel")) return;
-    if (e.type === "keydown" || e.type === "keyup") {
-      if (!remoteKeys.has(e.key)) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      if (ref) {
-        const input = { id: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2), type: e.type, key: e.key, code: e.code, repeat: !!e.repeat, at: Date.now() };
-        updateDoc(ref, { remoteInput: input, updatedAt: Date.now() }).catch(err => console.warn("MINI GAME remote input failed", err));
-      }
-      return;
-    }
-    e.preventDefault();
-    e.stopImmediatePropagation();
+function installGuestInputRelay() {
+  const remoteKeys = new Set(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space","Enter","KeyA","KeyD","KeyS","KeyW","KeyL","KeyQ","KeyP"]);
+  const pressed = new Set();
+  const sendKeys = () => {
+    const r = readRoom(); if (!roomKey(r) || r.role !== "guest") return;
+    updateDoc(doc(db,"miniGameRooms",r.code),{remoteKeys:{keys:[...pressed],updatedAt:Date.now()},updatedAt:Date.now()})
+      .catch(err=>console.warn("MINI GAME remote keys failed",err));
   };
-  ["pointerdown","click","keydown","keyup","touchstart"].forEach(type => document.addEventListener(type, lock, true));
+  const onKeyDown = e => {
+    if (e.target?.closest?.("#miniSoundPanel")) return;
+    if (!remoteKeys.has(e.code)) return;
+    const r = readRoom(); if (!roomKey(r) || r.role !== "guest") return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    pressed.add(e.code); sendKeys();
+  };
+  const onKeyUp = e => {
+    if (!remoteKeys.has(e.code)) return;
+    const r = readRoom(); if (!roomKey(r) || r.role !== "guest") return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    pressed.delete(e.code); sendKeys();
+  };
+  const blockLocal = e => {
+    const r = readRoom(); if (!roomKey(r) || r.role !== "guest") return;
+    if (e.target?.closest?.("#miniSoundPanel")) return;
+    if (e.type === "pointerdown" || e.type === "click" || e.type === "touchstart") { e.preventDefault(); e.stopImmediatePropagation(); }
+  };
+  ["keydown","keyup"].forEach(type=>document.addEventListener(type,type==="keydown"?onKeyDown:onKeyUp,true));
+  ["pointerdown","click","touchstart"].forEach(type=>document.addEventListener(type,blockLocal,true));
+  window.addEventListener("blur",()=>{if(pressed.size){pressed.clear();sendKeys();}});
 }
+window.addEventListener("mini-game-room-updated",ensureSubscription);
+window.addEventListener("storage",e=>{if(e.key==="miniGameRoom")ensureSubscription();});
+window.addEventListener("beforeunload",()=>{if(unsub)unsub();if(mirrorTimer)clearInterval(mirrorTimer);});
+installGuestInputRelay();
+ensureSubscription();
 window.dispatchEvent(new Event("mg-online-ready"));
-if (active && room.role === "host") {
-  let lastMirrorAt = 0;
-  setInterval(async () => {
-    if (document.visibilityState === "hidden" || !ref) return;
-    const now = Date.now();
-    if (now - lastMirrorAt < 650) return;
-    lastMirrorAt = now;
-    const images = [];
-    document.querySelectorAll("canvas").forEach(canvas => {
-      if (images.length >= 2) return;
-      try { images.push(canvas.toDataURL("image/jpeg", 0.42)); } catch {}
-    });
-    const text = (document.body.innerText || "").replace(/\s+/g, " ").trim().slice(0, 850);
-    const screen = document.querySelector(".screen:not(.hidden)")?.id || "";
-    try { await updateDoc(ref, { mirror: { page: location.pathname.split("/").pop(), screen, text, images, updatedAt: now } }); }
-    catch (e) { console.warn("MINI GAME mirror update failed", e); }
-  }, 650);
-}
-window.addEventListener("beforeunload", () => { if (unsub) unsub(); });
