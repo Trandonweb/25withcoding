@@ -31,7 +31,8 @@ function setStatus(text) {
   el.textContent = text;
 }
 function renderHostMirror(data) {
-  if (!data.images || !data.images.length) { if (mirrorRoot) mirrorRoot.style.display = "none"; return; }
+  // Keep the last good frame during a transient capture failure.
+  if (!data.images || !data.images.length) return;
   if (!mirrorRoot) {
     mirrorRoot = document.createElement("section");
     mirrorRoot.id = "mgHostMirror";
@@ -60,6 +61,62 @@ function renderHostMirror(data) {
     Object.assign(img.style, { display:"block", maxWidth:data.images.length > 1 ? "min(48%,700px)" : "min(100%,900px)", maxHeight:"62dvh", objectFit:"contain", background:"#fff", border:"1px solid #dbe5dc", borderRadius:"14px", boxShadow:"0 8px 24px #203b2810" });
     shots.appendChild(img);
   });
+}
+async function captureWholePage() {
+  const sourceBody = document.body;
+  const viewportW = Math.max(320, Math.min(900, window.innerWidth || 900));
+  const viewportH = Math.max(240, Math.min(680, window.innerHeight || 600));
+  const scale = Math.min(1, 900 / viewportW, 680 / viewportH);
+  const outW = Math.max(1, Math.round(viewportW * scale));
+  const outH = Math.max(1, Math.round(viewportH * scale));
+  const clone = sourceBody.cloneNode(true);
+  clone.querySelectorAll("#mgOnlineStatus,#mgHostMirror,#miniSoundPanel,script").forEach(el => el.remove());
+  clone.style.setProperty("box-sizing","border-box","important");
+  clone.style.setProperty("width",viewportW+"px","important");
+  clone.style.setProperty("min-height",viewportH+"px","important");
+  clone.style.setProperty("margin","0","important");
+  clone.style.setProperty("overflow","hidden","important");
+  const originals = [sourceBody, ...sourceBody.querySelectorAll("*")];
+  const copies = [clone, ...clone.querySelectorAll("*")];
+  for (let i=0; i<Math.min(originals.length,copies.length); i++) {
+    const original = originals[i], copy = copies[i];
+    if (original.id === "mgOnlineStatus" || original.id === "mgHostMirror" || original.id === "miniSoundPanel") continue;
+    try {
+      const cs = getComputedStyle(original);
+      for (let j=0; j<cs.length; j++) {
+        const prop = cs[j];
+        copy.style.setProperty(prop,cs.getPropertyValue(prop),cs.getPropertyPriority(prop));
+      }
+    } catch {}
+    if (original instanceof HTMLInputElement) copy.setAttribute("value",original.value);
+    if (original instanceof HTMLTextAreaElement) copy.textContent=original.value;
+    if (original instanceof HTMLSelectElement) copy.querySelectorAll("option").forEach((option,k)=>option.toggleAttribute("selected",original.options[k]?.selected===true));
+    if (original instanceof HTMLCanvasElement) {
+      try {
+        const img=document.createElement("img");
+        img.src=original.toDataURL("image/png");
+        img.width=original.width; img.height=original.height;
+        img.style.cssText=copy.style.cssText;
+        copy.replaceWith(img);
+      } catch {}
+    }
+  }
+  const markup = new XMLSerializer().serializeToString(clone);
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+viewportW+'" height="'+viewportH+'"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:'+viewportW+'px;height:'+viewportH+'px;overflow:hidden">'+markup+'</div></foreignObject></svg>';
+  const blobUrl = URL.createObjectURL(new Blob([svg],{type:"image/svg+xml;charset=utf-8"}));
+  try {
+    const img = new Image();
+    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=blobUrl;});
+    const canvas=document.createElement("canvas");
+    canvas.width=outW; canvas.height=outH;
+    const ctx=canvas.getContext("2d");
+    if(!ctx) throw new Error("Canvas context unavailable");
+    ctx.fillStyle="#07100b";ctx.fillRect(0,0,outW,outH);
+    ctx.drawImage(img,0,0,outW,outH);
+    return canvas.toDataURL("image/jpeg",0.58);
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
 }
 function dispatchKey(type, key, code, repeat=false) {
   try { const event = new KeyboardEvent(type, { key, code, bubbles:true, cancelable:true, repeat }); Object.defineProperty(event,"mgRemote",{value:true}); document.dispatchEvent(event); } catch {}
@@ -143,20 +200,14 @@ function ensureSubscription() {
       const now = Date.now();
       if (now - lastMirrorAt < 1000) return;
       lastMirrorAt = now;
-      const images = [];
-      document.querySelectorAll("canvas").forEach(canvas => {
-        if (images.length >= 2) return;
-        try {
-          const maxW = 700, scale = Math.min(1, maxW / canvas.width);
-          const tmp = document.createElement("canvas");
-          tmp.width = Math.max(1, Math.round(canvas.width * scale));
-          tmp.height = Math.max(1, Math.round(canvas.height * scale));
-          tmp.getContext("2d").drawImage(canvas,0,0,tmp.width,tmp.height);
-          images.push(tmp.toDataURL("image/jpeg",0.22));
-        } catch {}
-      });
+      let images = [];
+      try {
+        const frame = await captureWholePage();
+        if (frame) images = [frame];
+      } catch (e) { console.warn("MINI GAME full-page capture failed",e); }
       const text = (document.body.innerText || "").replace(/\s+/g," ").trim().slice(0,500);
       const screen = document.querySelector(".screen:not(.hidden)")?.id || "";
+      if (!images.length) return;
       try { await updateDoc(ref,{ mirror:{page:location.pathname.split("/").pop(),screen,text,images,updatedAt:now} }); }
       catch (e) { console.warn("MINI GAME mirror update failed",e); }
     },1000);
