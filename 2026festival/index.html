@@ -2611,19 +2611,18 @@ async function discoverProjectFolders(){
     const data=await response.json();
     if(data.truncated) throw new Error("저장소 파일 목록이 일부만 반환되었습니다.");
 
-    const files=new Set((data.tree||[]).filter(item=>item.type==="blob").map(item=>item.path));
-    const directories=new Set((data.tree||[]).filter(item=>item.type==="tree").map(item=>item.path));
+    const treeEntries=Array.isArray(data.tree)?data.tree:[];
+    const files=new Set(treeEntries.filter(item=>item.type==="blob").map(item=>item.path));
     const root="2026festival";
     const names=new Set();
 
-    for(const path of directories){
-      if(!path.startsWith(root+"/")) continue;
-      const relative=path.slice(root.length+1);
-      if(!relative||relative.includes("/")) continue;
-      if(relative.endsWith("_code")) continue;
+    // 디렉터리(tree) 항목 유무에 의존하지 않고 실제 index.html 파일 경로로
+    // 작품 폴더를 찾습니다. 작품과 _code 폴더가 모두 있고 index.html이 있을 때만 노출합니다.
+    for(const path of files){
+      if(!path.startsWith(root+"/")||!path.endsWith("/index.html")) continue;
+      const relative=path.slice(root.length+1,-"/index.html".length);
+      if(!relative||relative.includes("/")||relative.endsWith("_code")) continue;
       const codeName=relative+"_code";
-      if(!directories.has(root+"/"+codeName)) continue;
-      if(!files.has(root+"/"+relative+"/index.html")) continue;
       if(!files.has(root+"/"+codeName+"/index.html")) continue;
       names.add(relative);
     }
