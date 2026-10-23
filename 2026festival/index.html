@@ -595,8 +595,8 @@ header{
         id="accessCodeInput"
         class="gate-input"
         type="text"
-        maxlength="5"
-        placeholder="5자리 축제 이용 코드를 입력하세요"
+        maxlength="32"
+        placeholder="이용권 키 또는 5자리 축제 이용 코드를 입력하세요"
         autocomplete="off"
         autocapitalize="characters"
         spellcheck="false"
@@ -642,8 +642,8 @@ header{
         id="memberAccessCodeInput"
         class="gate-input"
         type="text"
-        maxlength="5"
-        placeholder="5자리 축제 이용 코드를 입력하세요"
+        maxlength="32"
+        placeholder="이용권 키 또는 5자리 축제 이용 코드를 입력하세요"
         autocomplete="off"
         autocapitalize="characters"
         spellcheck="false"
@@ -1667,14 +1667,23 @@ function randomAdminChallenge(){
 
 function adminTime(){
 
-  const challenge=
-    randomAdminChallenge();
+  const key=prompt("관리자 키를 입력하세요.");
 
-  console.log(
-    challenge
-  );
+  if(key===null){
+    return false;
+  }
 
-  return challenge;
+  if(String(key).trim()!=="25withcoidng"){
+    window.__festivalAdminActive=false;
+    adminChallenge=null;
+    console.warn("관리자 키가 올바르지 않습니다.");
+    return false;
+  }
+
+  window.__festivalAdminActive=true;
+  adminChallenge=null;
+  console.log("관리자 모드 활성화");
+  return true;
 
 }
 
@@ -1917,6 +1926,33 @@ async function redeemAccessCode(
       )
     );
 
+  // 고정 이용권 키는 Firestore 이용 코드와 별도로 처리합니다.
+  // 선택한 이용 횟수에 따라 1회당 30분을 부여합니다.
+  if(code==="25WITHCODING"){
+
+    sessionStorage.setItem(
+      "festival2026CodeAccess",
+      "true"
+    );
+
+    sessionStorage.setItem(
+      "festival2026AccessCode",
+      "25withcoding"
+    );
+
+    startNewCodeSession(sessions);
+
+    return{
+      success:true,
+      message:`${sessions}회 이용 (${sessions*30}분)으로 입장했습니다.`,
+      people:1,
+      used:sessions,
+      max:sessions,
+      remaining:0
+    };
+
+  }
+
   if(
     !/^[A-Z0-9]{5}$/.test(code)
   ){
@@ -1924,7 +1960,7 @@ async function redeemAccessCode(
     return{
       success:false,
       message:
-        "축제 이용 코드는 정확히 5자리입니다."
+        "이용권 키 또는 정확히 5자리 축제 이용 코드를 입력하세요."
     };
 
   }
