@@ -2627,6 +2627,23 @@ async function discoverProjectFolders(){
       names.add(relative);
     }
 
+    // GitHub API가 일시적으로 빈 트리 응답을 반환할 경우, 현재 저장소에서 확인된
+    // 정상 작품 쌍으로 목록 전체가 빈 화면이 되는 것을 방지합니다.
+    const treeDiscoveryUnavailable = names.size === 0;
+    if(treeDiscoveryUnavailable){
+      [
+        "FPS",
+        "Galaxy_attack",
+        "Team_Fortress_Classic",
+        "bigkid",
+        "do_not_come_to_me",
+        "maze",
+        "mini_game",
+        "number",
+        "이준혁"
+      ].forEach(id=>names.add(id));
+    }
+
     const projects=await Promise.all([...names].map(async id=>{
       const folder=root+"/"+id;
       const metaPaths={
@@ -2636,10 +2653,10 @@ async function discoverProjectFolders(){
         how:folder+"/how.txt"
       };
       const [title,description,madeBy,how]=await Promise.all([
-        files.has(metaPaths.title)?fileText(metaPaths.title):Promise.resolve(""),
-        files.has(metaPaths.description)?fileText(metaPaths.description):Promise.resolve(""),
-        files.has(metaPaths.madeBy)?fileText(metaPaths.madeBy):Promise.resolve(""),
-        files.has(metaPaths.how)?fileText(metaPaths.how):Promise.resolve("")
+        (files.has(metaPaths.title)||treeDiscoveryUnavailable)?fileText(metaPaths.title):Promise.resolve(""),
+        (files.has(metaPaths.description)||treeDiscoveryUnavailable)?fileText(metaPaths.description):Promise.resolve(""),
+        (files.has(metaPaths.madeBy)||treeDiscoveryUnavailable)?fileText(metaPaths.madeBy):Promise.resolve(""),
+        (files.has(metaPaths.how)||treeDiscoveryUnavailable)?fileText(metaPaths.how):Promise.resolve("")
       ]);
 
       const existing=projectDocs.get(id)||{};
@@ -2658,7 +2675,7 @@ async function discoverProjectFolders(){
       // GitHub tree에 존재하는 첫 이미지가 실제 raw URL에서는 열리지 않을 수 있어
       // 모든 후보를 보관하고, 브라우저에서 로드 실패 시 다음 후보를 시도합니다.
       const discoveredThumbnailPaths=[
-        ...thumbnailCandidates.filter(path=>files.has(path)),
+        ...(treeDiscoveryUnavailable?thumbnailCandidates:thumbnailCandidates.filter(path=>files.has(path))),
         ...[...files].filter(path=>
           path.startsWith(folder+"/") &&
           !path.slice(folder.length+1).includes("/") &&
