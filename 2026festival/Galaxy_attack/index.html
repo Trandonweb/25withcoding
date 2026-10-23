@@ -320,7 +320,7 @@ import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async 
     likeSubmitting = true;
     likeButton.disabled = true;
     try {
-      await dbModule.updateDoc(likeDocRef, { likes: dbModule.increment(1) });
+      await dbModule.setDoc(likeDocRef, { likes: dbModule.increment(1) }, { merge: true });
       likeButton.title = "응원해 주셔서 감사합니다!";
     } catch (error) {
       console.error("응원 처리 실패:", error);
