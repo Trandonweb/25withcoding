@@ -2605,63 +2605,32 @@ function renderProjects(){
 }
 
 async function discoverProjectFolders(){
+  // 작품 목록은 GitHub Tree API 응답에 의존하지 않고 현재 저장소에 존재하는
+  // 작품 폴더와 대응 _code 폴더를 수동으로 등록합니다.
+  const manualProjectIds=[
+    "FPS",
+    "Galaxy_attack",
+    "Team_Fortress_Classic",
+    "bigkid",
+    "do_not_come_to_me",
+    "maze",
+    "mini_game",
+    "number",
+    "이준혁"
+  ];
+
   try{
-    const response=await fetch(GITHUB_TREE_URL,{cache:"no-store"});
-    if(!response.ok) throw new Error("GitHub 저장소 목록을 불러오지 못했습니다.");
-    const data=await response.json();
-    if(data.truncated) throw new Error("저장소 파일 목록이 일부만 반환되었습니다.");
-
-    const treeEntries=Array.isArray(data.tree)?data.tree:[];
-    const files=new Set(treeEntries.filter(item=>item.type==="blob").map(item=>item.path));
-    const root="2026festival";
-    const names=new Set();
-
-    // 디렉터리(tree) 항목 유무에 의존하지 않고 실제 index.html 파일 경로로
-    // 작품 폴더를 찾습니다. 작품과 _code 폴더가 모두 있고 index.html이 있을 때만 노출합니다.
-    for(const path of files){
-      if(!path.startsWith(root+"/")||!path.endsWith("/index.html")) continue;
-      const relative=path.slice(root.length+1,-"/index.html".length);
-      if(!relative||relative.includes("/")||relative.endsWith("_code")) continue;
-      const codeName=relative+"_code";
-      if(!files.has(root+"/"+codeName+"/index.html")) continue;
-      names.add(relative);
-    }
-
-    // GitHub API가 일시적으로 빈 트리 응답을 반환할 경우, 현재 저장소에서 확인된
-    // 정상 작품 쌍으로 목록 전체가 빈 화면이 되는 것을 방지합니다.
-    const treeDiscoveryUnavailable = names.size === 0;
-    if(treeDiscoveryUnavailable){
-      [
-        "FPS",
-        "Galaxy_attack",
-        "Team_Fortress_Classic",
-        "bigkid",
-        "do_not_come_to_me",
-        "maze",
-        "mini_game",
-        "number",
-        "이준혁"
-      ].forEach(id=>names.add(id));
-    }
-
-    const projects=await Promise.all([...names].map(async id=>{
-      const folder=root+"/"+id;
-      const metaPaths={
-        title:folder+"/title.txt",
-        description:folder+"/explanation.txt",
-        madeBy:folder+"/madeby.txt",
-        how:folder+"/how.txt"
-      };
+    const projects=await Promise.all(manualProjectIds.map(async id=>{
+      const folder="2026festival/"+id;
       const [title,description,madeBy,how]=await Promise.all([
-        (files.has(metaPaths.title)||treeDiscoveryUnavailable)?fileText(metaPaths.title):Promise.resolve(""),
-        (files.has(metaPaths.description)||treeDiscoveryUnavailable)?fileText(metaPaths.description):Promise.resolve(""),
-        (files.has(metaPaths.madeBy)||treeDiscoveryUnavailable)?fileText(metaPaths.madeBy):Promise.resolve(""),
-        (files.has(metaPaths.how)||treeDiscoveryUnavailable)?fileText(metaPaths.how):Promise.resolve("")
+        fileText(folder+"/title.txt"),
+        fileText(folder+"/explanation.txt"),
+        fileText(folder+"/madeby.txt"),
+        fileText(folder+"/how.txt")
       ]);
 
       const existing=projectDocs.get(id)||{};
-      // 파일명 오타(thubnail)와 정상 표기(thumbnail), 확장자 차이를 모두 허용합니다.
-      const thumbnailCandidates=[
+      const thumbnailPaths=[
         folder+"/thumbnail.png",
         folder+"/thubnail.png",
         folder+"/thumbnail.jpg",
@@ -2670,33 +2639,23 @@ async function discoverProjectFolders(){
         folder+"/thumbnail.svg",
         folder+"/thumb.png",
         folder+"/thumb.jpg",
-        folder+"/thumb.webp"
+        folder+"/thumb.webp",
+        folder+"/thumb.jpeg",
+        folder+"/thumbnail.gif"
       ];
-      // GitHub tree에 존재하는 첫 이미지가 실제 raw URL에서는 열리지 않을 수 있어
-      // 모든 후보를 보관하고, 브라우저에서 로드 실패 시 다음 후보를 시도합니다.
-      const discoveredThumbnailPaths=[
-        ...(treeDiscoveryUnavailable?thumbnailCandidates:thumbnailCandidates.filter(path=>files.has(path))),
-        ...[...files].filter(path=>
-          path.startsWith(folder+"/") &&
-          !path.slice(folder.length+1).includes("/") &&
-          /thumb(nail)?\.(png|jpe?g|webp|gif|svg)$/i.test(path) &&
-          !thumbnailCandidates.includes(path)
-        )
-      ];
+      const thumbnailCandidates=thumbnailPaths.map(safeImageUrl);
       const savedThumbnail=String(existing.thum||existing.thumbnail||"");
-      const thumbnailCandidatesUrls=discoveredThumbnailPaths.map(safeImageUrl);
-      const thumbnail=thumbnailCandidatesUrls[0]||savedThumbnail;
 
       return {
         id,
-        title:title||id,
+        title:title||String(existing.title||id),
         description:description||String(existing.detail||""),
         madeBy:madeBy||String(existing.madeby||existing.madeBy||existing.author||""),
         how:how||String(existing.howto||existing.how||""),
-        thumbnail,
-        thumbnailCandidates:thumbnailCandidatesUrls.length
-          ?thumbnailCandidatesUrls
-          :(savedThumbnail?[savedThumbnail]:[])
+        thumbnail:thumbnailCandidates[0]||savedThumbnail,
+        thumbnailCandidates:savedThumbnail
+          ?[...thumbnailCandidates,savedThumbnail]
+          :thumbnailCandidates
       };
     }));
 
@@ -2704,7 +2663,7 @@ async function discoverProjectFolders(){
     projectsLoading=false;
     renderProjects();
   }catch(error){
-    console.error("작품 폴더 자동 검색 실패:",error);
+    console.error("수동 작품 목록 불러오기 실패:",error);
     projectsLoading=false;
     grid.replaceChildren(makeText("div","empty","작품 목록을 불러오지 못했습니다. 네트워크 연결을 확인해주세요."));
   }
