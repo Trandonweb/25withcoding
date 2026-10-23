@@ -154,10 +154,14 @@ async function connectStudent(id,d){
    }
   };
 
+  // 이전 연결의 ICE 후보를 먼저 비운 뒤 협상을 시작한다.
+  // setLocalDescription 이후 후보 수집이 시작되므로, answer 저장 시 후보 배열을 다시 비우면
+  // 먼저 저장된 후보가 사라져 일부 네트워크에서 연결이 실패할 수 있다.
+  await updateDoc(ref,{sharing:false,sharingStartedAt:null,adminAnswer:null,adminCandidates:[],updatedAt:serverTimestamp()});
   await pc.setRemoteDescription(new RTCSessionDescription({type:d.clientOffer.type,sdp:d.clientOffer.sdp}));
   const answer=await pc.createAnswer();
   await pc.setLocalDescription(answer);
-  await updateDoc(ref,{sharing:true,sharingStartedAt:serverTimestamp(),adminAnswer:{type:answer.type,sdp:answer.sdp,sessionId:sid},adminCandidates:[],updatedAt:serverTimestamp()});
+  await updateDoc(ref,{sharing:true,sharingStartedAt:serverTimestamp(),adminAnswer:{type:answer.type,sdp:answer.sdp,sessionId:sid},updatedAt:serverTimestamp()});
 
   s.unsubscribe=onSnapshot(ref,async snap=>{
    const x=snap.data();
