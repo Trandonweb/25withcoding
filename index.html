@@ -38,6 +38,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
 .tools-dropdown{position:absolute;top:calc(100% + 18px);left:50%;transform:translateX(-50%);width:210px;padding:8px;border:1px solid var(--border-color);border-radius:15px;background:var(--card-bg);box-shadow:0 12px 35px rgba(0,0,0,.15);display:grid;gap:3px}.tools-dropdown:before{content:"";position:absolute;left:0;right:0;top:-18px;height:18px}.tools-menu:hover>.tools-dropdown,.tools-menu:focus-within>.tools-dropdown{display:grid}.tools-menu:hover>summary,.tools-menu:focus-within>summary{color:var(--primary-color);opacity:1}
 .tools-dropdown a{display:block;padding:11px 12px;border-radius:9px;color:var(--text-color);text-decoration:none;font-size:13px;font-weight:650}.tools-dropdown a:hover{background:var(--card-hover-bg);color:var(--primary-color)}
 .header-account{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:100px}
+.profile-menu-wrap{position:relative}.profile-dropdown{position:absolute;right:0;top:calc(100% + 10px);min-width:180px;padding:7px;border:1px solid var(--border-color);border-radius:14px;background:var(--card-bg);box-shadow:0 12px 30px rgba(0,0,0,.16);display:none;z-index:1100}.profile-dropdown.open{display:grid;gap:3px}.profile-dropdown a,.profile-dropdown button{display:block;width:100%;padding:11px 12px;border:0;border-radius:9px;background:transparent;color:var(--text-color);text-align:left;text-decoration:none;font:inherit;font-size:13px;font-weight:650;cursor:pointer}.profile-dropdown a:hover,.profile-dropdown button:hover{background:var(--card-hover-bg);color:var(--primary-color)}.profile-dropdown .profile-settings{border-top:1px solid var(--border-color);border-radius:0 0 9px 9px;margin-top:3px;padding-top:13px}
 .student-number{color:var(--text-color);font-size:12px;font-weight:750;white-space:nowrap;opacity:.75}
 .auth-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:8px 13px;border:1px solid var(--border-color);border-radius:999px;background:var(--primary-color);color:white;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;transition:filter .2s}
 .auth-btn:hover{filter:brightness(.92)}.profile-mark{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.2);font-size:14px}
@@ -78,7 +79,14 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     </nav>
     <div class="header-account">
       <span id="studentNumber" class="student-number" hidden></span>
-      <button id="authBtn" class="auth-btn" type="button"><span class="profile-mark" aria-hidden="true">●</span><span id="authLabel">로그인</span></button>
+      <div class="profile-menu-wrap">
+        <button id="authBtn" class="auth-btn" type="button" aria-haspopup="true" aria-expanded="false"><span class="profile-mark" aria-hidden="true">●</span><span id="authLabel">로그인</span></button>
+        <div id="profileDropdown" class="profile-dropdown" role="menu">
+          <a id="profileHomeLink" href="/profile" role="menuitem">프로필</a>
+          <a id="settingsLink" class="profile-settings" href="/settings" role="menuitem">설정</a>
+          <button id="signoutBtn" type="button" role="menuitem">로그아웃</button>
+        </div>
+      </div>
     </div>
   </header>
   <main class="page-content">
@@ -138,20 +146,27 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       const btn=document.getElementById("authBtn");
       const label=document.getElementById("authLabel");
       const studentNumber=document.getElementById("studentNumber");
+      const dropdown=document.getElementById("profileDropdown");
+      const signoutBtn=document.getElementById("signoutBtn");
       if(user){
         await checkUserSettings(user);
-        btn.setAttribute("aria-label",user+" 로그아웃");
+        btn.setAttribute("aria-label","프로필 메뉴 열기");
         label.textContent="프로필";
         studentNumber.textContent="학번 "+user;
         studentNumber.hidden=false;
-        btn.onclick=()=>{location.href="/signout?redirect=/"};
+        btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
+        signoutBtn.hidden=false;
+        signoutBtn.onclick=()=>{location.href="/signout?redirect=/"};
       }else{
         btn.setAttribute("aria-label","로그인");
         label.textContent="로그인";
         studentNumber.textContent="";
         studentNumber.hidden=true;
         btn.onclick=()=>{location.href="/signin?redirect=/"};
+        dropdown.classList.remove("open");
+        signoutBtn.hidden=true;
       }
+      document.addEventListener("click",event=>{if(!event.target.closest(".profile-menu-wrap")){dropdown.classList.remove("open");btn.setAttribute("aria-expanded","false")}});
       syncSettingsUI();
     }
     window.changePassword=async function(){const user=localStorage.getItem("userId");if(!user){alert("로그인 후 이용할 수 있습니다.");return}const currentPassword=document.getElementById("currentPassword").value,newPassword=document.getElementById("newPassword").value,confirmPassword=document.getElementById("confirmPassword").value,button=document.getElementById("passwordChangeBtn");if(!currentPassword||!newPassword||!confirmPassword){alert("현재 비밀번호와 새 비밀번호를 모두 입력하세요.");return}if(newPassword.length<6){alert("새 비밀번호는 6자 이상이어야 합니다.");return}if(newPassword!==confirmPassword){alert("새 비밀번호가 서로 일치하지 않습니다.");return}if(currentPassword===newPassword){alert("현재 비밀번호와 다른 비밀번호를 입력하세요.");return}button.disabled=true;button.textContent="확인 중...";try{const userRef=doc(db,"users",user),snap=await getDoc(userRef);if(!snap.exists()){alert("사용자 정보를 찾을 수 없습니다.");return}const data=snap.data();if(currentPassword!==data.password){alert("현재 비밀번호가 올바르지 않습니다.");return}await updateDoc(userRef,{password:newPassword});document.getElementById("currentPassword").value="";document.getElementById("newPassword").value="";document.getElementById("confirmPassword").value="";alert("비밀번호가 변경되었습니다.")}catch(e){console.error("비밀번호 변경 실패",e);alert("비밀번호 변경 중 오류가 발생했습니다.")}finally{button.disabled=false;button.textContent="비밀번호 변경"}};
