@@ -27,8 +27,21 @@
     body.dark-mode { --bg-color:#121212; --card-bg:#1E1E1E; --text-color:#FFFFFF; --header-bg:#121212; --border-color:var(--primary-color); --header-text:var(--primary-color); --card-hover-bg:color-mix(in srgb,var(--primary-color) 15%,#1E1E1E); --btn-bg:#2C2C2C; --btn-text:#FFFFFF; --btn-hover:#3A3A3A; --input-bg:#2A2A2A; --input-border:#444444; }
     * { box-sizing:border-box; }
     body { margin:0; font-family:Arial,sans-serif; background:var(--bg-color); color:var(--text-color); display:flex; flex-direction:column; align-items:center; min-height:100vh; transition:background .2s,color .2s; }
-    header { position:relative; width:100%; padding:22px; background:var(--header-bg); color:var(--header-text); text-align:center; font-size:26px; font-weight:bold; border-bottom:3px solid var(--border-color); box-shadow:0 2px 10px rgba(0,0,0,.08); letter-spacing:1px; }
-    .header-left { position:absolute; left:20px; top:16px; display:flex; gap:10px; }
+    header { position:sticky; top:0; z-index:900; width:100%; padding:0 4.5%; min-height:76px; display:flex; align-items:center; justify-content:space-between; gap:24px; background:color-mix(in srgb,var(--header-bg) 94%,transparent); color:var(--header-text); text-align:left; font-size:18px; font-weight:bold; border-bottom:1px solid var(--border-color); box-shadow:0 3px 16px rgba(0,0,0,.07); letter-spacing:.2px; backdrop-filter:blur(16px); transform:translateY(0); opacity:1; transition:transform .28s ease,opacity .22s ease,background .2s; }
+    header.nav-hidden { transform:translateY(-110%); opacity:0; pointer-events:none; }
+    .brand { display:flex; align-items:center; gap:11px; color:var(--text-color); text-decoration:none; white-space:nowrap; font-size:19px; }
+    .brand-mark { display:grid; place-items:center; width:38px; height:38px; border-radius:12px; color:#fff; background:var(--primary-color); font-size:20px; font-weight:900; }
+    .main-nav { display:flex; align-items:center; justify-content:center; gap:clamp(12px,2.1vw,30px); flex:1; }
+    .main-nav a { color:var(--text-color); text-decoration:none; font-size:14px; font-weight:700; opacity:.82; transition:color .2s,opacity .2s; white-space:nowrap; }
+    .main-nav a:hover { color:var(--primary-color); opacity:1; }
+    .header-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+    .header-tools { display:flex; align-items:center; gap:6px; }
+    .header-tools .header-btn { padding:8px 10px; font-size:12px; }
+    .header-left { position:static; display:flex; align-items:center; gap:6px; }
+    .header-left .header-btn { padding:8px 10px; font-size:12px; }
+    .auth-btn { position:static; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:10px 13px; border-radius:999px; white-space:nowrap; }
+    .auth-btn::before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.85); }
+
     .header-btn,.auth-btn { border:none; border-radius:10px; padding:10px 15px; cursor:pointer; font-size:14px; font-weight:bold; }
     .header-btn { background:var(--btn-bg); color:var(--btn-text); transition:background .2s; }
     .header-btn:hover { background:var(--btn-hover); }
@@ -36,11 +49,53 @@
     .attendance-btn:hover { background:var(--primary-color); filter:brightness(.92); }
     .attendance-btn:disabled { background:var(--primary-color); color:#fff; opacity:.65; cursor:default; }
     #adminBtn,#noticeBtn { display:none; }
-    .auth-btn { position:absolute; right:20px; top:16px; background:var(--primary-color); color:white; transition:filter .2s; }
+
     .auth-btn:hover { filter:brightness(.9); }
-    .container { margin-top:40px; width:90%; max-width:600px; }
-    .card { background:var(--card-bg); padding:22px; margin:18px 0; border-radius:18px; cursor:pointer; transition:transform .2s,background .2s,border .2s; border:2px solid var(--border-color); box-shadow:0 4px 12px rgba(0,0,0,.08); text-align:center; font-size:18px; font-weight:bold; color:var(--text-color); }
-    .card:hover { transform:scale(1.03); background:var(--card-hover-bg); }
+    .page-content { width:min(1180px,91%); margin:0 auto; }
+    .hero { position:relative; overflow:hidden; min-height:390px; margin:34px auto 28px; padding:clamp(30px,6vw,72px); display:flex; align-items:center; border:1px solid var(--border-color); border-radius:30px; background:linear-gradient(125deg,color-mix(in srgb,var(--primary-color) 20%,var(--card-bg)),var(--card-bg) 68%); box-shadow:0 18px 50px rgba(0,0,0,.07); }
+    .hero::after { content:"</>"; position:absolute; right:5%; bottom:-18%; font-size:clamp(150px,26vw,330px); font-weight:900; letter-spacing:-.12em; line-height:1; color:var(--primary-color); opacity:.09; pointer-events:none; }
+    .hero-copy { position:relative; z-index:1; max-width:720px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; color:var(--primary-color); font-size:12px; font-weight:800; letter-spacing:2px; text-transform:uppercase; }
+    .eyebrow::before { content:""; width:24px; height:2px; background:var(--primary-color); }
+    .hero h1 { margin:18px 0 14px; font-size:clamp(34px,6vw,68px); line-height:1.08; letter-spacing:-.055em; color:var(--text-color); }
+    .hero p { max-width:620px; margin:0; font-size:clamp(15px,2vw,19px); line-height:1.8; color:var(--text-color); opacity:.76; }
+    .hero-links { display:flex; flex-wrap:wrap; gap:10px; margin-top:28px; }
+    .action-link { display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding:0 18px; border:1px solid var(--border-color); border-radius:13px; background:var(--primary-color); color:#fff; text-decoration:none; font-size:14px; font-weight:800; transition:transform .2s,filter .2s; }
+    .action-link:hover { transform:translateY(-2px); filter:brightness(.95); }
+    .action-link.secondary { background:var(--card-bg); color:var(--text-color); }
+    .section { padding:28px 0 42px; scroll-margin-top:96px; }
+    .section-heading { display:flex; align-items:end; justify-content:space-between; gap:18px; margin-bottom:20px; }
+    .section-kicker { margin:0 0 8px; color:var(--primary-color); font-size:11px; font-weight:800; letter-spacing:2px; }
+    .section-heading h2 { margin:0; font-size:clamp(24px,3vw,34px); letter-spacing:-.04em; }
+    .section-heading p { margin:8px 0 0; color:var(--text-color); opacity:.68; line-height:1.7; font-size:14px; }
+    .notice-carousel { position:relative; overflow:hidden; min-height:190px; border-radius:22px; border:1px solid var(--border-color); background:var(--card-bg); }
+    .notice-slide { display:none; min-height:190px; padding:clamp(22px,4vw,38px); align-items:center; justify-content:space-between; gap:24px; }
+    .notice-slide.active { display:flex; animation:slideIn .35s ease both; }
+    .notice-slide h3 { margin:10px 0; font-size:clamp(20px,3vw,29px); letter-spacing:-.035em; }
+    .notice-slide p { margin:0; line-height:1.7; color:var(--text-color); opacity:.72; }
+    .notice-label { display:inline-flex; padding:6px 10px; border-radius:999px; background:color-mix(in srgb,var(--primary-color) 13%,var(--card-bg)); color:var(--primary-color); font-size:11px; font-weight:800; }
+    .slide-symbol { display:grid; place-items:center; flex:0 0 90px; width:90px; height:90px; border-radius:24px; background:color-mix(in srgb,var(--primary-color) 13%,var(--card-bg)); color:var(--primary-color); font-size:38px; font-weight:900; }
+    .carousel-controls { display:flex; align-items:center; justify-content:space-between; padding:0 20px 18px; }
+    .carousel-dots { display:flex; gap:7px; }
+    .carousel-dot { width:8px; height:8px; border:0; border-radius:99px; background:var(--border-color); opacity:.35; cursor:pointer; padding:0; }
+    .carousel-dot.active { width:24px; opacity:1; background:var(--primary-color); }
+    .carousel-arrows { display:flex; gap:7px; }
+    .carousel-arrows button { width:34px; height:34px; border:1px solid var(--border-color); border-radius:50%; background:var(--card-bg); color:var(--text-color); cursor:pointer; }
+    .feature-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+    .feature-card { min-height:180px; display:flex; flex-direction:column; align-items:flex-start; gap:12px; padding:24px; border:1px solid var(--border-color); border-radius:20px; background:var(--card-bg); color:var(--text-color); text-align:left; text-decoration:none; transition:transform .2s,background .2s,box-shadow .2s; }
+    .feature-card:hover { transform:translateY(-4px); background:var(--card-hover-bg); box-shadow:0 12px 28px rgba(0,0,0,.07); }
+    .feature-icon { display:grid; place-items:center; width:44px; height:44px; border-radius:14px; background:color-mix(in srgb,var(--primary-color) 13%,var(--card-bg)); color:var(--primary-color); font-size:22px; font-weight:900; }
+    .feature-card h3 { margin:0; font-size:18px; }
+    .feature-card p { margin:0; font-size:13px; line-height:1.7; color:var(--text-color); opacity:.68; font-weight:400; }
+    .feature-arrow { margin-top:auto; color:var(--primary-color); font-weight:800; }
+    .about-panel { display:grid; grid-template-columns:1.1fr .9fr; gap:28px; align-items:center; padding:clamp(24px,5vw,48px); border-radius:26px; background:var(--card-bg); border:1px solid var(--border-color); }
+    .about-panel h2 { margin:0 0 14px; font-size:clamp(25px,3vw,38px); letter-spacing:-.04em; }
+    .about-panel p { margin:0; line-height:1.9; color:var(--text-color); opacity:.75; }
+    .about-visual { min-height:210px; display:flex; align-items:center; justify-content:center; border-radius:20px; background:linear-gradient(135deg,color-mix(in srgb,var(--primary-color) 18%,var(--card-bg)),var(--bg-color)); color:var(--primary-color); font-size:clamp(64px,10vw,100px); font-weight:900; letter-spacing:-.1em; }
+    .portal-links { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+    .portal-links a { color:var(--primary-color); font-weight:800; font-size:14px; text-decoration:none; }
+    .footer { width:100%; margin-top:30px; padding:28px 4.5%; color:var(--text-color); opacity:.65; font-size:13px; border-top:1px solid var(--border-color); text-align:center; }
+    @keyframes slideIn { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
     .coby-card { display:flex; align-items:center; justify-content:center; gap:10px; height:69px; padding:10px 22px; text-decoration:none; }
     .coby-title { display:block; width:190px; height:45px; overflow:hidden; border-radius:10px; flex:0 0 190px; font-size:0; line-height:0; border:0; }
     .coby-beta { display:inline-flex; align-items:center; justify-content:center; padding:4px 9px; border-radius:999px; background:var(--primary-color); color:#fff; font-size:10px; line-height:1; font-weight:800; letter-spacing:.5px; }
@@ -79,29 +134,45 @@
     .password-change-btn { width:100%; padding:12px; margin-top:3px; border:none; border-radius:12px; background:var(--primary-color); color:white; font-weight:bold; cursor:pointer; transition:filter .2s; }
     .password-change-btn:hover { filter:brightness(.9); }
     .password-change-btn:disabled { opacity:.6; cursor:default; }
-    @media (max-width:600px) { header{padding:58px 20px 20px;font-size:22px;} .header-left{top:12px;left:12px;} .auth-btn{top:12px;right:12px;} .header-btn,.auth-btn{padding:8px 11px;font-size:12px;} .container{margin-top:25px;} .card{margin:14px 0;padding:19px;} .coby-card{height:63px;padding:8px 19px;} .coby-title{width:135px;height:43px;flex-basis:135px;} }
+    @media (max-width:900px) { header { padding:12px 4%; min-height:68px; gap:12px; } .main-nav { gap:12px; } .main-nav a { font-size:12px; } .header-left { display:none; } .feature-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:620px) { header { min-height:64px; padding:10px 4%; gap:8px; } .brand { font-size:15px; gap:7px; } .brand-mark { width:32px;height:32px;border-radius:10px; } .main-nav { display:none; } .header-actions { gap:5px; } .auth-btn { padding:9px 11px; font-size:12px; } .header-tools { display:none; } .hero { min-height:350px; margin-top:18px; border-radius:22px; } .feature-grid { grid-template-columns:1fr; gap:11px; } .feature-card { min-height:140px; padding:20px; } .about-panel { grid-template-columns:1fr; gap:22px; } .about-visual { min-height:150px; } .notice-slide { gap:12px; } .slide-symbol { flex-basis:58px;width:58px;height:58px;border-radius:17px;font-size:27px; } .carousel-controls { padding:0 15px 15px; } .section { padding:22px 0 30px; } }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-left">
-      <button id="adminBtn" class="header-btn" onclick="location.href='/admin'">관리자</button>
-      <button id="noticeBtn" class="header-btn" onclick="location.href='/안내사항/'">공지</button>
-      <button id="mirrorBtn" class="header-btn" onclick="location.href='/admin/mirroring/outsider.html'">화면공유</button>
-      <button id="attendanceBtn" class="header-btn attendance-btn" style="display:none">출석하기</button>
-      <button id="settingsBtn" class="header-btn" onclick="openSettingsModal()">설정</button>
-    </div>
-    코딩과 함께라면
-    <button id="authBtn" class="auth-btn">로그인</button>
+  <header id="siteHeader">
+    <a class="brand" href="/" aria-label="코딩과 함께라면 홈"><span class="brand-mark">&lt;/&gt;</span><span>25withcoding</span></a>
+    <nav class="main-nav" aria-label="주요 메뉴"><a href="#about">소개</a><a href="#features">주요 기능</a><a href="#archive">기록관</a><a href="#news">공지·소식</a></nav>
+    <div class="header-actions"><div class="header-tools"><div class="header-left">
+      <button id="adminBtn" class="header-btn" onclick="location.href='/admin'">관리자</button><button id="noticeBtn" class="header-btn" onclick="location.href='/안내사항/'">공지</button><button id="mirrorBtn" class="header-btn" onclick="location.href='/admin/mirroring/outsider.html'">화면공유</button><button id="attendanceBtn" class="header-btn attendance-btn" style="display:none">출석하기</button><button id="settingsBtn" class="header-btn" onclick="openSettingsModal()">설정</button>
+    </div></div><button id="authBtn" class="auth-btn">로그인</button></div>
   </header>
-  <div class="container">
-    <div class="card" onclick="go('/2026/')">🎉 2026</div>
-    <div class="card" onclick="go('/2025/')">2025 기념관</div>
-    <div class="card" onclick="go('/memo/')">저장 공간</div>
-    <div class="card" onclick="goPoint()">상벌점</div>
-    <div class="card" onclick="go('/NOTE/')">설명용 노트</div>
-    <a class="card coby-card" href="/AI"><span class="coby-title"><img class="coby-logo" id="cobyLogo" src="/AI/COBY_AI_logo.png" alt="COBY AI"></span><span class="coby-beta">BETA</span></a>
-  </div>
+  <main class="page-content">
+    <section class="hero"><div class="hero-copy"><span class="eyebrow">CODING & COMMUNITY · SINCE 2025</span><h1>코딩과 함께라면<br>상상을 코드로.</h1><p>옥계동부중학교 코딩 자율 동아리. 함께 배우고, 직접 만들고, 아이디어를 나누며 코딩의 가능성을 넓혀 갑니다.</p><div class="hero-links"><a class="action-link" href="#features">사이트 둘러보기 ↗</a><a class="action-link secondary" href="#about">동아리 소개</a></div></div></section>
+    <section class="section" id="news"><div class="section-heading"><div><p class="section-kicker">NOTICE & UPDATE</p><h2>공지와 새로운 소식</h2><p>동아리의 주요 안내와 업데이트를 확인하세요.</p></div></div>
+      <div class="notice-carousel" id="noticeCarousel" aria-roledescription="carousel">
+        <article class="notice-slide active"><div><span class="notice-label">WELCOME</span><h3>코딩과 함께라면에 오신 것을 환영합니다.</h3><p>동아리의 활동과 프로젝트, 다양한 사이트 기능을 한곳에서 만나 보세요.</p></div><div class="slide-symbol" aria-hidden="true">&lt;/&gt;</div></article>
+        <article class="notice-slide"><div><span class="notice-label">PROJECTS</span><h3>우리가 만든 작품을 만나 보세요.</h3><p>작품과 프로젝트를 직접 둘러보고, 새로운 아이디어를 발견해 보세요.</p></div><div class="slide-symbol" aria-hidden="true">01</div></article>
+        <article class="notice-slide"><div><span class="notice-label">COMMUNITY</span><h3>함께 배우고 함께 성장합니다.</h3><p>활동 소식과 동아리 기록을 통해 코딩과 함께라면의 이야기를 확인하세요.</p></div><div class="slide-symbol" aria-hidden="true">∞</div></article>
+        <div class="carousel-controls"><div class="carousel-dots" id="carouselDots"><button class="carousel-dot active" aria-label="첫 번째 소식"></button><button class="carousel-dot" aria-label="두 번째 소식"></button><button class="carousel-dot" aria-label="세 번째 소식"></button></div><div class="carousel-arrows"><button type="button" id="prevSlide" aria-label="이전 소식">←</button><button type="button" id="nextSlide" aria-label="다음 소식">→</button></div></div>
+      </div>
+    </section>
+    <section class="section" id="features"><div class="section-heading"><div><p class="section-kicker">EXPLORE</p><h2>무엇을 해볼까요?</h2><p>자주 사용하는 기능과 프로젝트로 빠르게 이동할 수 있어요.</p></div></div>
+      <div class="feature-grid">
+        <a class="feature-card" href="/2026/"><span class="feature-icon">↗</span><h3>2026 축제</h3><p>축제 작품과 행사 콘텐츠를 둘러보세요.</p><span class="feature-arrow">축제 둘러보기 →</span></a>
+        <a class="feature-card" href="/2025/"><span class="feature-icon">⌂</span><h3>2025 기념관</h3><p>지난 활동과 기록을 다시 만나 보세요.</p><span class="feature-arrow">기록 보기 →</span></a>
+        <a class="feature-card" href="/memo/"><span class="feature-icon">▤</span><h3>저장 공간</h3><p>저장 공간에 있는 콘텐츠를 확인하세요.</p><span class="feature-arrow">열기 →</span></a>
+        <a class="feature-card" href="/상벌점/main.html"><span class="feature-icon">＋</span><h3>상벌점</h3><p>관련 기록과 정보를 확인할 수 있어요.</p><span class="feature-arrow">상벌점 확인 →</span></a>
+        <a class="feature-card" href="/NOTE/"><span class="feature-icon">✎</span><h3>설명용 노트</h3><p>설명과 참고 내용을 확인하는 공간입니다.</p><span class="feature-arrow">노트 열기 →</span></a>
+        <a class="feature-card" href="/AI"><span class="feature-icon">AI</span><h3>COBY AI <span class="coby-beta">BETA</span></h3><p>COBY AI 서비스를 이용해 보세요.</p><span class="feature-arrow">COBY 열기 →</span></a>
+      </div>
+    </section>
+    <section class="section" id="about"><div class="about-panel"><div><p class="section-kicker">ABOUT OUR CLUB</p><h2>아이디어를 만들고,<br>코드로 연결하다.</h2><p>코딩과 함께라면은 코딩을 좋아하는 학생들이 함께 배우고 실험하며 자신만의 프로젝트를 만들어 가는 동아리입니다. 작은 아이디어도 직접 구현하고, 서로의 결과물을 공유하면서 한 걸음씩 성장합니다.</p><div class="portal-links"><a href="/안내사항/">동아리 안내 확인 →</a><a href="/2026/">프로젝트 둘러보기 →</a></div></div><div class="about-visual" aria-hidden="true">&lt;/&gt;</div></div></section>
+    <section class="section" id="archive"><div class="section-heading"><div><p class="section-kicker">MORE FROM US</p><h2>동아리 포털</h2><p>활동에 필요한 페이지를 언제든 편하게 찾아보세요.</p></div></div><div class="feature-grid">
+      <a class="feature-card" href="/안내사항/"><span class="feature-icon">i</span><h3>안내사항</h3><p>동아리 이용과 관련한 안내를 확인하세요.</p><span class="feature-arrow">안내 보기 →</span></a>
+      <a class="feature-card" href="/signin?redirect=/"><span class="feature-icon">◎</span><h3>로그인 및 계정</h3><p>기존 로그인 시스템으로 계정에 접속합니다.</p><span class="feature-arrow">로그인 →</span></a>
+      <a class="feature-card" href="/admin/mirroring/outsider.html"><span class="feature-icon">▣</span><h3>화면 공유</h3><p>지원되는 화면 공유 페이지로 이동합니다.</p><span class="feature-arrow">화면 공유 →</span></a>
+    </div></section>
+  </main>
   <div class="footer">2026 코딩과함께라면 | SINCE 2025</div>
   <div id="settingsModal" class="modal-overlay" onclick="handleModalOutsideClick(event)">
     <div class="modal-content">
@@ -139,6 +210,13 @@
     window.closeSettingsModal=function(){document.getElementById("settingsModal").classList.remove("active")};
     window.handleModalOutsideClick=function(event){if(event.target===document.getElementById("settingsModal"))closeSettingsModal()};
     updateUI().then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));});
+    const slides=[...document.querySelectorAll(".notice-slide")],dots=[...document.querySelectorAll(".carousel-dot")];let activeSlide=0,carouselTimer;
+    function showSlide(index){if(!slides.length)return;activeSlide=(index+slides.length)%slides.length;slides.forEach((slide,i)=>slide.classList.toggle("active",i===activeSlide));dots.forEach((dot,i)=>dot.classList.toggle("active",i===activeSlide))}
+    function restartCarousel(){clearInterval(carouselTimer);carouselTimer=setInterval(()=>showSlide(activeSlide+1),6500)}
+    document.getElementById("prevSlide")?.addEventListener("click",()=>{showSlide(activeSlide-1);restartCarousel()});document.getElementById("nextSlide")?.addEventListener("click",()=>{showSlide(activeSlide+1);restartCarousel()});dots.forEach((dot,i)=>dot.addEventListener("click",()=>{showSlide(i);restartCarousel()}));document.getElementById("noticeCarousel")?.addEventListener("mouseenter",()=>clearInterval(carouselTimer));document.getElementById("noticeCarousel")?.addEventListener("mouseleave",restartCarousel);restartCarousel();
+    const siteHeader=document.getElementById("siteHeader");let lastScrollY=window.scrollY,scrollTick=false;
+    window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY,delta=currentY-lastScrollY;if(currentY<40||delta<0)siteHeader.classList.remove("nav-hidden");else if(delta>0&&currentY>100)siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
+    document.addEventListener("keydown",event=>{if(event.key==="Escape")closeSettingsModal()});
   </script>
 <script>
   // One-time cleanup of legacy homepage caches/workers from older deployments.
