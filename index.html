@@ -87,32 +87,10 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         <span class="eyebrow">CODING & COMMUNITY · SINCE 2025</span>
         <h1>코딩과 함께라면<br>상상을 코드로.</h1>
         <p>옥계동부중학교 코딩 자율 동아리. 함께 배우고, 직접 만들고, 아이디어를 나누며 코딩의 가능성을 넓혀 갑니다.</p>
-        <div class="hero-links"><a class="action-link" href="/about">동아리 소개</a><a class="action-link secondary" href="/memorial_hall">기념관 둘러보기</a></div>
       </div>
     </section>
-    <section class="section" id="tools">
-      <div class="section-heading"><p class="section-kicker">TOOLS & SERVICES</p><h2>자주 사용하는 도구</h2><p>동아리 활동에 필요한 서비스를 빠르게 열어 보세요.</p></div>
-      <div class="feature-grid">
-        <a class="feature-card" href="/상벌점/main.html"><span class="feature-icon">＋</span><h3>상벌점</h3><p>상벌점 관련 기록과 정보를 확인합니다.</p><span class="feature-arrow">상벌점 열기 →</span></a>
-        <a class="feature-card" href="/memo/"><span class="feature-icon">▤</span><h3>저장 공간</h3><p>저장해 둔 내용과 메모를 관리합니다.</p><span class="feature-arrow">저장 공간 열기 →</span></a>
-        <a class="feature-card" href="/AI"><span class="feature-icon">AI</span><h3>COBY AI</h3><p>COBY AI 서비스를 이용합니다.</p><span class="feature-arrow">COBY 열기 →</span></a>
-        <a class="feature-card" href="/NOTE/"><span class="feature-icon">✎</span><h3>설명용 노트</h3><p>설명과 참고 내용을 확인하는 공간입니다.</p><span class="feature-arrow">노트 열기 →</span></a>
-        <a class="feature-card" href="/안내사항/"><span class="feature-icon">i</span><h3>안내사항</h3><p>동아리 이용과 관련한 안내를 확인합니다.</p><span class="feature-arrow">안내 보기 →</span></a>
-        <a class="feature-card" href="/admin/mirroring/outsider.html"><span class="feature-icon">▣</span><h3>화면 공유</h3><p>지원되는 화면 공유 페이지로 이동합니다.</p><span class="feature-arrow">화면 공유 →</span></a>
-      </div>
-    </section>
-    <section class="section" id="news" aria-label="소식"></section>
   </main>
   <div class="footer">2026 코딩과함께라면 | SINCE 2025</div>
-  <div id="settingsModal" class="modal-overlay" onclick="handleModalOutsideClick(event)">
-    <div class="modal-content">
-      <div class="modal-header"><span>환경 설정</span><button class="modal-close" onclick="closeSettingsModal()">&times;</button></div>
-      <div class="setting-item"><div class="setting-info"><span class="setting-title">다크 모드</span><span class="setting-desc">화면을 어둡게 표시합니다.</span></div><label class="switch"><input type="checkbox" id="darkModeToggle" onchange="toggleSetting('darkMode', this.checked)"><span class="slider"></span></label></div>
-      <div class="setting-item"><div class="setting-info"><span class="setting-title">포인트 컬러 테마</span><span class="setting-desc">사이트의 대표 색상을 변경합니다.</span></div><div class="color-picker-group"><div class="color-circle" style="background:#27ae60;" onclick="changeThemeColor('#27ae60')" data-color="#27ae60"></div><div class="color-circle" style="background:#3498db;" onclick="changeThemeColor('#3498db')" data-color="#3498db"></div><div class="color-circle" style="background:#e84393;" onclick="changeThemeColor('#e84393')" data-color="#e84393"></div><div class="color-circle" style="background:#9b59b6;" onclick="changeThemeColor('#9b59b6')" data-color="#9b59b6"></div><div class="color-circle" style="background:#e74c3c;" onclick="changeThemeColor('#e74c3c')" data-color="#e74c3c"></div></div></div>
-      <div class="setting-item"><div class="setting-info"><span class="setting-title">로그인 상태 유지</span><span class="setting-desc">브라우저 종료 후 재접속 시 로그인 유지합니다.</span></div><label class="switch"><input type="checkbox" id="keepLoginToggle" onchange="toggleSetting('keepLogin', this.checked)"><span class="slider"></span></label></div>
-      <div class="setting-item password-setting" id="passwordSetting"><button type="button" class="password-toggle" onclick="togglePasswordForm()" aria-expanded="false" aria-controls="passwordForm"><span class="setting-info"><span class="setting-title">비밀번호 변경</span><span class="setting-desc">눌러서 비밀번호 변경</span></span><span class="password-toggle-icon">⌄</span></button><div class="password-form" id="passwordForm"><input class="password-input" id="currentPassword" type="password" autocomplete="current-password" placeholder="현재 비밀번호"><input class="password-input" id="newPassword" type="password" autocomplete="new-password" placeholder="새 비밀번호"><input class="password-input" id="confirmPassword" type="password" autocomplete="new-password" placeholder="새 비밀번호 확인"><button class="password-change-btn" id="passwordChangeBtn" onclick="changePassword()">비밀번호 변경</button></div></div>
-    </div>
-  </div>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
@@ -144,16 +122,20 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
         const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
         btn.setAttribute("aria-label","프로필 메뉴 열기");
-        label.textContent=(String(name).trim().replace(/\\s+/g,"").slice(0,3)||"이름 미등록");
+        label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
         studentNumber.textContent="";
         studentNumber.hidden=false;
         document.getElementById("profileAccountLabel").textContent="학번: "+user+" · 이름: "+name;
-        const avatar=document.getElementById("profileAvatar"),fallback=document.getElementById("profileAvatarFallback");\n        const photo=data.profilePhoto||data.photoURL||data.photoUrl||data.avatarUrl||localStorage.getItem("profilePhoto")||"";\n        if(photo){avatar.src=photo;avatar.hidden=false;fallback.hidden=true;avatar.onerror=()=>{avatar.hidden=true;fallback.hidden=false}}else{avatar.removeAttribute("src");avatar.hidden=true;fallback.hidden=false}\n        btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
+        const avatar=document.getElementById("profileAvatar"),fallback=document.getElementById("profileAvatarFallback");
+        const photo=data.profilePhoto||data.photoURL||data.photoUrl||data.avatarUrl||localStorage.getItem("profilePhoto")||"";
+        if(photo){avatar.src=photo;avatar.hidden=false;fallback.hidden=true;avatar.onerror=()=>{avatar.hidden=true;fallback.hidden=false}}else{avatar.removeAttribute("src");avatar.hidden=true;fallback.hidden=false}
+        btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
         signoutBtn.hidden=false;
         signoutBtn.onclick=()=>{location.href="/signout?redirect=/"};
       }else{
         btn.setAttribute("aria-label","로그인");
-        label.textContent="로그인";\n        document.getElementById("profileAvatar").hidden=true;document.getElementById("profileAvatarFallback").hidden=false;
+        label.textContent="로그인";
+        document.getElementById("profileAvatar").hidden=true;document.getElementById("profileAvatarFallback").hidden=false;
         studentNumber.textContent="";
         studentNumber.hidden=true;
         document.getElementById("profileAccountLabel").textContent="로그인되어 있지 않습니다.";
@@ -166,9 +148,6 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     }
     window.changePassword=async function(){const user=localStorage.getItem("userId");if(!user){alert("로그인 후 이용할 수 있습니다.");return}const currentPassword=document.getElementById("currentPassword").value,newPassword=document.getElementById("newPassword").value,confirmPassword=document.getElementById("confirmPassword").value,button=document.getElementById("passwordChangeBtn");if(!currentPassword||!newPassword||!confirmPassword){alert("현재 비밀번호와 새 비밀번호를 모두 입력하세요.");return}if(newPassword.length<6){alert("새 비밀번호는 6자 이상이어야 합니다.");return}if(newPassword!==confirmPassword){alert("새 비밀번호가 서로 일치하지 않습니다.");return}if(currentPassword===newPassword){alert("현재 비밀번호와 다른 비밀번호를 입력하세요.");return}button.disabled=true;button.textContent="확인 중...";try{const userRef=doc(db,"users",user),snap=await getDoc(userRef);if(!snap.exists()){alert("사용자 정보를 찾을 수 없습니다.");return}const data=snap.data();if(currentPassword!==data.password){alert("현재 비밀번호가 올바르지 않습니다.");return}await updateDoc(userRef,{password:newPassword});document.getElementById("currentPassword").value="";document.getElementById("newPassword").value="";document.getElementById("confirmPassword").value="";alert("비밀번호가 변경되었습니다.")}catch(e){console.error("비밀번호 변경 실패",e);alert("비밀번호 변경 중 오류가 발생했습니다.")}finally{button.disabled=false;button.textContent="비밀번호 변경"}};
     window.togglePasswordForm=function(){const setting=document.getElementById("passwordSetting"),toggle=setting.querySelector(".password-toggle"),isOpen=setting.classList.toggle("open");toggle.setAttribute("aria-expanded",String(isOpen))};
-    window.openSettingsModal=function(){syncSettingsUI();document.getElementById("settingsModal").classList.add("active")};
-    window.closeSettingsModal=function(){document.getElementById("settingsModal").classList.remove("active")};
-    window.handleModalOutsideClick=function(event){if(event.target===document.getElementById("settingsModal"))closeSettingsModal()};
     updateUI().then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));});
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
@@ -176,7 +155,6 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     navRevealTrigger.addEventListener("click",()=>siteHeader.classList.remove("nav-hidden"));
     siteHeader.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
 
-    document.addEventListener("keydown",event=>{if(event.key==="Escape")closeSettingsModal()});
   </script>
 <script>
   // One-time cleanup of legacy homepage caches/workers from older deployments.
