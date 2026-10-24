@@ -34,7 +34,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
 .main-nav>a,.tools-menu>summary{font:inherit;color:var(--text-color);text-decoration:none;font-size:14px;font-weight:750;opacity:.85;white-space:nowrap;cursor:pointer;list-style:none}
 .main-nav>a:hover,.tools-menu>summary:hover{color:var(--primary-color);opacity:1}
 .tools-menu{position:relative}.tools-menu>summary::-webkit-details-marker{display:none}.tools-menu>summary:after{content:"⌄";margin-left:6px;color:var(--primary-color)}
-.tools-dropdown{position:absolute;top:calc(100% + 18px);left:50%;transform:translateX(-50%);width:210px;padding:8px;border:1px solid var(--border-color);border-radius:15px;background:var(--card-bg);box-shadow:0 12px 35px rgba(0,0,0,.15);display:grid;gap:3px}
+.tools-dropdown{position:absolute;top:calc(100% + 18px);left:50%;transform:translateX(-50%);width:210px;padding:8px;border:1px solid var(--border-color);border-radius:15px;background:var(--card-bg);box-shadow:0 12px 35px rgba(0,0,0,.15);display:grid;gap:3px}.tools-dropdown:before{content:"";position:absolute;left:0;right:0;top:-18px;height:18px}.tools-menu:hover>.tools-dropdown,.tools-menu:focus-within>.tools-dropdown{display:grid}.tools-menu:hover>summary,.tools-menu:focus-within>summary{color:var(--primary-color);opacity:1}
 .tools-dropdown a{display:block;padding:11px 12px;border-radius:9px;color:var(--text-color);text-decoration:none;font-size:13px;font-weight:650}.tools-dropdown a:hover{background:var(--card-hover-bg);color:var(--primary-color)}
 .header-account{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:100px}
 .student-number{color:var(--text-color);font-size:12px;font-weight:750;white-space:nowrap;opacity:.75}
