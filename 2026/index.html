@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>코딩과 함께라면 2026 Festival</title>
+<title>코딩과 함께라면 2026</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -569,7 +569,7 @@ header{
 
     <div class="gate-icon">🎉</div>
 
-    <h1 class="gate-title">2026 FESTIVAL</h1>
+    <h1 class="gate-title">2026</h1>
 
     <div
       class="gate-description"
@@ -740,7 +740,7 @@ header{
 </a>
 
 <header>
-  코딩과 함께라면 2026 Festival
+  코딩과 함께라면 2026
 </header>
 
 <div
@@ -1881,7 +1881,7 @@ document
     ()=>{
       const redirect=
         encodeURIComponent(
-          "/2026festival/"
+          "/2026/"
         );
 
       location.href=
@@ -2492,7 +2492,7 @@ async function checkFestivalAccess(){
 }
 
 
-checkFestivalAccess();
+enterFestival();
 
 
 /* =========================
@@ -2566,7 +2566,7 @@ function renderProjects(){
     card.setAttribute("role","link");
     card.setAttribute("aria-label",p.title+" 작품 정보 보기");
 
-    const openProject=()=>{ location.href="/2026festival/"+encodeURIComponent(p.id)+"/"; };
+    const openProject=()=>{ location.href="/2026/"+encodeURIComponent(p.id)+"/"; };
     card.addEventListener("click",openProject);
     card.addEventListener("keydown",event=>{
       if(event.target!==card) return;
@@ -2657,7 +2657,7 @@ async function discoverProjectFolders(){
 
   try{
     const projects=await Promise.all(manualProjectIds.map(async id=>{
-      const folder="2026festival/"+id;
+      const folder="2026/"+id;
       const [title,description,madeBy,how]=await Promise.all([
         fileText(folder+"/title.txt"),
         fileText(folder+"/explanation.txt"),

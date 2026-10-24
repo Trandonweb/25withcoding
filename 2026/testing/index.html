@@ -119,8 +119,8 @@ footer strong{color:#a6aea5;font-weight:750}
 <body>
 <div class="app">
 <header class="topbar">
-  <a class="brand" href="/2026festival/"><span class="mark">↗</span><span>코딩과 함께라면<small>2026 SCHOOL FESTIVAL</small></span></a>
-  <a class="back" href="/2026festival/">← 작품 목록</a>
+  <a class="brand" href="/2026/"><span class="mark">↗</span><span>코딩과 함께라면<small>2026 SCHOOL FESTIVAL</small></span></a>
+  <a class="back" href="/2026/">← 작품 목록</a>
 </header>
 <main>
   <section class="intro">
@@ -275,7 +275,7 @@ async function loadRecommendations(){
     if(treeData.truncated) throw new Error("작품 폴더 목록이 일부만 반환되었습니다.");
     const files=new Set((treeData.tree||[]).filter(x=>x.type==="blob").map(x=>x.path));
     const dirs=new Set((treeData.tree||[]).filter(x=>x.type==="tree").map(x=>x.path));
-    const root="2026festival";
+    const root="2026";
     const ids=[];
     for(const path of dirs){
       if(!path.startsWith(root+"/")) continue;
@@ -311,7 +311,7 @@ async function loadRecommendations(){
     for(const project of projects.slice(0,4)){
       const link=document.createElement("a");
       link.className="recommendation";
-      link.href="/2026festival/"+encodeURIComponent(project.id)+"/";
+      link.href="/2026/"+encodeURIComponent(project.id)+"/";
       if(project.thumbnail){
         const img=document.createElement("img");
         img.className="recommendation-thumb";
