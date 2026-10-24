@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="코딩과 함께라면의 활동 기념관">
+<title>기념관 | 코딩과 함께라면</title>
+<link rel="icon" href="/logo1.png" type="image/png">
+<style>
+:root{--primary-color:#27ae60;--bg:#f0f0f0;--card:#fff;--text:#171717;--border:color-mix(in srgb,var(--primary-color) 40%,#ddd)}
+body.dark-mode{--bg:#121212;--card:#1e1e1e;--text:#fff;--border:color-mix(in srgb,var(--primary-color) 55%,#333)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;transition:background .2s,color .2s}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px clamp(18px,5vw,70px);border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-weight:800}.mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--primary-color);color:white}
+header a.back{color:var(--text);text-decoration:none;font-size:14px;font-weight:700}
+main{width:min(1050px,90%);margin:60px auto}.eyebrow{font-size:12px;letter-spacing:2px;color:var(--primary-color);font-weight:800}h1{font-size:clamp(34px,6vw,58px);letter-spacing:-.05em;margin:14px 0} .intro{font-size:16px;line-height:1.8;opacity:.72}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:38px}
+.choice{display:flex;flex-direction:column;gap:15px;min-height:260px;padding:clamp(22px,4vw,36px);border:1px solid var(--border);border-radius:24px;background:var(--card);color:var(--text);text-decoration:none;transition:transform .2s,box-shadow .2s}
+.choice:hover{transform:translateY(-5px);box-shadow:0 15px 35px #00000012}.year{font-size:12px;font-weight:800;letter-spacing:2px;color:var(--primary-color)}.choice h2{font-size:30px;margin:0}.choice p{line-height:1.8;opacity:.72;margin:0}.open{margin-top:auto;color:var(--primary-color);font-weight:800}
+footer{text-align:center;padding:24px;border-top:1px solid var(--border);font-size:13px;opacity:.65}
+@media(max-width:620px){main{margin:38px auto}.choices{grid-template-columns:1fr}.choice{min-height:210px}}
+</style>
+</head>
+<body>
+<header><a class="brand" href="/"><span class="mark">&lt;/&gt;</span><span>코딩과 함께라면</span></a><a class="back" href="/">메인으로 돌아가기 ←</a></header>
+<main>
+<span class="eyebrow">OUR MEMORIAL HALL</span>
+<h1>기념관</h1>
+<p class="intro">기억하고 싶은 활동과 작품을 연도별 기념관에서 만나 보세요.</p>
+<div class="choices">
+<a class="choice" href="/2025/"><span class="year">2025 · FIRST CHAPTER</span><h2>2025 기념관</h2><p>코딩과 함께라면의 시작과 첫 활동을 돌아봅니다.</p><span class="open">2025 기념관 입장 →</span></a>
+<a class="choice" href="/2026/"><span class="year">2026 · NEXT CHAPTER</span><h2>2026 기념관</h2><p>2026년의 프로젝트와 축제 활동을 둘러봅니다.</p><span class="open">2026 기념관 입장 →</span></a>
+</div>
+</main>
+<footer>2026 코딩과함께라면 | SINCE 2025</footer>
+<script>
+(()=>{try{const settings=JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}");if(settings.darkMode)document.body.classList.add("dark-mode");if(settings.primaryColor)document.documentElement.style.setProperty("--primary-color",settings.primaryColor)}catch(e){}})();
+</script>
+</body>
+</html>
