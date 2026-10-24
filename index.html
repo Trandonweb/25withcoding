@@ -159,7 +159,9 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     window.handleModalOutsideClick=function(event){if(event.target===document.getElementById("settingsModal"))closeSettingsModal()};
     updateUI().then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));});
     const siteHeader=document.getElementById("siteHeader");let lastScrollY=window.scrollY,scrollTick=false;
-    window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY,delta=currentY-lastScrollY;if(currentY<40||delta<0)siteHeader.classList.remove("nav-hidden");else if(delta>0&&currentY>100)siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
+    window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
+    document.addEventListener("mousemove",event=>{if(event.clientY<=12)siteHeader.classList.remove("nav-hidden");else if(window.scrollY>100&&event.clientY>100)siteHeader.classList.add("nav-hidden")},{passive:true});
+    siteHeader.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
     document.querySelectorAll(".main-nav a").forEach(link=>link.addEventListener("click",()=>document.querySelector(".tools-menu")?.removeAttribute("open")));
     document.addEventListener("keydown",event=>{if(event.key==="Escape")closeSettingsModal()});
   </script>
