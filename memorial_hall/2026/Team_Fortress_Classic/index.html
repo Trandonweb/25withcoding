@@ -109,10 +109,8 @@ footer strong{color:#a6aea5;font-weight:750}
 /* 축제 이용 시간 표시 */
 #viewerRemainingTimer{position:fixed;top:12px;right:14px;z-index:99999;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #356b49;border-radius:10px;background:rgba(20,22,25,.96);box-shadow:0 6px 22px rgba(0,0,0,.28);color:#dfe8df;font:700 12px/1.2 Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif;backdrop-filter:blur(8px)}
 #viewerRemainingTimer strong{font:800 15px/1 monospace;color:#b5ef69;font-variant-numeric:tabular-nums}
-#viewerRemainingTimer.warning{border-color:#ffb74d}
-#viewerRemainingTimer.warning strong{color:#ffcc80}
-#viewerRemainingTimer.danger{border-color:#ff5252;animation:viewerTimerPulse .6s infinite alternate}
-#viewerRemainingTimer.danger strong{color:#ff7777}
+#viewerRemainingTimer.warning{border-color:#ffb74d}#viewerRemainingTimer.warning strong{color:#ffcc80}
+#viewerRemainingTimer.danger{border-color:#ff5252;animation:viewerTimerPulse .6s infinite alternate}#viewerRemainingTimer.danger strong{color:#ff7777}
 @keyframes viewerTimerPulse{to{transform:scale(1.035)}}
 @media(max-width:600px){#viewerRemainingTimer{top:8px;right:8px;padding:6px 8px;font-size:10px;gap:6px}#viewerRemainingTimer strong{font-size:13px}}
 </style>
@@ -120,8 +118,8 @@ footer strong{color:#a6aea5;font-weight:750}
 <body>
 <div class="app">
 <header class="topbar">
-  <a class="brand" href="/2026/"><span class="mark">↗</span><span>코딩과 함께라면<small>2026</small></span></a>
-  <a class="back" href="/2026/">← 작품 목록</a>
+  <a class="brand" href="/memorial_hall/2026/"><span class="mark">↗</span><span>코딩과 함께라면<small>2026</small></span></a>
+  <a class="back" href="/memorial_hall/2026/">← 작품 목록</a>
 </header>
 <main>
   <section class="intro">
@@ -143,7 +141,7 @@ footer strong{color:#a6aea5;font-weight:750}
     <aside class="recommendations">
       <div class="recommendations-head"><h2>다른 작품</h2><span>DISCOVER</span></div>
       <div class="recommendation-list" id="recommendation-list"><p class="recommendation-empty">작품을 불러오는 중...</p></div>
-      <a class="all-projects" href="/2026/">전체 작품 보기 ↗</a>
+      <a class="all-projects" href="/memorial_hall/2026/">전체 작품 보기 ↗</a>
     </aside>
     <aside class="details">
       <div class="section-label">ABOUT THE PROJECT</div>
@@ -163,15 +161,15 @@ footer strong{color:#a6aea5;font-weight:750}
 <script>
 /* 작품마다 아래 PROJECT 설정만 수정하세요. */
 const PROJECT = {
-  slug: "maze",
-  title: "미로 탈출 아케이드",
+  slug: "Team_Fortress_Classic",
+  title: "Team Fortress Classic",
   author: "코딩과 함께라면",
-  description: "2026 코딩과 함께라면 축제 프로젝트입니다.",
-  howTo: "게임이 바로 시작됩니다. 방향키로 이동하고 Enter로 메뉴를 선택하세요. 전체 화면 버튼으로 넓게 즐길 수 있습니다.",
-  notes: "작품을 즐긴 뒤 응원하기를 눌러 주세요.",
+  description: "RED와 BLU 중 한 팀을 선택하고 병과를 골라 1인칭 팀 전투를 체험하는 게임입니다.",
+  howTo: "WASD 이동 · 마우스 조준 · 좌클릭 발사 · R 재장전 · 1/2/3 무기 전환 · Space 점프 · Shift 달리기 · Esc 일시정지",
+  notes: "인트로 화면에서 시작한 뒤 게임이 실행됩니다. 작품을 즐긴 뒤 응원하기를 눌러 주세요.",
   type: "entry",
-  codeUrl: "/2026/maze_code/index.html",
-  embed: '<iframe src="/2026/maze_code/index.html" allowfullscreen></iframe>',
+  codeUrl: "/memorial_hall/2026/Team_Fortress_Classic_code/index.html?v=20261022-pyro-respawn-music1",
+  embed: '<iframe src="/intro/index.html" allowfullscreen></iframe>',
   url: ""
 };
 const $ = id => document.getElementById(id);
@@ -206,14 +204,7 @@ async function loadFolderMetadata(){
   if(explanation) $("description").textContent = explanation;
   if(madeBy) $("author").textContent = madeBy;
   if(how) $("how-to").textContent = how;
-  const thumbnail = $("project-thumbnail");
-  try {
-    const response = await fetch("./thubnail.png", {method:"HEAD", cache:"no-store"});
-    if(response.ok){
-      thumbnail.src = "./thubnail.png";
-      thumbnail.classList.add("visible");
-    }
-  } catch {}
+  // 썸네일 파일이 없는 작품도 있으므로 존재하지 않는 이미지에 HEAD 요청을 보내지 않습니다.
 }
 loadFolderMetadata();
 
@@ -265,15 +256,6 @@ $("fullscreen-button").addEventListener("click", async () => {
   try { if (!document.fullscreenElement) await screen.requestFullscreen(); else await document.exitFullscreen(); }
   catch { $("status-text").textContent = "전체 화면을 사용할 수 없습니다"; }
 });
-
-const recommendationFirebaseConfig = {
-  apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
-  authDomain: "festivallikes.firebaseapp.com",
-  projectId: "festivallikes",
-  storageBucket: "festivallikes.firebasestorage.app",
-  messagingSenderId: "782245120700",
-  appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
-};
 
 // 축제 메인 페이지와 동일한 projects 문서의 likes를 실시간으로 표시하고 증가시킵니다.
 const likeButton = $("like-button");
@@ -331,7 +313,14 @@ import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js").then(async 
 
 // 추천 작품: 실제 작품 폴더와 메타데이터를 기준으로 표시하고, 응원 수가 높은 순으로 정렬합니다.
 const recommendationList = $("recommendation-list");
-
+const recommendationFirebaseConfig = {
+  apiKey: "AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9Q",
+  authDomain: "festivallikes.firebaseapp.com",
+  projectId: "festivallikes",
+  storageBucket: "festivallikes.firebasestorage.app",
+  messagingSenderId: "782245120700",
+  appId: "1:782245120700:web:c61e16313e9ae688e6deb9"
+};
 async function loadRecommendations(){
   try {
     const [appModule, dbModule, treeResponse] = await Promise.all([
@@ -368,7 +357,7 @@ async function loadRecommendations(){
       const [title,description,thumbnail]=await Promise.all([
         files.has(folder+"title.txt")?readText(folder+"title.txt"):Promise.resolve(""),
         files.has(folder+"explanation.txt")?readText(folder+"explanation.txt"):Promise.resolve(""),
-        Promise.resolve(files.has(folder+"thubnail.png")?rawRoot+folder+"thubnail.png":"")
+        Promise.resolve(files.has(folder+"thumbnail.png")?rawRoot+folder+"thumbnail.png":"")
       ]);
       return {id,title:title||id,description:description||"축제 작품을 체험해 보세요.",thumbnail,likes:likes.get(id)||0};
     }));
@@ -381,7 +370,7 @@ async function loadRecommendations(){
     for(const project of projects.slice(0,4)){
       const link=document.createElement("a");
       link.className="recommendation";
-      link.href="/2026/"+encodeURIComponent(project.id)+"/";
+      link.href="/memorial_hall/2026/"+encodeURIComponent(project.id)+"/";
       if(project.thumbnail){
         const img=document.createElement("img");
         img.className="recommendation-thumb";
@@ -409,35 +398,7 @@ async function loadRecommendations(){
 loadRecommendations();
 </script>
 
-<div id="viewerRemainingTimer" role="status" aria-live="off" aria-label="축제 이용 남은 시간">
-  <span>남은 시간</span><strong id="viewerRemainingTimerValue">--:--</strong>
-</div>
-<script>
-(function(){
-  const box=document.getElementById("viewerRemainingTimer");
-  const value=document.getElementById("viewerRemainingTimerValue");
-  const KEY="festival2026AccessExpiresAt";
-  function update(){
-    const expiresAt=Number(sessionStorage.getItem(KEY));
-    if(!Number.isFinite(expiresAt)||expiresAt<=0){
-      box.hidden=true;
-      return;
-    }
-    box.hidden=false;
-    const remaining=Math.max(0,expiresAt-Date.now());
-    const seconds=Math.ceil(remaining/1000);
-    const minutes=Math.floor(seconds/60);
-    const rest=seconds%60;
-    value.textContent=String(minutes).padStart(2,"0")+":"+String(rest).padStart(2,"0");
-    box.classList.toggle("warning",remaining<=5*60*1000&&remaining>60*1000);
-    box.classList.toggle("danger",remaining<=60*1000);
-    if(remaining<=0) value.textContent="00:00";
-  }
-  update();
-  setInterval(update,250);
-  window.addEventListener("storage",update);
-})();
-</script>
-
+<div id="viewerRemainingTimer" role="status" aria-live="off" aria-label="축제 이용 남은 시간"><span>남은 시간</span><strong id="viewerRemainingTimerValue">--:--</strong></div>
+<script>(function(){const box=document.getElementById("viewerRemainingTimer"),value=document.getElementById("viewerRemainingTimerValue");function update(){const expiresAt=Number(sessionStorage.getItem("festival2026AccessExpiresAt"));if(!Number.isFinite(expiresAt)||expiresAt<=0){box.hidden=true;return}box.hidden=false;const remaining=Math.max(0,expiresAt-Date.now()),seconds=Math.ceil(remaining/1000);value.textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");box.classList.toggle("warning",remaining<=300000&&remaining>60000);box.classList.toggle("danger",remaining<=60000)}update();setInterval(update,250);window.addEventListener("storage",update)})();</script>
 </body>
 </html>
