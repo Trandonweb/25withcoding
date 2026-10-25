@@ -22,7 +22,7 @@ jobs:
       - name: Include 2026 pages in the COBY preview package
         run: |
           mkdir -p AI/2026
-          cp -R 2026/. AI/2026/
+          cp -R memorial_hall/2026/. AI/2026/
 
       - name: Upload COBY preview artifact (not GitHub Pages)
         uses: actions/upload-artifact@v4
