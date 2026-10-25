@@ -64,10 +64,12 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
   <header id="siteHeader">
     <a class="brand" href="/" aria-label="코딩과 함께라면 홈"><img class="brand-logo" src="/simple_logo.png" alt=""><span>코딩과 함께라면</span></a>
     <nav class="main-nav" aria-label="주요 메뉴">
-      <div class="nav-item"><a class="nav-trigger" href="/about">소개</a><div class="nav-dropdown"><a href="/about">동아리 소개</a><a href="/안내사항/">이용 안내</a><a href="/역할분담/">역할 분담</a></div></div>
-      <div class="nav-item"><a class="nav-trigger" href="/memorial_hall">기념관</a><div class="nav-dropdown"><a href="/2025/">2025 기념관</a><a href="/2026/">2026 기념관</a><a href="/memorial_hall">기념관 홈</a></div></div>
-      <div class="nav-item"><a class="nav-trigger" href="#tools">도구</a><div class="nav-dropdown"><a href="/상벌점/main.html">상벌점</a><a href="/memo/">저장 공간</a><a href="/AI">COBY AI</a><a href="/NOTE/">설명용 노트</a><a href="/admin/mirroring/outsider.html">화면 공유</a></div></div>
-      <div class="nav-item"><a class="nav-trigger" href="#news">소식</a><div class="nav-dropdown"><a href="#news">최근 소식</a><a href="/안내사항/">공지 및 안내</a></div></div>
+      <div class="nav-item"><a class="nav-trigger" href="/about">소개</a><div class="nav-dropdown"><a href="/about">동아리 소개</a></div></div>
+      <div class="nav-item"><a class="nav-trigger" href="/memorial_hall">기념관</a><div class="nav-dropdown"><a href="/memorial_hall">기념관 홈</a></div></div>
+      <div class="nav-item"><a class="nav-trigger" href="/상벌점/main.html">도구</a><div class="nav-dropdown"><a href="/상벌점/main.html">상벌점</a><a href="/memo/">저장 공간</a><a href="/AI">COBY</a></div></div>
+      <div class="nav-item"><a class="nav-trigger" href="/news">소식</a><div class="nav-dropdown"><a href="/news">최근 소식</a></div></div>
+      <div class="nav-item"><a class="nav-trigger" href="/apply">지원</a><div class="nav-dropdown"><a href="/apply">동아리 지원하기</a></div></div>
+      <div class="nav-item" id="adminNavItem" hidden><a class="nav-trigger" href="/admin">관리자 도구</a><div class="nav-dropdown"><a href="/admin">관리자</a></div></div>
     </nav>
     <div class="header-account">
       <span id="studentNumber" class="student-number" hidden></span>
@@ -122,6 +124,8 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       const signoutBtn=document.getElementById("signoutBtn");
       if(user){
         let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
+        const adminNav=document.getElementById("adminNavItem");
+        if(adminNav)adminNav.hidden=!(data.role==="president"||data.role==="vice");
         const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
         btn.setAttribute("aria-label","프로필 메뉴 열기");
         label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
@@ -133,6 +137,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         signoutBtn.hidden=false;
         signoutBtn.onclick=()=>{location.href="/signout?redirect=/"};
       }else{
+        const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;
         btn.setAttribute("aria-label","로그인");
         label.textContent="로그인";
         renderAvatar(getStoredSettings().avatarConfig);
