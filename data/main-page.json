@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "slides": [
+    {
+      "id": "slide-1",
+      "eyebrow": "CODING & COMMUNITY · SINCE 2025",
+      "title": "코딩과 함께라면\n상상을 코드로.",
+      "description": "옥계동부중학교 코딩 자율 동아리. 함께 배우고, 직접 만들고, 아이디어를 나누며 코딩의 가능성을 넓혀 갑니다.",
+      "buttonText": "동아리 알아보기",
+      "buttonUrl": "/about",
+      "enabled": true
+    },
+    {
+      "id": "slide-2",
+      "eyebrow": "01 · LEARN BY MAKING",
+      "title": "엔트리와 파이썬으로\n코딩의 기초부터.",
+      "description": "블록 코딩에서 텍스트 코딩까지, 직접 실행하고 실험하면서 프로그래밍의 원리를 익힙니다.",
+      "buttonText": "우리의 활동",
+      "buttonUrl": "/about#activities",
+      "enabled": true
+    },
+    {
+      "id": "slide-3",
+      "eyebrow": "02 · BUILD WITH AI",
+      "title": "AI와 함께\n웹 개발의 다음 단계로.",
+      "description": "아이디어를 구체화하고 AI를 활용해 실제로 동작하는 웹 페이지와 프로젝트를 만들어 갑니다.",
+      "buttonText": "동아리 소개",
+      "buttonUrl": "/about",
+      "enabled": true
+    }
+  ],
+  "elements": [],
+  "updatedAt": null,
+  "updatedBy": null
+}
