@@ -42,7 +42,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
 .nav-dropdown a:hover,.nav-dropdown a:focus-visible{background:var(--card-hover-bg);color:var(--primary-color);outline:none}
 
 .header-account{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:100px}
-.profile-menu-wrap{position:relative}.profile-dropdown{position:absolute;right:0;top:calc(100% + 10px);min-width:180px;padding:7px;border:1px solid var(--border-color);border-radius:14px;background:var(--card-bg);box-shadow:0 12px 30px rgba(0,0,0,.16);display:none;z-index:1100}.profile-dropdown.open{display:grid;gap:3px}.profile-account-label{padding:11px 12px;color:var(--text-color);font-size:13px;font-weight:750;opacity:.75}.profile-dropdown a,.profile-dropdown button{display:block;width:100%;padding:11px 12px;border:0;border-radius:9px;background:transparent;color:var(--text-color);text-align:left;text-decoration:none;font:inherit;font-size:13px;font-weight:650;cursor:pointer}.profile-dropdown a:hover,.profile-dropdown button:hover{background:var(--card-hover-bg);color:var(--primary-color)}.profile-dropdown .profile-settings{border-top:1px solid var(--border-color);border-radius:0 0 9px 9px;margin-top:3px;padding-top:13px}
+.profile-menu-wrap{position:relative}.profile-dropdown{position:absolute;right:0;top:calc(100% + 10px);min-width:180px;padding:7px;border:1px solid var(--border-color);border-radius:14px;background:var(--card-bg);box-shadow:0 12px 30px rgba(0,0,0,.16);display:none;z-index:1100}.profile-dropdown.open{display:grid;gap:3px}.profile-account-label{display:grid;gap:7px;padding:11px 12px;color:var(--text-color);font-size:13px;font-weight:750}.profile-info-row{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:8px;line-height:1.5}.profile-info-row span{color:var(--text-color);opacity:.65;font-weight:650}.profile-info-row strong{min-width:0;color:var(--text-color);font-weight:800;overflow-wrap:anywhere}.profile-dropdown a,.profile-dropdown button{display:block;width:100%;padding:11px 12px;border:0;border-radius:9px;background:transparent;color:var(--text-color);text-align:left;text-decoration:none;font:inherit;font-size:13px;font-weight:650;cursor:pointer}.profile-dropdown a:hover,.profile-dropdown button:hover{background:var(--card-hover-bg);color:var(--primary-color)}.profile-dropdown .profile-settings{border-top:1px solid var(--border-color);border-radius:0 0 9px 9px;margin-top:3px;padding-top:13px}
 .student-number{color:var(--text-color);font-size:13px;font-weight:750;white-space:nowrap;opacity:.88;letter-spacing:.02em;max-width:3.2em;overflow:hidden;text-overflow:clip}
 .auth-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:8px 13px;border:1px solid var(--border-color);border-radius:999px;background:var(--primary-color);color:white;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;transition:filter .2s}
 .auth-btn:hover{filter:brightness(.92)}.profile-mark{display:block;width:34px;height:34px;flex:0 0 34px;border-radius:50%;overflow:hidden;border:1.5px solid color-mix(in srgb,var(--border-color) 65%,transparent);background:var(--card-bg);object-fit:cover}
@@ -92,7 +92,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       <div class="profile-menu-wrap">
         <button id="authBtn" class="auth-btn" type="button" aria-haspopup="true" aria-expanded="false"><img id="profileAvatar" class="profile-mark" alt="프로필 캐릭터"><span id="authLabel">로그인</span></button>
         <div id="profileDropdown" class="profile-dropdown" role="menu">
-          <div id="profileAccountLabel" class="profile-account-label" role="menuitem">학번: —<br>이름: —</div>
+          <div id="profileAccountLabel" class="profile-account-label" role="group"><div class="profile-info-row"><span>학번</span><strong id="profileStudentNumber">—</strong></div><div class="profile-info-row"><span>이름</span><strong id="profileStudentName">—</strong></div></div>
           <button id="signoutBtn" type="button" role="menuitem">로그아웃</button>
           <a id="settingsLink" class="profile-settings" href="/settings" role="menuitem">설정</a>
         </div>
@@ -147,7 +147,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
         studentNumber.textContent="";
         studentNumber.hidden=false;
-        document.getElementById("profileAccountLabel").textContent="학번: "+user+" · 이름: "+name;
+        document.getElementById("profileStudentNumber").textContent=user;document.getElementById("profileStudentName").textContent=name;
         const currentSettings=getStoredSettings();renderAvatar((data.settings&&data.settings.avatarConfig)||currentSettings.avatarConfig);
         btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
         signoutBtn.hidden=false;
@@ -165,7 +165,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         renderAvatar(getStoredSettings().avatarConfig);
         studentNumber.textContent="";
         studentNumber.hidden=true;
-        document.getElementById("profileAccountLabel").textContent="로그인되어 있지 않습니다.";
+        document.getElementById("profileStudentNumber").textContent="—";document.getElementById("profileStudentName").textContent="로그인 필요";
         btn.onclick=()=>{location.href="/signin?redirect=/"};
         dropdown.classList.remove("open");
         signoutBtn.hidden=true;
