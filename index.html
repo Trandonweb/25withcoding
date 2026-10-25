@@ -72,6 +72,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
 
 
 /* 관리자 메인페이지 설계 콘텐츠 */
+.hero[hidden],#managedMainSections[hidden]{display:none!important}
 .managed-main-sections{display:grid;gap:18px;padding:0 0 34px}
 .managed-block{min-width:0;padding:clamp(20px,4vw,34px);border:1px solid var(--border-color);border-radius:22px;background:var(--card-bg);color:var(--text-color);overflow:hidden}
 .managed-block h2{margin:0 0 10px;font-size:clamp(23px,3vw,32px);letter-spacing:-.04em;line-height:1.2}
@@ -156,7 +157,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       {id:"slide-2",eyebrow:"01 · LEARN BY MAKING",title:"엔트리와 파이썬으로\n코딩의 기초부터.",description:"블록 코딩에서 텍스트 코딩까지, 직접 실행하고 실험하면서 프로그래밍의 원리를 익힙니다.",buttonText:"우리의 활동",buttonUrl:"/about#activities",enabled:true},
       {id:"slide-3",eyebrow:"02 · BUILD WITH AI",title:"AI와 함께\n웹 개발의 다음 단계로.",description:"아이디어를 구체화하고 AI를 활용해 실제로 동작하는 웹 페이지와 프로젝트를 만들어 갑니다.",buttonText:"동아리 소개",buttonUrl:"/about",enabled:true}
     ];
-    let mainSlides=defaultMainSlides,mainSlideIndex=0,mainSlideTimer=null;
+    let mainSlides=defaultMainSlides,mainSlideIndex=0,mainSlideTimer=null,mainScheduleTimer=null;
     function safeMainUrl(value){const v=String(value||"").trim();if(v.startsWith("/")&&!v.startsWith("//"))return v;if(/^https?:\/\/[^\s]+$/i.test(v))return v;return ""}
     function renderMainSlide(index,animate=true){
       const root=document.getElementById("mainHeroContent");if(!root||!mainSlides.length)return;
@@ -205,6 +206,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         globalVisible=visibleNow(content.settings||{enabled:true});
         if(Array.isArray(content.slides)){const configured=content.slides.filter(s=>visibleNow(s));if(configured.length)mainSlides=configured;else mainSlides=[]}
         if(Array.isArray(content.elements))elements=content.elements.filter(e=>visibleNow(e));
+        if(mainScheduleTimer)clearTimeout(mainScheduleTimer);const upcoming=[content.settings,...(Array.isArray(content.slides)?content.slides:[]),...(Array.isArray(content.elements)?content.elements:[])].filter(Boolean).flatMap(item=>[scheduleDate(item.startAt),scheduleDate(item.endAt)]).filter(date=>date&&date>activeNow).sort((a,b)=>a-b);if(upcoming.length)mainScheduleTimer=setTimeout(()=>loadMainPageContent(),Math.min(upcoming[0]-activeNow+250,2147483647));
       }catch(e){console.warn("메인페이지 JSON을 불러오지 못해 기본 콘텐츠를 표시합니다.",e)}
       if(!globalVisible){mainSlides=[];const hero=document.querySelector(".hero");if(hero)hero.hidden=true;const managed=document.getElementById("managedMainSections");if(managed)managed.hidden=true;return}
       const hero=document.querySelector(".hero");if(hero)hero.hidden=!mainSlides.length;const managed=document.getElementById("managedMainSections");if(managed)managed.hidden=false;
