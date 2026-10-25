@@ -204,11 +204,20 @@ async function loadFolderMetadata(){
   if(explanation) $("description").textContent=explanation;
   if(madeBy) $("author").textContent=madeBy;
   if(how) $("how-to").textContent=how;
-  const thumbnail=$("project-thumbnail");
-  try {
-    const response=await fetch("./thumbnail.png",{method:"HEAD",cache:"no-store"});
-    if(response.ok){thumbnail.src="./thumbnail.png";thumbnail.classList.add("visible");}
-  } catch {}
+  const thumbnail = $("project-thumbnail");
+  const thumbnailCandidates = ["./thumbnail.png","./thumbnail.jpg","./thumbnail.jpeg","./thumbnail.webp","./thumbnail.svg","./thumbnail.gif","./thubnail.png"];
+  let thumbnailIndex = 0;
+  thumbnail.onload = () => thumbnail.classList.add("visible");
+  thumbnail.onerror = () => {
+    thumbnailIndex++;
+    if (thumbnailIndex < thumbnailCandidates.length) {
+      thumbnail.src = thumbnailCandidates[thumbnailIndex];
+    } else {
+      thumbnail.classList.remove("visible");
+      thumbnail.removeAttribute("src");
+    }
+  };
+  thumbnail.src = thumbnailCandidates[0];
 }
 loadFolderMetadata();
 
