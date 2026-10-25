@@ -118,8 +118,8 @@ footer strong{color:#a6aea5;font-weight:750}
 <body>
 <div class="app">
 <header class="topbar">
-  <a class="brand" href="/2026/"><span class="mark">↗</span><span>코딩과 함께라면<small>2026</small></span></a>
-  <a class="back" href="/2026/">← 작품 목록</a>
+  <a class="brand" href="/memorial_hall/2026/"><span class="mark">↗</span><span>코딩과 함께라면<small>2026</small></span></a>
+  <a class="back" href="/memorial_hall/2026/">← 작품 목록</a>
 </header>
 <main>
   <section class="intro">
@@ -141,7 +141,7 @@ footer strong{color:#a6aea5;font-weight:750}
     <aside class="recommendations">
       <div class="recommendations-head"><h2>다른 작품</h2><span>DISCOVER</span></div>
       <div class="recommendation-list" id="recommendation-list"><p class="recommendation-empty">작품을 불러오는 중...</p></div>
-      <a class="all-projects" href="/2026/">전체 작품 보기 ↗</a>
+      <a class="all-projects" href="/memorial_hall/2026/">전체 작품 보기 ↗</a>
     </aside>
     <aside class="details">
       <div class="section-label">ABOUT THE PROJECT</div>
@@ -168,7 +168,7 @@ const PROJECT = {
   howTo: "WASD 이동 · 마우스 조준 · 좌클릭 발사 · R 재장전 · 1/2/3 무기 전환 · Space 점프 · Shift 달리기 · Esc 일시정지",
   notes: "인트로 화면에서 시작한 뒤 게임이 실행됩니다. 작품을 즐긴 뒤 응원하기를 눌러 주세요.",
   type: "entry",
-  codeUrl: "/2026/Team_Fortress_Classic_code/index.html?v=20261022-pyro-respawn-music1",
+  codeUrl: "/memorial_hall/2026/Team_Fortress_Classic_code/index.html?v=20261022-pyro-respawn-music1",
   embed: '<iframe src="/intro/index.html" allowfullscreen></iframe>',
   url: ""
 };
@@ -370,7 +370,7 @@ async function loadRecommendations(){
     for(const project of projects.slice(0,4)){
       const link=document.createElement("a");
       link.className="recommendation";
-      link.href="/2026/"+encodeURIComponent(project.id)+"/";
+      link.href="/memorial_hall/2026/"+encodeURIComponent(project.id)+"/";
       if(project.thumbnail){
         const img=document.createElement("img");
         img.className="recommendation-thumb";
