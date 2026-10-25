@@ -174,6 +174,17 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     function renderManagedElements(elements){
       const root=document.getElementById("managedMainSections");if(!root)return;root.replaceChildren();
       (Array.isArray(elements)?elements:[]).filter(e=>e&&e.enabled!==false).forEach(e=>{
+        if(e.type==="canvas"){
+          const stage=document.createElement("section");stage.className="managed-canvas-page";stage.style.position="relative";stage.style.width="100%";stage.style.aspectRatio="16 / 9";stage.style.overflow="hidden";stage.style.margin="24px 0";stage.style.background=e.canvasBackground||e.background||"#ffffff";stage.style.borderRadius="18px";stage.style.boxShadow="0 10px 34px rgba(0,0,0,.08)";
+          (Array.isArray(e.objects)?e.objects:[]).slice().sort((a,b)=>(a.z||0)-(b.z||0)).forEach(o=>{
+            const item=document.createElement(o.linkUrl&&safeMainUrl(o.linkUrl)?"a":"div");if(item.tagName==="A"){item.href=safeMainUrl(o.linkUrl);item.style.textDecoration="none"}
+            item.style.position="absolute";item.style.left=(Number(o.x)||0)+"%";item.style.top=(Number(o.y)||0)+"%";item.style.width=(Number(o.w)||20)+"%";item.style.height=(Number(o.h)||15)+"%";item.style.zIndex=String(o.z||1);item.style.boxSizing="border-box";item.style.display="flex";item.style.alignItems="center";item.style.justifyContent="center";item.style.overflow="hidden";item.style.whiteSpace="pre-wrap";item.style.wordBreak="break-word";item.style.padding="1%";item.style.fontSize="clamp(8px, "+(Number(o.fontSize)||18)/10+"vw, "+(Number(o.fontSize)||18)+"px)";item.style.textAlign=o.align||"center";item.style.color=o.color||"#17231b";item.style.background=o.type==="line"?"transparent":o.type==="image"?"transparent":o.fill||"transparent";item.style.borderRadius=(Number(o.radius)||0)+"px";
+            if(o.type==="circle"){item.style.border="2px solid "+(o.color||"#17231b");item.style.borderRadius="50%"}else if(o.type==="rect"){item.style.border="2px solid "+(o.color||"#17231b)"}else if(o.type==="line"){item.style.height="0.5%";item.style.minHeight="2px";item.style.padding="0";item.style.background=o.color||"#17231b"}
+            if(o.type==="image"&&safeMainUrl(o.imageUrl)){const img=document.createElement("img");img.src=safeMainUrl(o.imageUrl);img.alt=o.name||"";img.style.width="100%";img.style.height="100%";img.style.objectFit="contain";item.append(img)}else{item.textContent=o.text||o.name||""}
+            stage.append(item);
+          });
+          root.append(stage);return;
+        }
         const type=["heading","text","image","button","card"].includes(e.type)?e.type:"card";
         const url=safeMainUrl(e.linkUrl),imageUrl=safeMainUrl(e.imageUrl);
         let block;
@@ -206,7 +217,9 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         globalVisible=visibleNow(content.settings||{enabled:true});
         if(Array.isArray(content.slides)){const configured=content.slides.filter(s=>visibleNow(s));if(configured.length)mainSlides=configured;else mainSlides=[]}
         if(Array.isArray(content.elements))elements=content.elements.filter(e=>visibleNow(e));
-        if(mainScheduleTimer)clearTimeout(mainScheduleTimer);const upcoming=[content.settings,...(Array.isArray(content.slides)?content.slides:[]),...(Array.isArray(content.elements)?content.elements:[])].filter(Boolean).flatMap(item=>[scheduleDate(item.startAt),scheduleDate(item.endAt)]).filter(date=>date&&date>activeNow).sort((a,b)=>a-b);if(upcoming.length)mainScheduleTimer=setTimeout(()=>loadMainPageContent(),Math.min(upcoming[0]-activeNow+250,2147483647));
+        const canvasPages=Array.isArray(content.canvasPages)?content.canvasPages.filter(p=>visibleNow(p)).map(p=>({...p,type:"canvas"})):[];
+        elements=[...elements,...canvasPages];
+        if(mainScheduleTimer)clearTimeout(mainScheduleTimer);const upcoming=[content.settings,...(Array.isArray(content.slides)?content.slides:[]),...(Array.isArray(content.elements)?content.elements:[]),...(Array.isArray(content.canvasPages)?content.canvasPages:[])].filter(Boolean).flatMap(item=>[scheduleDate(item.startAt),scheduleDate(item.endAt)]).filter(date=>date&&date>activeNow).sort((a,b)=>a-b);if(upcoming.length)mainScheduleTimer=setTimeout(()=>loadMainPageContent(),Math.min(upcoming[0]-activeNow+250,2147483647));
       }catch(e){console.warn("메인페이지 JSON을 불러오지 못해 기본 콘텐츠를 표시합니다.",e)}
       if(!globalVisible){mainSlides=[];const hero=document.querySelector(".hero");if(hero)hero.hidden=true;const managed=document.getElementById("managedMainSections");if(managed)managed.hidden=true;return}
       const hero=document.querySelector(".hero");if(hero)hero.hidden=!mainSlides.length;const managed=document.getElementById("managedMainSections");if(managed)managed.hidden=false;
