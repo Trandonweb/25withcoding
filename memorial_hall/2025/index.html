@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2025 코딩과 함께라면 기념관</title>
 
-<link rel="icon" href="/2025withcoding_logo.png" type="image/png">
-<link rel="apple-touch-icon" href="/2025withcoding_logo.png">
 
 <style>
 .VOTE_1, .VOTE_2 {
@@ -28,41 +26,14 @@ body {
   background-position: center;
 }
 
-/* 햄버거 버튼 */
-.hamburger {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  width: 30px;   /* 75% 크기 */
-  height: 30px;
-  background: url("hamburgerbotton.png") no-repeat center/contain;
-  border: none;
-  cursor: pointer;
-  z-index: 3000;
-}
-/*상벌점 버튼*/
-.POINT_BTN {
-  position: fixed;
-  top: 20px;
-  left: 140px; /* ← 기존보다 더 오른쪽 */
-  padding: 10px 16px;
-  border: none;
-  background: #222;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
-  z-index: 2000;
-  transition: 0.2s;
-}
-
-.POINT_BTN:hover {
-  background: #444;
-  transform: scale(1.05);
-}
-
-.POINT_BTN:active {
-  transform: scale(0.95);
+/* 기념관 홈 버튼 */
+.museum-home {
+  position: fixed; top: 20px; left: 20px; z-index: 3000;
+  padding: 11px 16px; border: 0; border-radius: 9px;
+  background: rgba(255,255,255,.92); color: #222;
+  font-weight: 700; font-size: 14px; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  text-decoration: none;
 }
 /* 음소거 버튼 */
 #musicBtn {
@@ -75,47 +46,6 @@ body {
   background: url('sound1.png') no-repeat center / contain;
   cursor: pointer;
   z-index: 2000;
-}
-
-/* 사이드 메뉴 */
-.menu {
-  position: fixed;
-  top: 0;
-  left: -260px;
-  width: 260px;
-  height: 100vh;
-  background: #f0f0f0;
-  padding-top: 80px;
-  transition: left 0.3s ease;
-  z-index: 2500;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.2);
-  pointer-events: none; /* 메뉴 닫힘시 클릭 안먹도록 */
-}
-
-.menu.active {
-  left: 0;
-  pointer-events: auto; /* 메뉴 열리면 클릭 가능 */
-}
-
-.menu a {
-  display: block;
-  padding: 16px 24px;
-  color: #000;
-  text-decoration: none;
-  font-size: 1.1em;
-  text-align: center;   /* 중앙정렬 */
-  font-weight: bold;    /* 글자 굵게 */
-}
-
-.menu a:hover {
-  background: rgba(0,0,0,0.06);
-}
-
-.menu-logo img {
-  width: 90px;
-  max-width: 90px;
-  height: auto;
-  margin-bottom: 20px;
 }
 
 /* 상단 텍스트 */
@@ -226,27 +156,8 @@ body {
 
 <body>
 
-<!-- 상벌점 시스템 버튼 -->
-<button class="POINT_BTN" onclick="location.href='https://25withcoding.kr/상벌점'">
-  상벌점 시스템
-</button>
-  
-<!-- 햄버거 버튼 -->
-<button class="hamburger" onclick="toggleMenu()"></button>
-<button id="musicBtn" onclick="toggleMusic()"></button>
-
-<!-- 사이드 메뉴 -->
-<nav class="menu" id="sideMenu">
-  <div class="menu-inner">
-    <div class="menu-logo">
-      <img src="/logo1.png" alt="logo">
-    </div>
-    <a class="menu-home" href="/" onclick="closeMenu()">홈</a>
-    <div class="menu-gap"></div>
-    <a href="/apply" onclick="closeMenu()">2기 지원</a>
-    <a href="/result" onclick="closeMenu()">결과 확인</a>
-  </div>
-</nav>
+<a class="museum-home" href="/memorial_hall/">기념관 홈</a>
+<button id="musicBtn" onclick="toggleMusic()" aria-label="배경 음악 음소거"></button>
 
 <!-- 배경 음악 -->
 <audio id="bgMusic" src="music.mp3" loop autoplay></audio>
@@ -283,16 +194,15 @@ body {
   <button id="next">&gt;</button>
 </div>
 
-<img src="/logo1.png" class="logo">
 
 <script>
 const thumbs = [
-  {img:'Thumbnail1.png', title:'CODE : STORGE', author:'JO Y.J.', link:'https://naver.me/5M5Ke6YT'},
-  {img:'Thumbnail2.png', title:'HIGH SCORE', author:'LEE J.H.', link:'https://naver.me/FPU7WpYv'},
-  {img:'Thumbnail3.png', title:'억까 게임', author:'SON S.H.', link:'https://naver.me/GdlLfME3'},
-  {img:'Thumbnail4.png', title:'SPEED GAME', author:'JANG H.J.', link:'https://naver.me/x4Gpy1ly'},
-  {img:'Thumbnail5.png', title:'몬스터 디펜스', author:'LEE S.Y.', link:'https://naver.me/GT6ZUHNa'},
-  {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.', link:'https://naver.me/xhl9LE6l'}
+  {img:'Thumbnail1.png', title:'CODE : STORGE', author:'JO Y.J.', link:'/memorial_hall/2025/code-storage/'},
+  {img:'Thumbnail2.png', title:'HIGH SCORE', author:'LEE J.H.', link:'/memorial_hall/2025/high-score/'},
+  {img:'Thumbnail3.png', title:'억까 게임', author:'SON S.H.', link:'/memorial_hall/2025/억까-게임/'},
+  {img:'Thumbnail4.png', title:'SPEED GAME', author:'JANG H.J.', link:'/memorial_hall/2025/speed-game/'},
+  {img:'Thumbnail5.png', title:'몬스터 디펜스', author:'LEE S.Y.', link:'/memorial_hall/2025/몬스터-디펜스/'},
+  {img:'Thumbnail6.png', title:'쓱삭김치가 되어보기', author:'LIM J.W.', link:'/memorial_hall/2025/쓱삭김치가-되어보기/'}
 ];
 
 let currentIndex = Math.floor(Math.random() * thumbs.length);
@@ -340,12 +250,10 @@ setInterval(next,2000);
       idx===0?thumbs[(currentIndex+2)%len]:
       idx===1?thumbs[(currentIndex+1)%len]:
       thumbs[currentIndex%len];
-    window.open(p.link,'_blank');
+    window.location.href=p.link;
   }
 });
 
-function toggleMenu(){ document.getElementById("sideMenu").classList.toggle("active"); }
-function closeMenu(){ document.getElementById("sideMenu").classList.remove("active"); }
 function toggleMusic(){
   const m=document.getElementById("bgMusic");
   const b=document.getElementById("musicBtn");
