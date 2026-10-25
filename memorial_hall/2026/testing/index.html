@@ -198,8 +198,8 @@ async function loadFolderMetadata(){
   if(how) $("how-to").textContent=how;
   const thumbnail=$("project-thumbnail");
   try {
-    const response=await fetch("./thubnail.png",{method:"HEAD",cache:"no-store"});
-    if(response.ok){thumbnail.src="./thubnail.png";thumbnail.classList.add("visible");}
+    const response=await fetch("./thumbnail.png",{method:"HEAD",cache:"no-store"});
+    if(response.ok){thumbnail.src="./thumbnail.png";thumbnail.classList.add("visible");}
   } catch {}
 }
 loadFolderMetadata();
@@ -300,7 +300,7 @@ async function loadRecommendations(){
         files.has(folder+"title.txt")?readText(folder+"title.txt"):Promise.resolve(""),
         files.has(folder+"explanation.txt")?readText(folder+"explanation.txt"):Promise.resolve("")
       ]);
-      return {id,title:title||id,description:description||"축제 작품을 체험해 보세요.",thumbnail:files.has(folder+"thubnail.png")?rawRoot+folder+"thubnail.png":"",likes:likes.get(id)||0};
+      return {id,title:title||id,description:description||"축제 작품을 체험해 보세요.",thumbnail:files.has(folder+"thumbnail.png")?rawRoot+folder+"thumbnail.png":"",likes:likes.get(id)||0};
     }));
     projects.sort((a,b)=>b.likes-a.likes||a.title.localeCompare(b.title,"ko"));
     recommendationList.replaceChildren();
