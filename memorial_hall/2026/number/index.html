@@ -368,7 +368,7 @@ async function loadRecommendations(){
       const [title,description,thumbnail]=await Promise.all([
         files.has(folder+"title.txt")?readText(folder+"title.txt"):Promise.resolve(""),
         files.has(folder+"explanation.txt")?readText(folder+"explanation.txt"):Promise.resolve(""),
-        Promise.resolve(files.has(folder+"thubnail.png")?rawRoot+folder+"thubnail.png":"")
+        Promise.resolve(files.has(folder+"thumbnail.png")?rawRoot+folder+"thumbnail.png":"")
       ]);
       return {id,title:title||id,description:description||"축제 작품을 체험해 보세요.",thumbnail,likes:likes.get(id)||0};
     }));
