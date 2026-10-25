@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "slides": [
     {
       "id": "slide-1",
@@ -8,7 +8,9 @@
       "description": "옥계동부중학교 코딩 자율 동아리. 함께 배우고, 직접 만들고, 아이디어를 나누며 코딩의 가능성을 넓혀 갑니다.",
       "buttonText": "동아리 알아보기",
       "buttonUrl": "/about",
-      "enabled": true
+      "enabled": true,
+      "startAt": "",
+      "endAt": ""
     },
     {
       "id": "slide-2",
@@ -17,7 +19,9 @@
       "description": "블록 코딩에서 텍스트 코딩까지, 직접 실행하고 실험하면서 프로그래밍의 원리를 익힙니다.",
       "buttonText": "우리의 활동",
       "buttonUrl": "/about#activities",
-      "enabled": true
+      "enabled": true,
+      "startAt": "",
+      "endAt": ""
     },
     {
       "id": "slide-3",
@@ -26,10 +30,17 @@
       "description": "아이디어를 구체화하고 AI를 활용해 실제로 동작하는 웹 페이지와 프로젝트를 만들어 갑니다.",
       "buttonText": "동아리 소개",
       "buttonUrl": "/about",
-      "enabled": true
+      "enabled": true,
+      "startAt": "",
+      "endAt": ""
     }
   ],
   "elements": [],
   "updatedAt": null,
-  "updatedBy": null
+  "updatedBy": null,
+  "settings": {
+    "enabled": true,
+    "startAt": "",
+    "endAt": ""
+  }
 }
