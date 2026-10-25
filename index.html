@@ -37,7 +37,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
 .nav-item:first-child>.nav-trigger{border-left:1px solid var(--border-color)}
  .nav-item:hover>.nav-trigger,.nav-item:focus-within>.nav-trigger{color:var(--primary-color);opacity:1;background:var(--card-hover-bg)}
 .nav-dropdown{position:absolute;top:100%;left:0;right:0;transform:translateY(-8px);width:100%;padding:0;box-sizing:border-box;border:1px solid var(--border-color);border-radius:0 0 14px 14px;background:var(--card-bg);box-shadow:0 16px 28px rgba(0,0,0,.13);display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility .18s;z-index:1200}
-.main-nav:hover .nav-dropdown,.main-nav:focus-within .nav-dropdown{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+.main-nav:hover>.nav-dropdown,.main-nav:focus-within>.nav-dropdown{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
 .nav-dropdown a{display:block;min-width:0;padding:12px 10px;border-right:1px solid var(--border-color);border-bottom:1px solid var(--border-color);color:var(--text-color);text-decoration:none;font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,color .15s}
 .nav-dropdown a:hover,.nav-dropdown a:focus-visible{background:var(--card-hover-bg);color:var(--primary-color);outline:none}
 
@@ -65,12 +65,20 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
   <header id="siteHeader">
     <a class="brand" href="/" aria-label="코딩과 함께라면 홈"><img class="brand-logo" src="/simple_logo.png" alt=""><span>코딩과 함께라면</span></a>
     <nav class="main-nav" aria-label="주요 메뉴">
-      <div class="nav-item"><a class="nav-trigger" href="/about">소개</a><div class="nav-dropdown"><a href="/about">동아리 소개</a></div></div>
-      <div class="nav-item"><a class="nav-trigger" href="/memorial_hall">기념관</a><div class="nav-dropdown"><a href="/memorial_hall">기념관 홈</a></div></div>
-      <div class="nav-item"><a class="nav-trigger" href="/상벌점/main.html">도구</a><div class="nav-dropdown"><a href="/상벌점/main.html">상벌점</a><a href="/memo/">저장 공간</a><a href="/AI">COBY</a></div></div>
-      <div class="nav-item"><a class="nav-trigger" href="/news">소식</a><div class="nav-dropdown"><a href="/news">최근 소식</a></div></div>
-      <div class="nav-item"><a class="nav-trigger" href="/apply">지원</a><div class="nav-dropdown"><a href="/apply">동아리 지원하기</a></div></div>
-      <div class="nav-item" id="adminNavItem" hidden><a class="nav-trigger" href="/admin">관리자 도구</a><div class="nav-dropdown"><a href="/admin">관리자</a></div></div>
+      <div class="nav-item"><a class="nav-trigger" href="/about">소개</a></div>
+      <div class="nav-item"><a class="nav-trigger" href="/memorial_hall">기념관</a></div>
+      <div class="nav-item"><a class="nav-trigger" href="/상벌점/main.html">도구</a></div>
+      <div class="nav-item"><a class="nav-trigger" href="/news">소식</a></div>
+      <div class="nav-item"><a class="nav-trigger" href="/apply">지원</a></div>
+      <div class="nav-item" id="adminNavItem" hidden><a class="nav-trigger" href="/admin">관리자 도구</a></div>
+      <div class="nav-dropdown" aria-label="메뉴 바로가기">
+        <div class="nav-column"><a href="/about">동아리 소개</a></div>
+        <div class="nav-column"><a href="/memorial_hall">기념관 홈</a></div>
+        <div class="nav-column"><a href="/상벌점/main.html">상벌점</a><a href="/memo/">저장 공간</a><a href="/AI">COBY</a></div>
+        <div class="nav-column"><a href="/news">최근 소식</a></div>
+        <div class="nav-column"><a href="/apply">동아리 지원하기</a></div>
+        <div class="nav-column" id="adminDropdownColumn" hidden><a href="/admin">관리자</a></div>
+      </div>
     </nav>
     <div class="header-account">
       <span id="studentNumber" class="student-number" hidden></span>
@@ -125,7 +133,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       if(user){
         let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
         const adminNav=document.getElementById("adminNavItem");
-        if(adminNav)adminNav.hidden=!(data.role==="president"||data.role==="vice");
+        if(adminNav)adminNav.hidden=!(data.role==="president"||data.role==="vice");const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=!(data.role==="president"||data.role==="vice");
         const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
         btn.setAttribute("aria-label","프로필 메뉴 열기");
         label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
@@ -137,7 +145,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         signoutBtn.hidden=false;
         signoutBtn.onclick=()=>{location.href="/signout?redirect=/"};
       }else{
-        const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;
+        const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=true;
         btn.setAttribute("aria-label","로그인");
         label.textContent="로그인";
         renderAvatar(getStoredSettings().avatarConfig);
