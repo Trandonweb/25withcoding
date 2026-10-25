@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "id": "page-1",
+  "title": "페이지 1",
+  "enabled": true,
+  "startAt": "",
+  "endAt": "",
+  "background": "#ffffff",
+  "backgroundImage": "",
+  "objects": []
+}
