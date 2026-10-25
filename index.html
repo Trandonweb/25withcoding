@@ -196,15 +196,19 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       });
     }
     async function loadMainPageContent(){
-      let elements=[];
+      let elements=[];let globalVisible=true;
       try{
         const response=await fetch("/data/main-page.json?ts="+Date.now(),{cache:"no-store"});
         if(!response.ok)throw new Error("HTTP "+response.status);
         const content=await response.json();
-        if(Array.isArray(content.slides)){const configured=content.slides.filter(s=>s&&s.enabled!==false);if(configured.length)mainSlides=configured}
-        if(Array.isArray(content.elements))elements=content.elements;
+        const activeNow=new Date();const scheduleDate=value=>value?new Date(String(value)+"+09:00"):null;const visibleNow=item=>item&&item.enabled!==false&&(!scheduleDate(item.startAt)||activeNow>=scheduleDate(item.startAt))&&(!scheduleDate(item.endAt)||activeNow<scheduleDate(item.endAt));
+        globalVisible=visibleNow(content.settings||{enabled:true});
+        if(Array.isArray(content.slides)){const configured=content.slides.filter(s=>visibleNow(s));if(configured.length)mainSlides=configured;else mainSlides=[]}
+        if(Array.isArray(content.elements))elements=content.elements.filter(e=>visibleNow(e));
       }catch(e){console.warn("메인페이지 JSON을 불러오지 못해 기본 콘텐츠를 표시합니다.",e)}
-      renderMainSlide(0,false);restartMainSlideTimer();renderManagedElements(elements);
+      if(!globalVisible){mainSlides=[];const hero=document.querySelector(".hero");if(hero)hero.hidden=true;const managed=document.getElementById("managedMainSections");if(managed)managed.hidden=true;return}
+      const hero=document.querySelector(".hero");if(hero)hero.hidden=!mainSlides.length;const managed=document.getElementById("managedMainSections");if(managed)managed.hidden=false;
+      if(mainSlides.length){renderMainSlide(0,false);restartMainSlideTimer()}else{const root=document.getElementById("mainHeroContent");if(root)root.replaceChildren()}renderManagedElements(elements);
     }
     loadMainPageContent();
     function go(path){location.href=path} window.go=go;
