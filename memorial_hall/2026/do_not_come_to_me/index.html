@@ -339,7 +339,7 @@ async function loadRecommendations(){
     if(treeData.truncated) throw new Error("작품 폴더 목록이 일부만 반환되었습니다.");
     const files=new Set((treeData.tree||[]).filter(x=>x.type==="blob").map(x=>x.path));
     const dirs=new Set((treeData.tree||[]).filter(x=>x.type==="tree").map(x=>x.path));
-    const root="2026";
+    const root="memorial_hall/2026";
     const ids=[];
     for(const path of dirs){
       if(!path.startsWith(root+"/")) continue;
