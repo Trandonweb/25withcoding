@@ -46,6 +46,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
 .nav-dropdown a:hover,.nav-dropdown a:focus-visible{background:var(--card-hover-bg);color:var(--primary-color);outline:none}
 
 .header-account{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:100px}
+.header-account.logged-out-account{min-width:auto}.header-account [hidden]{display:none!important}
 .profile-menu-wrap{position:relative}.profile-dropdown{position:absolute;right:0;top:calc(100% + 10px);min-width:180px;padding:7px;border:1px solid var(--border-color);border-radius:14px;background:var(--card-bg);box-shadow:0 12px 30px rgba(0,0,0,.16);display:none;z-index:1100}.profile-dropdown.open{display:grid;gap:3px}.profile-account-label{display:grid;gap:7px;padding:11px 12px;color:var(--text-color);font-size:13px;font-weight:750}.profile-info-row{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:8px;line-height:1.5}.profile-info-row span{color:var(--text-color);opacity:.65;font-weight:650}.profile-info-row strong{min-width:0;color:var(--text-color);font-weight:800;overflow-wrap:anywhere}.profile-dropdown a,.profile-dropdown button{display:block;width:100%;padding:11px 12px;border:0;border-radius:9px;background:transparent;color:var(--text-color);text-align:left;text-decoration:none;font:inherit;font-size:13px;font-weight:650;cursor:pointer}.profile-dropdown a:hover,.profile-dropdown button:hover{background:var(--card-hover-bg);color:var(--primary-color)}.profile-dropdown .profile-settings{border-top:1px solid var(--border-color);border-radius:0 0 9px 9px;margin-top:3px;padding-top:13px}
 .student-number{color:var(--text-color);font-size:13px;font-weight:750;white-space:nowrap;opacity:.88;letter-spacing:.02em;max-width:3.2em;overflow:hidden;text-overflow:clip}
 .auth-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:8px 13px;border:1px solid var(--border-color);border-radius:999px;background:var(--primary-color);color:white;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;transition:filter .2s}
@@ -143,6 +144,8 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       const dropdown=document.getElementById("profileDropdown");
       const signoutBtn=document.getElementById("signoutBtn");
       if(user){
+        const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=false;
+        const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
         let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
         const adminNav=document.getElementById("adminNavItem");
         if(adminNav)adminNav.hidden=!(data.role==="president"||data.role==="vice");const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=!(data.role==="president"||data.role==="vice");
@@ -160,6 +163,8 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=false});
         document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=false});
       }else{
+        const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=true;
+        const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.add("logged-out-account");
         const nav=document.querySelector(".main-nav");if(nav)nav.classList.add("is-logged-out");
         document.querySelectorAll(".main-nav .nav-item").forEach(item=>{const link=item.querySelector(".nav-trigger");item.hidden=!(link&&["/about","/memorial_hall","/apply"].includes(new URL(link.href,location.href).pathname))});
         document.querySelectorAll(".main-nav .nav-column").forEach(column=>{const links=[...column.querySelectorAll("a")];column.hidden=!links.length||!links.every(link=>["/about","/memorial_hall","/apply"].includes(new URL(link.href,location.href).pathname))});
