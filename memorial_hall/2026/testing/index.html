@@ -119,8 +119,8 @@ footer strong{color:#a6aea5;font-weight:750}
 <body>
 <div class="app">
 <header class="topbar">
-  <a class="brand" href="/2026/"><span class="mark">↗</span><span>코딩과 함께라면<small>2026</small></span></a>
-  <a class="back" href="/2026/">← 작품 목록</a>
+  <a class="brand" href="/memorial_hall/2026/"><span class="mark">↗</span><span>코딩과 함께라면<small>2026</small></span></a>
+  <a class="back" href="/memorial_hall/2026/">← 작품 목록</a>
 </header>
 <main>
   <section class="intro">
@@ -311,7 +311,7 @@ async function loadRecommendations(){
     for(const project of projects.slice(0,4)){
       const link=document.createElement("a");
       link.className="recommendation";
-      link.href="/2026/"+encodeURIComponent(project.id)+"/";
+      link.href="/memorial_hall/2026/"+encodeURIComponent(project.id)+"/";
       if(project.thumbnail){
         const img=document.createElement("img");
         img.className="recommendation-thumb";
