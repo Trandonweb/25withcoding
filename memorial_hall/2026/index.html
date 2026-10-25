@@ -2657,7 +2657,7 @@ async function discoverProjectFolders(){
 
   try{
     const projects=await Promise.all(manualProjectIds.map(async id=>{
-      const folder="2026/"+id;
+      const folder="memorial_hall/2026/"+id;
       const [title,description,madeBy,how]=await Promise.all([
         fileText(folder+"/title.txt"),
         fileText(folder+"/explanation.txt"),
