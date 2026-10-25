@@ -1881,7 +1881,7 @@ document
     ()=>{
       const redirect=
         encodeURIComponent(
-          "/memorial_hall/2026/"
+          "/memorial_hall/memorial_hall/2026/"
         );
 
       location.href=
@@ -2566,7 +2566,7 @@ function renderProjects(){
     card.setAttribute("role","link");
     card.setAttribute("aria-label",p.title+" 작품 정보 보기");
 
-    const openProject=()=>{ location.href="/memorial_hall/2026/"+encodeURIComponent(p.id)+"/"; };
+    const openProject=()=>{ location.href="/memorial_hall/memorial_hall/2026/"+encodeURIComponent(p.id)+"/"; };
     card.addEventListener("click",openProject);
     card.addEventListener("keydown",event=>{
       if(event.target!==card) return;
