@@ -204,7 +204,20 @@ async function loadFolderMetadata(){
   if(explanation) $("description").textContent = explanation;
   if(madeBy) $("author").textContent = madeBy;
   if(how) $("how-to").textContent = how;
-  // 썸네일 파일이 없는 작품도 있으므로 존재하지 않는 이미지에 HEAD 요청을 보내지 않습니다.
+  const thumbnail = $("project-thumbnail");
+  const thumbnailCandidates = ["./thumbnail.png","./thumbnail.jpg","./thumbnail.jpeg","./thumbnail.webp","./thumbnail.svg","./thumbnail.gif","./thubnail.png"];
+  let thumbnailIndex = 0;
+  thumbnail.onload = () => thumbnail.classList.add("visible");
+  thumbnail.onerror = () => {
+    thumbnailIndex++;
+    if (thumbnailIndex < thumbnailCandidates.length) {
+      thumbnail.src = thumbnailCandidates[thumbnailIndex];
+    } else {
+      thumbnail.classList.remove("visible");
+      thumbnail.removeAttribute("src");
+    }
+  };
+  thumbnail.src = thumbnailCandidates[0];
 }
 loadFolderMetadata();
 
