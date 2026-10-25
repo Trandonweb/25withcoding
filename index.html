@@ -58,6 +58,13 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
 @media(max-width:800px){header{gap:18px;padding:8px 4%;min-height:76px}.brand{font-size:15px;gap:7px}.brand-logo{width:32px;height:32px}.main-nav{gap:4px}.main-nav .nav-trigger{font-size:13px;min-height:44px;padding:0 10px}.nav-dropdown{grid-template-columns:repeat(6,minmax(0,1fr))}.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){header{min-height:68px;padding:8px 4%;gap:10px}.brand{font-size:12px;gap:6px}.brand-logo{width:28px;height:28px}.main-nav{gap:2px;flex:1}.main-nav .nav-trigger{font-size:10px;letter-spacing:0;min-height:40px;padding:0 5px;border-radius:9px}.nav-dropdown{grid-template-columns:repeat(6,minmax(0,1fr))}.nav-dropdown a{font-size:10px;padding:9px 4px;white-space:normal}.header-account{min-width:0;gap:6px}.student-number{font-size:10px;max-width:56px;overflow:hidden;text-overflow:ellipsis}.auth-btn{min-height:34px;padding:5px 8px;font-size:10px}.profile-mark{width:28px;height:28px;flex-basis:28px}.hero{min-height:330px;margin-top:18px;border-radius:22px}.feature-grid{grid-template-columns:1fr}.feature-card{min-height:135px;padding:20px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* 비로그인 메뉴 제한 및 안내 토스트 */
+.main-nav.is-logged-out .nav-dropdown{grid-template-columns:repeat(3,minmax(0,1fr))}
+.site-toast{position:fixed;right:24px;bottom:24px;z-index:99999;max-width:min(360px,calc(100vw - 32px));padding:15px 18px;border:1px solid var(--border-color);border-radius:16px;background:var(--card-bg);color:var(--text-color);box-shadow:0 12px 32px rgba(0,0,0,.18);font-size:14px;font-weight:700;line-height:1.5;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .22s ease,transform .22s ease}
+.site-toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:560px){.site-toast{right:16px;bottom:16px;font-size:13px}}
+
 </style>
 </head>
 <body>
@@ -145,7 +152,13 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
         signoutBtn.hidden=false;
         signoutBtn.onclick=()=>{location.href="/signout?redirect=/"};
+        const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
+        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=false});
+        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=false});
       }else{
+        const nav=document.querySelector(".main-nav");if(nav)nav.classList.add("is-logged-out");
+        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{const link=item.querySelector(".nav-trigger");item.hidden=!(link&&["/about","/memorial_hall","/apply"].includes(new URL(link.href,location.href).pathname))});
+        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{const links=[...column.querySelectorAll("a")];column.hidden=!links.length||!links.every(link=>["/about","/memorial_hall","/apply"].includes(new URL(link.href,location.href).pathname))});
         const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=true;
         btn.setAttribute("aria-label","로그인");
         label.textContent="로그인";
@@ -162,6 +175,20 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     }
     window.changePassword=async function(){const user=localStorage.getItem("userId");if(!user){alert("로그인 후 이용할 수 있습니다.");return}const currentPassword=document.getElementById("currentPassword").value,newPassword=document.getElementById("newPassword").value,confirmPassword=document.getElementById("confirmPassword").value,button=document.getElementById("passwordChangeBtn");if(!currentPassword||!newPassword||!confirmPassword){alert("현재 비밀번호와 새 비밀번호를 모두 입력하세요.");return}if(newPassword.length<6){alert("새 비밀번호는 6자 이상이어야 합니다.");return}if(newPassword!==confirmPassword){alert("새 비밀번호가 서로 일치하지 않습니다.");return}if(currentPassword===newPassword){alert("현재 비밀번호와 다른 비밀번호를 입력하세요.");return}button.disabled=true;button.textContent="확인 중...";try{const userRef=doc(db,"users",user),snap=await getDoc(userRef);if(!snap.exists()){alert("사용자 정보를 찾을 수 없습니다.");return}const data=snap.data();if(currentPassword!==data.password){alert("현재 비밀번호가 올바르지 않습니다.");return}await updateDoc(userRef,{password:newPassword});document.getElementById("currentPassword").value="";document.getElementById("newPassword").value="";document.getElementById("confirmPassword").value="";alert("비밀번호가 변경되었습니다.")}catch(e){console.error("비밀번호 변경 실패",e);alert("비밀번호 변경 중 오류가 발생했습니다.")}finally{button.disabled=false;button.textContent="비밀번호 변경"}};
     window.togglePasswordForm=function(){const setting=document.getElementById("passwordSetting"),toggle=setting.querySelector(".password-toggle"),isOpen=setting.classList.toggle("open");toggle.setAttribute("aria-expanded",String(isOpen))};
+    let siteToastTimer;
+    function showSiteToast(message){
+      let toast=document.getElementById("siteToast");
+      if(!toast){toast=document.createElement("div");toast.id="siteToast";toast.className="site-toast";toast.setAttribute("role","status");toast.setAttribute("aria-live","polite");document.body.appendChild(toast)}
+      toast.textContent=message;toast.classList.add("show");clearTimeout(siteToastTimer);siteToastTimer=setTimeout(()=>toast.classList.remove("show"),3200);
+    }
+    document.addEventListener("click",event=>{
+      const link=event.target.closest(".main-nav a[href]");
+      if(!link)return;
+      const user=localStorage.getItem("userId");
+      if(!user&&new URL(link.href,location.href).pathname==="/apply"){
+        event.preventDefault();showSiteToast("지원 가능한 기간이 아닙니다.");
+      }
+    });
     updateUI().then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));});
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
