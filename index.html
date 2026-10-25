@@ -140,7 +140,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       {id:"slide-3",eyebrow:"02 · BUILD WITH AI",title:"AI와 함께\n웹 개발의 다음 단계로.",description:"아이디어를 구체화하고 AI를 활용해 실제로 동작하는 웹 페이지와 프로젝트를 만들어 갑니다.",buttonText:"동아리 소개",buttonUrl:"/about",enabled:true}
     ];
     let mainSlides=defaultMainSlides.filter(s=>s.enabled!==false),mainSlideIndex=0,mainSlideTimer=null;
-    function safeMainUrl(value){const v=String(value||"").trim();if(v.startsWith("/")&&!v.startsWith("//"))return v;if(/^https:\/\/\//i.test(v))return v;return ""}
+    function safeMainUrl(value){const v=String(value||"").trim();if(v.startsWith("/")&&!v.startsWith("//"))return v;if(v.toLowerCase().startsWith("https://"))return v;return ""}
     function renderMainSlide(index,animate=true){
       const root=document.getElementById("mainHeroContent");if(!root||!mainSlides.length)return;
       mainSlideIndex=(index+mainSlides.length)%mainSlides.length;const slide=mainSlides[mainSlideIndex];
