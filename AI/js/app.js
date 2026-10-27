@@ -1,5 +1,19 @@
 import { doc, getDoc, setDoc, serverTimestamp } from "./firebase.js";
-import { mainDb, db } from "./firebase.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+import { mainApp, mainDb, db } from "./firebase.js";
+
+const auth = getAuth(mainApp);
+function waitForAuthUser() {
+    return new Promise((resolve, reject) => {
+        const unsubscribe = onAuthStateChanged(auth, user => {
+            unsubscribe();
+            resolve(user);
+        }, error => {
+            unsubscribe();
+            reject(error);
+        });
+    });
+}
 import { state, $ } from "./state.js";
 import { setStatus, updateProfile, openMenu, closeMenu } from "./ui.js";
 import { loadChats, initializeConversation, newChat } from "./conversations.js";
@@ -12,12 +26,18 @@ import { bindCobyCopy } from "./coby-markup.js";
 import { initCobyInput } from "./input.js";
 
 async function loadUser() {
-    state.currentUserId = localStorage.getItem("userId");
+    const authUser = await waitForAuthUser();
+    const match = (authUser?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
+    state.currentUserId = match?.[1] || "";
     if (!state.currentUserId) {
+        localStorage.removeItem("userId");
+        localStorage.removeItem("firebaseIdToken");
         setStatus("로그인이 필요합니다");
         updateProfile();
+        location.href = "/signin?redirect=" + encodeURIComponent("/AI/");
         return false;
     }
+    localStorage.setItem("userId", state.currentUserId);
     try {
         const snapshot = await getDoc(doc(mainDb, "users", state.currentUserId));
         state.currentPerson = snapshot.exists()
