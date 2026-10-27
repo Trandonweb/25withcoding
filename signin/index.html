@@ -207,7 +207,18 @@ const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsW
   : "/";
 
 onAuthStateChanged(auth, user => {
-  if (user && localStorage.getItem("userId")) location.replace(redirect);
+  const match = (user?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+  if (user && match) {
+    // The Firebase Auth session is authoritative; localStorage is only a UI cache.
+    localStorage.setItem("userId", match[1]);
+    localStorage.removeItem("firebaseIdToken");
+    localStorage.removeItem("firebaseRefreshToken");
+    location.replace(redirect);
+    return;
+  }
+  localStorage.removeItem("userId");
+  localStorage.removeItem("firebaseIdToken");
+  localStorage.removeItem("firebaseRefreshToken");
 });
 
 window.togglePw = () => {
@@ -231,9 +242,8 @@ window.login = async () => {
   loginBtn.innerHTML = '<div class="spinner"></div>';
   try {
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
-    const idToken = await credential.user.getIdToken(true);
     localStorage.setItem("userId", id);
-    localStorage.setItem("firebaseIdToken", idToken);
+    localStorage.removeItem("firebaseIdToken");
     localStorage.removeItem("firebaseRefreshToken");
     location.replace(redirect);
   } catch (error) {
