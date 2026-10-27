@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Admin status must be granted by a trusted server using Firebase Admin SDK.
+    // Never derive admin privileges from localStorage or a client-editable profile field.
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isOwnStudent(studentId) {
+      return signedIn()
+        && request.auth.token.email == studentId + '@auth.25withcoding.kr';
+    }
+
+    match /users/{studentId} {
+      // A student may read only their own profile. Admin access requires a trusted custom claim.
+      allow get: if isOwnStudent(studentId) || isAdmin();
+      allow list: if isAdmin();
+
+      // Students may change only the settings field; all role, name, score, and credential
+      // fields remain protected. Admin writes require a trusted custom claim.
+      allow create: if isAdmin();
+      allow update: if isAdmin()
+        || (isOwnStudent(studentId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['settings']));
+      allow delete: if isAdmin();
+    }
+
+    // Default deny for all other collections/documents until each data model has
+    // an explicit, reviewed policy.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
