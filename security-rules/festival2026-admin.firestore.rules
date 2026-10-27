@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Temporary emergency lock. Confirm the Firebase project ID before publishing.
+    // This intentionally disables every Firestore read and write until reviewed rules exist.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
