@@ -1666,75 +1666,18 @@ function randomAdminChallenge(){
 
 
 function adminTime(){
-
-  const key=prompt("관리자 키를 입력하세요.");
-
-  if(key===null){
-    return false;
-  }
-
-  if(String(key).trim()!=="25withcoidng"){
-    window.__festivalAdminActive=false;
-    adminChallenge=null;
-    console.warn("관리자 키가 올바르지 않습니다.");
-    return false;
-  }
-
-  window.__festivalAdminActive=true;
-  adminChallenge=null;
-  console.log("관리자 모드 활성화");
-  return true;
-
+  window.__festivalAdminActive = false;
+  adminChallenge = null;
+  console.warn("관리자 타이머 기능은 서버 측 인증이 준비될 때까지 비활성화되어 있습니다.");
+  return false;
 }
 
-
-function adminAnswer(
-  answer
-){
-
-  if(
-    !adminChallenge ||
-    adminChallenge.expiresAt<Date.now()
-  ){
-
-    console.warn(
-      "관리자 인증 문제가 만료되었습니다. admin.time()을 다시 실행하세요."
-    );
-
-    return false;
-  }
-
-  const value=
-    String(
-      answer||""
-    )
-    .trim()
-    .toUpperCase();
-
-  if(
-    value!==adminChallenge.answer
-  ){
-
-    console.warn(
-      "관리자 인증 실패"
-    );
-
-    return false;
-  }
-
-  window.__festivalAdminActive=
-    true;
-
-  adminChallenge=null;
-
-  console.log(
-    "관리자 모드 활성화"
-  );
-
-  return true;
-
+function adminAnswer(){
+  window.__festivalAdminActive = false;
+  adminChallenge = null;
+  console.warn("관리자 타이머 기능은 서버 측 인증이 준비될 때까지 비활성화되어 있습니다.");
+  return false;
 }
-
 
 function adminClose(){
 
