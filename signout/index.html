@@ -11,6 +11,7 @@
   <script>
     localStorage.removeItem("userId");
     localStorage.removeItem("firebaseIdToken");
+    localStorage.removeItem("firebaseRefreshToken");
 
     const params = new URLSearchParams(window.location.search);
     const requested = params.get("redirect") || "/";
