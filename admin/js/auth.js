@@ -11,7 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 import {
     getAuth,
-    onAuthStateChanged
+    onAuthStateChanged,
+    signOut
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 import { app, db } from "./firebase.js";
@@ -73,7 +74,7 @@ export async function getCurrentUser(){
 
         localStorage.removeItem("userId");
         localStorage.removeItem("firebaseIdToken");
-        await auth.signOut();
+        await signOut(auth);
 
         location.href="/signin";
 
