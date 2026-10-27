@@ -238,6 +238,7 @@ window.login = async () => {
 
     localStorage.setItem("userId", id);
     localStorage.setItem("firebaseIdToken", result.idToken);
+    if (result.refreshToken) localStorage.setItem("firebaseRefreshToken", result.refreshToken);
     location.replace(redirect);
   } catch (error) {
     console.error("로그인 요청 실패", error);
