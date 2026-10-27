@@ -9,8 +9,27 @@ import {
     updateDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-import { db } from "./firebase.js";
+import { app, db } from "./firebase.js";
+
+const auth = getAuth(app);
+
+function waitForAuthUser() {
+    return new Promise((resolve, reject) => {
+        const unsubscribe = onAuthStateChanged(auth, user => {
+            unsubscribe();
+            resolve(user);
+        }, error => {
+            unsubscribe();
+            reject(error);
+        });
+    });
+}
 
 
 // =====================================
@@ -32,15 +51,20 @@ function getCollectionName(id){
 
 export async function getCurrentUser(){
 
-    const userId = localStorage.getItem("userId");
+    const authUser = await waitForAuthUser();
+    const email = authUser?.email || "";
+    const match = email.match(/^(\d{5})@auth\.25withcoding\.kr$/i);
+    const userId = match?.[1] || "";
 
-    if(!userId){
-
-        location.href="/signin/?redirect=/admin/mirroring.html"+encodeURIComponent(location.pathname);
-
-        throw new Error("로그인 필요");
-
+    if (!authUser || !userId) {
+        localStorage.removeItem("userId");
+        localStorage.removeItem("firebaseIdToken");
+        location.href = "/signin/?redirect=" + encodeURIComponent(location.pathname + location.search);
+        throw new Error("Firebase Authentication 로그인 필요");
     }
+
+    // localStorage is only a compatibility/display cache; identity comes from the verified SDK session.
+    localStorage.setItem("userId", userId);
 
     const ref = doc(db,"users",userId);
 
@@ -49,8 +73,10 @@ export async function getCurrentUser(){
     if(!snap.exists()){
 
         localStorage.removeItem("userId");
+        localStorage.removeItem("firebaseIdToken");
+        await signOut(auth);
 
-        location.href="/login";
+        location.href="/signin";
 
         throw new Error("계정 없음");
 
