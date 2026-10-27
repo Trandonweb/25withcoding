@@ -1,19 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>로그아웃</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>로그아웃 중</title>
 </head>
 <body>
+  <p>로그아웃 중입니다.</p>
+  <script>
+    localStorage.removeItem("userId");
+    localStorage.removeItem("firebaseIdToken");
+    localStorage.removeItem("firebaseRefreshToken");
 
-<script>
-  localStorage.removeItem("userId");
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get("redirect") || "/";
+    const redirect = requested.startsWith("/") && !requested.startsWith("//")
+      ? requested
+      : "/";
 
-  const params = new URLSearchParams(window.location.search);
-  const redirect = params.get("redirect") || "/";
-
-  location.replace(redirect);
-</script>
-
+    location.replace(redirect);
+  </script>
 </body>
 </html>
