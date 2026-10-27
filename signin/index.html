@@ -207,7 +207,7 @@ const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsW
   : "/";
 
 onAuthStateChanged(auth, user => {
-  const match = (user?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+  const match = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if (user && match) {
     // The Firebase Auth session is authoritative; localStorage is only a UI cache.
     localStorage.setItem("userId", match[1]);
