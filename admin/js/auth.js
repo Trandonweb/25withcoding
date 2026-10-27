@@ -33,13 +33,16 @@ function getCollectionName(id){
 export async function getCurrentUser(){
 
     const userId = localStorage.getItem("userId");
+    const idToken = localStorage.getItem("firebaseIdToken");
 
-    if(!userId){
-
-        location.href="/signin/?redirect=/admin/mirroring.html"+encodeURIComponent(location.pathname);
-
-        throw new Error("로그인 필요");
-
+    // userId만 저장된 구형 세션은 인증된 로그인으로 인정하지 않는다.
+    if(!userId || !idToken){
+        localStorage.removeItem("userId");
+        localStorage.removeItem("firebaseIdToken");
+        localStorage.removeItem("firebaseRefreshToken");
+        const redirect = encodeURIComponent(location.pathname + location.search);
+        location.replace("/signin/?redirect=" + redirect);
+        throw new Error("새 인증 방식으로 다시 로그인해야 합니다.");
     }
 
     const ref = doc(db,"users",userId);
@@ -49,8 +52,10 @@ export async function getCurrentUser(){
     if(!snap.exists()){
 
         localStorage.removeItem("userId");
+        localStorage.removeItem("firebaseIdToken");
+        localStorage.removeItem("firebaseRefreshToken");
 
-        location.href="/login";
+        location.replace("/signin/?redirect=" + encodeURIComponent(location.pathname + location.search));
 
         throw new Error("계정 없음");
 
