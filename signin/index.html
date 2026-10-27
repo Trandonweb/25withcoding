@@ -173,51 +173,34 @@
   <button id="loginBtn" onclick="login()">로그인</button>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-  authDomain: "points2026-f5e50.firebaseapp.com",
-  projectId: "points2026-f5e50"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// 테마 동기화 로직
+<script>
+const AUTH_API = "https://25withcoding.trandonwebtoon.workers.dev/login";
 const SETTINGS_KEY = "coding_with_ramen_settings";
 
 function applyStoredSettings() {
-    const saved = localStorage.getItem(SETTINGS_KEY);
-    if (saved) {
-        try {
-            const settings = JSON.parse(saved);
-            if (settings.darkMode) {
-                document.body.classList.add("dark-mode");
-            } else {
-                document.body.classList.remove("dark-mode");
-            }
-            if (settings.primaryColor) {
-                document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
-            }
-        } catch (e) {
-            console.error("설정 로드 실패", e);
-        }
+  const saved = localStorage.getItem(SETTINGS_KEY);
+  if (!saved) return;
+  try {
+    const settings = JSON.parse(saved);
+    document.body.classList.toggle("dark-mode", Boolean(settings.darkMode));
+    if (settings.primaryColor) {
+      document.documentElement.style.setProperty("--primary-color", settings.primaryColor);
     }
+  } catch (error) {
+    console.error("설정 로드 실패", error);
+  }
 }
 
-// 페이지 로드 즉시 테마 적용 (깜빡임 방지)
 applyStoredSettings();
 
-// 로그인 후 돌아갈 주소
 const params = new URLSearchParams(window.location.search);
-const redirect = params.get("redirect") || "/";
+const requestedRedirect = params.get("redirect") || "/";
+const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
+  ? requestedRedirect
+  : "/";
 
-// 이미 로그인된 경우
-if (localStorage.getItem("userId")) {
-  location.href = redirect;
+if (localStorage.getItem("userId") && localStorage.getItem("firebaseIdToken")) {
+  location.replace(redirect);
 }
 
 window.togglePw = () => {
@@ -229,67 +212,47 @@ window.login = async () => {
   const idInput = document.getElementById("id");
   const pwInput = document.getElementById("pw");
   const loginBtn = document.getElementById("loginBtn");
-
   const id = idInput.value.trim();
-  const pw = pwInput.value;
+  const password = pwInput.value;
 
-  if (!id || !pw) {
+  if (!id || !password) {
     alert("학번과 비밀번호를 입력하세요.");
     return;
   }
 
-  // 로그인 시작: 버튼을 로딩 스피너로 변경 및 비활성화
   loginBtn.disabled = true;
   loginBtn.innerHTML = '<div class="spinner"></div>';
 
   try {
-    const snap = await getDoc(doc(db, "users", id));
+    const response = await fetch(AUTH_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentId: id, password })
+    });
+    const result = await response.json().catch(() => ({}));
 
-    if (!snap.exists()) {
-      alert("계정 없음");
-      resetBtn();
-      return;
-    }
-
-    const data = snap.data();
-
-    if (pw !== data.password) {
-      alert("비밀번호 틀림");
-      resetBtn();
+    if (!response.ok || !result.success || !result.idToken) {
+      alert(result.error || "로그인에 실패했습니다. 학번과 비밀번호를 확인해 주세요.");
       return;
     }
 
     localStorage.setItem("userId", id);
-
-    // 기본 비밀번호면 변경 페이지
-    if (data.password === "qwer1234!") {
-      location.href = "/상벌점/change.html";
-      return;
-    }
-
-    // 원래 있던 페이지로 복귀
-    location.href = redirect;
-
-  } catch (e) {
-    console.error(e);
-    alert("로그인 중 오류 발생");
-    resetBtn();
+    localStorage.setItem("firebaseIdToken", result.idToken);
+    location.replace(redirect);
+  } catch (error) {
+    console.error("로그인 요청 실패", error);
+    alert("로그인 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "로그인";
   }
 };
 
-function resetBtn() {
-  const loginBtn = document.getElementById("loginBtn");
-  loginBtn.disabled = false;
-  loginBtn.innerHTML = "로그인";
-}
-
-// 엔터키 입력 시 로그인 실행 이벤트 추가
-document.getElementById("id").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") login();
+document.getElementById("id").addEventListener("keydown", event => {
+  if (event.key === "Enter") window.login();
 });
-
-document.getElementById("pw").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") login();
+document.getElementById("pw").addEventListener("keydown", event => {
+  if (event.key === "Enter") window.login();
 });
 </script>
 
