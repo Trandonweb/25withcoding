@@ -24,7 +24,12 @@ function applyStoredSettings(){try{const s=JSON.parse(localStorage.getItem(SETTI
 applyStoredSettings();
 try{const user=await requireAdmin();document.getElementById("welcome").innerHTML=`안녕하세요, <b>${user.name}</b>님 (${user.role})`;document.getElementById("loading").style.display="none"}catch(e){console.error(e)}
 document.getElementById("homeBtn").onclick=()=>location.href="/index.html";
-document.getElementById("logout").onclick=()=>{localStorage.removeItem("userId");location.href="/signin/"};
+document.getElementById("logout").onclick=()=>{
+  localStorage.removeItem("userId");
+  localStorage.removeItem("firebaseIdToken");
+  localStorage.removeItem("firebaseRefreshToken");
+  location.replace("/signin/");
+};
 document.getElementById("mirroring").onclick=()=>location.href="/admin/mirroring.html";
 document.getElementById("users").onclick=()=>location.href="/admin/users.html";
 document.getElementById("attendance").onclick=()=>location.href="/admin/attendance.html";
