@@ -173,24 +173,31 @@
   <button id="loginBtn" onclick="login()">로그인</button>
 </div>
 
-<script>
-const AUTH_API = "https://25withcoding.trandonwebtoon.workers.dev/login";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain: "points2026-f5e50.firebaseapp.com",
+  projectId: "points2026-f5e50",
+  storageBucket: "points2026-f5e50.firebasestorage.app",
+  messagingSenderId: "248724251417",
+  appId: "1:248724251417:web:02d85cdc4addac98069b88"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const SETTINGS_KEY = "coding_with_ramen_settings";
 
 function applyStoredSettings() {
-  const saved = localStorage.getItem(SETTINGS_KEY);
-  if (!saved) return;
   try {
-    const settings = JSON.parse(saved);
+    const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
     document.body.classList.toggle("dark-mode", Boolean(settings.darkMode));
-    if (settings.primaryColor) {
+    if (typeof settings.primaryColor === "string" && /^#[0-9a-f]{6}$/i.test(settings.primaryColor)) {
       document.documentElement.style.setProperty("--primary-color", settings.primaryColor);
     }
-  } catch (error) {
-    console.error("설정 로드 실패", error);
-  }
+  } catch {}
 }
-
 applyStoredSettings();
 
 const params = new URLSearchParams(window.location.search);
@@ -199,9 +206,9 @@ const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsW
   ? requestedRedirect
   : "/";
 
-if (localStorage.getItem("userId") && localStorage.getItem("firebaseIdToken")) {
-  location.replace(redirect);
-}
+onAuthStateChanged(auth, user => {
+  if (user && localStorage.getItem("userId")) location.replace(redirect);
+});
 
 window.togglePw = () => {
   const pw = document.getElementById("pw");
@@ -215,34 +222,31 @@ window.login = async () => {
   const id = idInput.value.trim();
   const password = pwInput.value;
 
-  if (!id || !password) {
-    alert("학번과 비밀번호를 입력하세요.");
+  if (!/^\d{5}$/.test(id) || !password) {
+    alert("올바른 학번과 비밀번호를 입력하세요.");
     return;
   }
 
   loginBtn.disabled = true;
   loginBtn.innerHTML = '<div class="spinner"></div>';
-
   try {
-    const response = await fetch(AUTH_API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId: id, password })
-    });
-    const result = await response.json().catch(() => ({}));
-
-    if (!response.ok || !result.success || !result.idToken) {
-      alert(result.error || "로그인에 실패했습니다. 학번과 비밀번호를 확인해 주세요.");
-      return;
-    }
-
+    const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
+    const idToken = await credential.user.getIdToken(true);
     localStorage.setItem("userId", id);
-    localStorage.setItem("firebaseIdToken", result.idToken);
-    if (result.refreshToken) localStorage.setItem("firebaseRefreshToken", result.refreshToken);
+    localStorage.setItem("firebaseIdToken", idToken);
+    localStorage.removeItem("firebaseRefreshToken");
     location.replace(redirect);
   } catch (error) {
-    console.error("로그인 요청 실패", error);
-    alert("로그인 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+    console.error("Firebase 로그인 실패", error);
+    const messages = {
+      "auth/invalid-credential": "학번 또는 비밀번호가 올바르지 않습니다.",
+      "auth/user-not-found": "인증 계정을 찾을 수 없습니다. 관리자에게 계정 전환을 요청하세요.",
+      "auth/wrong-password": "학번 또는 비밀번호가 올바르지 않습니다.",
+      "auth/invalid-email": "학번 형식이 올바르지 않습니다.",
+      "auth/too-many-requests": "로그인 시도가 많습니다. 잠시 후 다시 시도하세요.",
+      "auth/network-request-failed": "네트워크 연결을 확인해 주세요."
+    };
+    alert(messages[error.code] || "로그인에 실패했습니다. 계정 전환 상태와 비밀번호를 확인해 주세요.");
   } finally {
     loginBtn.disabled = false;
     loginBtn.textContent = "로그인";
