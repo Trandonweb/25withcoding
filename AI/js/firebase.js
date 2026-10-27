@@ -19,7 +19,9 @@ const cobyFirebaseConfig = {
     appId: "1:248724251417:web:6feaa5781dc538700b18f7"
 };
 
-export const mainDb = getFirestore(initializeApp(mainFirebaseConfig, "mainApp"));
+// Use the default Firebase app so the Auth session created on /signin is shared.
+export const mainApp = initializeApp(mainFirebaseConfig);
+export const mainDb = getFirestore(mainApp);
 export const db = getFirestore(initializeApp(cobyFirebaseConfig, "cobyApp"));
 export const API_URL = "https://two5withcoding.onrender.com/chat";
 
