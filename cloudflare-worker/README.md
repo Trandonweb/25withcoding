@@ -30,3 +30,36 @@ From this directory run `npm install`, then `npx wrangler login` and `npx wrangl
 
 ## Migration status
 The Worker has a health endpoint and a restricted Firebase Auth REST proxy that reads `FIREBASE_API_KEY` from the Cloudflare environment. The existing frontend has not yet been migrated, and Firestore-backed features are not yet moved.
+
+
+## Repository-wide migration audit — 2026-10-28
+
+Three independent GitHub code-search passes were performed for the points2026 project ID, Firebase API-key/config references, Firebase initialization, and Firestore SDK usage. The repository tree was also checked on both `main` and `security/cloudflare-worker-backend`.
+
+**Result: migration is NOT complete. Do not merge or deploy this Worker as a full points2026 replacement.**
+
+The following files still contain direct `points2026-f5e50` Firebase configuration or SDK usage in the current `main` branch and need a feature-by-feature migration:
+
+- `AI/js/firebase.js`
+- `AI/js/settings.js` (also contains a separate COBY AI Firebase config; do not alter that config)
+- `admin/js/firebase.js`
+- `admin/attendance.html`
+- `admin/mirroring.html`
+- `admin/mirroring/client.html`
+- `admin/mirroring/outsider.html`
+- `admin/users.html`
+- `index.html`
+- `index2.html`
+- `settings/index.html`
+- `상벌점/index.html`
+- `상벌점/main.html`
+- `상벌점/admin.html`
+- `상벌점/committee.html`
+- `memorial_hall/2026/index.html`
+- `memorial_hall/2026/coins.html` (also contains a separate festival-likes Firebase config; do not alter that project)
+- `memorial_hall/2026/mini_game_code/online-sync.js`
+- `security-test/index.html`
+
+The branch changes only the sign-in, sign-out, and password-change pages plus the Worker scaffold. The existing Worker has **no Firestore endpoints**, so moving the remaining pages requires dedicated endpoints with Firebase ID-token verification and server-side authorization. Do not solve this by adding a generic Firestore proxy or by simply deleting client config: either would leave the data features unsafe or broken.
+
+The current audit covers the complete recursive text-file tree of the repository's current branches and GitHub code-search results; it does not claim that historical commits, external deployment artifacts, cached copies, or other repositories have been cleaned.
