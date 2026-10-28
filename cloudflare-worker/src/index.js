@@ -2,10 +2,8 @@ const ALLOWED_ORIGINS = new Set([
   "https://25withcoding.kr",
   "https://www.25withcoding.kr",
 ]);
-const AUTH_OPERATIONS = new Set([
-  "signInWithPassword", "signUp", "sendOobCode", "resetPassword",
-  "verifyPasswordResetCode", "confirmPasswordReset", "getAccountInfo", "update",
-]);
+// Keep the public proxy minimal until individual frontend flows are migrated and tested.
+const AUTH_OPERATIONS = new Set(["signInWithPassword"]);
 const MAX_BODY = 16_384;
 const RESET_GENERIC_MESSAGE = "계정이 확인되면 등록된 복구 이메일로 안내를 보냅니다. 메일함과 스팸함을 확인해 주세요.";
 
@@ -140,7 +138,8 @@ async function getGoogleAccessToken(env) {
   cachedGoogleAccessToken = { value: data.access_token, expiresAt: Date.now() + data.expires_in * 1000 };
   return data.access_token;
 }
-async function generatePasswordResetLink(env, email) {
+async function generatePasswordResetLink(env, email, userIp) {
+  if (!userIp) throw new Error("caller_ip_unavailable");
   const accessToken = await getGoogleAccessToken(env);
   const response = await fetch(
     "https://identitytoolkit.googleapis.com/v1/projects/points2026-f5e50/accounts:sendOobCode",
@@ -153,6 +152,7 @@ async function generatePasswordResetLink(env, email) {
       body: JSON.stringify({
         requestType: "PASSWORD_RESET",
         email,
+        userIp,
         returnOobLink: true,
         continueUrl: "https://25withcoding.kr/signin",
       }),
@@ -242,7 +242,8 @@ async function handleRecovery(request, env, url, origin) {
     const recoveryEmail = await env.RECOVERY_STORE.get(`recovery-email:${studentId}`);
     if (!recoveryEmail) return json({ ok: true, message: RESET_GENERIC_MESSAGE }, 200, origin);
     try {
-      const link = await generatePasswordResetLink(env, `${studentId}@auth.25withcoding.kr`);
+      const callerIp = request.headers.get("CF-Connecting-IP");
+      const link = await generatePasswordResetLink(env, `${studentId}@auth.25withcoding.kr`, callerIp);
       await sendPlainTextEmail(env, recoveryEmail, "코딩과 함께라면 비밀번호 재설정", [
         "비밀번호 재설정 요청이 접수되었습니다.",
         "",
