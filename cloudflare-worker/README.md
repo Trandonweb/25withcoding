@@ -80,7 +80,7 @@ The recovery endpoints are deliberately fail-closed until their infrastructure i
 
 ### Required configuration before testing
 
-1. Create a Cloudflare Workers KV namespace and bind it to this Worker with the exact binding name `RECOVERY_STORE`. The binding must be available to the deployed Worker before recovery requests will work.
+1. Create a Cloudflare Workers KV namespace and bind it to this Worker with the exact binding name `RECOVERY_STORE`. The binding must be available to the deployed Worker before recovery requests will work. Reset-link generation uses the authenticated Identity Platform endpoint because `returnOobLink` requires Google OAuth credentials with the `firebaseauth.users.sendEmail` permission.
 2. Create a Resend account and verify a sending domain/address you control. The sender must be a real address on that verified domain.
 3. Set Worker secrets/variables:
    - `FIREBASE_API_KEY` — existing web API key for `points2026-f5e50`; keep it out of source control.
