@@ -68,7 +68,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_POINTS2026_FIREBASE_WEB_API_KEY",
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
   authDomain: "points2026-f5e50.firebaseapp.com",
   projectId: "points2026-f5e50",
   storageBucket: "points2026-f5e50.firebasestorage.app",
@@ -77,11 +77,6 @@ const firebaseConfig = {
 };
 // Keep the existing project configuration local to this file; never add service secrets here.
 const auth = getAuth(initializeApp(firebaseConfig));
-const api = path => fetch(path, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(arguments.length > 1 ? arguments[1] : {})
-});
 async function post(path, body, token) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = "Bearer " + token;
