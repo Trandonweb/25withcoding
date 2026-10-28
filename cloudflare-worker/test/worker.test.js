@@ -136,6 +136,7 @@ test("reset request does not reveal whether a recovery email exists", async () =
     body: JSON.stringify({ studentId: "20623" }),
   }), {
     FIREBASE_API_KEY: "dummy-key",
+    FIREBASE_SERVICE_ACCOUNT_JSON: "{}",
     RESEND_API_KEY: "dummy-mail-key",
     RESEND_FROM_EMAIL: "test@example.com",
     RECOVERY_STORE: store,
