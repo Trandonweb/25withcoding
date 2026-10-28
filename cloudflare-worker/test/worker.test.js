@@ -76,6 +76,18 @@ test("auth route rejects unallowlisted operations before upstream fetch", async 
   }
 });
 
+test("auth proxy blocks account creation and mutation operations", async () => {
+  for (const operation of ["signUp", "update", "sendOobCode", "resetPassword", "getAccountInfo"]) {
+    const response = await worker.fetch(request("/api/points2026/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operation, payload: {} }),
+    }), { FIREBASE_API_KEY: "dummy-secret" });
+    assert.equal(response.status, 400, operation);
+    assert.equal((await response.json()).error, "operation_not_allowed", operation);
+  }
+});
+
 test("auth route rejects malformed JSON", async () => {
   const response = await worker.fetch(request("/api/points2026/auth", {
     method: "POST",
