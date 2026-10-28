@@ -83,8 +83,89 @@ async function sendPlainTextEmail(env, to, subject, text) {
   if (!response.ok) throw new Error("email_delivery_failed");
 }
 function configuredRecovery(env) {
-  return Boolean(env.FIREBASE_API_KEY && env.RESEND_API_KEY && env.RESEND_FROM_EMAIL && env.RECOVERY_STORE);
+  return Boolean(env.FIREBASE_API_KEY && env.FIREBASE_SERVICE_ACCOUNT_JSON && env.RESEND_API_KEY && env.RESEND_FROM_EMAIL && env.RECOVERY_STORE);
 }
+let cachedGoogleAccessToken = null;
+
+function base64Url(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
+}
+function base64UrlText(value) {
+  return base64Url(new TextEncoder().encode(value));
+}
+async function getGoogleAccessToken(env) {
+  if (cachedGoogleAccessToken && cachedGoogleAccessToken.expiresAt > Date.now() + 60_000) {
+    return cachedGoogleAccessToken.value;
+  }
+  if (!env.FIREBASE_SERVICE_ACCOUNT_JSON) throw new Error("firebase_admin_not_configured");
+  let serviceAccount;
+  try { serviceAccount = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT_JSON); }
+  catch { throw new Error("firebase_admin_not_configured"); }
+  if (!serviceAccount.client_email || !serviceAccount.private_key) throw new Error("firebase_admin_not_configured");
+
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64UrlText(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claims = base64UrlText(JSON.stringify({
+    iss: serviceAccount.client_email,
+    scope: "https://www.googleapis.com/auth/identitytoolkit",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600,
+  }));
+  const unsigned = header + "." + claims;
+  const pem = serviceAccount.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\\s/g, "");
+  const keyBytes = Uint8Array.from(atob(pem), character => character.charCodeAt(0));
+  const key = await crypto.subtle.importKey(
+    "pkcs8", keyBytes,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false, ["sign"],
+  );
+  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(unsigned));
+  const assertion = unsigned + "." + base64Url(new Uint8Array(signature));
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+  if (!response.ok) throw new Error("google_oauth_unavailable");
+  const data = await response.json();
+  if (typeof data.access_token !== "string" || !Number.isFinite(data.expires_in)) {
+    throw new Error("google_oauth_unavailable");
+  }
+  cachedGoogleAccessToken = { value: data.access_token, expiresAt: Date.now() + data.expires_in * 1000 };
+  return data.access_token;
+}
+async function generatePasswordResetLink(env, email) {
+  const accessToken = await getGoogleAccessToken(env);
+  const response = await fetch(
+    "https://identitytoolkit.googleapis.com/v1/projects/points2026-f5e50/accounts:sendOobCode",
+    {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + accessToken,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        requestType: "PASSWORD_RESET",
+        email,
+        returnOobLink: true,
+        continueUrl: "https://25withcoding.kr/signin",
+      }),
+    },
+  );
+  let data = {};
+  try { data = await response.json(); } catch {}
+  if (!response.ok || typeof data.oobLink !== "string" || !/^https:\/\//i.test(data.oobLink)) {
+    throw new Error("password_reset_link_unavailable");
+  }
+  return data.oobLink;
+}
+
 async function handleRecovery(request, env, url, origin) {
   if (!configuredRecovery(env)) return json({ error: "recovery_service_not_configured" }, 503, origin);
   const parsed = await readJson(request);
@@ -161,15 +242,7 @@ async function handleRecovery(request, env, url, origin) {
     const recoveryEmail = await env.RECOVERY_STORE.get(`recovery-email:${studentId}`);
     if (!recoveryEmail) return json({ ok: true, message: RESET_GENERIC_MESSAGE }, 200, origin);
     try {
-      const { response, data } = await firebaseRequest(env, "sendOobCode", {
-        requestType: "PASSWORD_RESET",
-        email: `${studentId}@auth.25withcoding.kr`,
-        returnOobLink: true,
-      });
-      const link = data?.oobLink;
-      if (!response.ok || typeof link !== "string" || !/^https:\/\//i.test(link)) {
-        return json({ ok: true, message: RESET_GENERIC_MESSAGE }, 200, origin);
-      }
+      const link = await generatePasswordResetLink(env, `${studentId}@auth.25withcoding.kr`);
       await sendPlainTextEmail(env, recoveryEmail, "코딩과 함께라면 비밀번호 재설정", [
         "비밀번호 재설정 요청이 접수되었습니다.",
         "",
