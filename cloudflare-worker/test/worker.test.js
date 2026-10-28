@@ -111,3 +111,38 @@ test("auth route forwards only allowlisted operation to fixed Google endpoint", 
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("recovery routes fail closed until mail and KV are configured", async () => {
+  const response = await worker.fetch(request("/api/points2026/recovery/request-reset", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ studentId: "20623" }),
+  }), {});
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "recovery_service_not_configured");
+});
+
+test("reset request does not reveal whether a recovery email exists", async () => {
+  const store = {
+    values: new Map(),
+    async get(key) { return this.values.get(key) ?? null; },
+    async put(key, value) { this.values.set(key, value); },
+    async delete(key) { this.values.delete(key); },
+  };
+  const response = await worker.fetch(request("/api/points2026/recovery/request-reset", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ studentId: "20623" }),
+  }), {
+    FIREBASE_API_KEY: "dummy-key",
+    RESEND_API_KEY: "dummy-mail-key",
+    RESEND_FROM_EMAIL: "test@example.com",
+    RECOVERY_STORE: store,
+  });
+  assert.equal(response.status, 200);
+  const data = await response.json();
+  assert.equal(data.ok, true);
+  assert.match(data.message, /등록된 복구 이메일/);
+  assert.equal(store.values.get("reset-throttle:20623"), "1");
+});
