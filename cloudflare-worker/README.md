@@ -19,7 +19,7 @@ npx wrangler secret put FIREBASE_API_KEY
 Enter the existing `points2026-f5e50` Firebase Web API key in the secure prompt. Do not put the key in this repository or paste it into chat.
 
 ## Important limitations
-- The auth endpoint is not yet connected to the existing sign-in page; the frontend must be changed to call it before the browser stops using its embedded Firebase config.
+- The existing sign-in, password-change, and sign-out pages have deliberately been kept on their current Firebase SDK flow for now. Calling this Worker from sign-in alone would return REST tokens without creating the Firebase SDK session required by the rest of the site, breaking protected pages. These pages must be migrated together with the downstream auth/session consumers.
 - This endpoint does not replace Firestore. Student profiles, roles, points, attendance, settings, and admin features still need dedicated routes with server-side ID-token verification and authorization.
 - A Firebase Web API key is a project identifier, not a service-account credential. Moving it server-side is useful for the requested migration but does not itself secure the database. Keep restrictive Firestore rules and API restrictions in place.
 - Do not add a generic Firestore read/write proxy. Do not trust client-supplied role or student identifiers.
@@ -60,6 +60,11 @@ The following files still contain direct `points2026-f5e50` Firebase configurati
 - `memorial_hall/2026/mini_game_code/online-sync.js`
 - `security-test/index.html`
 
-The branch changes only the sign-in, sign-out, and password-change pages plus the Worker scaffold. The existing Worker has **no Firestore endpoints**, so moving the remaining pages requires dedicated endpoints with Firebase ID-token verification and server-side authorization. Do not solve this by adding a generic Firestore proxy or by simply deleting client config: either would leave the data features unsafe or broken.
+The branch currently contains the Worker scaffold and regression tests. The existing sign-in, sign-out, and password-change pages were restored to their original Firebase SDK behavior to avoid introducing a partial, incompatible auth migration. The Worker has **no Firestore endpoints**, so moving the remaining pages requires dedicated endpoints with Firebase ID-token verification and server-side authorization. Do not solve this by adding a generic Firestore proxy or by simply deleting client config: either would leave the data features unsafe or broken.
 
 The current audit covers the complete recursive text-file tree of the repository's current branches and GitHub code-search results; it does not claim that historical commits, external deployment artifacts, cached copies, or other repositories have been cleaned.
+
+
+## Worker regression tests
+
+Run `npm test` from this directory. The Node built-in test suite checks health-secret non-disclosure, origin rejection, fail-closed behavior when the secret is absent, JSON validation, operation allowlisting, fixed upstream routing, and unsupported-route handling. These are local regression tests only; they do not prove production deployment or real Firebase account compatibility.
