@@ -90,7 +90,7 @@ let cachedGoogleAccessToken = null;
 function base64Url(bytes) {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
+  return btoa(binary).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 function base64UrlText(value) {
   return base64Url(new TextEncoder().encode(value));
@@ -115,7 +115,7 @@ async function getGoogleAccessToken(env) {
     exp: now + 3600,
   }));
   const unsigned = header + "." + claims;
-  const pem = serviceAccount.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\\s/g, "");
+  const pem = serviceAccount.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, "");
   const keyBytes = Uint8Array.from(atob(pem), character => character.charCodeAt(0));
   const key = await crypto.subtle.importKey(
     "pkcs8", keyBytes,
