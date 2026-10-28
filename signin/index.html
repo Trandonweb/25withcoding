@@ -2,81 +2,274 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
   <title>코딩과 함께라면_로그인</title>
   <style>
-    :root{--bg:#f0f0f0;--card:#fff;--text:#111;--sub:#666;--input:#f8fafc;--border:#e1e8ed;--primary:#27ae60}
-    body.dark-mode{--bg:#121212;--card:#1e1e1e;--text:#fff;--sub:#aaa;--input:#2a2a2a;--border:#333}
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;background:var(--bg);color:var(--text);font-family:'Malgun Gothic',sans-serif}
-    .card{width:min(100%,380px);padding:35px 30px;border:1px solid var(--border);border-radius:24px;background:var(--card);text-align:center;box-shadow:0 8px 30px #0001}
-    h1{font-size:20px;margin:0 0 8px}h2{font-size:14px;color:var(--sub);font-weight:normal;margin:0 0 25px}
-    input{width:100%;padding:14px 16px;margin:8px 0;border:1px solid var(--border);border-radius:16px;background:var(--input);color:var(--text);font-size:14px;outline:none}
-    input:focus{border-color:var(--primary)}
-    .pw-wrap{position:relative}.pw-wrap input{padding-right:48px}.toggle{position:absolute;right:15px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:.7}
-    button{width:100%;height:50px;margin-top:15px;border:0;border-radius:16px;background:var(--primary);color:#fff;font-weight:bold;font-size:15px;cursor:pointer}
-    button:disabled{opacity:.7;cursor:wait}.message{min-height:20px;margin-top:12px;color:var(--sub);font-size:13px;line-height:1.5}
+    :root {
+      --bg-color: #f0f0f0;
+      --card-bg: #ffffff;
+      --text-color: #111111;
+      --sub-text: #666666;
+      --input-bg: #f8fafc;
+      --input-border: #e1e8ed;
+      --input-focus-bg: #ffffff;
+      --primary-color: #27ae60;
+      --btn-bg: var(--primary-color);
+      --btn-hover: color-mix(in srgb, var(--primary-color) 85%, black);
+      --btn-text: #ffffff;
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1E1E1E;
+      --text-color: #FFFFFF;
+      --sub-text: #AAAAAA;
+      --input-bg: #2A2A2A;
+      --input-border: #333333;
+      --input-focus-bg: #1E1E1E;
+      --btn-bg: var(--primary-color);
+      --btn-hover: color-mix(in srgb, var(--primary-color) 85%, black);
+      --btn-text: #FFFFFF;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Malgun Gothic', sans-serif;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .card {
+      background: var(--card-bg);
+      color: var(--text-color);
+      padding: 35px 30px;
+      border-radius: 24px;
+      text-align: center;
+      width: 320px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--input-border);
+      transition: background 0.2s, border 0.2s;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    h2 {
+      font-size: 14px;
+      margin-bottom: 25px;
+      color: var(--sub-text);
+      font-weight: normal;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px 16px;
+      margin: 8px 0;
+      border-radius: 16px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--primary-color);
+      background: var(--input-focus-bg);
+    }
+
+    .pw-wrap {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .pw-wrap input {
+      margin-right: 0;
+    }
+
+    .toggle {
+      position: absolute;
+      right: 15px;
+      cursor: pointer;
+      font-size: 16px;
+      opacity: 0.6;
+      transition: 0.2s;
+      user-select: none;
+    }
+
+    .toggle:hover {
+      opacity: 1;
+    }
+
+    button {
+      position: relative;
+      padding: 14px;
+      margin-top: 15px;
+      width: 100%;
+      height: 50px;
+      border-radius: 16px;
+      border: none;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      transition: filter 0.2s, background 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    button:hover:not(:disabled) {
+      filter: brightness(0.9);
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.8;
+    }
+
+    /* 로딩 스피너 스타일 */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
+
 <body>
-  <main class="card">
-    <h1>2026 코딩과 함께라면</h1><h2>로그인</h2>
-    <input id="id" inputmode="numeric" autocomplete="username" maxlength="5" placeholder="학번을 입력하세요.">
-    <div class="pw-wrap"><input id="pw" type="password" autocomplete="current-password" placeholder="비밀번호를 입력하세요."><span class="toggle" role="button" tabindex="0" aria-label="비밀번호 표시" onclick="togglePw()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePw()}">👁</span></div>
-    <button id="loginBtn" type="button" onclick="login()">로그인</button>
-    <div id="message" class="message" role="status" aria-live="polite"></div>
-  </main>
-<script>
-const API_PATH = "/api/points2026/auth";
-const SETTINGS_KEY = "coding_with_ramen_settings";
-function applySettings(){try{const s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");document.body.classList.toggle("dark-mode",!!s.darkMode);if(typeof s.primaryColor==="string"&&/^#[0-9a-f]{6}$/i.test(s.primaryColor))document.documentElement.style.setProperty("--primary",s.primaryColor)}catch{}}
-applySettings();
-const params=new URLSearchParams(location.search);
-const requestedRedirect=params.get("redirect")||"/";
-const redirect=requestedRedirect.startsWith("/")&&!requestedRedirect.startsWith("//")?requestedRedirect:"/";
-if(localStorage.getItem("firebaseIdToken")&&/^\d{5}$/.test(localStorage.getItem("userId")||"")) location.replace(redirect);
-window.togglePw=()=>{const p=document.getElementById("pw");p.type=p.type==="password"?"text":"password"};
-async function callAuth(operation,payload){
-  const response=await fetch(API_PATH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({operation,payload})});
-  let data={};try{data=await response.json()}catch{}
-  if(!response.ok||data.error?.message||data.error) {
-    const code=data.error?.message||data.error||"REQUEST_FAILED";
-    throw new Error(String(code));
-  }
-  return data;
-}
-window.login=async()=>{
-  const id=document.getElementById("id").value.trim();
-  const password=document.getElementById("pw").value;
-  const button=document.getElementById("loginBtn"),message=document.getElementById("message");
-  if(!/^\d{5}$/.test(id)||!password){message.textContent="올바른 학번과 비밀번호를 입력하세요.";return}
-  button.disabled=true;button.textContent="로그인 중...";message.textContent="";
-  try{
-    const result=await callAuth("signInWithPassword",{email:id+"@auth.25withcoding.kr",password,returnSecureToken:true});
-    if(!result.idToken)throw new Error("INVALID_AUTH_RESPONSE");
-    localStorage.setItem("userId",id);
-    localStorage.setItem("firebaseIdToken",result.idToken);
-    if(result.refreshToken)localStorage.setItem("firebaseRefreshToken",result.refreshToken);
-    else localStorage.removeItem("firebaseRefreshToken");
-    location.replace(redirect);
-  }catch(error){
-    console.error("로그인 요청 실패",error.message);
-    const code=error.message;
-    const messages={
-      "EMAIL_NOT_FOUND":"학번 또는 비밀번호가 올바르지 않습니다.",
-      "INVALID_PASSWORD":"학번 또는 비밀번호가 올바르지 않습니다.",
-      "INVALID_LOGIN_CREDENTIALS":"학번 또는 비밀번호가 올바르지 않습니다.",
-      "USER_DISABLED":"사용이 중지된 계정입니다. 관리자에게 문의하세요.",
-      "TOO_MANY_ATTEMPTS_TRY_LATER":"로그인 시도가 많습니다. 잠시 후 다시 시도하세요.",
-      "INVALID_EMAIL":"학번 형식이 올바르지 않습니다.",
-      "Failed to fetch":"Cloudflare 인증 API에 연결할 수 없습니다."
-    };
-    message.textContent=messages[code]||"로그인에 실패했습니다. Cloudflare API 배포 상태와 계정을 확인해 주세요.";
-  }finally{button.disabled=false;button.textContent="로그인"}
+
+<div class="card">
+  <h1>2026 코딩과 함께라면</h1>
+  <h2>로그인</h2>
+
+  <input id="id" placeholder="학번을 입력하세요.">
+
+  <div class="pw-wrap">
+    <input id="pw" type="password" placeholder="비밀번호를 입력하세요.">
+    <span class="toggle" onclick="togglePw()">👁</span>
+  </div>
+
+  <button id="loginBtn" onclick="login()">로그인</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain: "points2026-f5e50.firebaseapp.com",
+  projectId: "points2026-f5e50",
+  storageBucket: "points2026-f5e50.firebasestorage.app",
+  messagingSenderId: "248724251417",
+  appId: "1:248724251417:web:02d85cdc4addac98069b88"
 };
-document.getElementById("id").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
-document.getElementById("pw").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const SETTINGS_KEY = "coding_with_ramen_settings";
+
+function applyStoredSettings() {
+  try {
+    const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+    document.body.classList.toggle("dark-mode", Boolean(settings.darkMode));
+    if (typeof settings.primaryColor === "string" && /^#[0-9a-f]{6}$/i.test(settings.primaryColor)) {
+      document.documentElement.style.setProperty("--primary-color", settings.primaryColor);
+    }
+  } catch {}
+}
+applyStoredSettings();
+
+const params = new URLSearchParams(window.location.search);
+const requestedRedirect = params.get("redirect") || "/";
+const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
+  ? requestedRedirect
+  : "/";
+
+onAuthStateChanged(auth, user => {
+  const match = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
+  if (user && match) {
+    // The Firebase Auth session is authoritative; localStorage is only a UI cache.
+    localStorage.setItem("userId", match[1]);
+    localStorage.removeItem("firebaseIdToken");
+    localStorage.removeItem("firebaseRefreshToken");
+    location.replace(redirect);
+    return;
+  }
+  localStorage.removeItem("userId");
+  localStorage.removeItem("firebaseIdToken");
+  localStorage.removeItem("firebaseRefreshToken");
+});
+
+window.togglePw = () => {
+  const pw = document.getElementById("pw");
+  pw.type = pw.type === "password" ? "text" : "password";
+};
+
+window.login = async () => {
+  const idInput = document.getElementById("id");
+  const pwInput = document.getElementById("pw");
+  const loginBtn = document.getElementById("loginBtn");
+  const id = idInput.value.trim();
+  const password = pwInput.value;
+
+  if (!/^\d{5}$/.test(id) || !password) {
+    alert("올바른 학번과 비밀번호를 입력하세요.");
+    return;
+  }
+
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = '<div class="spinner"></div>';
+  try {
+    const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
+    localStorage.setItem("userId", id);
+    localStorage.removeItem("firebaseIdToken");
+    localStorage.removeItem("firebaseRefreshToken");
+    location.replace(redirect);
+  } catch (error) {
+    console.error("Firebase 로그인 실패", error);
+    const messages = {
+      "auth/invalid-credential": "학번 또는 비밀번호가 올바르지 않습니다.",
+      "auth/user-not-found": "인증 계정을 찾을 수 없습니다. 관리자에게 계정 전환을 요청하세요.",
+      "auth/wrong-password": "학번 또는 비밀번호가 올바르지 않습니다.",
+      "auth/invalid-email": "학번 형식이 올바르지 않습니다.",
+      "auth/too-many-requests": "로그인 시도가 많습니다. 잠시 후 다시 시도하세요.",
+      "auth/network-request-failed": "네트워크 연결을 확인해 주세요."
+    };
+    alert(messages[error.code] || "로그인에 실패했습니다. 계정 전환 상태와 비밀번호를 확인해 주세요.");
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "로그인";
+  }
+};
+
+document.getElementById("id").addEventListener("keydown", event => {
+  if (event.key === "Enter") window.login();
+});
+document.getElementById("pw").addEventListener("keydown", event => {
+  if (event.key === "Enter") window.login();
+});
 </script>
+
 </body>
 </html>
