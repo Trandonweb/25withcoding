@@ -157,6 +157,7 @@
   
     .forgot-link { display:block; margin-top:14px; color:var(--sub-text); font-size:13px; text-decoration:none; }
     .forgot-link:hover { text-decoration:underline; }
+    .login-status { min-height: 18px; margin-top: 10px; color: var(--sub-text); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
   </style>
 </head>
 
@@ -174,6 +175,7 @@
   </div>
 
   <button id="loginBtn" onclick="login()">로그인</button>
+  <div id="loginStatus" class="login-status" role="status" aria-live="polite"></div>
   <a class="forgot-link" href="/password_reset">비밀번호를 잊으셨나요?</a>
 </div>
 
@@ -237,6 +239,7 @@ window.login = async () => {
   const idInput = document.getElementById("id");
   const pwInput = document.getElementById("pw");
   const loginBtn = document.getElementById("loginBtn");
+  const loginStatus = document.getElementById("loginStatus");
   const id = idInput.value.trim();
   const password = pwInput.value;
 
@@ -245,6 +248,7 @@ window.login = async () => {
     return;
   }
 
+  loginStatus.textContent = "";
   loginBtn.disabled = true;
   loginBtn.innerHTML = '<div class="spinner"></div>';
   const usedTemporaryPassword = password === "qwer1234!";
@@ -262,16 +266,21 @@ window.login = async () => {
     }
   } catch (error) {
     sessionStorage.removeItem("forcePasswordChangeAfterLogin");
-    console.error("Firebase 로그인 실패", error);
+    console.error("Firebase 로그인 실패 코드:", error?.code || "unknown", error);
     const messages = {
-      "auth/invalid-credential": "학번 또는 비밀번호가 올바르지 않습니다.",
-      "auth/user-not-found": "인증 계정을 찾을 수 없습니다. 관리자에게 계정 전환을 요청하세요.",
-      "auth/wrong-password": "학번 또는 비밀번호가 올바르지 않습니다.",
-      "auth/invalid-email": "학번 형식이 올바르지 않습니다.",
-      "auth/too-many-requests": "로그인 시도가 많습니다. 잠시 후 다시 시도하세요.",
-      "auth/network-request-failed": "네트워크 연결을 확인해 주세요."
+      "auth/invalid-credential": "학번 계정이 없거나 비밀번호가 일치하지 않습니다. 계정이 실제로 존재하는지 관리자에게 확인해 주세요.",
+      "auth/user-not-found": "인증 계정을 찾을 수 없습니다. 관리자에게 계정 등록 상태를 확인해 주세요.",
+      "auth/wrong-password": "비밀번호가 일치하지 않습니다. 비밀번호 재설정이 필요할 수 있습니다.",
+      "auth/invalid-email": "학번으로 만든 로그인 주소 형식이 올바르지 않습니다.",
+      "auth/too-many-requests": "로그인 시도가 많습니다. 잠시 후 다시 시도해 주세요.",
+      "auth/network-request-failed": "네트워크 연결을 확인해 주세요.",
+      "auth/operation-not-allowed": "Firebase Authentication에서 이메일/비밀번호 로그인이 비활성화되어 있습니다.",
+      "auth/invalid-api-key": "Firebase 설정의 API 키가 올바르지 않습니다.",
+      "auth/app-not-authorized": "현재 도메인이 Firebase Authentication에서 허용되지 않았습니다."
     };
-    alert(messages[error.code] || "로그인에 실패했습니다. 계정 전환 상태와 비밀번호를 확인해 주세요.");
+    const code = error?.code || "unknown";
+    loginStatus.textContent = (messages[code] || "로그인에 실패했습니다. 아래 오류 코드를 관리자에게 전달해 주세요.") + " (오류 코드: " + code + ")";
+    alert(loginStatus.textContent);
   } finally {
     loginBtn.disabled = false;
     loginBtn.textContent = "로그인";
