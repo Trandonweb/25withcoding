@@ -213,11 +213,14 @@ const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsW
 onAuthStateChanged(auth, user => {
   const match = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if (user && match) {
-    // The Firebase Auth session is authoritative; localStorage is only a UI cache.
     localStorage.setItem("userId", match[1]);
     localStorage.removeItem("firebaseIdToken");
     localStorage.removeItem("firebaseRefreshToken");
-    location.replace(redirect);
+    if (sessionStorage.getItem("forcePasswordChangeAfterLogin") === "1") {
+      location.replace("/password_change?force=1&redirect=" + encodeURIComponent(redirect));
+    } else {
+      location.replace(redirect);
+    }
     return;
   }
   localStorage.removeItem("userId");
@@ -244,13 +247,21 @@ window.login = async () => {
 
   loginBtn.disabled = true;
   loginBtn.innerHTML = '<div class="spinner"></div>';
+  const usedTemporaryPassword = password === "qwer1234!";
+  if (usedTemporaryPassword) sessionStorage.setItem("forcePasswordChangeAfterLogin", "1");
+  else sessionStorage.removeItem("forcePasswordChangeAfterLogin");
   try {
-    const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
+    await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
     localStorage.setItem("userId", id);
     localStorage.removeItem("firebaseIdToken");
     localStorage.removeItem("firebaseRefreshToken");
-    location.replace(redirect);
+    if (usedTemporaryPassword) {
+      location.replace("/password_change?force=1&redirect=" + encodeURIComponent(redirect));
+    } else {
+      location.replace(redirect);
+    }
   } catch (error) {
+    sessionStorage.removeItem("forcePasswordChangeAfterLogin");
     console.error("Firebase 로그인 실패", error);
     const messages = {
       "auth/invalid-credential": "학번 또는 비밀번호가 올바르지 않습니다.",
