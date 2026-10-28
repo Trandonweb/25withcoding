@@ -7,7 +7,7 @@ This Worker is scoped to the `points2026-f5e50` project. It does not migrate the
 - `POST /api/points2026/auth`: forwards a fixed allowlist of Firebase Authentication REST operations to Google Identity Toolkit. The browser sends `{ "operation": "...", "payload": { ... } }`; it cannot select an upstream URL or project.
 - All other paths return `404 not_implemented`. No generic Firestore proxy exists.
 
-Allowed auth operations: `signInWithPassword`, `signUp`, `sendOobCode`, `resetPassword`, `verifyPasswordResetCode`, `confirmPasswordReset`, `getAccountInfo`.
+Allowed auth operation: `signInWithPassword` only. Other Firebase Auth operations are intentionally blocked until each flow has a dedicated, tested integration.
 
 ## Cloudflare secret
 Set the Worker secret named `FIREBASE_API_KEY` in the Cloudflare dashboard (Workers & Pages → your Worker → Settings → Variables and Secrets) or with Wrangler:
@@ -29,7 +29,7 @@ Enter the existing `points2026-f5e50` Firebase Web API key in the secure prompt.
 From this directory run `npm install`, then `npx wrangler login` and `npx wrangler deploy` after reviewing the code. Do not switch production traffic until the frontend and all required points2026 routes have been migrated and tested.
 
 ## Migration status
-The Worker has a health endpoint and a restricted Firebase Auth REST proxy that reads `FIREBASE_API_KEY` from the Cloudflare environment. The existing frontend has not yet been migrated, and Firestore-backed features are not yet moved.
+The Worker has a health endpoint and a minimal Firebase Auth REST proxy that currently permits only `signInWithPassword` and reads `FIREBASE_API_KEY` from the Cloudflare environment. Password-reset link generation forwards Cloudflare's `CF-Connecting-IP` to Identity Platform because that API requires the caller IP for `PASSWORD_RESET`. The existing frontend has not yet been migrated, and Firestore-backed features are not yet moved.
 
 
 ## Repository-wide migration audit — 2026-10-28
