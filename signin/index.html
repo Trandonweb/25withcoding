@@ -154,6 +154,9 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+  
+    .forgot-link { display:block; margin-top:14px; color:var(--sub-text); font-size:13px; text-decoration:none; }
+    .forgot-link:hover { text-decoration:underline; }
   </style>
 </head>
 
@@ -170,7 +173,7 @@
     <span class="toggle" onclick="togglePw()">👁</span>
   </div>
 
-  <button id="loginBtn" onclick="login()">로그인</button>
+  <button id="loginBtn" onclick="login()">로그인</button>\n  <a class="forgot-link" href="/password_reset">비밀번호를 잊으셨나요?</a>
 </div>
 
 <script type="module">
