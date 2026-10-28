@@ -58,7 +58,7 @@ async function authenticatedStudent(request, env) {
   const { response, data } = await firebaseRequest(env, "lookup", { idToken: match[1] });
   const user = data?.users?.[0];
   const emailMatch = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
-  if (!response.ok || !emailMatch || user.emailVerified === false) throw new Error("authentication_required");
+  if (!response.ok || !emailMatch) throw new Error("authentication_required");
   return { studentId: emailMatch[1], email: user.email };
 }
 function validEmail(value) {
