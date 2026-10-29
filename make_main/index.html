@@ -38,9 +38,9 @@ body.dark-mode{--bg:#111713;--surface:#1b241e;--text:#eef7f0;--muted:#a3b3a7;--l
 <header class="top"><button class="back" id="backBtn">← 관리자</button><div class="top-title"><h1>메인페이지 설계</h1><p>콘텐츠 제작 · 순서 편집 · GitHub JSON 저장</p></div><span class="status" id="status">관리자 확인 중…</span></header>
 <main class="canvas-layout">
 <section class="tool-panel">
-  <h3>페이지</h3><h3 style="margin-top:18px">추가 도구</h3><div class="tool-grid"><button class="tool" data-tool="text">T 텍스트</button><button class="tool" data-tool="rect">▰ 사각형</button><button class="tool" data-tool="circle">○ 원형</button><button class="tool" data-tool="line">／ 선</button><button class="tool" data-tool="image">▧ 이미지</button><button class="tool" data-tool="button">↗ 버튼</button></div><p class="auto-note">도구를 누르면 캔버스에 개체가 추가됩니다.</p>
-  <div id="pageList"></div>
+  <h3>페이지 관리</h3><p class="auto-note">페이지를 선택해 편집하거나 새 페이지를 추가하세요.</p><div id="pageList"></div>
   <div class="buttons"><button class="btn secondary" id="addPage">＋ 새 페이지</button><button class="btn ghost" id="duplicatePage">복제</button></div>
+  <div style="border-top:1px solid var(--line);margin:16px 0"></div><h3>추가 도구</h3><div class="tool-grid"><button class="tool" data-tool="text">T 텍스트</button><button class="tool" data-tool="rect">▰ 사각형</button><button class="tool" data-tool="circle">○ 원형</button><button class="tool" data-tool="line">／ 선</button><button class="tool" data-tool="image">▧ 이미지</button><button class="tool" data-tool="button">↗ 버튼</button></div><p class="auto-note">도구를 누르면 캔버스에 개체가 추가됩니다.</p>
   <div class="page-schedule">
     <h3>페이지 노출 예약</h3>
     <label class="toggle"><input type="checkbox" id="pageEnabled" checked> 페이지 노출</label>
@@ -97,7 +97,7 @@ import { requireAdmin } from "/admin/js/auth.js";
 const OWNER="Trandonweb",REPO="25withcoding",MAIN_PATH="data/main-page.json";
 const $=id=>document.getElementById(id);
 let adminUser=null,mainData={version:3,settings:{enabled:true,startAt:"",endAt:""},slides:[],elements:[],canvasPages:[]};
-let pages=[],pageIndex=0,selectedId=null,connected=false,autoSaveTimer=null,saving=false,editRevision=0,undoStack=[],redoStack=[],dragState=null;
+let pages=[{id:"page-1",title:"페이지 1",enabled:true,startAt:"",endAt:"",background:"#ffffff",objects:[]}],pageIndex=0,selectedId=null,connected=false,autoSaveTimer=null,saving=false,editRevision=0,undoStack=[],redoStack=[],dragState=null;
 const clone=v=>JSON.parse(JSON.stringify(v));
 const id=prefix=>prefix+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
 const safeUrl=value=>{const v=String(value||"").trim();return v.startsWith("/")&&!v.startsWith("//")?v:/^https?:\/\/[^\s]+$/i.test(v)?v:""};
@@ -149,6 +149,6 @@ $("sendBackBtn").onclick=()=>{const o=currentObject();if(!o)return;pushHistory()
 $("undoBtn").onclick=()=>{if(!undoStack.length)return;redoStack.push(clone(pages));pages=undoStack.pop();pageIndex=Math.min(pageIndex,pages.length-1);selectedId=null;renderAll();changed()};
 $("redoBtn").onclick=()=>{if(!redoStack.length)return;undoStack.push(clone(pages));pages=redoStack.pop();pageIndex=Math.min(pageIndex,pages.length-1);selectedId=null;renderAll();changed()};
 $("backBtn").onclick=()=>location.href="/admin/";
-window.addEventListener("beforeunload",ev=>{if(connected&&autoSaveTimer){ev.preventDefault();ev.returnValue=""}});
+window.addEventListener("beforeunload",ev=>{if(connected&&(autoSaveTimer||saving)){ev.preventDefault();ev.returnValue=""}});
 try{adminUser=await requireAdmin();status("관리자 확인됨 · GitHub 연결 필요")}catch(e){console.error(e);status("권한 확인 실패")}
 </script>
