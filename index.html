@@ -111,7 +111,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     </nav>
     <div class="header-account">
       <span id="studentNumber" class="student-number" hidden></span>
-      <div class="profile-menu-wrap">
+      <div id="profileMenuWrap" class="profile-menu-wrap">
         <button id="authBtn" class="auth-btn" type="button" aria-haspopup="true" aria-expanded="false"><img id="profileAvatar" class="profile-mark" alt="프로필 캐릭터"><span id="authLabel">로그인</span></button>
         <div id="profileDropdown" class="profile-dropdown" role="menu">
           <div id="profileAccountLabel" class="profile-account-label" role="group"><div class="profile-info-row"><span>학번</span><strong id="profileStudentNumber">—</strong></div><div class="profile-info-row"><span>이름</span><strong id="profileStudentName">—</strong></div></div>
@@ -262,6 +262,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       const signoutBtn=document.getElementById("signoutBtn");
       if(user){
         const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=false;
+        dropdown.hidden=false;
         const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
         let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
         const adminNav=document.getElementById("adminNavItem");
@@ -280,7 +281,8 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=false});
         document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=false});
       }else{
-        const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=true;
+        const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=false;
+        dropdown.classList.remove("open");dropdown.hidden=true;
         const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.add("logged-out-account");
         const nav=document.querySelector(".main-nav");if(nav)nav.classList.add("is-logged-out");
         document.querySelectorAll(".main-nav .nav-item").forEach(item=>{const link=item.querySelector(".nav-trigger");item.hidden=!(link&&["/about","/memorial_hall","/apply"].includes(new URL(link.href,location.href).pathname))});
@@ -315,7 +317,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         event.preventDefault();showSiteToast("지원 가능한 기간이 아닙니다.");
       }
     });
-    updateUI().then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));});
+    updateUI().then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));}).catch(error=>{console.error("[AUTH] 메인 페이지 로그인 UI 초기화 실패",error?.code||error,error);const btn=document.getElementById("authBtn");const label=document.getElementById("authLabel");const dropdown=document.getElementById("profileDropdown");const wrap=document.getElementById("profileMenuWrap");if(wrap)wrap.hidden=false;if(dropdown){dropdown.hidden=true;dropdown.classList.remove("open")}if(btn){btn.setAttribute("aria-label","로그인");btn.onclick=()=>{location.href="/signin?redirect=/"}}if(label)label.textContent="로그인";const signoutBtn=document.getElementById("signoutBtn");if(signoutBtn)signoutBtn.hidden=true;});
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
     navRevealTrigger.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
