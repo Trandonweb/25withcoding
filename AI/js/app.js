@@ -5,13 +5,15 @@ import { mainApp, mainDb, db } from "./firebase.js";
 const auth = getAuth(mainApp);
 function waitForAuthUser() {
     return new Promise((resolve, reject) => {
-        const unsubscribe = onAuthStateChanged(auth, user => {
+        let unsubscribe = () => {};
+        let settled = false;
+        const finish = (callback, value) => {
+            if (settled) return;
+            settled = true;
             unsubscribe();
-            resolve(user);
-        }, error => {
-            unsubscribe();
-            reject(error);
-        });
+            callback(value);
+        };
+        unsubscribe = onAuthStateChanged(auth, user => finish(resolve, user), error => finish(reject, error));
     });
 }
 import { state, $ } from "./state.js";
