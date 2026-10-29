@@ -44,10 +44,17 @@ const app=initializeApp(firebaseConfig);const db=getFirestore(app);const auth=ge
 async function getVerifiedStudentId(){
   await setPersistence(auth,browserLocalPersistence);
   const currentUser=await new Promise((resolve,reject)=>{
-    let unsubscribe=()=>{};
+    let unsubscribe=null;
+    let unsubscribeAfterAttach=false;
     let settled=false;
-    const finish=(callback,value)=>{if(settled)return;settled=true;unsubscribe();callback(value)};
+    const finish=(callback,value)=>{
+      if(settled)return;
+      settled=true;
+      if(unsubscribe)unsubscribe();else unsubscribeAfterAttach=true;
+      callback(value);
+    };
     unsubscribe=onAuthStateChanged(auth,user=>finish(resolve,user),error=>finish(reject,error));
+    if(unsubscribeAfterAttach)unsubscribe();
   });
   const match=(currentUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if(!match){localStorage.removeItem("userId");return null;}
