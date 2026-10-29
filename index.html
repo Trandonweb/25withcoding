@@ -317,7 +317,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         event.preventDefault();showSiteToast("지원 가능한 기간이 아닙니다.");
       }
     });
-    let lastRenderedAuthUid=null;
+    let lastRenderedAuthUid=undefined;
     let authUiUpdateQueue=Promise.resolve();
     function handleAuthUiError(error){
       console.error("[AUTH] 메인 페이지 로그인 UI 초기화 실패",error?.code||error,error);
