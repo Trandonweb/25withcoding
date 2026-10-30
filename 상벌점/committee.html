@@ -71,12 +71,15 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = { apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20", authDomain:"points2026-f5e50.firebaseapp.com", projectId:"points2026-f5e50" };
-const db = getFirestore(initializeApp(firebaseConfig));
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 const API = "https://two5withcoding.onrender.com";
-const myId = localStorage.getItem("userId");
+let myId = null;
 let selectedPoints = 1;
 const $ = id => document.getElementById(id);
 
@@ -95,9 +98,8 @@ async function loadUsers() {
 }
 
 async function init() {
-  if(!myId){ location.href="/signin/?redirect=/상벌점/committee.html"; return; }
   const snap=await getDoc(doc(db,"users",myId));
-  if(!snap.exists()){ alert("사용자 정보를 찾을 수 없습니다."); return; }
+  if(!snap.exists()){ alert("사용자 정보를 찾을 수 없습니다."); await signOut(auth); location.replace("/signin/?redirect=/상벌점/committee.html"); return; }
   const data=snap.data();
   $("loading").classList.add("hidden");
   $("roleBadge").textContent=data.role==="president"?"회장":data.role==="committee_chair"?"상벌관리위원회장":"권한 없음";
@@ -111,7 +113,8 @@ for(const button of document.querySelectorAll(".point")) button.addEventListener
 
 $("assignBtn").addEventListener("click",async()=>{
   const targetId=$("chairSelect").value, btn=$("assignBtn"); if(!targetId)return; btn.disabled=true;
-  try{ const r=await fetch(API+"/committee/assign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({actorId:myId,targetId})}); const d=await r.json(); if(!r.ok)throw new Error(d.detail||"지정에 실패했습니다."); showResult($("assignResult"),true,"상벌관리위원회장이 지정되었습니다."); await loadUsers(); }
+  try{ const idToken=await auth.currentUser.getIdToken();
+    const r=await fetch(API+"/committee/assign",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+idToken},body:JSON.stringify({actorId:myId,targetId})}); const d=await r.json(); if(!r.ok)throw new Error(d.detail||"지정에 실패했습니다."); showResult($("assignResult"),true,"상벌관리위원회장이 지정되었습니다."); await loadUsers(); }
   catch(e){showResult($("assignResult"),false,e.message);} finally{btn.disabled=false;}
 });
 
@@ -122,7 +125,8 @@ $("applyBtn").addEventListener("click",async()=>{
   if(reason.length<2)return showResult($("applyResult"),false,"벌점 사유를 조금 더 구체적으로 입력해주세요.");
   btn.disabled=true; btn.textContent="COBY가 타당성을 검사하는 중...";
   try{
-    const response=await fetch(API+"/discipline/apply",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({actorId:myId,targetId,points:selectedPoints,reason})});
+    const idToken=await auth.currentUser.getIdToken();
+    const response=await fetch(API+"/discipline/apply",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+idToken},body:JSON.stringify({actorId:myId,targetId,points:selectedPoints,reason})});
     const data=await response.json(); if(!response.ok)throw new Error(data.detail||"벌점 적용에 실패했습니다.");
     if(!data.applied){ showResult($("applyResult"),false,"COBY가 적용을 거부했습니다.\n판정: "+data.reason); return; }
     const capped=Boolean(data.capped);
@@ -136,7 +140,27 @@ $("applyBtn").addEventListener("click",async()=>{
   }catch(e){showResult($("applyResult"),false,e.message);}
   finally{btn.disabled=false;btn.textContent="COBY 타당성 검사 후 적용";}
 });
-init();
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    localStorage.removeItem("userId");
+    location.replace("/signin/?redirect=/상벌점/committee.html");
+    return;
+  }
+  const match = (user.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+  if (!match) {
+    await signOut(auth);
+    location.replace("/signin/?redirect=/상벌점/committee.html");
+    return;
+  }
+  myId = match[1];
+  localStorage.setItem("userId", myId);
+  try { await init(); }
+  catch (error) {
+    console.error(error);
+    $("loading").textContent = "정보를 불러오지 못했습니다. Firebase 권한을 확인해주세요.";
+    $("loading").classList.remove("hidden");
+  }
+});
 </script>
 </body>
 </html>
