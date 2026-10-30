@@ -237,66 +237,128 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     function go(path){location.href=path} window.go=go;
     function goPoint(){const user=localStorage.getItem("userId");location.href=user?"/상벌점/main.html":"/signin?redirect=/상벌점/main.html"} window.goPoint=goPoint;
     async function checkUserSettings(userId){if(!/^\d{5}$/.test(String(userId||"")))throw new Error("인증된 학번이 없습니다.");const userRef=doc(db,"users",userId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig};saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
-    async function updateUI(authUser){
-      const user=getVerifiedStudentId(authUser);
+    let authUiRevision=0;
+    let lastAuthUid=undefined;
+    function setSignedOutUI(){
       const btn=document.getElementById("authBtn");
       const label=document.getElementById("authLabel");
       const studentNumber=document.getElementById("studentNumber");
       const dropdown=document.getElementById("profileDropdown");
       const signoutBtn=document.getElementById("signoutBtn");
-      if(user){
-        // Render the authenticated state immediately. Firestore is only needed for profile details.
-        const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=false;
-        dropdown.hidden=false;
-        const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
-        const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
-        const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;
-        const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=true;
-        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=item.id==="adminNavItem"});
-        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"});
-        btn.setAttribute("aria-label","프로필 메뉴 열기");
-        label.textContent="회원";
-        studentNumber.textContent="";
-        studentNumber.hidden=false;
-        document.getElementById("profileStudentNumber").textContent=user;
-        document.getElementById("profileStudentName").textContent="회원 정보 불러오는 중";
-        btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
-        signoutBtn.hidden=false;
-        signoutBtn.onclick=()=>{location.href="/signout?redirect=/"};
-        renderAvatar(getStoredSettings().avatarConfig);
-
-        let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
-        if(auth.currentUser?.uid!==authUser?.uid)return;
-        const isProfileAdmin=data.role==="president"||data.role==="vice";
-        if(adminNav)adminNav.hidden=!isProfileAdmin;
-        if(adminColumn)adminColumn.hidden=!isProfileAdmin;
-        const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
-        label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
-        document.getElementById("profileStudentName").textContent=name;
-        const currentSettings=getStoredSettings();renderAvatar((data.settings&&data.settings.avatarConfig)||currentSettings.avatarConfig);
-        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=item.id==="adminNavItem"?!isProfileAdmin:false});
-        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"?!isProfileAdmin:false});
-      }else{
-        const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=false;
-        dropdown.classList.remove("open");dropdown.hidden=true;
-        const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.add("logged-out-account");
-        const nav=document.querySelector(".main-nav");if(nav)nav.classList.add("is-logged-out");
-        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{const link=item.querySelector(".nav-trigger");item.hidden=!(link&&["/about","/memorial_hall","/apply"].includes(new URL(link.href,location.href).pathname))});
-        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{const links=[...column.querySelectorAll("a")];column.hidden=!links.length||!links.every(link=>["/about","/memorial_hall","/apply"].includes(new URL(link.href,location.href).pathname))});
-        const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=true;
-        btn.setAttribute("aria-label","로그인");
-        label.textContent="로그인";
-        renderAvatar(getStoredSettings().avatarConfig);
-        studentNumber.textContent="";
-        studentNumber.hidden=true;
-        document.getElementById("profileStudentNumber").textContent="—";document.getElementById("profileStudentName").textContent="로그인 필요";
-        btn.onclick=()=>{location.href="/signin/?redirect=%2F"};
-        dropdown.classList.remove("open");
-        signoutBtn.hidden=true;
-      }
-      document.addEventListener("click",event=>{if(!event.target.closest(".profile-menu-wrap")){dropdown.classList.remove("open");btn.setAttribute("aria-expanded","false")}});
+      const profileWrap=document.getElementById("profileMenuWrap");
+      if(profileWrap)profileWrap.hidden=false;
+      if(dropdown){dropdown.classList.remove("open");dropdown.hidden=true}
+      const headerAccount=document.querySelector(".header-account");
+      if(headerAccount)headerAccount.classList.add("logged-out-account");
+      const nav=document.querySelector(".main-nav");
+      if(nav)nav.classList.add("is-logged-out");
+      const publicPaths=["/about","/memorial_hall","/apply"];
+      document.querySelectorAll(".main-nav .nav-item").forEach(item=>{
+        const link=item.querySelector(".nav-trigger");
+        let path="";
+        try{path=link?new URL(link.href,location.href).pathname:""}catch{}
+        item.hidden=!publicPaths.includes(path);
+      });
+      document.querySelectorAll(".main-nav .nav-column").forEach(column=>{
+        const links=[...column.querySelectorAll("a")];
+        column.hidden=!links.length||!links.every(link=>{
+          try{return publicPaths.includes(new URL(link.href,location.href).pathname)}catch{return false}
+        });
+      });
+      const adminNav=document.getElementById("adminNavItem");
+      const adminColumn=document.getElementById("adminDropdownColumn");
+      if(adminNav)adminNav.hidden=true;
+      if(adminColumn)adminColumn.hidden=true;
+      if(btn){btn.setAttribute("aria-label","로그인");btn.setAttribute("aria-expanded","false");btn.onclick=()=>{location.href="/signin/?redirect=%2F"}}
+      if(label)label.textContent="로그인";
+      if(studentNumber){studentNumber.textContent="";studentNumber.hidden=true}
+      const profileNumber=document.getElementById("profileStudentNumber");
+      const profileName=document.getElementById("profileStudentName");
+      if(profileNumber)profileNumber.textContent="—";
+      if(profileName)profileName.textContent="로그인 필요";
+      if(signoutBtn)signoutBtn.hidden=true;
+      renderAvatar(getStoredSettings().avatarConfig);
       syncSettingsUI();
     }
+    function setSignedInShell(authUser,revision){
+      const studentId=getVerifiedStudentId(authUser);
+      if(!studentId){setSignedOutUI();return null}
+      const btn=document.getElementById("authBtn");
+      const label=document.getElementById("authLabel");
+      const studentNumber=document.getElementById("studentNumber");
+      const dropdown=document.getElementById("profileDropdown");
+      const signoutBtn=document.getElementById("signoutBtn");
+      const profileWrap=document.getElementById("profileMenuWrap");
+      if(profileWrap)profileWrap.hidden=false;
+      if(dropdown)dropdown.hidden=false;
+      const headerAccount=document.querySelector(".header-account");
+      if(headerAccount)headerAccount.classList.remove("logged-out-account");
+      const nav=document.querySelector(".main-nav");
+      if(nav)nav.classList.remove("is-logged-out");
+      const adminNav=document.getElementById("adminNavItem");
+      const adminColumn=document.getElementById("adminDropdownColumn");
+      if(adminNav)adminNav.hidden=true;
+      if(adminColumn)adminColumn.hidden=true;
+      document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=item.id==="adminNavItem"});
+      document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"});
+      if(btn){
+        btn.setAttribute("aria-label","프로필 메뉴 열기");
+        btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
+      }
+      if(label)label.textContent="회원";
+      if(studentNumber){studentNumber.textContent="";studentNumber.hidden=false}
+      const profileNumber=document.getElementById("profileStudentNumber");
+      const profileName=document.getElementById("profileStudentName");
+      if(profileNumber)profileNumber.textContent=studentId;
+      if(profileName)profileName.textContent="회원 정보 불러오는 중";
+      if(signoutBtn){signoutBtn.hidden=false;signoutBtn.onclick=()=>{location.href="/signout?redirect=/"}}
+      renderAvatar(getStoredSettings().avatarConfig);
+      return studentId;
+    }
+    async function loadSignedInProfile(authUser,studentId,revision){
+      let data={};
+      try{data=await checkUserSettings(studentId)||{}}
+      catch(error){console.warn("[AUTH] 로그인은 유지되지만 프로필 정보 조회에 실패했습니다.",error?.code||error)}
+      if(revision!==authUiRevision||auth.currentUser?.uid!==authUser.uid)return;
+      const isProfileAdmin=data.role==="president"||data.role==="vice";
+      const adminNav=document.getElementById("adminNavItem");
+      const adminColumn=document.getElementById("adminDropdownColumn");
+      if(adminNav)adminNav.hidden=!isProfileAdmin;
+      if(adminColumn)adminColumn.hidden=!isProfileAdmin;
+      const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
+      const label=document.getElementById("authLabel");
+      const profileName=document.getElementById("profileStudentName");
+      if(label)label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
+      if(profileName)profileName.textContent=name;
+      const currentSettings=getStoredSettings();
+      renderAvatar((data.settings&&data.settings.avatarConfig)||currentSettings.avatarConfig);
+      document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=item.id==="adminNavItem"?!isProfileAdmin:false});
+      document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"?!isProfileAdmin:false});
+    }
+    function renderAuthState(authUser){
+      // Ignore a stale observer callback if Firebase already exposes a newer user.
+      const liveUser=auth.currentUser;
+      if(authUser&&liveUser&&authUser.uid!==liveUser.uid)return;
+      if(!authUser&&liveUser)authUser=liveUser;
+      const uid=authUser?.uid||null;
+      if(uid===lastAuthUid)return;
+      lastAuthUid=uid;
+      const revision=++authUiRevision;
+      if(!authUser){
+        setSignedOutUI();
+        return;
+      }
+      const studentId=setSignedInShell(authUser,revision);
+      if(studentId)void loadSignedInProfile(authUser,studentId,revision);
+    }
+    document.addEventListener("click",event=>{
+      const dropdown=document.getElementById("profileDropdown");
+      const btn=document.getElementById("authBtn");
+      if(dropdown&&btn&&!event.target.closest(".profile-menu-wrap")){
+        dropdown.classList.remove("open");
+        btn.setAttribute("aria-expanded","false");
+      }
+    });
     window.changePassword=function(){location.href="/password_change?redirect="+encodeURIComponent(location.pathname+location.search)}
     window.togglePasswordForm=function(){const setting=document.getElementById("passwordSetting"),toggle=setting.querySelector(".password-toggle"),isOpen=setting.classList.toggle("open");toggle.setAttribute("aria-expanded",String(isOpen))};
     let siteToastTimer;
@@ -313,40 +375,19 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         event.preventDefault();showSiteToast("지원 가능한 기간이 아닙니다.");
       }
     });
-    function handleAuthUiError(error,authUser=auth.currentUser){
-      console.error("[AUTH] 메인 페이지 로그인 UI 초기화 실패",error?.code||error,error);
-      const match=(authUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
-      const btn=document.getElementById("authBtn"),label=document.getElementById("authLabel"),dropdown=document.getElementById("profileDropdown"),wrap=document.getElementById("profileMenuWrap"),signoutBtn=document.getElementById("signoutBtn");
-      if(wrap)wrap.hidden=false;
-      if(match){
-        // A profile/Firestore/UI error must never turn a valid Auth session into a logged-out display.
-        const id=match[1];try{localStorage.setItem("userId",id)}catch(storageError){console.warn("[AUTH] userId 표시 캐시 저장 실패",storageError)}
-        if(dropdown){dropdown.hidden=false;dropdown.classList.remove("open")}
-        const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
-        const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
-        document.querySelectorAll(".main-nav .nav-item,.main-nav .nav-column").forEach(item=>item.hidden=item.id==="adminNavItem"||item.id==="adminDropdownColumn");
-        const number=document.getElementById("profileStudentNumber");if(number)number.textContent=id;
-        const name=document.getElementById("profileStudentName");if(name)name.textContent="회원 정보 불러오기 실패";
-        const studentNumber=document.getElementById("studentNumber");if(studentNumber)studentNumber.hidden=false;
-        if(btn){btn.setAttribute("aria-label","프로필 메뉴 열기");btn.onclick=()=>{if(dropdown)dropdown.classList.toggle("open")}}
-        if(label)label.textContent="회원";
-        if(signoutBtn){signoutBtn.hidden=false;signoutBtn.onclick=()=>{location.href="/signout?redirect=/"}}
-        return;
+    function handleAuthObserverError(error){
+      console.error("[AUTH] 메인 페이지 인증 상태 감시 오류",error?.code||error,error);
+      // Observer errors are not proof of logout. Preserve a valid live Auth user.
+      if(auth.currentUser)renderAuthState(auth.currentUser);
+      else if(lastAuthUid===undefined){
+        const label=document.getElementById("authLabel");
+        if(label)label.textContent="인증 확인 중";
       }
-      try{localStorage.removeItem("userId")}catch(storageError){console.warn("[AUTH] userId 표시 캐시 정리 실패",storageError)}
-      if(dropdown){dropdown.hidden=true;dropdown.classList.remove("open")}
-      const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.add("logged-out-account");
-      const nav=document.querySelector(".main-nav");if(nav)nav.classList.add("is-logged-out");
-      if(btn){btn.setAttribute("aria-label","로그인");btn.onclick=()=>{location.href="/signin/?redirect=%2F"}}
-      if(label)label.textContent="로그인";
-      if(signoutBtn)signoutBtn.hidden=true;
     }
-    onAuthStateChanged(auth,async authUser=>{
-      // Firebase Auth is the sole source of login state. Firestore failures affect
-      // profile details only; they must not silently switch the UI to logged-out.
-      try{await updateUI(authUser)}
-      catch(error){handleAuthUiError(error,authUser)}
-    },error=>handleAuthUiError(error,auth.currentUser));
+    onAuthStateChanged(auth,renderAuthState,handleAuthObserverError);
+    // Explicitly wait for Firebase's first persisted-state restoration as a second
+    // initialization path. The UID guard prevents duplicate rendering.
+    auth.authStateReady().then(()=>renderAuthState(auth.currentUser)).catch(handleAuthObserverError);
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
     navRevealTrigger.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
