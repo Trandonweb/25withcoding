@@ -7,7 +7,7 @@ service cloud.firestore {
 
     function studentId() {
       return signedIn()
-        && request.auth.token.email.matches('^[0-9]{5}@auth\\.25withcoding\\.kr$')
+        && request.auth.token.email.matches('^[0-9]{5}@auth\.25withcoding\.kr$')
         ? request.auth.token.email.split('@')[0]
         : '';
     }
