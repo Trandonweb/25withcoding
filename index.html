@@ -152,8 +152,10 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         unsubscribe=onAuthStateChanged(auth,user=>finish(resolve,user),error=>finish(reject,error));
       });
     }
-    async function getVerifiedStudentId(){
-      const currentUser=await waitForAuthUser();
+    async function getVerifiedStudentId(authUser){
+      // When called by the auth-state listener, use the exact user object
+      // supplied by Firebase instead of starting a second observer.
+      const currentUser=arguments.length ? authUser : await waitForAuthUser();
       const match=(currentUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
       if(!match){localStorage.removeItem("userId");return null;}
       const verifiedId=match[1];
@@ -251,8 +253,8 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     function go(path){location.href=path} window.go=go;
     function goPoint(){const user=localStorage.getItem("userId");location.href=user?"/상벌점/main.html":"/signin?redirect=/상벌점/main.html"} window.goPoint=goPoint;
     async function checkUserSettings(userId){if(!/^\d{5}$/.test(String(userId||"")))throw new Error("인증된 학번이 없습니다.");const userRef=doc(db,"users",userId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig};saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
-    async function updateUI(){
-      const user=await getVerifiedStudentId().catch(e=>{console.warn("Firebase 인증 상태 확인 실패",e?.code||e);return null;});
+    async function updateUI(authUser){
+      const user=await getVerifiedStudentId(authUser).catch(e=>{console.warn("Firebase 인증 상태 확인 실패",e?.code||e);return null;});
       const btn=document.getElementById("authBtn");
       const label=document.getElementById("authLabel");
       const studentNumber=document.getElementById("studentNumber");
@@ -324,10 +326,19 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       if(label)label.textContent="로그인";
       if(signoutBtn)signoutBtn.hidden=true;
     }
-    updateUI().then(async()=>{
-      const attendanceBtn=document.getElementById("attendanceBtn");
-      if(attendanceBtn)await renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));
-    }).catch(handleAuthUiError);
+    let attendanceButtonInitialized=false;
+    onAuthStateChanged(auth,async authUser=>{
+      // Keep the homepage profile/navigation synchronized with Firebase Auth.
+      // The initial callback runs only after Firebase has restored persisted auth state.
+      try{
+        await updateUI(authUser);
+        if(!attendanceButtonInitialized){
+          attendanceButtonInitialized=true;
+          const attendanceBtn=document.getElementById("attendanceBtn");
+          if(attendanceBtn)await renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));
+        }
+      }catch(error){handleAuthUiError(error)}
+    },handleAuthUiError);
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
     navRevealTrigger.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
