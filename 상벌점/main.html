@@ -655,7 +655,7 @@ onAuthStateChanged(auth, async (user) => {
     location.replace("/signin/?redirect=" + encodeURIComponent(location.pathname));
     return;
   }
-  const match = (user.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+  const match = (user.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if (!match) {
     await signOut(auth);
     localStorage.removeItem("userId");
