@@ -54,7 +54,7 @@ async function save(key,value){
   const status=document.getElementById("settingsStatus");
   status.textContent="설정 저장 중…";
   const currentUser=auth.currentUser;
-  const match=(currentUser?.email||"").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+  const match=(currentUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if(!currentUser||!match){
     status.textContent="이 기기에 저장했습니다. 계정에 저장하려면 로그인해 주세요.";
     return;
@@ -76,7 +76,7 @@ for(const id of ["avatarIcon","avatarIconColor","avatarBackground","avatarEffect
 const authReady=new Promise(resolve=>{
   const unsubscribe=onAuthStateChanged(auth,async currentUser=>{
     unsubscribe();
-    const match=(currentUser?.email||"").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+    const match=(currentUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
     if(!currentUser||!match){
       document.getElementById("settingsStatus").textContent="로그인하지 않은 상태입니다. 변경 사항은 이 기기에 저장됩니다.";
       resolve(null);
