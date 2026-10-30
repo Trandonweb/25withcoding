@@ -763,6 +763,9 @@ import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { waitForStudentSession } from "/firebase-session.js";
+
 import {
   getFirestore,
   collection,
@@ -789,7 +792,7 @@ const firebaseConfig={
   appId:"1:782245120700:web:c61e16313e9ae688e6deb9"
 };
 
-const app=initializeApp(firebaseConfig);
+const app=initializeApp(firebaseConfig,"festivalApp");
 const db=getFirestore(app);
 
 
@@ -799,12 +802,10 @@ const loginFirebaseConfig={
   projectId:"points2026-f5e50"
 };
 
-const loginApp=initializeApp(
-  loginFirebaseConfig,
-  "loginApp"
-);
-
+const loginApp=initializeApp(loginFirebaseConfig);
+const loginAuth=getAuth(loginApp);
 const loginDB=getFirestore(loginApp);
+const loginSession=await waitForStudentSession(loginAuth);
 
 
 /* =========================
@@ -2378,10 +2379,7 @@ async function checkFestivalAccess(){
 
   }
 
-  const userId=
-    localStorage.getItem(
-      "userId"
-    );
+  const userId=loginSession?.studentId||"";
 
   if(!userId){
 
