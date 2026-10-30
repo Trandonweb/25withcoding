@@ -139,10 +139,21 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     import { renderAttendanceButton } from "/attendance.js";
     const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
     const app=initializeApp(firebaseConfig); const db=getFirestore(app); const auth=getAuth(app);
+    function waitForAuthUser(){
+      return new Promise((resolve,reject)=>{
+        let unsubscribe=null;
+        let settled=false;
+        const finish=(callback,value)=>{
+          if(settled)return;
+          settled=true;
+          if(unsubscribe)unsubscribe();
+          callback(value);
+        };
+        unsubscribe=onAuthStateChanged(auth,user=>finish(resolve,user),error=>finish(reject,error));
+      });
+    }
     async function getVerifiedStudentId(){
-      // Wait until Firebase has restored the persisted session before reading currentUser.
-      await auth.authStateReady();
-      const currentUser=auth.currentUser;
+      const currentUser=await waitForAuthUser();
       const match=(currentUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
       if(!match){localStorage.removeItem("userId");return null;}
       const verifiedId=match[1];
