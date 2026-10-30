@@ -136,27 +136,11 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-    import { renderAttendanceButton } from "/attendance.js";
     const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
     const app=initializeApp(firebaseConfig); const db=getFirestore(app); const auth=getAuth(app);
-    function waitForAuthUser(){
-      return new Promise((resolve,reject)=>{
-        let unsubscribe=null;
-        let settled=false;
-        const finish=(callback,value)=>{
-          if(settled)return;
-          settled=true;
-          if(unsubscribe)unsubscribe();
-          callback(value);
-        };
-        unsubscribe=onAuthStateChanged(auth,user=>finish(resolve,user),error=>finish(reject,error));
-      });
-    }
-    async function getVerifiedStudentId(authUser){
-      // When called by the auth-state listener, use the exact user object
-      // supplied by Firebase instead of starting a second observer.
-      const currentUser=arguments.length ? authUser : await waitForAuthUser();
-      const match=(currentUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
+    function getVerifiedStudentId(authUser=auth.currentUser){
+      // Identity always comes from the live Firebase Auth user, never localStorage.
+      const match=(authUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
       if(!match){localStorage.removeItem("userId");return null;}
       const verifiedId=match[1];
       localStorage.setItem("userId",verifiedId);
@@ -172,8 +156,8 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     function updateCobyLogo(darkMode){const logo=document.getElementById("cobyLogo");if(!logo)return;const target=darkMode?COBY_DARK_LOGO:COBY_LIGHT_LOGO;logo.dataset.source=target;const image=new Image();image.onload=()=>{if(darkMode){try{const processed=removeLogoBackground(image);if(processed){logo.src=processed;return}}catch(e){console.warn("COBY 로고 자동 배경제거 실패",e)}}logo.src=target};image.onerror=()=>{logo.src=target};image.src=target}
     function applySettings(settings){document.body.classList.toggle("dark-mode",!!settings.darkMode);if(settings.primaryColor)document.documentElement.style.setProperty("--primary-color",settings.primaryColor);document.querySelectorAll(".color-circle").forEach(circle=>circle.classList.toggle("selected",circle.getAttribute("data-color")===settings.primaryColor));updateCobyLogo(!!settings.darkMode)}
     function syncSettingsUI(){const settings=getStoredSettings();const darkModeToggle=document.getElementById("darkModeToggle");const keepLoginToggle=document.getElementById("keepLoginToggle");if(darkModeToggle)darkModeToggle.checked=!!settings.darkMode;if(keepLoginToggle)keepLoginToggle.checked=!!settings.keepLogin;applySettings(settings)}
-    window.toggleSetting=async function(key,value){const settings=getStoredSettings();settings[key]=value;saveStoredSettings(settings);applySettings(settings);try{const user=await getVerifiedStudentId();if(user){await setDoc(doc(db,"users",user),{settings:{[key]:value}},{merge:true})}else{console.warn("설정은 이 기기에 저장했지만 Firebase 로그인 세션이 없습니다.")}}catch(e){console.error("설정 동기화 실패",e?.code||e,e)}};
-    window.changeThemeColor=async function(color){const settings=getStoredSettings();settings.primaryColor=color;saveStoredSettings(settings);applySettings(settings);const user=localStorage.getItem("userId");if(user){try{await setDoc(doc(db,"users",user),{settings:{primaryColor:color}},{merge:true})}catch(e){console.error("컬러 테마 동기화 실패",e)}}};
+    window.toggleSetting=async function(key,value){const settings=getStoredSettings();settings[key]=value;saveStoredSettings(settings);applySettings(settings);try{const user=getVerifiedStudentId(auth.currentUser);if(user){await setDoc(doc(db,"users",user),{settings:{[key]:value}},{merge:true})}else{console.warn("설정은 이 기기에 저장했지만 Firebase 로그인 세션이 없습니다.")}}catch(e){console.error("설정 동기화 실패",e?.code||e,e)}};
+    window.changeThemeColor=async function(color){const settings=getStoredSettings();settings.primaryColor=color;saveStoredSettings(settings);applySettings(settings);const user=getVerifiedStudentId(auth.currentUser);if(user){try{await setDoc(doc(db,"users",user),{settings:{primaryColor:color}},{merge:true})}catch(e){console.error("컬러 테마 동기화 실패",e)}}};
     applySettings(getStoredSettings());renderAvatar(getStoredSettings().avatarConfig);
 
     const defaultMainSlides=[
@@ -254,7 +238,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     function goPoint(){const user=localStorage.getItem("userId");location.href=user?"/상벌점/main.html":"/signin?redirect=/상벌점/main.html"} window.goPoint=goPoint;
     async function checkUserSettings(userId){if(!/^\d{5}$/.test(String(userId||"")))throw new Error("인증된 학번이 없습니다.");const userRef=doc(db,"users",userId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig};saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
     async function updateUI(authUser){
-      const user=await getVerifiedStudentId(authUser).catch(e=>{console.warn("Firebase 인증 상태 확인 실패",e?.code||e);return null;});
+      const user=getVerifiedStudentId(authUser);
       const btn=document.getElementById("authBtn");
       const label=document.getElementById("authLabel");
       const studentNumber=document.getElementById("studentNumber");
@@ -317,28 +301,42 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         event.preventDefault();showSiteToast("지원 가능한 기간이 아닙니다.");
       }
     });
-    function handleAuthUiError(error){
+    function handleAuthUiError(error,authUser=auth.currentUser){
       console.error("[AUTH] 메인 페이지 로그인 UI 초기화 실패",error?.code||error,error);
+      const match=(authUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
       const btn=document.getElementById("authBtn"),label=document.getElementById("authLabel"),dropdown=document.getElementById("profileDropdown"),wrap=document.getElementById("profileMenuWrap"),signoutBtn=document.getElementById("signoutBtn");
       if(wrap)wrap.hidden=false;
+      if(match){
+        // A profile/Firestore/UI error must never turn a valid Auth session into a logged-out display.
+        const id=match[1];localStorage.setItem("userId",id);
+        if(dropdown){dropdown.hidden=false;dropdown.classList.remove("open")}
+        const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
+        const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
+        document.querySelectorAll(".main-nav .nav-item,.main-nav .nav-column").forEach(item=>item.hidden=false);
+        const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;
+        const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=true;
+        const number=document.getElementById("profileStudentNumber");if(number)number.textContent=id;
+        const name=document.getElementById("profileStudentName");if(name)name.textContent="회원 정보 불러오기 실패";
+        const studentNumber=document.getElementById("studentNumber");if(studentNumber)studentNumber.hidden=false;
+        if(btn){btn.setAttribute("aria-label","프로필 메뉴 열기");btn.onclick=()=>{if(dropdown)dropdown.classList.toggle("open")}}
+        if(label)label.textContent="회원";
+        if(signoutBtn){signoutBtn.hidden=false;signoutBtn.onclick=()=>{location.href="/signout?redirect=/"}}
+        return;
+      }
+      localStorage.removeItem("userId");
       if(dropdown){dropdown.hidden=true;dropdown.classList.remove("open")}
+      const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.add("logged-out-account");
+      const nav=document.querySelector(".main-nav");if(nav)nav.classList.add("is-logged-out");
       if(btn){btn.setAttribute("aria-label","로그인");btn.onclick=()=>{location.href="/signin/?redirect=%2F"}}
       if(label)label.textContent="로그인";
       if(signoutBtn)signoutBtn.hidden=true;
     }
-    let attendanceButtonInitialized=false;
     onAuthStateChanged(auth,async authUser=>{
-      // Keep the homepage profile/navigation synchronized with Firebase Auth.
-      // The initial callback runs only after Firebase has restored persisted auth state.
-      try{
-        await updateUI(authUser);
-        if(!attendanceButtonInitialized){
-          attendanceButtonInitialized=true;
-          const attendanceBtn=document.getElementById("attendanceBtn");
-          if(attendanceBtn)await renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));
-        }
-      }catch(error){handleAuthUiError(error)}
-    },handleAuthUiError);
+      // Firebase Auth is the sole source of login state. Firestore failures affect
+      // profile details only; they must not silently switch the UI to logged-out.
+      try{await updateUI(authUser)}
+      catch(error){handleAuthUiError(error,authUser)}
+    },error=>handleAuthUiError(error,auth.currentUser));
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
     navRevealTrigger.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
