@@ -253,8 +253,8 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     function go(path){location.href=path} window.go=go;
     function goPoint(){const user=localStorage.getItem("userId");location.href=user?"/상벌점/main.html":"/signin?redirect=/상벌점/main.html"} window.goPoint=goPoint;
     async function checkUserSettings(userId){const verifiedId=await getVerifiedStudentId();if(!verifiedId)throw new Error("Firebase 로그인 세션을 확인할 수 없습니다.");const userRef=doc(db,"users",verifiedId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig},updateData={};if(firebaseSettings.darkMode===undefined)updateData.darkMode=settings.darkMode;if(firebaseSettings.primaryColor===undefined)updateData.primaryColor=settings.primaryColor;if(firebaseSettings.keepLogin===undefined)updateData.keepLogin=settings.keepLogin;if(firebaseSettings.avatarConfig===undefined)updateData.avatarConfig=settings.avatarConfig;if(Object.keys(updateData).length>0)await setDoc(userRef,{settings:updateData},{merge:true});saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
-    async function updateUI(authUserOverride){
-      const user=await getVerifiedStudentId(authUserOverride).catch(e=>{console.warn("Firebase 인증 상태 확인 실패",e?.code||e);return null;});
+    async function updateUI(){
+      const user=await getVerifiedStudentId().catch(e=>{console.warn("Firebase 인증 상태 확인 실패",e?.code||e);return null;});
       const btn=document.getElementById("authBtn");
       const label=document.getElementById("authLabel");
       const studentNumber=document.getElementById("studentNumber");
@@ -317,8 +317,6 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         event.preventDefault();showSiteToast("지원 가능한 기간이 아닙니다.");
       }
     });
-    let lastRenderedAuthUid=undefined;
-    let authUiUpdateQueue=Promise.resolve();
     function handleAuthUiError(error){
       console.error("[AUTH] 메인 페이지 로그인 UI 초기화 실패",error?.code||error,error);
       const btn=document.getElementById("authBtn"),label=document.getElementById("authLabel"),dropdown=document.getElementById("profileDropdown"),wrap=document.getElementById("profileMenuWrap"),signoutBtn=document.getElementById("signoutBtn");
@@ -328,16 +326,10 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       if(label)label.textContent="로그인";
       if(signoutBtn)signoutBtn.hidden=true;
     }
-    onAuthStateChanged(auth,authUser=>{
-      const uid=authUser?.uid||null;
-      if(uid===lastRenderedAuthUid)return;
-      lastRenderedAuthUid=uid;
-      authUiUpdateQueue=authUiUpdateQueue.then(async()=>{
-        await updateUI(authUser);
-        const attendanceBtn=document.getElementById("attendanceBtn");
-        if(attendanceBtn)await renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));
-      }).catch(handleAuthUiError);
-    },error=>handleAuthUiError(error));
+    updateUI().then(async()=>{
+      const attendanceBtn=document.getElementById("attendanceBtn");
+      if(attendanceBtn)await renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));
+    }).catch(handleAuthUiError);
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
     navRevealTrigger.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
