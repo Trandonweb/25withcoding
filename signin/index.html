@@ -176,7 +176,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
@@ -186,8 +186,7 @@ const firebaseConfig = {
   messagingSenderId: "248724251417",
   appId: "1:248724251417:web:02d85cdc4addac98069b88"
 };
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const auth = getAuth(initializeApp(firebaseConfig));
 const SETTINGS_KEY = "coding_with_ramen_settings";
 
 function applyStoredSettings() {
@@ -207,6 +206,18 @@ const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsW
   ? requestedRedirect
   : "/";
 
+onAuthStateChanged(auth, user => {
+  const match = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
+  if (user && match) {
+    try { localStorage.setItem("userId", match[1]); } catch (error) {
+      console.warn("로그인 표시 캐시 저장 실패", error);
+    }
+    location.replace(redirect);
+    return;
+  }
+  try { localStorage.removeItem("userId"); } catch {}
+});
+
 window.togglePw = () => {
   const pw = document.getElementById("pw");
   pw.type = pw.type === "password" ? "text" : "password";
@@ -221,36 +232,22 @@ window.login = async () => {
   const password = pwInput.value;
 
   if (!/^\d{5}$/.test(id) || !password) {
-    alert("올바른 학번과 비밀번호를 입력하세요.");
+    loginStatus.textContent = "올바른 학번과 비밀번호를 입력하세요.";
     return;
   }
 
-  loginStatus.textContent = "Firebase 계정을 확인하고 있습니다…";
   loginBtn.disabled = true;
   loginBtn.innerHTML = '<div class="spinner"></div>';
+  loginStatus.textContent = "Firebase 계정을 확인하고 있습니다…";
   try {
-    let keepLogin = true;
-    try {
-      const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
-      keepLogin = savedSettings.keepLogin !== false;
-    } catch (settingsError) {
-      console.warn("로그인 유지 설정을 읽지 못해 기본값을 사용합니다.", settingsError);
-    }
-    try {
-      await setPersistence(auth, keepLogin ? browserLocalPersistence : browserSessionPersistence);
-    } catch (persistenceError) {
-      console.warn("선택한 로그인 저장 방식 적용 실패, 세션 저장으로 재시도", persistenceError?.code || persistenceError);
-      await setPersistence(auth, browserSessionPersistence);
-    }
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
-    // Confirm that the SDK's active user is the account whose credentials just succeeded.
-    if (!auth.currentUser || auth.currentUser.uid !== credential.user.uid) {
-      throw Object.assign(new Error("로그인 세션을 확인하지 못했습니다."), { code: "auth/session-not-established" });
+    const verified = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
+    if (!verified || verified[1] !== id) {
+      throw Object.assign(new Error("인증 계정의 학번이 입력한 학번과 일치하지 않습니다."), { code: "auth/invalid-user-email" });
     }
-    await auth.currentUser.getIdToken();
-    const verifiedMatch = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
-    if (!verifiedMatch || verifiedMatch[1] !== id) throw Object.assign(new Error("인증된 계정의 학번이 입력한 학번과 일치하지 않습니다."), { code: "auth/invalid-user-email" });
-    localStorage.setItem("userId", verifiedMatch[1]);
+    try { localStorage.setItem("userId", verified[1]); } catch (error) {
+      console.warn("로그인 표시 캐시 저장 실패", error);
+    }
     localStorage.removeItem("firebaseIdToken");
     localStorage.removeItem("firebaseRefreshToken");
     loginStatus.textContent = "로그인 성공. 페이지를 이동합니다…";
@@ -259,22 +256,14 @@ window.login = async () => {
     console.error("Firebase 로그인 실패", error);
     const messages = {
       "auth/invalid-credential": "학번 또는 비밀번호가 올바르지 않습니다.",
-      "auth/user-not-found": "인증 계정을 찾을 수 없습니다. 관리자에게 계정 전환을 요청하세요.",
+      "auth/user-not-found": "인증 계정을 찾을 수 없습니다.",
       "auth/wrong-password": "학번 또는 비밀번호가 올바르지 않습니다.",
       "auth/invalid-email": "학번 형식이 올바르지 않습니다.",
       "auth/too-many-requests": "로그인 시도가 많습니다. 잠시 후 다시 시도하세요.",
       "auth/network-request-failed": "네트워크 연결을 확인해 주세요.",
-      "auth/operation-not-allowed": "Firebase Authentication에서 이메일/비밀번호 로그인이 비활성화되어 있습니다.",
-      "auth/invalid-api-key": "Firebase 설정의 API 키가 올바르지 않습니다.",
-      "auth/app-not-authorized": "현재 도메인이 Firebase Authentication의 승인 도메인에 등록되어 있지 않습니다.",
-      "auth/web-storage-unsupported": "이 브라우저에서 로그인 상태를 저장할 수 없습니다. 일반 브라우저 탭에서 다시 시도해 주세요.",
-      "auth/invalid-user-email": "인증된 계정의 학번이 입력한 학번과 일치하지 않습니다.",
-      "auth/session-not-established": "로그인은 처리됐지만 브라우저 인증 세션을 확인하지 못했습니다. 다시 로그인해 주세요."
+      "auth/invalid-user-email": "인증된 계정의 학번이 입력한 학번과 일치하지 않습니다."
     };
-    localStorage.removeItem("userId");
-    const detail = (messages[error.code] || "로그인에 실패했습니다. Firebase 계정 상태와 네트워크를 확인해 주세요.") + " (오류 코드: " + (error.code || "unknown") + ")";
-    loginStatus.textContent = detail;
-    console.error("로그인 상세 오류", { code: error?.code, message: error?.message, name: error?.name });
+    loginStatus.textContent = (messages[error?.code] || "로그인에 실패했습니다. Firebase 계정 상태와 네트워크를 확인해 주세요.") + " (오류 코드: " + (error?.code || "unknown") + ")";
   } finally {
     loginBtn.disabled = false;
     loginBtn.textContent = "로그인";
