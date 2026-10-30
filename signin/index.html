@@ -245,13 +245,25 @@ window.login = async () => {
   loginBtn.disabled = true;
   loginBtn.innerHTML = '<div class="spinner"></div>';
   try {
+    let keepLogin = true;
     try {
-      await setPersistence(auth, browserLocalPersistence);
+      const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+      keepLogin = savedSettings.keepLogin !== false;
+    } catch (settingsError) {
+      console.warn("로그인 유지 설정을 읽지 못해 기본값을 사용합니다.", settingsError);
+    }
+    try {
+      await setPersistence(auth, keepLogin ? browserLocalPersistence : browserSessionPersistence);
     } catch (persistenceError) {
-      console.warn("브라우저 로컬 로그인 저장 실패, 세션 저장으로 재시도", persistenceError?.code || persistenceError);
+      console.warn("선택한 로그인 저장 방식 적용 실패, 세션 저장으로 재시도", persistenceError?.code || persistenceError);
       await setPersistence(auth, browserSessionPersistence);
     }
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
+    // Confirm that the SDK's active user is the account whose credentials just succeeded.
+    if (!auth.currentUser || auth.currentUser.uid !== credential.user.uid) {
+      throw Object.assign(new Error("로그인 세션을 확인하지 못했습니다."), { code: "auth/session-not-established" });
+    }
+    await auth.currentUser.getIdToken();
     const verifiedMatch = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
     if (!verifiedMatch || verifiedMatch[1] !== id) throw Object.assign(new Error("인증된 계정의 학번이 입력한 학번과 일치하지 않습니다."), { code: "auth/invalid-user-email" });
     localStorage.setItem("userId", verifiedMatch[1]);
@@ -272,7 +284,8 @@ window.login = async () => {
       "auth/invalid-api-key": "Firebase 설정의 API 키가 올바르지 않습니다.",
       "auth/app-not-authorized": "현재 도메인이 Firebase Authentication의 승인 도메인에 등록되어 있지 않습니다.",
       "auth/web-storage-unsupported": "이 브라우저에서 로그인 상태를 저장할 수 없습니다. 일반 브라우저 탭에서 다시 시도해 주세요.",
-      "auth/invalid-user-email": "인증된 계정의 학번이 입력한 학번과 일치하지 않습니다."
+      "auth/invalid-user-email": "인증된 계정의 학번이 입력한 학번과 일치하지 않습니다.",
+      "auth/session-not-established": "로그인은 처리됐지만 브라우저 인증 세션을 확인하지 못했습니다. 다시 로그인해 주세요."
     };
     localStorage.removeItem("userId");
     const detail = (messages[error.code] || "로그인에 실패했습니다. Firebase 계정 상태와 네트워크를 확인해 주세요.") + " (오류 코드: " + (error.code || "unknown") + ")";
