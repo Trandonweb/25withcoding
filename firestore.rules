@@ -5,33 +5,29 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Admin status must be granted by a trusted server using Firebase Admin SDK.
-    // Never derive admin privileges from localStorage or a client-editable profile field.
+    // 관리자 권한은 신뢰할 수 있는 서버(Firebase Admin SDK)가 부여한
+    // Firebase Authentication custom claim으로만 판단한다.
     function isAdmin() {
       return signedIn() && request.auth.token.admin == true;
     }
 
+    // 로그인한 계정의 이메일에서 학번을 확인한다.
     function isOwnStudent(studentId) {
       return signedIn()
         && request.auth.token.email == studentId + '@auth.25withcoding.kr';
     }
 
     match /users/{studentId} {
-      // A student may read only their own profile. Admin access requires a trusted custom claim.
+      // 학생은 본인 문서만, 관리자는 모든 학생 문서를 읽을 수 있다.
       allow get: if isOwnStudent(studentId) || isAdmin();
       allow list: if isAdmin();
 
-      // Students may change only the settings field; all role, name, score, and credential
-      // fields remain protected. Admin writes require a trusted custom claim.
-      allow create: if isAdmin();
-      allow update: if isAdmin()
-        || (isOwnStudent(studentId)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['settings']));
-      allow delete: if isAdmin();
+      // 학생은 본인 문서만 생성·수정·삭제할 수 있고,
+      // 관리자는 모든 학생 문서를 관리할 수 있다.
+      allow create, update, delete: if isOwnStudent(studentId) || isAdmin();
     }
 
-    // Default deny for all other collections/documents until each data model has
-    // an explicit, reviewed policy.
+    // users 이외의 컬렉션은 별도 정책을 검토하기 전까지 모두 차단한다.
     match /{document=**} {
       allow read, write: if false;
     }
