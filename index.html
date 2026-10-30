@@ -240,8 +240,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=false;
         const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
         let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
-        const adminNav=document.getElementById("adminNavItem");
-        if(adminNav)adminNav.hidden=!(data.role==="president"||data.role==="vice");const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=!(data.role==="president"||data.role==="vice");
+        const isAdmin = data.role === "president" || data.role === "vice";
         const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
         btn.setAttribute("aria-label","프로필 메뉴 열기");
         label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
@@ -255,6 +254,11 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
         document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=false});
         document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=false});
+        // 일반 메뉴를 표시한 뒤에도 관리자 메뉴는 실제 Firestore 역할로 최종 판정한다.
+        const adminNav=document.getElementById("adminNavItem");
+        const adminColumn=document.getElementById("adminDropdownColumn");
+        if(adminNav)adminNav.hidden=!isAdmin;
+        if(adminColumn)adminColumn.hidden=!isAdmin;
       }else{
         const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=true;
         const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.add("logged-out-account");
