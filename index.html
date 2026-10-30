@@ -241,7 +241,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
         let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
         const isAdmin = data.role === "president" || data.role === "vice";
-        const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
+        const name=String(data.name||"").trim()||"이름 미등록";
         btn.setAttribute("aria-label","프로필 메뉴 열기");
         label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
         studentNumber.textContent="";
