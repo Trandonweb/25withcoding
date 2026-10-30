@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -12,11 +12,12 @@ from ai import ask_ai
 
 try:
     import firebase_admin
-    from firebase_admin import credentials, firestore
+    from firebase_admin import credentials, firestore, auth as firebase_auth
 except ImportError:
     firebase_admin = None
     credentials = None
     firestore = None
+    firebase_auth = None
 
 
 app = FastAPI()
@@ -53,6 +54,29 @@ class DisciplineApplyRequest(BaseModel):
 class CommitteeAssignRequest(BaseModel):
     actorId: str = Field(min_length=1, max_length=20)
     targetId: str = Field(min_length=1, max_length=20)
+
+
+def verify_actor_token(authorization: str | None, expected_actor_id: str) -> None:
+    """Verify Firebase Auth ID token and bind it to the requested student ID."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Firebase 로그인 인증이 필요합니다.")
+    if firebase_auth is None:
+        raise HTTPException(status_code=503, detail="Firebase 인증 모듈을 사용할 수 없습니다.")
+
+    token = authorization[7:].strip()
+    if not token:
+        raise HTTPException(status_code=401, detail="인증 토큰이 비어 있습니다.")
+
+    try:
+        decoded = firebase_auth.verify_id_token(token, check_revoked=True)
+    except Exception:
+        raise HTTPException(status_code=401, detail="로그인 세션이 만료되었거나 유효하지 않습니다.")
+
+    import re
+    email = str(decoded.get("email", "")).lower()
+    match = re.fullmatch(r"(\d{5})@auth\.25withcoding\.kr", email)
+    if not match or match.group(1) != expected_actor_id:
+        raise HTTPException(status_code=403, detail="요청자 계정과 인증 정보가 일치하지 않습니다.")
 
 
 def get_firestore():
@@ -163,7 +187,11 @@ def coby_check_discipline(reason: str, points: int) -> dict[str, Any]:
 
 
 @app.post("/discipline/apply")
-def discipline_apply(request: DisciplineApplyRequest):
+def discipline_apply(
+    request: DisciplineApplyRequest,
+    authorization: str | None = Header(default=None),
+):
+    verify_actor_token(authorization, request.actorId)
     reason = request.reason.strip()
     if not reason:
         raise HTTPException(status_code=400, detail="벌점 사유를 입력해야 합니다.")
@@ -283,7 +311,11 @@ def discipline_apply(request: DisciplineApplyRequest):
 
 
 @app.post("/committee/assign")
-def committee_assign(request: CommitteeAssignRequest):
+def committee_assign(
+    request: CommitteeAssignRequest,
+    authorization: str | None = Header(default=None),
+):
+    verify_actor_token(authorization, request.actorId)
     db = get_firestore()
     actor_ref = db.collection("users").document(request.actorId)
     target_ref = db.collection("users").document(request.targetId)
