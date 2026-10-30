@@ -244,7 +244,7 @@ window.login = async () => {
   try {
     await setPersistence(auth, browserLocalPersistence);
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
-    const verifiedMatch = (credential.user?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+    const verifiedMatch = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
     if (!verifiedMatch || verifiedMatch[1] !== id) throw Object.assign(new Error("인증된 계정의 학번이 입력한 학번과 일치하지 않습니다."), { code: "auth/invalid-user-email" });
     localStorage.setItem("userId", verifiedMatch[1]);
     localStorage.removeItem("firebaseIdToken");
