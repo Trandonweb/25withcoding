@@ -33,7 +33,7 @@ service cloud.firestore {
 
     match /users/{targetId} {
       // 로그인한 구성원은 상벌점 화면에 필요한 사용자 명단을 읽을 수 있다.
-      allow get, list: if signedIn();
+      allow get, list: if studentId() != '';
 
       // 본인은 설정만 수정할 수 있다. 점수 변경은 회장/부회장만 가능하다.
       allow update: if (
@@ -52,7 +52,7 @@ service cloud.firestore {
     }
 
     match /reward/{rewardId} {
-      allow read: if signedIn();
+      allow read: if studentId() != '';
       allow create, update: if isPresident() || isVice();
       allow delete: if false;
     }
