@@ -175,7 +175,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
@@ -188,6 +188,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const SETTINGS_KEY = "coding_with_ramen_settings";
+let loginInProgress = false;
 
 function applyStoredSettings() {
   try {
@@ -207,16 +208,15 @@ const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsW
   : "/";
 
 onAuthStateChanged(auth, user => {
+  // Do not redirect merely because an old session was restored. The login button
+  // performs the redirect only after the credentials entered on this page succeed.
+  if (loginInProgress) return;
   const match = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if (user && match) {
-    // The Firebase Auth session is authoritative; localStorage is only a UI cache.
     localStorage.setItem("userId", match[1]);
-    localStorage.removeItem("firebaseIdToken");
-    localStorage.removeItem("firebaseRefreshToken");
-    location.replace(redirect);
-    return;
+  } else {
+    localStorage.removeItem("userId");
   }
-  localStorage.removeItem("userId");
   localStorage.removeItem("firebaseIdToken");
   localStorage.removeItem("firebaseRefreshToken");
 });
@@ -238,11 +238,15 @@ window.login = async () => {
     return;
   }
 
+  loginInProgress = true;
   loginBtn.disabled = true;
   loginBtn.innerHTML = '<div class="spinner"></div>';
   try {
+    await setPersistence(auth, browserLocalPersistence);
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
-    localStorage.setItem("userId", id);
+    const verifiedMatch = (credential.user?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+    if (!verifiedMatch || verifiedMatch[1] !== id) throw Object.assign(new Error("인증된 계정의 학번이 입력한 학번과 일치하지 않습니다."), { code: "auth/invalid-user-email" });
+    localStorage.setItem("userId", verifiedMatch[1]);
     localStorage.removeItem("firebaseIdToken");
     localStorage.removeItem("firebaseRefreshToken");
     location.replace(redirect);
@@ -254,10 +258,17 @@ window.login = async () => {
       "auth/wrong-password": "학번 또는 비밀번호가 올바르지 않습니다.",
       "auth/invalid-email": "학번 형식이 올바르지 않습니다.",
       "auth/too-many-requests": "로그인 시도가 많습니다. 잠시 후 다시 시도하세요.",
-      "auth/network-request-failed": "네트워크 연결을 확인해 주세요."
+      "auth/network-request-failed": "네트워크 연결을 확인해 주세요.",
+      "auth/operation-not-allowed": "Firebase Authentication에서 이메일/비밀번호 로그인이 비활성화되어 있습니다.",
+      "auth/invalid-api-key": "Firebase 설정의 API 키가 올바르지 않습니다.",
+      "auth/app-not-authorized": "현재 도메인이 Firebase Authentication의 승인 도메인에 등록되어 있지 않습니다.",
+      "auth/web-storage-unsupported": "이 브라우저에서 로그인 상태를 저장할 수 없습니다. 일반 브라우저 탭에서 다시 시도해 주세요.",
+      "auth/invalid-user-email": "인증된 계정의 학번이 입력한 학번과 일치하지 않습니다."
     };
-    alert(messages[error.code] || "로그인에 실패했습니다. 계정 전환 상태와 비밀번호를 확인해 주세요.");
+    localStorage.removeItem("userId");
+    alert((messages[error.code] || "로그인에 실패했습니다. Firebase 계정 상태를 확인해 주세요.") + " (오류 코드: " + (error.code || "unknown") + ")");
   } finally {
+    loginInProgress = false;
     loginBtn.disabled = false;
     loginBtn.textContent = "로그인";
   }
