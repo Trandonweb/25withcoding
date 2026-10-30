@@ -5,29 +5,66 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // 관리자 권한은 신뢰할 수 있는 서버(Firebase Admin SDK)가 부여한
-    // Firebase Authentication custom claim으로만 판단한다.
-    function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
-    }
-
-    // 로그인한 계정의 이메일에서 학번을 확인한다.
-    function isOwnStudent(studentId) {
+    function studentId() {
       return signedIn()
-        && request.auth.token.email == studentId + '@auth.25withcoding.kr';
+        && request.auth.token.email.matches('^[0-9]{5}@auth\\.25withcoding\\.kr$')
+        ? request.auth.token.email.split('@')[0]
+        : '';
     }
 
-    match /users/{studentId} {
-      // 학생은 본인 문서만, 관리자는 모든 학생 문서를 읽을 수 있다.
-      allow get: if isOwnStudent(studentId) || isAdmin();
-      allow list: if isAdmin();
-
-      // 학생은 본인 문서만 생성·수정·삭제할 수 있고,
-      // 관리자는 모든 학생 문서를 관리할 수 있다.
-      allow create, update, delete: if isOwnStudent(studentId) || isAdmin();
+    function myUser() {
+      return get(/databases/$(database)/documents/users/$(studentId()));
     }
 
-    // users 이외의 컬렉션은 별도 정책을 검토하기 전까지 모두 차단한다.
+    function isPresident() {
+      return signedIn() && myUser().data.role == 'president';
+    }
+
+    function isVice() {
+      return signedIn() && myUser().data.role == 'vice';
+    }
+
+    function canManageScore(targetId) {
+      return isPresident()
+        || (isVice()
+          && targetId != studentId()
+          && get(/databases/$(database)/documents/users/$(targetId)).data.role != 'president');
+    }
+
+    match /users/{targetId} {
+      // 로그인한 구성원은 상벌점 화면에 필요한 사용자 명단을 읽을 수 있다.
+      allow get, list: if signedIn();
+
+      // 본인은 설정만 수정할 수 있다. 점수 변경은 회장/부회장만 가능하다.
+      allow update: if (
+          signedIn()
+          && targetId == studentId()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['settings'])
+        )
+        || (
+          canManageScore(targetId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score'])
+          && request.resource.data.score is number
+        );
+
+      // 프로필/권한 생성 및 삭제는 클라이언트에서 허용하지 않는다.
+      allow create, delete: if false;
+    }
+
+    match /reward/{rewardId} {
+      allow read: if signedIn();
+      allow create, update: if isPresident() || isVice();
+      allow delete: if false;
+    }
+
+    // 상벌점 이력 및 일일 제한 기록은 Firebase Admin SDK 백엔드만 접근한다.
+    match /discipline_records/{recordId} {
+      allow read, write: if false;
+    }
+    match /discipline_daily/{recordId} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
