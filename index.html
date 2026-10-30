@@ -376,7 +376,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       console.error("[AUTH] 메인 페이지 인증 상태 감시 오류",error?.code||error,error);
       // Observer errors are not proof of logout. Preserve a valid live Auth user.
       if(auth.currentUser)renderAuthState(auth.currentUser);
-      else if(lastAuthUid===undefined){
+      else {
         const label=document.getElementById("authLabel");
         if(label)label.textContent="인증 확인 중";
       }
