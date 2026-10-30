@@ -245,25 +245,35 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       const dropdown=document.getElementById("profileDropdown");
       const signoutBtn=document.getElementById("signoutBtn");
       if(user){
+        // Render the authenticated state immediately. Firestore is only needed for profile details.
         const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=false;
         dropdown.hidden=false;
         const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
-        let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
-        const adminNav=document.getElementById("adminNavItem");
-        const isProfileAdmin=data.role==="president"||data.role==="vice";
-        if(adminNav)adminNav.hidden=!isProfileAdmin;
-        const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=!isProfileAdmin;
-        const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
+        const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
+        const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;
+        const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=true;
+        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=item.id==="adminNavItem"});
+        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"});
         btn.setAttribute("aria-label","프로필 메뉴 열기");
-        label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
+        label.textContent="회원";
         studentNumber.textContent="";
         studentNumber.hidden=false;
-        document.getElementById("profileStudentNumber").textContent=user;document.getElementById("profileStudentName").textContent=name;
-        const currentSettings=getStoredSettings();renderAvatar((data.settings&&data.settings.avatarConfig)||currentSettings.avatarConfig);
+        document.getElementById("profileStudentNumber").textContent=user;
+        document.getElementById("profileStudentName").textContent="회원 정보 불러오는 중";
         btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
         signoutBtn.hidden=false;
         signoutBtn.onclick=()=>{location.href="/signout?redirect=/"};
-        const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
+        renderAvatar(getStoredSettings().avatarConfig);
+
+        let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
+        if(auth.currentUser?.uid!==authUser?.uid)return;
+        const isProfileAdmin=data.role==="president"||data.role==="vice";
+        if(adminNav)adminNav.hidden=!isProfileAdmin;
+        if(adminColumn)adminColumn.hidden=!isProfileAdmin;
+        const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
+        label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
+        document.getElementById("profileStudentName").textContent=name;
+        const currentSettings=getStoredSettings();renderAvatar((data.settings&&data.settings.avatarConfig)||currentSettings.avatarConfig);
         document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=item.id==="adminNavItem"?!isProfileAdmin:false});
         document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"?!isProfileAdmin:false});
       }else{
