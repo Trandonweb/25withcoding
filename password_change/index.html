@@ -91,6 +91,7 @@
     button:hover:not(:disabled) { filter: brightness(.9); }
     button:disabled { cursor: default; opacity: .75; }
     .message { min-height: 18px; margin-top: 12px; color: var(--sub-text); font-size: 13px; line-height: 1.5; }
+    .hidden { display: none !important; }
     .back { display: inline-block; margin-top: 14px; color: var(--sub-text); font-size: 13px; text-decoration: none; }
     .back:hover { text-decoration: underline; }
   </style>
@@ -125,7 +126,15 @@ const SETTINGS_KEY = "coding_with_ramen_settings";
 const params = new URLSearchParams(location.search);
 const rawRedirect = params.get("redirect") || "/상벌점/main.html";
 const redirect = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/상벌점/main.html";
-document.getElementById("backLink").href = redirect;
+const forceChange = params.get("force") === "1" || sessionStorage.getItem("forcePasswordChangeAfterLogin") === "1";
+const backLink = document.getElementById("backLink");
+if (forceChange) {
+  backLink.classList.add("hidden");
+  document.querySelector("h2").textContent = "첫 로그인: 비밀번호 변경 필수";
+  document.getElementById("message").textContent = "계정 보호를 위해 새 비밀번호를 설정해야 합니다. 변경 전에는 이 화면을 건너뛸 수 없습니다.";
+} else {
+  backLink.href = redirect;
+}
 
 try {
   const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
@@ -185,6 +194,7 @@ window.changePassword = async () => {
     localStorage.removeItem("firebaseRefreshToken");
     document.getElementById("pw1").value = "";
     document.getElementById("pw2").value = "";
+    sessionStorage.removeItem("forcePasswordChangeAfterLogin");
     message.textContent = "비밀번호가 변경되었습니다.";
     setTimeout(() => location.replace(redirect), 900);
   } catch (error) {

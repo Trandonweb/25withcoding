@@ -1,0 +1,7 @@
+name = "25withcoding-api"
+main = "src/index.js"
+compatibility_date = "2026-10-28"
+
+# Configure deployment secrets with:
+# npx wrangler secret put <SECRET_NAME>
+# Never place service-account JSON, private keys, or API secrets in this file.
