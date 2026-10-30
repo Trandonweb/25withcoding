@@ -38,10 +38,8 @@ main{width:min(760px,92%);margin:42px auto 70px}.eyebrow{color:var(--primary);fo
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import {getFirestore,doc,getDoc,setDoc} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
-const app=initializeApp(firebaseConfig);const db=getFirestore(app);const auth=getAuth(app);const KEY="coding_with_ramen_settings";
-let authenticatedUser=null;let authReadyResolve;const authReady=new Promise(resolve=>{authReadyResolve=resolve});let authReadyDone=false;
+const app=initializeApp(firebaseConfig);const db=getFirestore(app);const KEY="coding_with_ramen_settings";
 const defaults={darkMode:false,primaryColor:"#27ae60",keepLogin:true,avatarConfig:{icon:"code",iconColor:"#27ae60",background:"#e7f7ed",backgroundEffect:"glow"}};
 
 function avatarSvg(config={}){const c={...defaults.avatarConfig,...(config||{})};const paths={code:'<path d="m43 40-15 16 15 16M69 40l15 16-15 16M63 32 49 80" fill="none" stroke="ICON" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>',terminal:'<rect x="27" y="29" width="58" height="54" rx="8" fill="none" stroke="ICON" stroke-width="5.5"/><path d="m39 45 10 9-10 9M57 64h16" fill="none" stroke="ICON" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',cpu:'<rect x="35" y="35" width="42" height="42" rx="6" fill="none" stroke="ICON" stroke-width="5.5"/><rect x="46" y="46" width="20" height="20" rx="3" fill="none" stroke="ICON" stroke-width="4"/><path d="M44 24v11m12-11v11m12-11v11M44 77v11m12-11v11m12-11v11M24 44h11m-11 12h11m-11 12h11M77 44h11M77 56h11M77 68h11" stroke="ICON" stroke-width="4.5" stroke-linecap="round"/>',gamepad:'<path d="M37 40h38a16 16 0 0 1 15 20l-5 17a8 8 0 0 1-13 4L60 69H52L40 81a8 8 0 0 1-13-4l-5-17a16 16 0 0 1 15-20Z" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/><path d="M38 49v16m-8-8h16" stroke="ICON" stroke-width="5" stroke-linecap="round"/><circle cx="70" cy="53" r="3" fill="ICON"/><circle cx="78" cy="61" r="3" fill="ICON"/>',rocket:'<path d="M47 66c-7-11-5-26 5-38 7-8 16-12 25-13 0 10-5 23-13 31-6 6-11 9-17 10Z" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/><circle cx="66" cy="33" r="6" fill="none" stroke="ICON" stroke-width="4.5"/><path d="m47 55-14 4-8 16 19-4M54 66l-2 17 15-8 5-14" fill="none" stroke="ICON" stroke-width="5" stroke-linejoin="round"/><path d="m40 78-5 7" stroke="ICON" stroke-width="4" stroke-linecap="round"/>',zap:'<path d="M62 20 34 59h20l-4 33 29-45H59l3-27Z" fill="ICON" stroke="ICON" stroke-width="2" stroke-linejoin="round"/>',star:'<path d="m56 22 10 21 23 3-17 16 4 23-20-11-20 11 4-23-17-16 23-3 10-21Z" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/>',layers:'<path d="m56 25 32 17-32 17-32-17 32-17Z" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/><path d="m24 56 32 17 32-17M24 69l32 17 32-17" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/>',music:'<path d="M65 67V28l23-5v39M65 38l23-5" fill="none" stroke="ICON" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="50" cy="72" rx="12" ry="8" transform="rotate(-20 50 72)" fill="none" stroke="ICON" stroke-width="5.5"/><ellipse cx="75" cy="65" rx="11" ry="7" transform="rotate(-20 75 65)" fill="none" stroke="ICON" stroke-width="5.5"/>',globe:'<circle cx="56" cy="56" r="32" fill="none" stroke="ICON" stroke-width="5.5"/><ellipse cx="56" cy="56" rx="14" ry="32" fill="none" stroke="ICON" stroke-width="4.5"/><path d="M26 46h60M26 66h60" stroke="ICON" stroke-width="4.5" stroke-linecap="round"/>'};let bg='';if(c.backgroundEffect==='glow')bg='<circle cx="56" cy="56" r="37" fill="'+c.iconColor+'" opacity=".13"/>';if(c.backgroundEffect==='dots'){for(let y=20;y<100;y+=16)for(let x=20;x<100;x+=16)bg+='<circle cx="'+x+'" cy="'+y+'" r="1.8" fill="'+c.iconColor+'" opacity=".24"/>'}if(c.backgroundEffect==='grid')bg='<path d="M16 32H96M16 48H96M16 64H96M16 80H96M32 16V96M48 16V96M64 16V96M80 16V96" stroke="'+c.iconColor+'" stroke-width="1" opacity=".15"/>';if(c.backgroundEffect==='rings')bg='<circle cx="56" cy="56" r="43" fill="none" stroke="'+c.iconColor+'" stroke-width="2" opacity=".18"/><circle cx="56" cy="56" r="31" fill="none" stroke="'+c.iconColor+'" stroke-width="2" opacity=".18"/>';const art=(paths[c.icon]||paths.code).replace(/ICON/g,c.iconColor);return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112"><rect width="112" height="112" rx="56" fill="'+c.background+'"/>'+bg+art+'</svg>'}function renderAvatar(config){document.getElementById("avatarPreview").src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(avatarSvg(config))}
@@ -54,14 +52,13 @@ async function save(key,value){
   apply(settings);
   const status=document.getElementById("settingsStatus");
   status.textContent="설정 저장 중…";
-  await authReady;
-  const match=(authenticatedUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
-  if(!authenticatedUser||!match){
-    status.textContent="Firebase 로그인 정보가 없습니다. 이 기기에만 저장했습니다.";
+  const userId=localStorage.getItem("userId");
+  if(!userId){
+    status.textContent="로그인 정보가 없습니다. 이 기기에만 저장했습니다.";
     return;
   }
   try{
-    await setDoc(doc(db,"users",match[1]),{settings:{[key]:value}},{merge:true});
+    await setDoc(doc(db,"users",userId),{settings:{[key]:value}},{merge:true});
     status.textContent="Firebase 계정에 설정을 저장했습니다.";
   }catch(e){
     console.error("Firebase 설정 저장 실패",e);
@@ -74,37 +71,32 @@ document.querySelectorAll(".color").forEach(b=>b.addEventListener("click",()=>sa
 function readAvatarControls(){return {icon:document.getElementById("avatarIcon").value,iconColor:document.getElementById("avatarIconColor").value,background:document.getElementById("avatarBackground").value,backgroundEffect:document.getElementById("avatarEffect").value}}
 for(const id of ["avatarIcon","avatarIconColor","avatarBackground","avatarEffect"]){document.getElementById(id).addEventListener("change",()=>{const config=readAvatarControls();renderAvatar(config);save("avatarConfig",config).then(()=>{document.getElementById("avatarStatus").textContent="프로필 그림 조합을 저장했습니다."})})}
 const area=document.getElementById("passwordArea");
-function showSignedOut(){
-  localStorage.removeItem("userId");
+// 메인 index.html과 동일하게 localStorage의 userId를 로그인 상태 기준으로 사용한다.
+const userId=localStorage.getItem("userId");
+if(userId){
+  area.innerHTML='<p class="status">비밀번호 변경은 전용 인증 페이지에서 진행합니다.</p><a class="primary-btn" href="/password_change?redirect=%2Fsettings">비밀번호 변경 페이지 열기</a>';
+  (async()=>{
+    document.getElementById("settingsStatus").textContent="Firebase 계정 설정을 불러오는 중…";
+    try{
+      const snap=await getDoc(doc(db,"users",userId));
+      if(snap.exists()){
+        const remote=snap.data().settings||{};
+        settings={...defaults,...remote,avatarConfig:{...defaults.avatarConfig,...(remote.avatarConfig||{})}};
+        localStorage.setItem(KEY,JSON.stringify(settings));
+        apply(settings);
+        document.getElementById("settingsStatus").textContent="Firebase 계정 설정을 불러왔습니다.";
+      }else{
+        document.getElementById("settingsStatus").textContent="계정 설정 문서가 아직 없습니다. 변경하면 새로 저장됩니다.";
+      }
+    }catch(e){
+      console.error("Firebase 계정 설정 불러오기 실패",e);
+      document.getElementById("settingsStatus").textContent="Firebase 설정 불러오기 실패 ("+(e.code||"unknown")+"). 로그인은 확인됐지만 Firestore 접근 권한을 확인해 주세요.";
+    }
+  })();
+}else{
   area.innerHTML='<p class="status">먼저 로그인해 주세요.</p><a class="primary-btn" href="/signin?redirect=%2Fsettings">로그인</a>';
   document.getElementById("settingsStatus").textContent="로그인하지 않은 상태입니다. 변경 사항은 이 기기에 저장됩니다.";
 }
-onAuthStateChanged(auth,async user=>{
-  authenticatedUser=user;
-  if(!authReadyDone){authReadyDone=true;authReadyResolve(user)}
-  const match=(user?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
-  if(!user||!match){showSignedOut();return}
-  const studentId=match[1];
-  // localStorage는 화면 표시용 캐시일 뿐, 인증 판단에는 사용하지 않는다.
-  localStorage.setItem("userId",studentId);
-  area.innerHTML='<p class="status">비밀번호 변경은 전용 인증 페이지에서 진행합니다.</p><a class="primary-btn" href="/password_change?redirect=%2Fsettings">비밀번호 변경 페이지 열기</a>';
-  document.getElementById("settingsStatus").textContent="Firebase 계정 설정을 불러오는 중…";
-  try{
-    const snap=await getDoc(doc(db,"users",studentId));
-    if(snap.exists()){
-      const remote=snap.data().settings||{};
-      settings={...defaults,...remote,avatarConfig:{...defaults.avatarConfig,...(remote.avatarConfig||{})}};
-      localStorage.setItem(KEY,JSON.stringify(settings));
-      apply(settings);
-      document.getElementById("settingsStatus").textContent="Firebase 계정 설정을 불러왔습니다.";
-    }else{
-      document.getElementById("settingsStatus").textContent="계정 설정 문서가 아직 없습니다. 변경하면 새로 저장됩니다.";
-    }
-  }catch(e){
-    console.error("Firebase 계정 설정 불러오기 실패",e);
-    document.getElementById("settingsStatus").textContent="Firebase 설정 불러오기 실패 ("+(e.code||"unknown")+"). 로그인 권한과 Firestore 규칙을 확인해 주세요.";
-  }
-});
 </script>
 </body>
 </html>
