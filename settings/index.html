@@ -43,7 +43,7 @@ const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain
 const app=initializeApp(firebaseConfig);const db=getFirestore(app);const auth=getAuth(app);const KEY="coding_with_ramen_settings";
 // Firebase Auth의 초기 세션 복구가 끝날 때까지 기다린다.
 const authUser=await new Promise(resolve=>{const unsubscribe=onAuthStateChanged(auth,user=>{unsubscribe();resolve(user)})});
-const authStudentMatch=(authUser?.email||"").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+const authStudentMatch=(authUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
 const authenticatedStudentId=authStudentMatch?authStudentMatch[1]:null;
 if(authenticatedStudentId) localStorage.setItem("userId",authenticatedStudentId);
 else localStorage.removeItem("userId");
