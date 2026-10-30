@@ -139,23 +139,10 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     import { renderAttendanceButton } from "/attendance.js";
     const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
     const app=initializeApp(firebaseConfig); const db=getFirestore(app); const auth=getAuth(app);
-    function waitForAuthUser(){
-      return new Promise((resolve,reject)=>{
-        let unsubscribe=null;
-        let unsubscribeAfterAttach=false;
-        let settled=false;
-        const finish=(callback,value)=>{
-          if(settled)return;
-          settled=true;
-          if(unsubscribe)unsubscribe();else unsubscribeAfterAttach=true;
-          callback(value);
-        };
-        unsubscribe=onAuthStateChanged(auth,user=>finish(resolve,user),error=>finish(reject,error));
-        if(unsubscribeAfterAttach)unsubscribe();
-      });
-    }
-    async function getVerifiedStudentId(currentUserOverride){
-      const currentUser=arguments.length>0?currentUserOverride:await waitForAuthUser();
+    async function getVerifiedStudentId(){
+      // Wait until Firebase has restored the persisted session before reading currentUser.
+      await auth.authStateReady();
+      const currentUser=auth.currentUser;
       const match=(currentUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
       if(!match){localStorage.removeItem("userId");return null;}
       const verifiedId=match[1];
@@ -252,7 +239,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     loadMainPageContent();
     function go(path){location.href=path} window.go=go;
     function goPoint(){const user=localStorage.getItem("userId");location.href=user?"/상벌점/main.html":"/signin?redirect=/상벌점/main.html"} window.goPoint=goPoint;
-    async function checkUserSettings(userId){const verifiedId=await getVerifiedStudentId();if(!verifiedId)throw new Error("Firebase 로그인 세션을 확인할 수 없습니다.");const userRef=doc(db,"users",verifiedId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig},updateData={};if(firebaseSettings.darkMode===undefined)updateData.darkMode=settings.darkMode;if(firebaseSettings.primaryColor===undefined)updateData.primaryColor=settings.primaryColor;if(firebaseSettings.keepLogin===undefined)updateData.keepLogin=settings.keepLogin;if(firebaseSettings.avatarConfig===undefined)updateData.avatarConfig=settings.avatarConfig;if(Object.keys(updateData).length>0)await setDoc(userRef,{settings:updateData},{merge:true});saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
+    async function checkUserSettings(userId){if(!/^\d{5}$/.test(String(userId||"")))throw new Error("인증된 학번이 없습니다.");const userRef=doc(db,"users",userId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig};saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
     async function updateUI(){
       const user=await getVerifiedStudentId().catch(e=>{console.warn("Firebase 인증 상태 확인 실패",e?.code||e);return null;});
       const btn=document.getElementById("authBtn");
