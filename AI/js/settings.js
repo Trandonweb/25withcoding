@@ -112,7 +112,7 @@ function renderSettings(admin) {
 }
 
 async function loadSettingsAccess() {
-    const userId = state.currentUserId || localStorage.getItem("userId");
+    const userId = state.currentUserId || "";
     let admin = false;
 
     if (userId) {
@@ -158,4 +158,3 @@ window.openSettings = openSettings;
 window.closeSettings = closeSettings;
 window.openAdminLogs = openAdminLogs;
 
-loadSettingsAccess();
