@@ -111,7 +111,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     </nav>
     <div class="header-account">
       <span id="studentNumber" class="student-number" hidden></span>
-      <div id="profileMenuWrap" class="profile-menu-wrap">
+      <div class="profile-menu-wrap">
         <button id="authBtn" class="auth-btn" type="button" aria-haspopup="true" aria-expanded="false"><img id="profileAvatar" class="profile-mark" alt="프로필 캐릭터"><span id="authLabel">로그인</span></button>
         <div id="profileDropdown" class="profile-dropdown" role="menu">
           <div id="profileAccountLabel" class="profile-account-label" role="group"><div class="profile-info-row"><span>학번</span><strong id="profileStudentNumber">—</strong></div><div class="profile-info-row"><span>이름</span><strong id="profileStudentName">—</strong></div></div>
@@ -135,29 +135,21 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-    const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
-    const app=initializeApp(firebaseConfig); const db=getFirestore(app); const auth=getAuth(app);
-    function getVerifiedStudentId(authUser=auth.currentUser){
-      // Identity always comes from the live Firebase Auth user, never localStorage.
-      const match=(authUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
-      if(!match){try{localStorage.removeItem("userId")}catch(storageError){console.warn("[AUTH] localStorage 사용 불가",storageError)}return null;}
-      const verifiedId=match[1];
-      try{localStorage.setItem("userId",verifiedId)}catch(storageError){console.warn("[AUTH] userId 표시 캐시 저장 실패",storageError)}
-      return verifiedId;
-    }
+    import { renderAttendanceButton } from "/attendance.js";
+    const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
+    const app=initializeApp(firebaseConfig); const db=getFirestore(app);
     const SETTINGS_KEY="coding_with_ramen_settings"; const COBY_LIGHT_LOGO="/AI/COBY_AI_logo.png"; const COBY_DARK_LOGO="/AI/COBY_AI_logo_dark_mode.png";
     const defaultSettings={darkMode:false,primaryColor:"#27ae60",keepLogin:true,avatarConfig:{icon:"code",iconColor:"#27ae60",background:"#e7f7ed",backgroundEffect:"glow"}};
-    function getStoredSettings(){try{const saved=localStorage.getItem(SETTINGS_KEY);if(saved){return {...defaultSettings,...JSON.parse(saved)}}}catch(e){console.warn("[SETTINGS] 로컬 설정 읽기 실패",e)}return {...defaultSettings}}
-    function saveStoredSettings(settings){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}catch(e){console.warn("[SETTINGS] 로컬 설정 저장 실패",e)}}
+    function getStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{return {...defaultSettings,...JSON.parse(saved)}}catch(e){return {...defaultSettings}}}return {...defaultSettings}}
+    function saveStoredSettings(settings){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}
     function avatarSvg(config={}){const c={...defaultSettings.avatarConfig,...(config||{})};const paths={code:'<path d="m43 40-15 16 15 16M69 40l15 16-15 16M63 32 49 80" fill="none" stroke="ICON" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>',terminal:'<rect x="27" y="29" width="58" height="54" rx="8" fill="none" stroke="ICON" stroke-width="5.5"/><path d="m39 45 10 9-10 9M57 64h16" fill="none" stroke="ICON" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',cpu:'<rect x="35" y="35" width="42" height="42" rx="6" fill="none" stroke="ICON" stroke-width="5.5"/><rect x="46" y="46" width="20" height="20" rx="3" fill="none" stroke="ICON" stroke-width="4"/><path d="M44 24v11m12-11v11m12-11v11M44 77v11m12-11v11m12-11v11M24 44h11m-11 12h11m-11 12h11M77 44h11M77 56h11M77 68h11" stroke="ICON" stroke-width="4.5" stroke-linecap="round"/>',gamepad:'<path d="M37 40h38a16 16 0 0 1 15 20l-5 17a8 8 0 0 1-13 4L60 69H52L40 81a8 8 0 0 1-13-4l-5-17a16 16 0 0 1 15-20Z" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/><path d="M38 49v16m-8-8h16" stroke="ICON" stroke-width="5" stroke-linecap="round"/><circle cx="70" cy="53" r="3" fill="ICON"/><circle cx="78" cy="61" r="3" fill="ICON"/>',rocket:'<path d="M47 66c-7-11-5-26 5-38 7-8 16-12 25-13 0 10-5 23-13 31-6 6-11 9-17 10Z" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/><circle cx="66" cy="33" r="6" fill="none" stroke="ICON" stroke-width="4.5"/><path d="m47 55-14 4-8 16 19-4M54 66l-2 17 15-8 5-14" fill="none" stroke="ICON" stroke-width="5" stroke-linejoin="round"/><path d="m40 78-5 7" stroke="ICON" stroke-width="4" stroke-linecap="round"/>',zap:'<path d="M62 20 34 59h20l-4 33 29-45H59l3-27Z" fill="ICON" stroke="ICON" stroke-width="2" stroke-linejoin="round"/>',star:'<path d="m56 22 10 21 23 3-17 16 4 23-20-11-20 11 4-23-17-16 23-3 10-21Z" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/>',layers:'<path d="m56 25 32 17-32 17-32-17 32-17Z" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/><path d="m24 56 32 17 32-17M24 69l32 17 32-17" fill="none" stroke="ICON" stroke-width="5.5" stroke-linejoin="round"/>',music:'<path d="M65 67V28l23-5v39M65 38l23-5" fill="none" stroke="ICON" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="50" cy="72" rx="12" ry="8" transform="rotate(-20 50 72)" fill="none" stroke="ICON" stroke-width="5.5"/><ellipse cx="75" cy="65" rx="11" ry="7" transform="rotate(-20 75 65)" fill="none" stroke="ICON" stroke-width="5.5"/>',globe:'<circle cx="56" cy="56" r="32" fill="none" stroke="ICON" stroke-width="5.5"/><ellipse cx="56" cy="56" rx="14" ry="32" fill="none" stroke="ICON" stroke-width="4.5"/><path d="M26 46h60M26 66h60" stroke="ICON" stroke-width="4.5" stroke-linecap="round"/>'};let bg='';if(c.backgroundEffect==='glow')bg='<circle cx="56" cy="56" r="37" fill="'+c.iconColor+'" opacity=".13"/>';if(c.backgroundEffect==='dots'){for(let y=20;y<100;y+=16)for(let x=20;x<100;x+=16)bg+='<circle cx="'+x+'" cy="'+y+'" r="1.8" fill="'+c.iconColor+'" opacity=".24"/>'}if(c.backgroundEffect==='grid')bg='<path d="M16 32H96M16 48H96M16 64H96M16 80H96M32 16V96M48 16V96M64 16V96M80 16V96" stroke="'+c.iconColor+'" stroke-width="1" opacity=".15"/>';if(c.backgroundEffect==='rings')bg='<circle cx="56" cy="56" r="43" fill="none" stroke="'+c.iconColor+'" stroke-width="2" opacity=".18"/><circle cx="56" cy="56" r="31" fill="none" stroke="'+c.iconColor+'" stroke-width="2" opacity=".18"/>';const art=(paths[c.icon]||paths.code).replace(/ICON/g,c.iconColor);return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112"><rect width="112" height="112" rx="56" fill="'+c.background+'"/>'+bg+art+'</svg>'}
     function renderAvatar(config){const avatar=document.getElementById("profileAvatar");if(avatar)avatar.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(avatarSvg(config))}
     function removeLogoBackground(image,threshold=45){const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d",{willReadFrequently:true});if(!ctx)return null;canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;ctx.drawImage(image,0,0);const data=ctx.getImageData(0,0,canvas.width,canvas.height),pixels=data.data,corners=[[0,0],[canvas.width-1,0],[0,canvas.height-1],[canvas.width-1,canvas.height-1]],backgrounds=corners.map(([x,y])=>{const i=(y*canvas.width+x)*4;return [pixels[i],pixels[i+1],pixels[i+2]]});for(let i=0;i<pixels.length;i+=4){const r=pixels[i],g=pixels[i+1],b=pixels[i+2],isBackground=backgrounds.some(([br,bg,bb])=>Math.sqrt((r-br)**2+(g-bg)**2+(b-bb)**2)<=threshold);if(isBackground)pixels[i+3]=0}ctx.putImageData(data,0,0);return canvas.toDataURL("image/png")}
     function updateCobyLogo(darkMode){const logo=document.getElementById("cobyLogo");if(!logo)return;const target=darkMode?COBY_DARK_LOGO:COBY_LIGHT_LOGO;logo.dataset.source=target;const image=new Image();image.onload=()=>{if(darkMode){try{const processed=removeLogoBackground(image);if(processed){logo.src=processed;return}}catch(e){console.warn("COBY 로고 자동 배경제거 실패",e)}}logo.src=target};image.onerror=()=>{logo.src=target};image.src=target}
     function applySettings(settings){document.body.classList.toggle("dark-mode",!!settings.darkMode);if(settings.primaryColor)document.documentElement.style.setProperty("--primary-color",settings.primaryColor);document.querySelectorAll(".color-circle").forEach(circle=>circle.classList.toggle("selected",circle.getAttribute("data-color")===settings.primaryColor));updateCobyLogo(!!settings.darkMode)}
     function syncSettingsUI(){const settings=getStoredSettings();const darkModeToggle=document.getElementById("darkModeToggle");const keepLoginToggle=document.getElementById("keepLoginToggle");if(darkModeToggle)darkModeToggle.checked=!!settings.darkMode;if(keepLoginToggle)keepLoginToggle.checked=!!settings.keepLogin;applySettings(settings)}
-    window.toggleSetting=async function(key,value){const settings=getStoredSettings();settings[key]=value;saveStoredSettings(settings);applySettings(settings);try{const user=getVerifiedStudentId(auth.currentUser);if(user){await setDoc(doc(db,"users",user),{settings:{[key]:value}},{merge:true})}else{console.warn("설정은 이 기기에 저장했지만 Firebase 로그인 세션이 없습니다.")}}catch(e){console.error("설정 동기화 실패",e?.code||e,e)}};
-    window.changeThemeColor=async function(color){const settings=getStoredSettings();settings.primaryColor=color;saveStoredSettings(settings);applySettings(settings);const user=getVerifiedStudentId(auth.currentUser);if(user){try{await setDoc(doc(db,"users",user),{settings:{primaryColor:color}},{merge:true})}catch(e){console.error("컬러 테마 동기화 실패",e)}}};
+    window.toggleSetting=async function(key,value){const settings=getStoredSettings();settings[key]=value;saveStoredSettings(settings);applySettings(settings);const user=localStorage.getItem("userId");if(user){try{await setDoc(doc(db,"users",user),{settings:{[key]:value}},{merge:true})}catch(e){console.error("설정 동기화 실패",e)}}};
+    window.changeThemeColor=async function(color){const settings=getStoredSettings();settings.primaryColor=color;saveStoredSettings(settings);applySettings(settings);const user=localStorage.getItem("userId");if(user){try{await setDoc(doc(db,"users",user),{settings:{primaryColor:color}},{merge:true})}catch(e){console.error("컬러 테마 동기화 실패",e)}}};
     applySettings(getStoredSettings());renderAvatar(getStoredSettings().avatarConfig);
 
     const defaultMainSlides=[
@@ -183,10 +175,10 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       const root=document.getElementById("managedMainSections");if(!root)return;root.replaceChildren();
       (Array.isArray(elements)?elements:[]).filter(e=>e&&e.enabled!==false).forEach(e=>{
         if(e.type==="canvas"){
-          const stage=document.createElement("section");stage.className="managed-canvas-page";stage.style.position="relative";stage.style.width="100%";stage.style.aspectRatio="16 / 9";stage.style.containerType="inline-size";stage.style.overflow="hidden";stage.style.margin="24px 0";stage.style.background=e.canvasBackground||e.background||"#ffffff";stage.style.borderRadius="18px";stage.style.boxShadow="0 10px 34px rgba(0,0,0,.08)";
+          const stage=document.createElement("section");stage.className="managed-canvas-page";stage.style.position="relative";stage.style.width="100%";stage.style.aspectRatio="16 / 9";stage.style.overflow="hidden";stage.style.margin="24px 0";stage.style.background=e.canvasBackground||e.background||"#ffffff";stage.style.borderRadius="18px";stage.style.boxShadow="0 10px 34px rgba(0,0,0,.08)";
           (Array.isArray(e.objects)?e.objects:[]).slice().sort((a,b)=>(a.z||0)-(b.z||0)).forEach(o=>{
             const item=document.createElement(o.linkUrl&&safeMainUrl(o.linkUrl)?"a":"div");if(item.tagName==="A"){item.href=safeMainUrl(o.linkUrl);item.style.textDecoration="none"}
-            item.style.position="absolute";item.style.left=(Number(o.x)||0)+"%";item.style.top=(Number(o.y)||0)+"%";item.style.width=(Number(o.w)||20)+"%";item.style.height=(Number(o.h)||15)+"%";item.style.zIndex=String(o.z||1);item.style.boxSizing="border-box";item.style.display="flex";item.style.alignItems="center";item.style.justifyContent="center";item.style.overflow="hidden";item.style.whiteSpace="pre-wrap";item.style.wordBreak="break-word";item.style.padding="1%";item.style.fontSize="clamp(8px, "+((Number(o.fontSize)||18)/11).toFixed(3)+"cqw, "+(Number(o.fontSize)||18)+"px)";item.style.textAlign=o.align||"center";item.style.color=o.color||"#17231b";item.style.background=o.type==="line"?"transparent":o.type==="image"?"transparent":o.fill||"transparent";item.style.borderRadius=(Number(o.radius)||0)+"px";
+            item.style.position="absolute";item.style.left=(Number(o.x)||0)+"%";item.style.top=(Number(o.y)||0)+"%";item.style.width=(Number(o.w)||20)+"%";item.style.height=(Number(o.h)||15)+"%";item.style.zIndex=String(o.z||1);item.style.boxSizing="border-box";item.style.display="flex";item.style.alignItems="center";item.style.justifyContent="center";item.style.overflow="hidden";item.style.whiteSpace="pre-wrap";item.style.wordBreak="break-word";item.style.padding="1%";item.style.fontSize="clamp(8px, "+(Number(o.fontSize)||18)/10+"vw, "+(Number(o.fontSize)||18)+"px)";item.style.textAlign=o.align||"center";item.style.color=o.color||"#17231b";item.style.background=o.type==="line"?"transparent":o.type==="image"?"transparent":o.fill||"transparent";item.style.borderRadius=(Number(o.radius)||0)+"px";
             if(o.type==="circle"){item.style.border="2px solid "+(o.color||"#17231b");item.style.borderRadius="50%"}else if(o.type==="rect"){item.style.border="2px solid "+(o.color||"#17231b")}else if(o.type==="line"){item.style.height="0.5%";item.style.minHeight="2px";item.style.padding="0";item.style.background=o.color||"#17231b"}
             if(o.type==="image"&&safeMainUrl(o.imageUrl)){const img=document.createElement("img");img.src=safeMainUrl(o.imageUrl);img.alt=o.name||"";img.style.width="100%";img.style.height="100%";img.style.objectFit="contain";item.append(img)}else{item.textContent=o.text||o.name||""}
             stage.append(item);
@@ -236,126 +228,53 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     loadMainPageContent();
     function go(path){location.href=path} window.go=go;
     function goPoint(){const user=localStorage.getItem("userId");location.href=user?"/상벌점/main.html":"/signin?redirect=/상벌점/main.html"} window.goPoint=goPoint;
-    async function checkUserSettings(userId){if(!/^\d{5}$/.test(String(userId||"")))throw new Error("인증된 학번이 없습니다.");const userRef=doc(db,"users",userId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig};saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
-    let authUiRevision=0;
-    function setSignedOutUI(){
+    async function checkUserSettings(userId){const userRef=doc(db,"users",userId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig},updateData={};if(firebaseSettings.darkMode===undefined)updateData.darkMode=settings.darkMode;if(firebaseSettings.primaryColor===undefined)updateData.primaryColor=settings.primaryColor;if(firebaseSettings.keepLogin===undefined)updateData.keepLogin=settings.keepLogin;if(firebaseSettings.avatarConfig===undefined)updateData.avatarConfig=settings.avatarConfig;if(Object.keys(updateData).length>0)await setDoc(userRef,{settings:updateData},{merge:true});saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
+    async function updateUI(){
+      const user=localStorage.getItem("userId");
       const btn=document.getElementById("authBtn");
       const label=document.getElementById("authLabel");
       const studentNumber=document.getElementById("studentNumber");
       const dropdown=document.getElementById("profileDropdown");
       const signoutBtn=document.getElementById("signoutBtn");
-      const profileWrap=document.getElementById("profileMenuWrap");
-      if(profileWrap)profileWrap.hidden=false;
-      if(dropdown){dropdown.classList.remove("open");dropdown.hidden=true}
-      const headerAccount=document.querySelector(".header-account");
-      if(headerAccount)headerAccount.classList.add("logged-out-account");
-      const nav=document.querySelector(".main-nav");
-      if(nav)nav.classList.add("is-logged-out");
-      const publicPaths=["/about","/memorial_hall","/apply"];
-      document.querySelectorAll(".main-nav .nav-item").forEach(item=>{
-        const link=item.querySelector(".nav-trigger");
-        let path="";
-        try{path=link?new URL(link.href,location.href).pathname:""}catch{}
-        item.hidden=!publicPaths.includes(path);
-      });
-      document.querySelectorAll(".main-nav .nav-column").forEach(column=>{
-        const links=[...column.querySelectorAll("a")];
-        column.hidden=!links.length||!links.every(link=>{
-          try{return publicPaths.includes(new URL(link.href,location.href).pathname)}catch{return false}
-        });
-      });
-      const adminNav=document.getElementById("adminNavItem");
-      const adminColumn=document.getElementById("adminDropdownColumn");
-      if(adminNav)adminNav.hidden=true;
-      if(adminColumn)adminColumn.hidden=true;
-      if(btn){btn.setAttribute("aria-label","로그인");btn.setAttribute("aria-expanded","false");btn.onclick=()=>{location.href="/signin/?redirect=%2F"}}
-      if(label)label.textContent="로그인";
-      if(studentNumber){studentNumber.textContent="";studentNumber.hidden=true}
-      const profileNumber=document.getElementById("profileStudentNumber");
-      const profileName=document.getElementById("profileStudentName");
-      if(profileNumber)profileNumber.textContent="—";
-      if(profileName)profileName.textContent="로그인 필요";
-      if(signoutBtn)signoutBtn.hidden=true;
-      renderAvatar(getStoredSettings().avatarConfig);
+      if(user){
+        const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=false;
+        const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
+        let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
+        const adminNav=document.getElementById("adminNavItem");
+        if(adminNav)adminNav.hidden=!(data.role==="president"||data.role==="vice");const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=!(data.role==="president"||data.role==="vice");
+        const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
+        btn.setAttribute("aria-label","프로필 메뉴 열기");
+        label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
+        studentNumber.textContent="";
+        studentNumber.hidden=false;
+        document.getElementById("profileStudentNumber").textContent=user;document.getElementById("profileStudentName").textContent=name;
+        const currentSettings=getStoredSettings();renderAvatar((data.settings&&data.settings.avatarConfig)||currentSettings.avatarConfig);
+        btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
+        signoutBtn.hidden=false;
+        signoutBtn.onclick=()=>{location.href="/signout?redirect=/"};
+        const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
+        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=false});
+        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=false});
+      }else{
+        const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=true;
+        const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.add("logged-out-account");
+        const nav=document.querySelector(".main-nav");if(nav)nav.classList.add("is-logged-out");
+        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{const link=item.querySelector(".nav-trigger");item.hidden=!(link&&["/about","/memorial_hall","/apply"].includes(new URL(link.href,location.href).pathname))});
+        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{const links=[...column.querySelectorAll("a")];column.hidden=!links.length||!links.every(link=>["/about","/memorial_hall","/apply"].includes(new URL(link.href,location.href).pathname))});
+        const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=true;
+        btn.setAttribute("aria-label","로그인");
+        label.textContent="로그인";
+        renderAvatar(getStoredSettings().avatarConfig);
+        studentNumber.textContent="";
+        studentNumber.hidden=true;
+        document.getElementById("profileStudentNumber").textContent="—";document.getElementById("profileStudentName").textContent="로그인 필요";
+        btn.onclick=()=>{location.href="/signin?redirect=/"};
+        dropdown.classList.remove("open");
+        signoutBtn.hidden=true;
+      }
+      document.addEventListener("click",event=>{if(!event.target.closest(".profile-menu-wrap")){dropdown.classList.remove("open");btn.setAttribute("aria-expanded","false")}});
       syncSettingsUI();
     }
-    function setSignedInShell(authUser,revision){
-      const studentId=getVerifiedStudentId(authUser);
-      if(!studentId){setSignedOutUI();return null}
-      const btn=document.getElementById("authBtn");
-      const label=document.getElementById("authLabel");
-      const studentNumber=document.getElementById("studentNumber");
-      const dropdown=document.getElementById("profileDropdown");
-      const signoutBtn=document.getElementById("signoutBtn");
-      const profileWrap=document.getElementById("profileMenuWrap");
-      if(profileWrap)profileWrap.hidden=false;
-      if(dropdown)dropdown.hidden=false;
-      const headerAccount=document.querySelector(".header-account");
-      if(headerAccount)headerAccount.classList.remove("logged-out-account");
-      const nav=document.querySelector(".main-nav");
-      if(nav)nav.classList.remove("is-logged-out");
-      const adminNav=document.getElementById("adminNavItem");
-      const adminColumn=document.getElementById("adminDropdownColumn");
-      if(adminNav)adminNav.hidden=true;
-      if(adminColumn)adminColumn.hidden=true;
-      document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=item.id==="adminNavItem"});
-      document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"});
-      if(btn){
-        btn.setAttribute("aria-label","프로필 메뉴 열기");
-        btn.onclick=()=>{const open=dropdown.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))};
-      }
-      if(label)label.textContent="회원";
-      if(studentNumber){studentNumber.textContent="";studentNumber.hidden=false}
-      const profileNumber=document.getElementById("profileStudentNumber");
-      const profileName=document.getElementById("profileStudentName");
-      if(profileNumber)profileNumber.textContent=studentId;
-      if(profileName)profileName.textContent="회원 정보 불러오는 중";
-      if(signoutBtn){signoutBtn.hidden=false;signoutBtn.onclick=()=>{location.href="/signout?redirect=/"}}
-      renderAvatar(getStoredSettings().avatarConfig);
-      return studentId;
-    }
-    async function loadSignedInProfile(authUser,studentId,revision){
-      let data={};
-      try{data=await checkUserSettings(studentId)||{}}
-      catch(error){console.warn("[AUTH] 로그인은 유지되지만 프로필 정보 조회에 실패했습니다.",error?.code||error)}
-      if(revision!==authUiRevision||auth.currentUser?.uid!==authUser.uid)return;
-      const isProfileAdmin=data.role==="president"||data.role==="vice";
-      const adminNav=document.getElementById("adminNavItem");
-      const adminColumn=document.getElementById("adminDropdownColumn");
-      if(adminNav)adminNav.hidden=!isProfileAdmin;
-      if(adminColumn)adminColumn.hidden=!isProfileAdmin;
-      const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
-      const label=document.getElementById("authLabel");
-      const profileName=document.getElementById("profileStudentName");
-      if(label)label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
-      if(profileName)profileName.textContent=name;
-      const currentSettings=getStoredSettings();
-      renderAvatar((data.settings&&data.settings.avatarConfig)||currentSettings.avatarConfig);
-      document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=item.id==="adminNavItem"?!isProfileAdmin:false});
-      document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"?!isProfileAdmin:false});
-    }
-    function renderAuthState(authUser){
-      // Firebase observer callbacks are authoritative. Do not suppress a repeated
-      // UID: a previous UI render may have been interrupted by a transient DOM error.
-      const liveUser=auth.currentUser;
-      if(authUser&&liveUser&&authUser.uid!==liveUser.uid)return;
-      if(!authUser&&liveUser)authUser=liveUser;
-      const revision=++authUiRevision;
-      if(!authUser){
-        setSignedOutUI();
-        return;
-      }
-      const studentId=setSignedInShell(authUser,revision);
-      if(studentId)void loadSignedInProfile(authUser,studentId,revision);
-    }
-    document.addEventListener("click",event=>{
-      const dropdown=document.getElementById("profileDropdown");
-      const btn=document.getElementById("authBtn");
-      if(dropdown&&btn&&!event.target.closest(".profile-menu-wrap")){
-        dropdown.classList.remove("open");
-        btn.setAttribute("aria-expanded","false");
-      }
-    });
     window.changePassword=function(){location.href="/password_change?redirect="+encodeURIComponent(location.pathname+location.search)}
     window.togglePasswordForm=function(){const setting=document.getElementById("passwordSetting"),toggle=setting.querySelector(".password-toggle"),isOpen=setting.classList.toggle("open");toggle.setAttribute("aria-expanded",String(isOpen))};
     let siteToastTimer;
@@ -372,61 +291,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         event.preventDefault();showSiteToast("지원 가능한 기간이 아닙니다.");
       }
     });
-    function handleAuthObserverError(error){
-      console.error("[AUTH] 메인 페이지 인증 상태 감시 오류",error?.code||error,error);
-      // Observer errors are not proof of logout. Preserve a valid live Auth user.
-      if(auth.currentUser)renderAuthState(auth.currentUser);
-      else {
-        const label=document.getElementById("authLabel");
-        if(label)label.textContent="인증 확인 중";
-      }
-    }
-    // Firebase Auth 상태 복원이 끝난 뒤 현재 사용자를 먼저 화면에 반영한다.
-    // 일부 모바일 인앱 브라우저에서 초기 observer 콜백과 화면 초기화 순서가
-    // 어긋나는 경우를 대비해 authStateReady()와 observer를 함께 사용한다.
-    auth.authStateReady().then(() => {
-      try {
-        renderAuthState(auth.currentUser);
-        document.documentElement.dataset.authUiReady = "true";
-      } catch (error) {
-        console.error("[AUTH] 초기 인증 상태 화면 반영 실패", error?.code || error, error);
-      }
-    }).catch(error => {
-      console.error("[AUTH] 인증 상태 복원 대기 실패", error?.code || error, error);
-    });
-
-    // 이후 로그인/로그아웃 변경은 observer가 계속 화면에 반영한다.
-    onAuthStateChanged(auth, user => {
-      try { renderAuthState(user); }
-      catch (error) {
-        console.error("[AUTH] 메인 페이지 인증 UI 렌더링 실패",error?.code||error,error);
-        const match=(auth.currentUser?.email||user?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
-        if(match){
-          const fallbackUser=auth.currentUser||user;
-          const fallbackRevision=++authUiRevision;
-          const id=match[1];
-          const wrap=document.getElementById("profileMenuWrap");
-          const dropdown=document.getElementById("profileDropdown");
-          const account=document.querySelector(".header-account");
-          const nav=document.querySelector(".main-nav");
-          const label=document.getElementById("authLabel");
-          const number=document.getElementById("profileStudentNumber");
-          const name=document.getElementById("profileStudentName");
-          const signout=document.getElementById("signoutBtn");
-          if(wrap)wrap.hidden=false;
-          if(dropdown)dropdown.hidden=false;
-          if(account)account.classList.remove("logged-out-account");
-          if(nav)nav.classList.remove("is-logged-out");
-          if(label)label.textContent="회원";
-          if(number)number.textContent=id;
-          if(name)name.textContent="회원 정보 확인 중";
-          if(signout){signout.hidden=false;signout.onclick=()=>location.href="/signout?redirect=/"}
-          void loadSignedInProfile(fallbackUser,id,fallbackRevision);
-        } else {
-          setSignedOutUI();
-        }
-      }
-    },handleAuthObserverError);
+    updateUI().then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));});
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
     navRevealTrigger.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));

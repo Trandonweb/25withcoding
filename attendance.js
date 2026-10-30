@@ -1,11 +1,7 @@
 import{initializeApp,getApps,getApp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import{getAuth}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import{getFirestore,doc,getDoc,getDocs,collection,runTransaction,increment,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
-// Reuse the site's default Firebase app so Firestore requests carry the same
-// authenticated session as /signin and the homepage.
-const app=getApps().some(x=>x.name==="[DEFAULT]")?getApp():initializeApp(firebaseConfig);
-getAuth(app);
+const app=getApps().some(x=>x.name==="attendanceApp")?getApp("attendanceApp"):initializeApp(firebaseConfig,"attendanceApp");
 const db=getFirestore(app);
 const ATTENDANCE_POINT=2,ABSENT_POINT=-5,KST="Asia/Seoul",ATTENDANCE_START_DATE="2026-09-16",ATTENDANCE_END_MINUTES=13*60+25;
 let excludedUserIds=new Set();

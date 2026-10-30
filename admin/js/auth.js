@@ -21,17 +21,13 @@ const auth = getAuth(app);
 
 function waitForAuthUser() {
     return new Promise((resolve, reject) => {
-        let unsubscribe = null;
-        let unsubscribeAfterAttach = false;
-        let settled = false;
-        const finish = (callback, value) => {
-            if (settled) return;
-            settled = true;
-            if (unsubscribe) unsubscribe(); else unsubscribeAfterAttach = true;
-            callback(value);
-        };
-        unsubscribe = onAuthStateChanged(auth, user => finish(resolve, user), error => finish(reject, error));
-        if (unsubscribeAfterAttach) unsubscribe();
+        const unsubscribe = onAuthStateChanged(auth, user => {
+            unsubscribe();
+            resolve(user);
+        }, error => {
+            unsubscribe();
+            reject(error);
+        });
     });
 }
 
@@ -104,20 +100,20 @@ export async function getCurrentUser(){
 export async function requireAdmin(){
 
     const user = await getCurrentUser();
-    const authUser = auth.currentUser;
-    const tokenResult = authUser ? await authUser.getIdTokenResult(true) : null;
-    const hasAdminClaim = tokenResult?.claims?.admin === true;
-    const hasAdminProfileRole = user.role === "president" || user.role === "vice";
 
-    // Firestore rules authorize administrators by the trusted custom claim,
-    // not by a client-readable role field alone.
-    if(!hasAdminClaim || !hasAdminProfileRole){
+    if(
 
-        alert("관리자 권한을 확인할 수 없습니다. 관리자 계정의 서버 발급 권한을 확인해 주세요.");
+        user.role!=="president" &&
+
+        user.role!=="vice"
+
+    ){
+
+        alert("관리자만 접근 가능합니다.");
 
         location.href="/";
 
-        throw new Error("관리자 custom claim 권한 없음");
+        throw new Error("권한 없음");
 
     }
 
