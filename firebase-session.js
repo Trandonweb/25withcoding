@@ -1,7 +1,7 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 export function getStudentId(user) {
-  const match = (user?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+  const match = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   return match?.[1] || "";
 }
 
