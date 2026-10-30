@@ -386,7 +386,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     onAuthStateChanged(auth, user => {
       try { renderAuthState(user); }
       catch (error) {
-        handleAuthObserverError(error);
+        console.error("[AUTH] 메인 페이지 인증 UI 렌더링 실패",error?.code||error,error);
         const match=(auth.currentUser?.email||user?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
         if(match){
           const fallbackUser=auth.currentUser||user;
