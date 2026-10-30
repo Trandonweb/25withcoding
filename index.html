@@ -381,8 +381,21 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         if(label)label.textContent="인증 확인 중";
       }
     }
-    // A single Firebase observer owns the homepage login UI. Its first callback
-    // is delivered after Firebase restores persisted authentication state.
+    // Firebase Auth 상태 복원이 끝난 뒤 현재 사용자를 먼저 화면에 반영한다.
+    // 일부 모바일 인앱 브라우저에서 초기 observer 콜백과 화면 초기화 순서가
+    // 어긋나는 경우를 대비해 authStateReady()와 observer를 함께 사용한다.
+    auth.authStateReady().then(() => {
+      try {
+        renderAuthState(auth.currentUser);
+        document.documentElement.dataset.authUiReady = "true";
+      } catch (error) {
+        console.error("[AUTH] 초기 인증 상태 화면 반영 실패", error?.code || error, error);
+      }
+    }).catch(error => {
+      console.error("[AUTH] 인증 상태 복원 대기 실패", error?.code || error, error);
+    });
+
+    // 이후 로그인/로그아웃 변경은 observer가 계속 화면에 반영한다.
     onAuthStateChanged(auth, user => {
       try { renderAuthState(user); }
       catch (error) {
