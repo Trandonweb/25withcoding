@@ -176,7 +176,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
@@ -189,7 +189,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const SETTINGS_KEY = "coding_with_ramen_settings";
-let loginInProgress = false;
 
 function applyStoredSettings() {
   try {
@@ -207,20 +206,6 @@ const requestedRedirect = params.get("redirect") || "/";
 const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
   ? requestedRedirect
   : "/";
-
-onAuthStateChanged(auth, user => {
-  // Do not redirect merely because an old session was restored. The login button
-  // performs the redirect only after the credentials entered on this page succeed.
-  if (loginInProgress) return;
-  const match = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
-  if (user && match) {
-    localStorage.setItem("userId", match[1]);
-  } else {
-    localStorage.removeItem("userId");
-  }
-  localStorage.removeItem("firebaseIdToken");
-  localStorage.removeItem("firebaseRefreshToken");
-});
 
 window.togglePw = () => {
   const pw = document.getElementById("pw");
@@ -240,7 +225,6 @@ window.login = async () => {
     return;
   }
 
-  loginInProgress = true;
   loginStatus.textContent = "Firebase 계정을 확인하고 있습니다…";
   loginBtn.disabled = true;
   loginBtn.innerHTML = '<div class="spinner"></div>';
@@ -292,7 +276,6 @@ window.login = async () => {
     loginStatus.textContent = detail;
     console.error("로그인 상세 오류", { code: error?.code, message: error?.message, name: error?.name });
   } finally {
-    loginInProgress = false;
     loginBtn.disabled = false;
     loginBtn.textContent = "로그인";
   }
