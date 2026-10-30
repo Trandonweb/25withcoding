@@ -23,10 +23,17 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
+import{getAuth}from'https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js';
 import{getFirestore,doc,getDoc,collection,onSnapshot,deleteDoc,serverTimestamp,runTransaction,query,orderBy,updateDoc}from'https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js';
+import{waitForStudentSession}from'/firebase-session.js';
 const firebaseConfig={apiKey:'AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9',authDomain:'festivallikes.firebaseapp.com',projectId:'festivallikes',storageBucket:'festivallikes.firebasestorage.app',messagingSenderId:'782245120700',appId:'1:782245120700:web:c61e16313e9ae688e6deb9'};
 const loginConfig={apiKey:'AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20',authDomain:'points2026-f5e50.firebaseapp.com',projectId:'points2026-f5e50'};
-const db=getFirestore(initializeApp(firebaseConfig)),loginDB=getFirestore(initializeApp(loginConfig,'loginApp'));
+const festivalApp=initializeApp(firebaseConfig,'festivalApp');
+const loginApp=initializeApp(loginConfig);
+const loginAuth=getAuth(loginApp);
+const loginDB=getFirestore(loginApp);
+const db=getFirestore(festivalApp);
+const loginSession=await waitForStudentSession(loginAuth);
 const $=id=>document.getElementById(id),coinCharacters={1:'A',2:'F',3:'K',4:'P',5:'U'},CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';let last='';
 function discriminator(people){return coinCharacters[Number(people)]||''}
 function random(n){const a=new Uint32Array(n);crypto.getRandomValues(a);return Array.from(a,x=>CHARS[x%CHARS.length]).join('')}
@@ -34,7 +41,7 @@ function alpha(){const a=new Uint32Array(1);crypto.getRandomValues(a);return 'AB
 function booth(){return document.querySelector('input[name="booth"]:checked').value}
 function updateRule(){const t=$('team').value,b=booth(),p=document.querySelector('input[name="people"]:checked')?.value,d=p?discriminator(p):'판별문자';$('rule').innerHTML=b==='coding'?`현재 <strong>코딩과 함께라면</strong> · <strong>${t}팀</strong><br>코드 형식: <span class="code-rule">(이용권 수)(랜덤)(랜덤)(랜덤)(판별문자)</span><br>판별문자: <strong>A=1인권 · F=2인권 · K=3인권 · P=4인권 · U=5인권</strong>${p?` · 현재 <strong>${d}</strong>`:''}`:`현재 <strong>S A N C A F E</strong> · <strong>${t}팀</strong><br>코드 형식: <span class="code-rule">(알파벳)(랜덤)(랜덤)(랜덤)(판별문자)</span><br>판별문자: <strong>A=1인권 · F=2인권 · K=3인권 · P=4인권 · U=5인권</strong>${p?` · 현재 <strong>${d}</strong>`:''}`}
 function makeCode(p,b){const lastChar=discriminator(p);return b==='coding'?`${p}${random(3)}${lastChar}`:`${alpha()}${random(3)}${lastChar}`}
-async function access(){const id=localStorage.getItem('userId');if(!id){$('denied').style.display='flex';return false}try{const s=await getDoc(doc(loginDB,'users',id));if(!s.exists())throw 0;const u=s.data();if(!(u.role==='president'||u.role==='vice'||u.coinManager===true))throw 0;$('app').style.display='block';return true}catch(e){$('denied').style.display='flex';return false}}
+async function access(){const id=loginSession?.studentId;if(!id){$('denied').style.display='flex';return false}try{const s=await getDoc(doc(loginDB,'users',id));if(!s.exists())throw 0;const u=s.data();if(!(u.role==='president'||u.role==='vice'||u.coinManager===true))throw 0;$('app').style.display='block';return true}catch(e){$('denied').style.display='flex';return false}}
 async function generate(){
  const sel=document.querySelector('input[name="people"]:checked');
  if(!sel){$('status').className='status error';$('status').textContent='이용권 수를 선택해주세요.';return}
@@ -48,7 +55,7 @@ async function generate(){
    let saved=null;
    for(let attempt=0;attempt<30&&!saved;attempt++){
     const code=makeCode(p,b),ref=doc(db,'accesscodes',code);
-    const ok=await runTransaction(db,async tx=>{if((await tx.get(ref)).exists())return false;tx.set(ref,{max:p,used:0,active:true,team:t,booth:b,createdAt:serverTimestamp(),createdBy:localStorage.getItem('userId')||'unknown'});return true});
+    const ok=await runTransaction(db,async tx=>{if((await tx.get(ref)).exists())return false;tx.set(ref,{max:p,used:0,active:true,team:t,booth:b,createdAt:serverTimestamp(),createdBy:loginSession?.studentId||'unknown'});return true});
     if(ok)saved=code;
    }
    if(!saved)throw new Error('중복 코드가 반복되어 '+(n+1)+'번째 발급에서 중단되었습니다.');
