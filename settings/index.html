@@ -55,7 +55,7 @@ async function save(key,value){
   const status=document.getElementById("settingsStatus");
   status.textContent="설정 저장 중…";
   await authReady;
-  const match=(authenticatedUser?.email||"").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+  const match=(authenticatedUser?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if(!authenticatedUser||!match){
     status.textContent="Firebase 로그인 정보가 없습니다. 이 기기에만 저장했습니다.";
     return;
@@ -82,7 +82,7 @@ function showSignedOut(){
 onAuthStateChanged(auth,async user=>{
   authenticatedUser=user;
   if(!authReadyDone){authReadyDone=true;authReadyResolve(user)}
-  const match=(user?.email||"").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+  const match=(user?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if(!user||!match){showSignedOut();return}
   const studentId=match[1];
   // localStorage는 화면 표시용 캐시일 뿐, 인증 판단에는 사용하지 않는다.
