@@ -250,7 +250,9 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
         let data={};try{data=await checkUserSettings(user)||{}}catch(e){console.warn("사용자 정보 불러오기 실패",e)}
         const adminNav=document.getElementById("adminNavItem");
-        if(adminNav)adminNav.hidden=!(data.role==="president"||data.role==="vice");const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=!(data.role==="president"||data.role==="vice");
+        const isProfileAdmin=data.role==="president"||data.role==="vice";
+        if(adminNav)adminNav.hidden=!isProfileAdmin;
+        const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=!isProfileAdmin;
         const name=data.name||data.userName||data.username||data.displayName||data.studentName||"이름 미등록";
         btn.setAttribute("aria-label","프로필 메뉴 열기");
         label.textContent=(String(name).trim().replace(/\s+/g,"").slice(0,3)||"이름 미등록");
@@ -262,8 +264,8 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         signoutBtn.hidden=false;
         signoutBtn.onclick=()=>{location.href="/signout?redirect=/"};
         const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
-        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=false});
-        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=false});
+        document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=item.id==="adminNavItem"?!isProfileAdmin:false});
+        document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"?!isProfileAdmin:false});
       }else{
         const profileWrap=document.getElementById("profileMenuWrap");if(profileWrap)profileWrap.hidden=false;
         dropdown.classList.remove("open");dropdown.hidden=true;
@@ -312,9 +314,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         if(dropdown){dropdown.hidden=false;dropdown.classList.remove("open")}
         const headerAccount=document.querySelector(".header-account");if(headerAccount)headerAccount.classList.remove("logged-out-account");
         const nav=document.querySelector(".main-nav");if(nav)nav.classList.remove("is-logged-out");
-        document.querySelectorAll(".main-nav .nav-item,.main-nav .nav-column").forEach(item=>item.hidden=false);
-        const adminNav=document.getElementById("adminNavItem");if(adminNav)adminNav.hidden=true;
-        const adminColumn=document.getElementById("adminDropdownColumn");if(adminColumn)adminColumn.hidden=true;
+        document.querySelectorAll(".main-nav .nav-item,.main-nav .nav-column").forEach(item=>item.hidden=item.id==="adminNavItem"||item.id==="adminDropdownColumn");
         const number=document.getElementById("profileStudentNumber");if(number)number.textContent=id;
         const name=document.getElementById("profileStudentName");if(name)name.textContent="회원 정보 불러오기 실패";
         const studentNumber=document.getElementById("studentNumber");if(studentNumber)studentNumber.hidden=false;
