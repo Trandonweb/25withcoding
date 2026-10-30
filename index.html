@@ -134,10 +134,12 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
   <div class="footer">2026 코딩과함께라면 | SINCE 2025</div>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    import { getStudentId } from "/firebase-session.js";
     import { renderAttendanceButton } from "/attendance.js";
     const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
-    const app=initializeApp(firebaseConfig); const db=getFirestore(app);
+    const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFirestore(app);
     const SETTINGS_KEY="coding_with_ramen_settings"; const COBY_LIGHT_LOGO="/AI/COBY_AI_logo.png"; const COBY_DARK_LOGO="/AI/COBY_AI_logo_dark_mode.png";
     const defaultSettings={darkMode:false,primaryColor:"#27ae60",keepLogin:true,avatarConfig:{icon:"code",iconColor:"#27ae60",background:"#e7f7ed",backgroundEffect:"glow"}};
     function getStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{return {...defaultSettings,...JSON.parse(saved)}}catch(e){return {...defaultSettings}}}return {...defaultSettings}}
@@ -148,8 +150,8 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     function updateCobyLogo(darkMode){const logo=document.getElementById("cobyLogo");if(!logo)return;const target=darkMode?COBY_DARK_LOGO:COBY_LIGHT_LOGO;logo.dataset.source=target;const image=new Image();image.onload=()=>{if(darkMode){try{const processed=removeLogoBackground(image);if(processed){logo.src=processed;return}}catch(e){console.warn("COBY 로고 자동 배경제거 실패",e)}}logo.src=target};image.onerror=()=>{logo.src=target};image.src=target}
     function applySettings(settings){document.body.classList.toggle("dark-mode",!!settings.darkMode);if(settings.primaryColor)document.documentElement.style.setProperty("--primary-color",settings.primaryColor);document.querySelectorAll(".color-circle").forEach(circle=>circle.classList.toggle("selected",circle.getAttribute("data-color")===settings.primaryColor));updateCobyLogo(!!settings.darkMode)}
     function syncSettingsUI(){const settings=getStoredSettings();const darkModeToggle=document.getElementById("darkModeToggle");const keepLoginToggle=document.getElementById("keepLoginToggle");if(darkModeToggle)darkModeToggle.checked=!!settings.darkMode;if(keepLoginToggle)keepLoginToggle.checked=!!settings.keepLogin;applySettings(settings)}
-    window.toggleSetting=async function(key,value){const settings=getStoredSettings();settings[key]=value;saveStoredSettings(settings);applySettings(settings);const user=localStorage.getItem("userId");if(user){try{await setDoc(doc(db,"users",user),{settings:{[key]:value}},{merge:true})}catch(e){console.error("설정 동기화 실패",e)}}};
-    window.changeThemeColor=async function(color){const settings=getStoredSettings();settings.primaryColor=color;saveStoredSettings(settings);applySettings(settings);const user=localStorage.getItem("userId");if(user){try{await setDoc(doc(db,"users",user),{settings:{primaryColor:color}},{merge:true})}catch(e){console.error("컬러 테마 동기화 실패",e)}}};
+    window.toggleSetting=async function(key,value){const settings=getStoredSettings();settings[key]=value;saveStoredSettings(settings);applySettings(settings);const user=getStudentId(auth.currentUser);if(user){try{await setDoc(doc(db,"users",user),{settings:{[key]:value}},{merge:true})}catch(e){console.error("설정 동기화 실패",e)}}};
+    window.changeThemeColor=async function(color){const settings=getStoredSettings();settings.primaryColor=color;saveStoredSettings(settings);applySettings(settings);const user=getStudentId(auth.currentUser);if(user){try{await setDoc(doc(db,"users",user),{settings:{primaryColor:color}},{merge:true})}catch(e){console.error("컬러 테마 동기화 실패",e)}}};
     applySettings(getStoredSettings());renderAvatar(getStoredSettings().avatarConfig);
 
     const defaultMainSlides=[
@@ -227,10 +229,11 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     }
     loadMainPageContent();
     function go(path){location.href=path} window.go=go;
-    function goPoint(){const user=localStorage.getItem("userId");location.href=user?"/상벌점/main.html":"/signin?redirect=/상벌점/main.html"} window.goPoint=goPoint;
+    function goPoint(){const user=getStudentId(auth.currentUser);location.href=user?"/상벌점/main.html":"/signin?redirect=/상벌점/main.html"} window.goPoint=goPoint;
     async function checkUserSettings(userId){const userRef=doc(db,"users",userId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig},updateData={};if(firebaseSettings.darkMode===undefined)updateData.darkMode=settings.darkMode;if(firebaseSettings.primaryColor===undefined)updateData.primaryColor=settings.primaryColor;if(firebaseSettings.keepLogin===undefined)updateData.keepLogin=settings.keepLogin;if(firebaseSettings.avatarConfig===undefined)updateData.avatarConfig=settings.avatarConfig;if(Object.keys(updateData).length>0)await setDoc(userRef,{settings:updateData},{merge:true});saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
-    async function updateUI(){
-      const user=localStorage.getItem("userId");
+    async function updateUI(authUser){
+      const user=getStudentId(authUser);
+      if(user)localStorage.setItem("userId",user);else localStorage.removeItem("userId");
       const btn=document.getElementById("authBtn");
       const label=document.getElementById("authLabel");
       const studentNumber=document.getElementById("studentNumber");
@@ -290,12 +293,12 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     document.addEventListener("click",event=>{
       const link=event.target.closest(".main-nav a[href]");
       if(!link)return;
-      const user=localStorage.getItem("userId");
+      const user=getStudentId(auth.currentUser);
       if(!user&&new URL(link.href,location.href).pathname==="/apply"){
         event.preventDefault();showSiteToast("지원 가능한 기간이 아닙니다.");
       }
     });
-    updateUI().then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));});
+    onAuthStateChanged(auth,authUser=>{updateUI(authUser).then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));}).catch(e=>console.error("[AUTH] 홈 인증 상태 처리 실패",e));},error=>console.error("[AUTH] 인증 상태 확인 실패",error));
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
     navRevealTrigger.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
