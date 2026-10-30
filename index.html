@@ -238,7 +238,6 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     function goPoint(){const user=localStorage.getItem("userId");location.href=user?"/상벌점/main.html":"/signin?redirect=/상벌점/main.html"} window.goPoint=goPoint;
     async function checkUserSettings(userId){if(!/^\d{5}$/.test(String(userId||"")))throw new Error("인증된 학번이 없습니다.");const userRef=doc(db,"users",userId),snap=await getDoc(userRef);if(!snap.exists())return {};const data=snap.data(),firebaseSettings=data.settings||{},settings={darkMode:firebaseSettings.darkMode??defaultSettings.darkMode,primaryColor:firebaseSettings.primaryColor??defaultSettings.primaryColor,keepLogin:firebaseSettings.keepLogin??defaultSettings.keepLogin,avatarConfig:firebaseSettings.avatarConfig??defaultSettings.avatarConfig};saveStoredSettings(settings);applySettings(settings);renderAvatar(settings.avatarConfig);return data}
     let authUiRevision=0;
-    let lastAuthUid=undefined;
     function setSignedOutUI(){
       const btn=document.getElementById("authBtn");
       const label=document.getElementById("authLabel");
@@ -336,13 +335,11 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
       document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=column.id==="adminDropdownColumn"?!isProfileAdmin:false});
     }
     function renderAuthState(authUser){
-      // Ignore a stale observer callback if Firebase already exposes a newer user.
+      // Firebase observer callbacks are authoritative. Do not suppress a repeated
+      // UID: a previous UI render may have been interrupted by a transient DOM error.
       const liveUser=auth.currentUser;
       if(authUser&&liveUser&&authUser.uid!==liveUser.uid)return;
       if(!authUser&&liveUser)authUser=liveUser;
-      const uid=authUser?.uid||null;
-      if(uid===lastAuthUid)return;
-      lastAuthUid=uid;
       const revision=++authUiRevision;
       if(!authUser){
         setSignedOutUI();
@@ -384,10 +381,39 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         if(label)label.textContent="인증 확인 중";
       }
     }
-    onAuthStateChanged(auth,renderAuthState,handleAuthObserverError);
-    // Explicitly wait for Firebase's first persisted-state restoration as a second
-    // initialization path. The UID guard prevents duplicate rendering.
-    auth.authStateReady().then(()=>renderAuthState(auth.currentUser)).catch(handleAuthObserverError);
+    // A single Firebase observer owns the homepage login UI. Its first callback
+    // is delivered after Firebase restores persisted authentication state.
+    onAuthStateChanged(auth, user => {
+      try { renderAuthState(user); }
+      catch (error) {
+        handleAuthObserverError(error);
+        const match=(auth.currentUser?.email||user?.email||"").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
+        if(match){
+          const fallbackUser=auth.currentUser||user;
+          const fallbackRevision=++authUiRevision;
+          const id=match[1];
+          const wrap=document.getElementById("profileMenuWrap");
+          const dropdown=document.getElementById("profileDropdown");
+          const account=document.querySelector(".header-account");
+          const nav=document.querySelector(".main-nav");
+          const label=document.getElementById("authLabel");
+          const number=document.getElementById("profileStudentNumber");
+          const name=document.getElementById("profileStudentName");
+          const signout=document.getElementById("signoutBtn");
+          if(wrap)wrap.hidden=false;
+          if(dropdown)dropdown.hidden=false;
+          if(account)account.classList.remove("logged-out-account");
+          if(nav)nav.classList.remove("is-logged-out");
+          if(label)label.textContent="회원";
+          if(number)number.textContent=id;
+          if(name)name.textContent="회원 정보 확인 중";
+          if(signout){signout.hidden=false;signout.onclick=()=>location.href="/signout?redirect=/"}
+          void loadSignedInProfile(fallbackUser,id,fallbackRevision);
+        } else {
+          setSignedOutUI();
+        }
+      }
+    },handleAuthObserverError);
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
     navRevealTrigger.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
