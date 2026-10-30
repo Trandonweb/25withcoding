@@ -146,7 +146,7 @@ onAuthStateChanged(auth, async (user) => {
     location.replace("/signin/?redirect=/상벌점/committee.html");
     return;
   }
-  const match = (user.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i);
+  const match = (user.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if (!match) {
     await signOut(auth);
     location.replace("/signin/?redirect=/상벌점/committee.html");
