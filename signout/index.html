@@ -27,13 +27,21 @@
 
     try {
       await signOut(auth);
-    } catch (error) {
-      console.error("Firebase 로그아웃 실패", error);
-    } finally {
       localStorage.removeItem("userId");
       localStorage.removeItem("firebaseIdToken");
       localStorage.removeItem("firebaseRefreshToken");
       location.replace(redirect);
+    } catch (error) {
+      console.error("Firebase 로그아웃 실패", error);
+      document.body.innerHTML = "";
+      const message = document.createElement("p");
+      message.textContent = "로그아웃을 완료하지 못했습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.";
+      document.body.append(message);
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.textContent = "다시 시도";
+      retry.onclick = () => location.reload();
+      document.body.append(retry);
     }
   </script>
 </body>
