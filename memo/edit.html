@@ -165,71 +165,76 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-import { getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
-const pointsApp = initializeApp({
-  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-  authDomain: "points2026-f5e50.firebaseapp.com",
-  projectId: "points2026-f5e50",
-  storageBucket: "points2026-f5e50.firebasestorage.app",
-  messagingSenderId: "248724251417",
-  appId: "1:248724251417:web:02d85cdc4addac98069b88"
-});
-const pointsAuth = getAuth(pointsApp);
-const pointsDb = getFirestore(pointsApp);
-
-function waitForSignedInUser() {
-  return new Promise((resolve, reject) => {
-    const unsubscribe = onAuthStateChanged(pointsAuth, user => {
-      unsubscribe();
-      resolve(user);
-    }, error => {
-      unsubscribe();
-      reject(error);
-    });
-  });
-}
-
 async function verifyAdminAgain() {
-  const authUser = await waitForSignedInUser();
-  const studentId = (authUser?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1];
-  if (!authUser || !studentId) {
-    alert("로그인이 필요합니다. 다시 로그인해 주세요.");
-    location.href = "/signin/?redirect=" + encodeURIComponent(location.pathname + location.search);
-    return false;
-  }
-
-  let profile;
   try {
-    const profileSnap = await getDoc(doc(pointsDb, "users", studentId));
+    // 편집 화면의 기존 메모 로딩에는 로그인 SDK가 관여하지 않도록,
+    // 저장 버튼을 누른 경우에만 인증 SDK를 초기화한다.
+    const [{ getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential },
+           { getFirestore: getPointsFirestore, doc: pointsDoc, getDoc: getPointsDoc }] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+    ]);
+
+    const pointsConfig = {
+      apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+      authDomain: "points2026-f5e50.firebaseapp.com",
+      projectId: "points2026-f5e50",
+      storageBucket: "points2026-f5e50.firebasestorage.app",
+      messagingSenderId: "248724251417",
+      appId: "1:248724251417:web:02d85cdc4addac98069b88"
+    };
+    const pointsApp = initializeApp(pointsConfig, "points-auth-check");
+    const pointsAuth = getAuth(pointsApp);
+    const pointsDb = getPointsFirestore(pointsApp);
+
+    const authUser = await new Promise((resolve, reject) => {
+      const unsubscribe = onAuthStateChanged(pointsAuth, user => {
+        unsubscribe();
+        resolve(user);
+      }, error => {
+        unsubscribe();
+        reject(error);
+      });
+    });
+
+    const studentId = (authUser?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i)?.[1];
+    if (!authUser || !studentId) {
+      alert("로그인이 필요합니다. 다시 로그인해 주세요.");
+      location.href = "/signin/?redirect=" + encodeURIComponent(location.pathname + location.search);
+      return false;
+    }
+
+    let profileSnap;
+    try {
+      profileSnap = await getPointsDoc(pointsDoc(pointsDb, "users", studentId));
+    } catch (error) {
+      console.error("관리자 권한 조회 실패:", error);
+      alert("관리자 권한을 확인할 수 없습니다. 계정 데이터베이스 접근 규칙을 확인해 주세요.");
+      return false;
+    }
+
     if (!profileSnap.exists()) {
       alert("계정 정보를 확인할 수 없습니다.");
       return false;
     }
-    profile = profileSnap.data();
-  } catch (error) {
-    console.error("관리자 권한 조회 실패:", error);
-    alert("관리자 권한을 확인할 수 없습니다. 계정 데이터베이스 접근 규칙을 확인해 주세요.");
-    return false;
-  }
 
-  if (profile.role !== "president" && profile.role !== "vice") {
-    alert("회장 또는 부회장만 공지 메모를 수정·삭제할 수 있습니다.");
-    return false;
-  }
+    const profile = profileSnap.data();
+    if (profile.role !== "president" && profile.role !== "vice") {
+      alert("회장 또는 부회장만 공지 메모를 수정·삭제할 수 있습니다.");
+      return false;
+    }
 
-  const password = prompt("관리자 2차 인증\n현재 계정 비밀번호를 다시 입력하세요.");
-  if (password === null || !password) return false;
+    const password = prompt("관리자 2차 인증\\n현재 계정 비밀번호를 다시 입력하세요.");
+    if (password === null || !password) return false;
 
-  try {
     await reauthenticateWithCredential(
       authUser,
       EmailAuthProvider.credential(authUser.email, password)
     );
     return true;
   } catch (error) {
-    console.error("2차 인증 실패:", error);
-    alert("비밀번호가 올바르지 않거나 재인증에 실패했습니다.");
+    console.error("관리자 2차 인증 오류:", error);
+    alert("인증 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
     return false;
   }
 }
@@ -290,22 +295,36 @@ const id = new URLSearchParams(location.search).get("id");
 let noteData = null;
 
 async function load() {
-  if (!id) { alert("잘못된 메모 주소입니다."); location.href = "index.html"; return; }
-  const snap = await getDoc(doc(db, "notes", id));
+  const saveButton = document.querySelector(".bottom button");
+  if (saveButton) saveButton.disabled = true;
+  try {
+    if (!id) {
+      alert("잘못된 메모 주소입니다.");
+      location.href = "index.html";
+      return;
+    }
 
-  if (!snap.exists()) {
-    alert("메모 없음");
-    location.href = "index.html";
-    return;
+    const snap = await getDoc(doc(db, "notes", id));
+    if (!snap.exists()) {
+      alert("메모를 찾을 수 없습니다.");
+      location.href = "index.html";
+      return;
+    }
+
+    noteData = snap.data();
+    document.getElementById("titleInput").value =
+      (noteData.title || "").replace(/^!@#/, "").replace(/#@!$/, "");
+    document.getElementById("contentInput").value = noteData.content || "";
+    if (saveButton) saveButton.disabled = false;
+  } catch (error) {
+    console.error("메모 불러오기 실패:", error);
+    alert("기존 메모를 불러오지 못했습니다. 내용을 저장하지 말고 뒤로 돌아가 주세요. 오류: " + (error.code || error.message));
+    location.href = "view.html?id=" + encodeURIComponent(id || "");
   }
-
-  noteData = snap.data();
-
-  document.getElementById("titleInput").value = (noteData.title || "").replace(/^!@#/, "").replace(/#@!$/, "");
-  document.getElementById("contentInput").value = noteData.content || "";
 }
 
 async function saveEdit() {
+  if (!noteData) { alert("기존 메모를 아직 불러오지 못했습니다. 저장을 중단합니다."); return; }
   const title = document.getElementById("titleInput").value.trim();
   const content = document.getElementById("contentInput").value;
 
