@@ -136,7 +136,6 @@ try {
 } catch {}
 
 let currentUser = null;
-let authError = null;
 const authReady = (async () => {
   let preferredPersistence = browserLocalPersistence;
   try {
@@ -155,7 +154,7 @@ const authReady = (async () => {
   return await new Promise((resolve, reject) => {
     let unsubscribe = () => {};
     unsubscribe = onAuthStateChanged(auth, user => {
-      const studentId = (user?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i)?.[1] || "";
+      const studentId = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1] || "";
       currentUser = studentId ? user : null;
       unsubscribe();
       if (!studentId) {
@@ -166,7 +165,6 @@ const authReady = (async () => {
       localStorage.setItem("userId", studentId);
       resolve(user);
     }, error => {
-      authError = error;
       unsubscribe();
       reject(error);
     });
