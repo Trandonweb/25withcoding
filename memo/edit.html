@@ -201,76 +201,67 @@ function askPasswordMasked(message) {
   });
 }
 
-async function verifyAdminAgain() {
-  try {
-    // 편집 화면의 기존 메모 로딩에는 로그인 SDK가 관여하지 않도록,
-    // 저장 버튼을 누른 경우에만 인증 SDK를 초기화한다.
-    const [{ getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential },
-           { getFirestore: getPointsFirestore, doc: pointsDoc, getDoc: getPointsDoc }] = await Promise.all([
-      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
-      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
-    ]);
-
-    const pointsConfig = {
-      apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-      authDomain: "points2026-f5e50.firebaseapp.com",
-      projectId: "points2026-f5e50",
-      storageBucket: "points2026-f5e50.firebasestorage.app",
-      messagingSenderId: "248724251417",
-      appId: "1:248724251417:web:02d85cdc4addac98069b88"
-    };
-    const pointsApp = initializeApp(pointsConfig);
-    const pointsAuth = getAuth(pointsApp);
-    const pointsDb = getPointsFirestore(pointsApp);
-
-    const authUser = await new Promise((resolve, reject) => {
-      const unsubscribe = onAuthStateChanged(pointsAuth, user => {
-        unsubscribe();
-        resolve(user);
-      }, error => {
-        unsubscribe();
-        reject(error);
-      });
+async function waitForSignedInUser() {
+  const [{ getAuth, onAuthStateChanged }, { getFirestore }] = await Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+  ]);
+  const pointsApp = initializeApp(pointsConfig);
+  const pointsAuth = getAuth(pointsApp);
+  const pointsDb = getFirestore(pointsApp);
+  const authUser = await new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(pointsAuth, user => {
+      unsubscribe();
+      resolve(user);
+    }, error => {
+      unsubscribe();
+      reject(error);
     });
+  });
+  return { authUser, pointsDb, authApi: await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js") };
+}
 
-    const studentId = (authUser?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1];
-    if (!authUser || !studentId) {
-      alert("로그인이 필요합니다. 다시 로그인해 주세요.");
-      location.href = "/signin/?redirect=" + encodeURIComponent(location.pathname + location.search);
-      return false;
-    }
+async function verifyAdminAgain() {
+  const { authUser, pointsDb, authApi } = await waitForSignedInUser();
+  const { EmailAuthProvider, reauthenticateWithCredential } = authApi;
+  const studentId = (authUser?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1];
+  if (!authUser || !studentId) {
+    alert("로그인이 필요합니다. 다시 로그인해 주세요.");
+    location.href = "/signin/?redirect=" + encodeURIComponent(location.pathname + location.search);
+    return false;
+  }
 
-    let profileSnap;
-    try {
-      profileSnap = await getPointsDoc(pointsDoc(pointsDb, "users", studentId));
-    } catch (error) {
-      console.error("관리자 권한 조회 실패:", error);
-      alert("관리자 권한을 확인할 수 없습니다. 계정 데이터베이스 접근 규칙을 확인해 주세요.");
-      return false;
-    }
-
+  let profile;
+  try {
+    const profileSnap = await getDoc(doc(pointsDb, "users", studentId));
     if (!profileSnap.exists()) {
       alert("계정 정보를 확인할 수 없습니다.");
       return false;
     }
+    profile = profileSnap.data();
+  } catch (error) {
+    console.error("관리자 권한 조회 실패:", error);
+    alert("관리자 권한을 확인할 수 없습니다. 계정 데이터베이스 접근 규칙을 확인해 주세요.");
+    return false;
+  }
 
-    const profile = profileSnap.data();
-    if (profile.role !== "president" && profile.role !== "vice") {
-      alert("회장 또는 부회장만 공지 메모를 수정·삭제할 수 있습니다.");
-      return false;
-    }
+  if (profile.role !== "president" && profile.role !== "vice") {
+    alert("회장 또는 부회장만 공지 메모를 수정·삭제할 수 있습니다.");
+    return false;
+  }
 
-    const password = await askPasswordMasked("관리자 2차 인증\n현재 계정 비밀번호를 다시 입력하세요.");
-    if (password === null || !password) return false;
+  const password = await askPasswordMasked("관리자 2차 인증\n현재 계정 비밀번호를 다시 입력하세요.");
+  if (password === null || !password) return false;
 
+  try {
     await reauthenticateWithCredential(
       authUser,
       EmailAuthProvider.credential(authUser.email, password)
     );
     return true;
   } catch (error) {
-    console.error("관리자 2차 인증 오류:", error);
-    alert("인증 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+    console.error("2차 인증 실패:", error);
+    alert("비밀번호가 올바르지 않거나 재인증에 실패했습니다.");
     return false;
   }
 }
