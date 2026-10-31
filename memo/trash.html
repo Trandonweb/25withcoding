@@ -288,7 +288,7 @@ async function verifyAdminWithPassword() {
   try {
     const profileSnap = await getDoc(doc(pointsDb, "users", studentId));
     if (!profileSnap.exists() || !["president", "vice"].includes(profileSnap.data().role)) {
-      alert("회장 또는 부회장만 메모를 영구삭제할 수 있습니다.");
+      alert("회장 또는 부회장만 데이터베이스에서 삭제할 수 있습니다.");
       return false;
     }
   } catch (error) {
@@ -297,7 +297,7 @@ async function verifyAdminWithPassword() {
     return false;
   }
 
-  const password = await askPasswordMasked("영구삭제 2차 인증\n현재 계정 비밀번호를 다시 입력하세요.");
+  const password = await askPasswordMasked("데이터베이스 삭제 인증\n현재 계정 비밀번호를 다시 입력하세요.");
   if (!password) return false;
 
   try {
@@ -427,6 +427,7 @@ async function loadTrash() {
       <div class="buttons">
         <button class="restore" onclick="restoreMemo('${docu.id}')">복구</button>
         ${!data.delete ? `<button class="delete" onclick="deleteForever('${docu.id}')">영구삭제</button>` : ""}
+        ${data.delete ? `<button class="delete" onclick="deleteFromDatabase('${docu.id}')">DB 삭제</button>` : ""}
       </div>
     `;
 
@@ -447,7 +448,21 @@ async function restoreMemo(id) {
 }
 
 async function deleteForever(id) {
-  const ok = confirm("이 메모를 데이터베이스에서 완전히 삭제할까요? 삭제 후에는 복구할 수 없습니다.");
+  const ok = confirm("영구삭제할까요? 학생 계정에서는 더 이상 보이지 않습니다.");
+  if (!ok) return;
+
+  try {
+    await updateDoc(doc(db, "notes", id), { delete: true });
+    alert("영구삭제 처리했습니다.");
+    await loadTrash();
+  } catch (error) {
+    console.error("영구삭제 처리 실패:", error);
+    alert("처리하지 못했습니다. 연결 상태와 Firestore 규칙을 확인해 주세요.");
+  }
+}
+
+async function deleteFromDatabase(id) {
+  const ok = confirm("데이터베이스에서 완전히 삭제할까요? 이 작업은 복구할 수 없습니다.");
   if (!ok) return;
 
   const verified = await verifyAdminWithPassword();
@@ -455,11 +470,11 @@ async function deleteForever(id) {
 
   try {
     await deleteDoc(doc(db, "notes", id));
-    alert("데이터베이스에서 영구삭제했습니다.");
+    alert("데이터베이스에서 완전히 삭제했습니다.");
     await loadTrash();
   } catch (error) {
-    console.error("메모 영구삭제 실패:", error);
-    alert("삭제하지 못했습니다. Firestore 보안 규칙과 연결 상태를 확인해 주세요.");
+    console.error("DB 삭제 실패:", error);
+    alert("DB 삭제에 실패했습니다. Firestore 보안 규칙과 연결 상태를 확인해 주세요.");
   }
 }
 
@@ -469,6 +484,7 @@ function goList() {
 
 window.restoreMemo = restoreMemo;
 window.deleteForever = deleteForever;
+window.deleteFromDatabase = deleteFromDatabase;
 window.goList = goList;
 
 loadTrash();
