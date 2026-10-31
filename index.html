@@ -147,7 +147,17 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         return settings.keepLogin===false?browserSessionPersistence:browserLocalPersistence;
       }catch{return browserLocalPersistence;}
     }
-    const authPersistenceReady=setPersistence(auth,getPreferredAuthPersistence()).catch(error=>{console.error("[AUTH] 로그인 유지 설정 실패",error);return false;});
+    const authPersistenceReady=setPersistence(auth,getPreferredAuthPersistence()).catch(async error=>{
+      console.error("[AUTH] 기본 로그인 유지 설정 실패",error);
+      try{
+        if(getPreferredAuthPersistence()===browserLocalPersistence){
+          await setPersistence(auth,browserSessionPersistence);
+          console.warn("[AUTH] 브라우저 저장소 제한으로 현재 탭 로그인 유지 방식으로 전환했습니다.");
+          return true;
+        }
+      }catch(fallbackError){console.error("[AUTH] 대체 로그인 유지 설정도 실패",fallbackError);}
+      return false;
+    });
     const SETTINGS_KEY="coding_with_ramen_settings"; const COBY_LIGHT_LOGO="/AI/COBY_AI_logo.png"; const COBY_DARK_LOGO="/AI/COBY_AI_logo_dark_mode.png";
     const defaultSettings={darkMode:false,primaryColor:"#27ae60",keepLogin:true,avatarConfig:{icon:"code",iconColor:"#27ae60",background:"#e7f7ed",backgroundEffect:"glow"}};
     function getStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{return {...defaultSettings,...JSON.parse(saved)}}catch(e){return {...defaultSettings}}}return {...defaultSettings}}
