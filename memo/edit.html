@@ -192,7 +192,7 @@ function waitForSignedInUser() {
 
 async function verifyAdminAgain() {
   const authUser = await waitForSignedInUser();
-  const studentId = (authUser?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i)?.[1];
+  const studentId = (authUser?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1];
   if (!authUser || !studentId) {
     alert("로그인이 필요합니다. 다시 로그인해 주세요.");
     location.href = "/signin/?redirect=" + encodeURIComponent(location.pathname + location.search);
