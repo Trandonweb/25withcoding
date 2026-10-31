@@ -165,6 +165,42 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+function askPasswordMasked(message) {
+  return new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:20000;padding:20px;";
+    const panel = document.createElement("div");
+    panel.style.cssText = "width:min(360px,100%);background:var(--card-bg,#fff);color:var(--text-color,#222);padding:22px;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);";
+    const heading = document.createElement("div");
+    heading.textContent = message;
+    heading.style.cssText = "font-weight:700;margin-bottom:14px;white-space:pre-line;";
+    const input = document.createElement("input");
+    input.type = "password";
+    input.autocomplete = "current-password";
+    input.placeholder = "현재 계정 비밀번호";
+    input.style.cssText = "width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--input-border,#ccc);border-radius:10px;background:var(--input-bg,#fff);color:var(--text-color,#222);font-size:16px;";
+    const buttons = document.createElement("div");
+    buttons.style.cssText = "display:flex;justify-content:flex-end;gap:8px;margin-top:16px;";
+    const cancel = document.createElement("button");
+    cancel.type = "button"; cancel.textContent = "취소";
+    const confirm = document.createElement("button");
+    confirm.type = "button"; confirm.textContent = "확인";
+    confirm.style.cssText = "background:var(--primary-color,#27ae60);color:#fff;";
+    const finish = value => { overlay.remove(); resolve(value); };
+    cancel.addEventListener("click", () => finish(null));
+    confirm.addEventListener("click", () => finish(input.value || null));
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); confirm.click(); }
+      if (event.key === "Escape") finish(null);
+    });
+    buttons.append(cancel, confirm);
+    panel.append(heading, input, buttons);
+    overlay.append(panel);
+    overlay.addEventListener("click", event => { if (event.target === overlay) finish(null); });
+    document.body.append(overlay); input.focus();
+  });
+}
+
 async function verifyAdminAgain() {
   try {
     // 편집 화면의 기존 메모 로딩에는 로그인 SDK가 관여하지 않도록,
@@ -224,7 +260,7 @@ async function verifyAdminAgain() {
       return false;
     }
 
-    const password = prompt("관리자 2차 인증\n현재 계정 비밀번호를 다시 입력하세요.");
+    const password = await askPasswordMasked("관리자 2차 인증\n현재 계정 비밀번호를 다시 입력하세요.");
     if (password === null || !password) return false;
 
     await reauthenticateWithCredential(
@@ -315,6 +351,16 @@ async function load() {
     document.getElementById("titleInput").value =
       (noteData.title || "").replace(/^!@#/, "").replace(/#@!$/, "");
     document.getElementById("contentInput").value = noteData.content || "";
+
+    // 공지는 기존 내용을 불러온 뒤 편집 화면 진입 시 관리자 인증을 요구한다.
+    const isNotice = noteData.title?.startsWith("!@#") && noteData.title?.endsWith("#@!");
+    if (isNotice) {
+      const verified = await verifyAdminAgain();
+      if (!verified) {
+        location.href = "view.html?id=" + encodeURIComponent(id);
+        return;
+      }
+    }
     if (saveButton) saveButton.disabled = false;
   } catch (error) {
     console.error("메모 불러오기 실패:", error);
@@ -331,14 +377,6 @@ async function saveEdit() {
   if (!title) {
     alert("제목을 입력해주세요.");
     return;
-  }
-
-  // 공지 메모는 조회·편집 화면 진입까지는 자유롭게 하고,
-  // 실제 저장을 누른 시점에만 관리자 로그인 및 비밀번호 재인증을 진행한다.
-  const isNotice = noteData?.title?.startsWith("!@#") && noteData?.title?.endsWith("#@!");
-  if (isNotice) {
-    const verified = await verifyAdminAgain();
-    if (!verified) return;
   }
 
   await updateDoc(
