@@ -134,12 +134,14 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
   <div class="footer">2026 코딩과함께라면 | SINCE 2025</div>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
     import { getStudentId } from "/firebase-session.js";
     import { renderAttendanceButton } from "/attendance.js";
     const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
     const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFirestore(app);
+    // Keep the same Firebase Auth session available after navigation and reloads.
+    const authPersistenceReady=setPersistence(auth,browserLocalPersistence).catch(error=>{console.error("[AUTH] 로그인 유지 설정 실패",error);return false;});
     const SETTINGS_KEY="coding_with_ramen_settings"; const COBY_LIGHT_LOGO="/AI/COBY_AI_logo.png"; const COBY_DARK_LOGO="/AI/COBY_AI_logo_dark_mode.png";
     const defaultSettings={darkMode:false,primaryColor:"#27ae60",keepLogin:true,avatarConfig:{icon:"code",iconColor:"#27ae60",background:"#e7f7ed",backgroundEffect:"glow"}};
     function getStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{return {...defaultSettings,...JSON.parse(saved)}}catch(e){return {...defaultSettings}}}return {...defaultSettings}}
@@ -298,7 +300,33 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
         event.preventDefault();showSiteToast("지원 가능한 기간이 아닙니다.");
       }
     });
-    onAuthStateChanged(auth,authUser=>{updateUI(authUser).then(()=>{const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));}).catch(e=>console.error("[AUTH] 홈 인증 상태 처리 실패",e));},error=>console.error("[AUTH] 인증 상태 확인 실패",error));
+    // Cached identity is used only to avoid a logged-out flash while Firebase restores the real session.
+    function showCachedSessionUI(){
+      const cachedId=localStorage.getItem("userId")||"";
+      if(!/^\\d{5}$/.test(cachedId))return;
+      const btn=document.getElementById("authBtn"),label=document.getElementById("authLabel");
+      const dropdown=document.getElementById("profileDropdown"),studentNumber=document.getElementById("studentNumber");
+      const nav=document.querySelector(".main-nav");
+      const profileWrap=document.querySelector(".profile-menu-wrap");
+      if(profileWrap)profileWrap.hidden=false;
+      if(btn){btn.disabled=true;btn.setAttribute("aria-label","로그인 상태 확인 중");}
+      if(label)label.textContent="확인 중";
+      if(studentNumber){studentNumber.textContent=cachedId;studentNumber.hidden=false;}
+      const numberLabel=document.getElementById("profileStudentNumber");
+      const nameLabel=document.getElementById("profileStudentName");
+      if(numberLabel)numberLabel.textContent=cachedId;
+      if(nameLabel)nameLabel.textContent="인증 확인 중";
+      const signout=document.getElementById("signoutBtn");if(signout)signout.hidden=true;
+      if(nav)nav.classList.remove("is-logged-out");
+      document.querySelectorAll(".main-nav .nav-item").forEach(item=>{item.hidden=false;});
+      document.querySelectorAll(".main-nav .nav-column").forEach(column=>{column.hidden=false;});
+      const adminNav=document.getElementById("adminNavItem"),adminColumn=document.getElementById("adminDropdownColumn");
+      if(adminNav)adminNav.hidden=true;if(adminColumn)adminColumn.hidden=true;
+      if(dropdown)dropdown.classList.remove("open");
+    }
+    showCachedSessionUI();
+    await authPersistenceReady;
+    onAuthStateChanged(auth,authUser=>{updateUI(authUser).then(()=>{const btn=document.getElementById("authBtn");if(btn)btn.disabled=false;const attendanceBtn=document.getElementById("attendanceBtn");if(attendanceBtn)renderAttendanceButton(attendanceBtn).catch(e=>console.error("[ATTENDANCE] 홈 연동 실패",e));}).catch(e=>{const btn=document.getElementById("authBtn");if(btn)btn.disabled=false;console.error("[AUTH] 홈 인증 상태 처리 실패",e)});},error=>{const btn=document.getElementById("authBtn");if(btn)btn.disabled=false;console.error("[AUTH] 인증 상태 확인 실패",error)});
     const siteHeader=document.getElementById("siteHeader");const navRevealTrigger=document.getElementById("navRevealTrigger");let lastScrollY=window.scrollY,scrollTick=false;
     window.addEventListener("scroll",()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{const currentY=window.scrollY;if(currentY<40)siteHeader.classList.remove("nav-hidden");else siteHeader.classList.add("nav-hidden");lastScrollY=currentY;scrollTick=false})},{passive:true});
     navRevealTrigger.addEventListener("mouseenter",()=>siteHeader.classList.remove("nav-hidden"));
