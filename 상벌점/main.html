@@ -454,10 +454,12 @@ async function checkUserSettings(userId) {
   const data = snap.data();
   const firebaseSettings = data.settings || {};
 
+  // 기기 설정을 기본값으로 두고 Firestore에 저장된 설정이 있으면 우선 적용한다.
+  const localSettings = getStoredSettings();
   const settings = {
-    darkMode: firebaseSettings.darkMode ?? defaultSettings.darkMode,
-    primaryColor: firebaseSettings.primaryColor ?? defaultSettings.primaryColor,
-    keepLogin: firebaseSettings.keepLogin ?? defaultSettings.keepLogin
+    ...defaultSettings,
+    ...localSettings,
+    ...firebaseSettings
   };
 
   const updateData = {};
