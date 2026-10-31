@@ -1,22 +1,10 @@
-import { doc, getDoc, getAuth, onAuthStateChanged, mainApp, mainDb } from "./firebase.js";
+import { doc, getDoc, getAuth, mainApp, mainDb } from "./firebase.js";
 
 // /signin과 동일한 points2026 기본 Firebase 앱의 Auth 세션을 그대로 사용한다.
 // 여기서 setPersistence를 다시 호출하면 로그인 직후 페이지 이동 과정에서
 // 기존 로그인 지속성 설정을 재설정할 수 있으므로 COBY에서는 변경하지 않는다.
 const auth = getAuth(mainApp);
 
-function waitForAuthUser() {
-    return new Promise((resolve, reject) => {
-        let unsubscribe = () => {};
-        unsubscribe = onAuthStateChanged(auth, user => {
-            unsubscribe();
-            resolve(user);
-        }, error => {
-            unsubscribe();
-            reject(error);
-        });
-    });
-}
 import { state, $ } from "./state.js";
 import { setStatus, updateProfile, openMenu, closeMenu } from "./ui.js";
 import { loadChats, initializeConversation, newChat } from "./conversations.js";
@@ -29,8 +17,10 @@ import { bindCobyCopy } from "./coby-markup.js";
 import { initCobyInput } from "./input.js";
 
 async function loadUser() {
-    // Firebase가 저장된 로그인 상태를 복원한 뒤 첫 Auth 상태를 전달할 때까지 기다린다.
-    const authUser = await waitForAuthUser();
+    // onAuthStateChanged의 첫 이벤트 대신 Firebase Auth 초기화 완료를 직접 기다린다.
+    // 초기 저장소 복원이 끝난 뒤 currentUser를 읽어 로그인 상태를 판정한다.
+    await auth.authStateReady();
+    const authUser = auth.currentUser;
     const match = (authUser?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
     state.currentUserId = match?.[1] || "";
     if (!state.currentUserId) {
