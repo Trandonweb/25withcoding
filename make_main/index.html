@@ -50,9 +50,8 @@ body.dark-mode{--bg:#111713;--surface:#1b241e;--text:#eef7f0;--muted:#a3b3a7;--l
   </div>
   <div class="token-box">
     <h3>GitHub 자동 저장</h3>
-    <div class="field"><label for="githubToken">GitHub fine-grained token</label><input id="githubToken" type="password" autocomplete="off" placeholder="github_pat_…"></div>
-    <button class="btn" id="connectBtn" style="width:100%">연결하고 자동 저장 켜기</button>
-    <p class="auto-note">Contents 읽기/쓰기 권한이 필요합니다. 토큰은 이 탭의 메모리에만 유지됩니다. 편집을 멈추면 자동으로 make_main/page1.json, page2.json…에 커밋합니다.</p>
+    <button class="btn" id="connectBtn" style="width:100%">관리자 인증 및 자동 저장 연결</button>
+    <p class="auto-note">Firebase 관리자 계정으로 인증합니다. GitHub 토큰은 Cloudflare Worker Secret에 보관되며 이 브라우저로 전달되지 않습니다. 편집을 멈추면 make_main/page1.json, page2.json…에 자동 저장됩니다.</p>
   </div>
 </section>
 <section class="work-panel">
@@ -94,7 +93,10 @@ body.dark-mode{--bg:#111713;--surface:#1b241e;--text:#eef7f0;--muted:#a3b3a7;--l
 </main>
 <script type="module">
 import { requireAdmin } from "/admin/js/auth.js";
-const OWNER="Trandonweb",REPO="25withcoding",MAIN_PATH="data/main-page.json";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { app } from "/admin/js/firebase.js";
+const MAIN_PATH="data/main-page.json",WORKER_URL="https://make-main.trandonwebtoon.workers.dev";
+const firebaseAuth=getAuth(app);
 const $=id=>document.getElementById(id);
 let adminUser=null,mainData={version:3,settings:{enabled:true,startAt:"",endAt:""},slides:[],elements:[],canvasPages:[]};
 let pages=[],pageIndex=0,selectedId=null,connected=false,autoSaveTimer=null,saving=false,editRevision=0,undoStack=[],redoStack=[],dragState=null;
@@ -106,8 +108,7 @@ const visibleNow=item=>item&&item.enabled!==false&&(!kstDate(item.startAt)||Date
 const currentPage=()=>pages[pageIndex]||null;
 const currentObject=()=>currentPage()?.objects.find(o=>o.id===selectedId)||null;
 function status(text){$("status").textContent=text;$("canvasStatus").textContent=text}
-function token(){return $("githubToken").value.trim()}
-async function api(path,method="GET",body=null){const headers={Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};if(token())headers.Authorization="Bearer "+token();if(body)headers["Content-Type"]="application/json";const r=await fetch("https://api.github.com/repos/"+OWNER+"/"+REPO+"/contents/"+path,{method,headers,body:body?JSON.stringify(body):undefined});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.message||("GitHub API "+r.status));return d}
+async function api(path,method="GET",body=null){const user=firebaseAuth.currentUser;if(!user)throw Error("Firebase 로그인이 필요합니다.");const idToken=await user.getIdToken();const safePath=path.split("/").map(encodeURIComponent).join("/");const headers={Accept:"application/vnd.github+json",Authorization:"Bearer "+idToken};if(body)headers["Content-Type"]="application/json";const r=await fetch(WORKER_URL+"/github/contents/"+safePath,{method,headers,body:body?JSON.stringify(body):undefined});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.message||d.error||("저장 서버 오류 "+r.status));return d}
 function decode64(s){const binary=atob(String(s||"").replace(/\s/g,""));return new TextDecoder().decode(Uint8Array.from(binary,c=>c.charCodeAt(0)))}
 function encode64(s){const bytes=new TextEncoder().encode(s);let binary="";bytes.forEach(b=>binary+=String.fromCharCode(b));return btoa(binary)}
 function makeObject(type){const common={id:id("obj"),type,name:type==="text"?"텍스트":type==="image"?"이미지":type==="circle"?"원형 도형":type==="line"?"선":type==="button"?"버튼":"사각형",text:type==="text"?"텍스트를 입력하세요":type==="button"?"자세히 보기":"",imageUrl:"",linkUrl:"",x:20+Math.random()*8,y:20+Math.random()*8,w:type==="text"?32:type==="image"?32:24,h:type==="text"?14:type==="image"?28:18,fontSize:type==="text"?30:18,color:"#17231b",fill:type==="button"?"#27ae60":"#e5f7eb",radius:type==="circle"?100:type==="button"?12:4,align:"center",z:pages[pageIndex]?.objects.length||1};return common}
@@ -133,7 +134,7 @@ async function putFile(path,content,message){let sha=null;try{sha=(await api(pat
 async function uploadImage(file){if(!connected)throw Error("먼저 GitHub에 연결해 주세요.");if(file.size>4*1024*1024)throw Error("이미지는 4MB 이하 파일을 선택해 주세요.");const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(Error("이미지를 읽지 못했습니다."));reader.readAsDataURL(file)});const content=dataUrl.split(",")[1];const ext=(file.name.split(".").pop()||"png").toLowerCase().replace(/[^a-z0-9]/g,"")||"png";const filename="image-"+Date.now()+"."+ext;await api("make_main/assets/"+filename,"PUT",{message:"Upload homepage canvas image "+filename,content});return "/make_main/assets/"+filename}
 async function saveAll(quiet=false){if(!connected||saving)return;saving=true;const savingRevision=editRevision;try{status("GitHub 자동 저장 중…");pages=pages.map(saveablePage);for(let i=0;i<pages.length;i++){const path="make_main/page"+(i+1)+".json";await putFile(path,JSON.stringify(pages[i],null,2),"Auto-save homepage design page "+(i+1));}const directory=await api("make_main");for(const stale of directory.filter(x=>x.type==="file"&&/^page\d+\.json$/.test(x.name)&&Number(x.name.match(/\d+/)[0])>pages.length)){await api("make_main/"+stale.name,"DELETE",{message:"Remove deleted homepage design page "+stale.name,sha:stale.sha});}const latest=await api(MAIN_PATH);mainData=JSON.parse(decode64(latest.content));mainData.version=3;mainData.canvasPages=canvasPagesAsElements();mainData.updatedAt=new Date().toISOString();mainData.updatedBy=adminUser?.id||"admin";await api(MAIN_PATH,"PUT",{message:"Sync canvas pages from /make_main",sha:latest.sha,content:encode64(JSON.stringify(mainData,null,2)+"\n")});status("자동 저장 완료 · "+pages.length+"개 페이지");if(!quiet)alert("모든 페이지를 GitHub에 저장했습니다.")}catch(e){console.error(e);status("자동 저장 실패 · 연결/권한 확인");if(!quiet)alert("GitHub 자동 저장에 실패했습니다.\n"+e.message)}finally{saving=false;if(connected&&editRevision!==savingRevision){clearTimeout(autoSaveTimer);autoSaveTimer=setTimeout(()=>saveAll(true),500)}}}
 async function loadPages(){status("페이지 파일 확인 중…");const listing=await api("make_main");const files=listing.filter(x=>x.type==="file"&&/^page\d+\.json$/.test(x.name)).sort((a,b)=>Number(a.name.match(/\d+/)[0])-Number(b.name.match(/\d+/)[0]));pages=[];for(const file of files){const data=await api("make_main/"+file.name);pages.push(JSON.parse(decode64(data.content)))}if(!pages.length){pages=[{id:"page-1",title:"페이지 1",enabled:true,startAt:"",endAt:"",background:"#ffffff",objects:[]}];await putFile("make_main/page1.json",JSON.stringify(pages[0],null,2),"Create first homepage design page")}pageIndex=0;selectedId=null;renderAll();status("GitHub 연결됨 · "+pages.length+"개 페이지")}
-$("connectBtn").onclick=async()=>{if(!token()){alert("GitHub fine-grained token을 입력하세요.");$("githubToken").focus();return}try{await api("make_main");connected=true;await loadPages();status("자동 저장 활성화 · "+pages.length+"개 페이지")}catch(e){connected=false;status("GitHub 연결 실패");alert("연결에 실패했습니다. 저장소 Contents 읽기/쓰기 권한을 확인하세요.\n"+e.message)}};
+$("connectBtn").onclick=async()=>{try{if(!firebaseAuth.currentUser)throw Error("로그인 세션을 찾지 못했습니다. 다시 로그인해 주세요.");await firebaseAuth.currentUser.getIdToken(true);await api("make_main");connected=true;await loadPages();status("Cloudflare 보안 연결됨 · "+pages.length+"개 페이지")}catch(e){connected=false;status("보안 연결 실패");alert("Cloudflare 연결에 실패했습니다.\n"+e.message)}};
 $("addPage").onclick=()=>{pushHistory();pages.push({id:id("page"),title:"페이지 "+(pages.length+1),enabled:true,startAt:"",endAt:"",background:"#ffffff",objects:[]});pageIndex=pages.length-1;selectedId=null;renderAll();changed()};
 $("duplicatePage").onclick=()=>{const p=currentPage();if(!p)return;pushHistory();const cp=clone(p);cp.id=id("page");cp.title=(p.title||"페이지")+" 복사본";cp.objects=cp.objects.map(o=>({...o,id:id("obj")}));pages.splice(pageIndex+1,0,cp);pageIndex++;selectedId=null;renderAll();changed()};
 $("pageEnabled").onchange=()=>{currentPage().enabled=$("pageEnabled").checked;changed()};
