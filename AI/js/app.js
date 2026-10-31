@@ -1,6 +1,6 @@
-import { doc, getDoc, setDoc, serverTimestamp } from "./firebase.js";
+import { doc, getDoc } from "./firebase.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-import { mainApp, mainDb, db } from "./firebase.js";
+import { mainApp, mainDb } from "./firebase.js";
 
 const auth = getAuth(mainApp);
 function waitForAuthUser() {
@@ -40,16 +40,17 @@ async function loadUser() {
     localStorage.setItem("userId", state.currentUserId);
     try {
         const snapshot = await getDoc(doc(mainDb, "users", state.currentUserId));
-        state.currentPerson = snapshot.exists()
-            ? { schoolNumber: state.currentUserId, ...snapshot.data() }
-            : { schoolNumber: state.currentUserId };
+        if (!snapshot.exists()) {
+            state.currentPerson = null;
+            setStatus("회원 정보를 찾을 수 없습니다");
+            updateProfile();
+            alert("points2026 회원 문서(users/" + state.currentUserId + ")를 찾을 수 없습니다. 관리자에게 문의해주세요.");
+            return false;
+        }
 
-        await setDoc(doc(db, "people", state.currentUserId), {
-            schoolNumber: state.currentUserId,
-            name: state.currentPerson.name || "사용자",
-            role: state.currentPerson.role || "student",
-            updatedAt: serverTimestamp()
-        }, { merge: true });
+        // 회원 개인정보의 단일 원본은 points2026의 users/{학번} 문서다.
+        // COBY 전용 Firebase에는 이름·학번·역할 프로필을 복사하지 않는다.
+        state.currentPerson = { schoolNumber: state.currentUserId, ...snapshot.data() };
 
         updateProfile();
         setStatus(`${state.currentPerson.name || "사용자"}님`, true);
