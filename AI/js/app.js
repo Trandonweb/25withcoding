@@ -26,9 +26,39 @@ async function loadUser() {
     if (!state.currentUserId) {
         localStorage.removeItem("userId");
         localStorage.removeItem("firebaseIdToken");
-        setStatus("로그인이 필요합니다");
+        localStorage.removeItem("firebaseRefreshToken");
+
+        // 로그인 페이지와 COBY 사이의 인증 저장소 차이를 확인하기 위한 임시 진단.
+        // 토큰이나 이메일은 화면에 노출하지 않는다.
+        const authStorageKey = `firebase:authUser:${auth.app.options.apiKey}:${auth.app.name}`;
+        const localAuthSaved = localStorage.getItem(authStorageKey) !== null;
+        const sessionAuthSaved = sessionStorage.getItem(authStorageKey) !== null;
+        const diagnostic = [
+            `프로젝트: ${auth.app.options.projectId || "확인 불가"}`,
+            `앱 이름: ${auth.app.name}`,
+            `Auth 사용자: 없음`,
+            `로컬 저장소 인증 항목: ${localAuthSaved ? "있음" : "없음"}`,
+            `세션 저장소 인증 항목: ${sessionAuthSaved ? "있음" : "없음"}`
+        ].join(" / ");
+
+        console.error("[COBY AUTH DIAGNOSTIC]", {
+            projectId: auth.app.options.projectId,
+            appName: auth.app.name,
+            hasCurrentUser: false,
+            localAuthSaved,
+            sessionAuthSaved
+        });
+        setStatus("로그인 세션을 읽지 못했습니다");
         updateProfile();
-        location.href = "/signin?redirect=" + encodeURIComponent("/AI/");
+        const status = $("statusText");
+        if (status) {
+            status.textContent = "인증 진단: " + diagnostic;
+            status.title = diagnostic;
+            status.style.whiteSpace = "normal";
+            status.style.maxWidth = "min(92vw, 680px)";
+            status.style.fontSize = "11px";
+            status.style.lineHeight = "1.6";
+        }
         return false;
     }
     localStorage.setItem("userId", state.currentUserId);
