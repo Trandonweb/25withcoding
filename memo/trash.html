@@ -252,6 +252,107 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 
+const pointsConfig = {
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain: "points2026-f5e50.firebaseapp.com",
+  projectId: "points2026-f5e50",
+  storageBucket: "points2026-f5e50.firebasestorage.app",
+  messagingSenderId: "248724251417",
+  appId: "1:248724251417:web:02d85cdc4addac98069b88"
+};
+
+async function verifyAdminWithPassword() {
+  const authApi = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+  const { getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential } = authApi;
+  const pointsApp = initializeApp(pointsConfig);
+  const auth = getAuth(pointsApp);
+  const pointsDb = getFirestore(pointsApp);
+  const user = await new Promise((resolve, reject) => {
+    let unsubscribe = () => {};
+    unsubscribe = onAuthStateChanged(auth, current => {
+      unsubscribe();
+      resolve(current);
+    }, error => {
+      unsubscribe();
+      reject(error);
+    });
+  });
+
+  const studentId = (user?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i)?.[1];
+  if (!user || !studentId) {
+    alert("로그인이 필요합니다. 다시 로그인해 주세요.");
+    location.href = "/signin/?redirect=" + encodeURIComponent(location.pathname + location.search);
+    return false;
+  }
+
+  try {
+    const profileSnap = await getDoc(doc(pointsDb, "users", studentId));
+    if (!profileSnap.exists() || !["president", "vice"].includes(profileSnap.data().role)) {
+      alert("회장 또는 부회장만 메모를 영구삭제할 수 있습니다.");
+      return false;
+    }
+  } catch (error) {
+    console.error("관리자 권한 조회 실패:", error);
+    alert("관리자 권한을 확인할 수 없습니다. 계정 데이터베이스 접근 규칙을 확인해 주세요.");
+    return false;
+  }
+
+  const password = await askPasswordMasked("영구삭제 2차 인증\\n현재 계정 비밀번호를 다시 입력하세요.");
+  if (!password) return false;
+
+  try {
+    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
+    return true;
+  } catch (error) {
+    console.error("비밀번호 재인증 실패:", error);
+    alert("비밀번호가 올바르지 않거나 재인증에 실패했습니다.");
+    return false;
+  }
+}
+
+function askPasswordMasked(message) {
+  return new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:20000;padding:20px;";
+    const panel = document.createElement("div");
+    panel.style.cssText = "width:min(360px,100%);background:var(--card-bg,#fff);color:var(--text-color,#222);padding:22px;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);";
+    const heading = document.createElement("div");
+    heading.textContent = message;
+    heading.style.cssText = "font-weight:700;margin-bottom:14px;white-space:pre-line;";
+    const input = document.createElement("input");
+    input.type = "password";
+    input.autocomplete = "current-password";
+    input.placeholder = "현재 계정 비밀번호";
+    input.style.cssText = "width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--input-border,#ccc);border-radius:10px;background:var(--input-bg,#fff);color:var(--text-color,#222);font-size:16px;";
+    const buttons = document.createElement("div");
+    buttons.style.cssText = "display:flex;justify-content:flex-end;gap:8px;margin-top:16px;";
+    const cancel = document.createElement("button");
+    cancel.type = "button"; cancel.textContent = "취소";
+    const confirm = document.createElement("button");
+    confirm.type = "button"; confirm.textContent = "확인";
+    confirm.style.cssText = "background:var(--primary-color,#27ae60);color:#fff;";
+    let finished = false;
+    const finish = value => {
+      if (finished) return;
+      finished = true;
+      overlay.remove();
+      resolve(value);
+    };
+    cancel.addEventListener("click", () => finish(null));
+    confirm.addEventListener("click", () => finish(input.value || null));
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); confirm.click(); }
+      if (event.key === "Escape") finish(null);
+    });
+    buttons.append(cancel, confirm);
+    panel.append(heading, input, buttons);
+    overlay.append(panel);
+    overlay.addEventListener("click", event => { if (event.target === overlay) finish(null); });
+    document.body.append(overlay);
+    input.focus();
+  });
+}
+
 const app = initializeApp({
   apiKey: "AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",
   authDomain: "memo-5123c.firebaseapp.com",
@@ -346,14 +447,20 @@ async function restoreMemo(id) {
 }
 
 async function deleteForever(id) {
-  const ok = confirm("영구삭제할까요?");
+  const ok = confirm("이 메모를 데이터베이스에서 완전히 삭제할까요? 삭제 후에는 복구할 수 없습니다.");
   if (!ok) return;
 
-  await updateDoc(doc(db, "notes", id), {
-    delete: true
-  });
-  alert("영구삭제 완료");
-  loadTrash();
+  const verified = await verifyAdminWithPassword();
+  if (!verified) return;
+
+  try {
+    await deleteDoc(doc(db, "notes", id));
+    alert("데이터베이스에서 영구삭제했습니다.");
+    await loadTrash();
+  } catch (error) {
+    console.error("메모 영구삭제 실패:", error);
+    alert("삭제하지 못했습니다. Firestore 보안 규칙과 연결 상태를 확인해 주세요.");
+  }
 }
 
 function goList() {
