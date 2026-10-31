@@ -1,11 +1,25 @@
-import { doc, getDoc } from "./firebase.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-import { mainApp, mainDb } from "./firebase.js";
+import { doc, getDoc, getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence, mainApp, mainDb } from "./firebase.js";
 
 const auth = getAuth(mainApp);
+async function prepareAuthPersistence() {
+    let persistence = browserLocalPersistence;
+    try {
+        const settings = JSON.parse(localStorage.getItem("coding_with_ramen_settings") || "{}");
+        if (settings.keepLogin === false) persistence = browserSessionPersistence;
+    } catch {}
+    try {
+        await setPersistence(auth, persistence);
+    } catch (error) {
+        if (persistence !== browserLocalPersistence) throw error;
+        console.warn("장기 로그인 저장을 사용할 수 없어 현재 탭 로그인으로 전환합니다.", error);
+        await setPersistence(auth, browserSessionPersistence);
+    }
+}
+
 function waitForAuthUser() {
     return new Promise((resolve, reject) => {
-        const unsubscribe = onAuthStateChanged(auth, user => {
+        let unsubscribe = () => {};
+        unsubscribe = onAuthStateChanged(auth, user => {
             unsubscribe();
             resolve(user);
         }, error => {
@@ -26,6 +40,7 @@ import { bindCobyCopy } from "./coby-markup.js";
 import { initCobyInput } from "./input.js";
 
 async function loadUser() {
+    await prepareAuthPersistence();
     const authUser = await waitForAuthUser();
     const match = (authUser?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
     state.currentUserId = match?.[1] || "";
@@ -54,7 +69,15 @@ async function loadUser() {
 
         updateProfile();
         setStatus(`${state.currentPerson.name || "사용자"}님`, true);
-        await Promise.all([loadChats(), loadProjects()]);
+        const results = await Promise.allSettled([loadChats(), loadProjects()]);
+        if (results[0].status === "rejected") {
+            console.error("COBY 대화 데이터 접근 실패:", results[0].reason);
+            $("chatList").innerHTML = '<div class="empty-chat">대화 기록에 연결할 수 없습니다. 데이터베이스 권한을 확인해주세요.</div>';
+        }
+        if (results[1].status === "rejected") {
+            console.error("COBY 프로젝트 데이터 접근 실패:", results[1].reason);
+            $("projectList").innerHTML = '<div class="empty-chat">프로젝트 데이터에 연결할 수 없습니다.</div>';
+        }
         return true;
     } catch (error) {
         console.error("사용자 확인 실패:", error);
@@ -138,8 +161,14 @@ async function init() {
     bindCobyCopy(document);
     initCobyInput({ input: $("userInput"), send: sendMessage });
     bindGlobalEvents();
-    const success = await loadUser();
-    if (success) await initializeConversation();
+    try {
+        const success = await loadUser();
+        if (success) await initializeConversation();
+    } catch (error) {
+        console.error("COBY 초기화 실패:", error);
+        setStatus("로그인 확인 실패");
+        alert("로그인 상태를 확인하지 못했습니다.\n\n" + (error?.message || "Firebase 설정을 확인해주세요."));
+    }
 }
 
 init();
