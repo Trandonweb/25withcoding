@@ -303,7 +303,7 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     // Cached identity is used only to avoid a logged-out flash while Firebase restores the real session.
     function showCachedSessionUI(){
       const cachedId=localStorage.getItem("userId")||"";
-      if(!/^\\d{5}$/.test(cachedId))return;
+      if(!/^\d{5}$/.test(cachedId))return;
       const btn=document.getElementById("authBtn"),label=document.getElementById("authLabel");
       const dropdown=document.getElementById("profileDropdown"),studentNumber=document.getElementById("studentNumber");
       const nav=document.querySelector(".main-nav");
