@@ -219,7 +219,7 @@ async function verifyAdminAgain() {
       messagingSenderId: "248724251417",
       appId: "1:248724251417:web:02d85cdc4addac98069b88"
     };
-    const pointsApp = initializeApp(pointsConfig, "points-auth-check");
+    const pointsApp = initializeApp(pointsConfig);
     const pointsAuth = getAuth(pointsApp);
     const pointsDb = getPointsFirestore(pointsApp);
 
