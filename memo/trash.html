@@ -117,6 +117,41 @@
       background: var(--admin-btn-hover);
     }
 
+    .admin-btn.active {
+      background: #166534;
+      color: #fff;
+    }
+
+    .admin-toolbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+    }
+
+    .admin-toolbar.visible { display: flex; }
+
+    .memo-select {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary-color);
+      cursor: pointer;
+    }
+
+    .selection-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
     h2 {
       margin-top: 0;
       margin-bottom: 14px;
@@ -228,10 +263,19 @@
 <div class="top-bar">
   <div class="left-buttons">
     <button onclick="goList()">← 목록</button>
+    <button id="adminModeToggle" class="admin-btn" onclick="toggleAdminMode()">관리자 모드 OFF</button>
   </div>
 </div>
 
 <h2>🗑 휴지통</h2>
+
+<div class="admin-toolbar" id="adminToolbar">
+  <div class="selection-area">
+    <label><input type="checkbox" id="selectAll" class="memo-select"> 전체 선택</label>
+    <span id="selectedCount">0개 선택</span>
+  </div>
+  <button class="delete" id="bulkDeleteButton" onclick="deleteSelected()">선택 삭제</button>
+</div>
 
 <div class="card" id="list">
   로딩중...
@@ -242,6 +286,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
+  getApps,
   collection,
   getDocs,
   getDoc,
@@ -264,7 +309,8 @@ const pointsConfig = {
 async function verifyAdminWithPassword() {
   const authApi = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
   const { getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential } = authApi;
-  const pointsApp = initializeApp(pointsConfig);
+  const pointsApp = getApps().find(app => app.name === "points-admin-auth")
+    || initializeApp(pointsConfig, "points-admin-auth");
   const auth = getAuth(pointsApp);
   const pointsDb = getFirestore(pointsApp);
   const user = await new Promise((resolve, reject) => {
@@ -361,6 +407,12 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 const listDiv = document.getElementById("list");
+const adminModeToggle = document.getElementById("adminModeToggle");
+const adminToolbar = document.getElementById("adminToolbar");
+const selectAllCheckbox = document.getElementById("selectAll");
+const selectedCount = document.getElementById("selectedCount");
+let adminMode = false;
+let trashItems = new Map();
 
 // --- 설정 시스템 모듈화 (localStorage 우선 적용 + Firebase 동기화) ---
 const SETTINGS_KEY = "coding_with_ramen_settings";
@@ -407,6 +459,7 @@ const currentUser = localStorage.getItem("userId");
 async function loadTrash() {
   const snap = await getDocs(collection(db, "notes"));
   listDiv.innerHTML = "";
+  trashItems.clear();
   let hasData = false;
 
   snap.forEach(docu => {
@@ -415,10 +468,12 @@ async function loadTrash() {
     if (!data.deleted) return;
 
     hasData = true;
+    trashItems.set(docu.id, { delete: data.delete === true });
     const div = document.createElement("div");
     div.className = "memo";
 
     div.innerHTML = `
+      ${adminMode ? `<input type="checkbox" class="memo-select item-select" data-id="${docu.id}" aria-label="이 메모 선택">` : ""}
       <div class="memo-info">
         <div class="memo-title">📄 ${data.title}</div>
         <div class="memo-meta">👤 ${data.authorName || "unknown"}</div>
@@ -427,7 +482,7 @@ async function loadTrash() {
       <div class="buttons">
         <button class="restore" onclick="restoreMemo('${docu.id}')">복구</button>
         ${!data.delete ? `<button class="delete" onclick="deleteForever('${docu.id}')">영구삭제</button>` : ""}
-        ${data.delete ? `<button class="delete" onclick="deleteFromDatabase('${docu.id}')">DB 삭제</button>` : ""}
+        ${data.delete && adminMode ? `<button class="delete" onclick="deleteFromDatabase('${docu.id}')">DB 삭제</button>` : ""}
       </div>
     `;
 
@@ -437,6 +492,34 @@ async function loadTrash() {
   if (!hasData) {
     listDiv.innerHTML = "<div class='empty'>휴지통이 비어있습니다.</div>";
   }
+  adminToolbar.classList.toggle("visible", adminMode && hasData);
+  adminModeToggle.classList.toggle("active", adminMode);
+  adminModeToggle.textContent = adminMode ? "관리자 모드 ON" : "관리자 모드 OFF";
+  selectAllCheckbox.checked = false;
+  updateSelectedCount();
+}
+
+async function toggleAdminMode() {
+  if (adminMode) {
+    adminMode = false;
+    await loadTrash();
+    return;
+  }
+
+  const verified = await verifyAdminWithPassword();
+  if (!verified) return;
+
+  adminMode = true;
+  await loadTrash();
+  alert("관리자 모드가 켜졌습니다. 이 페이지를 벗어나거나 새로고침하면 인증이 해제됩니다.");
+}
+
+function updateSelectedCount() {
+  const checked = listDiv.querySelectorAll(".item-select:checked");
+  selectedCount.textContent = checked.length + "개 선택";
+  const all = listDiv.querySelectorAll(".item-select");
+  selectAllCheckbox.checked = all.length > 0 && checked.length === all.length;
+  selectAllCheckbox.indeterminate = checked.length > 0 && checked.length < all.length;
 }
 
 async function restoreMemo(id) {
@@ -462,11 +545,12 @@ async function deleteForever(id) {
 }
 
 async function deleteFromDatabase(id) {
+  if (!adminMode) {
+    alert("관리자 모드를 먼저 켜 주세요.");
+    return;
+  }
   const ok = confirm("데이터베이스에서 완전히 삭제할까요? 이 작업은 복구할 수 없습니다.");
   if (!ok) return;
-
-  const verified = await verifyAdminWithPassword();
-  if (!verified) return;
 
   try {
     await deleteDoc(doc(db, "notes", id));
@@ -478,6 +562,44 @@ async function deleteFromDatabase(id) {
   }
 }
 
+async function deleteSelected() {
+  if (!adminMode) {
+    alert("관리자 모드를 먼저 켜 주세요.");
+    return;
+  }
+
+  const ids = [...listDiv.querySelectorAll(".item-select:checked")].map(input => input.dataset.id);
+  if (!ids.length) {
+    alert("삭제할 항목을 먼저 선택해 주세요.");
+    return;
+  }
+
+  const permanentCount = ids.filter(id => !trashItems.get(id)?.delete).length;
+  const physicalCount = ids.filter(id => trashItems.get(id)?.delete).length;
+  const message = [
+    "선택한 " + ids.length + "개 항목을 처리할까요?",
+    permanentCount ? "· " + permanentCount + "개: 영구삭제 처리(학생 계정에서 숨김)" : "",
+    physicalCount ? "· " + physicalCount + "개: DB에서 완전 삭제(복구 불가)" : ""
+  ].filter(Boolean).join("\\n");
+  if (!confirm(message)) return;
+
+  try {
+    for (const id of ids) {
+      if (trashItems.get(id)?.delete) {
+        await deleteDoc(doc(db, "notes", id));
+      } else {
+        await updateDoc(doc(db, "notes", id), { delete: true });
+      }
+    }
+    alert("선택한 항목을 처리했습니다.");
+    await loadTrash();
+  } catch (error) {
+    console.error("선택 삭제 실패:", error);
+    alert("일부 항목 처리에 실패했습니다. Firestore 규칙과 연결 상태를 확인해 주세요.");
+    await loadTrash();
+  }
+}
+
 function goList() {
   location.href = "index.html";
 }
@@ -485,7 +607,19 @@ function goList() {
 window.restoreMemo = restoreMemo;
 window.deleteForever = deleteForever;
 window.deleteFromDatabase = deleteFromDatabase;
+window.deleteSelected = deleteSelected;
+window.toggleAdminMode = toggleAdminMode;
 window.goList = goList;
+
+selectAllCheckbox.addEventListener("change", () => {
+  listDiv.querySelectorAll(".item-select").forEach(input => {
+    input.checked = selectAllCheckbox.checked;
+  });
+  updateSelectedCount();
+});
+listDiv.addEventListener("change", event => {
+  if (event.target.classList.contains("item-select")) updateSelectedCount();
+});
 
 loadTrash();
 
