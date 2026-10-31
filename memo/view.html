@@ -72,6 +72,42 @@ async function waitForSignedInUser() {
   return { authUser, pointsDb, authApi: await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js") };
 }
 
+function askPasswordMasked(message) {
+  return new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:20000;padding:20px;";
+    const panel = document.createElement("div");
+    panel.style.cssText = "width:min(360px,100%);background:var(--card-bg,#fff);color:var(--text-color,#222);padding:22px;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);";
+    const heading = document.createElement("div");
+    heading.textContent = message;
+    heading.style.cssText = "font-weight:700;margin-bottom:14px;white-space:pre-line;";
+    const input = document.createElement("input");
+    input.type = "password";
+    input.autocomplete = "current-password";
+    input.placeholder = "현재 계정 비밀번호";
+    input.style.cssText = "width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--input-border,#ccc);border-radius:10px;background:var(--input-bg,#fff);color:var(--text-color,#222);font-size:16px;";
+    const buttons = document.createElement("div");
+    buttons.style.cssText = "display:flex;justify-content:flex-end;gap:8px;margin-top:16px;";
+    const cancel = document.createElement("button");
+    cancel.type = "button"; cancel.textContent = "취소";
+    const confirm = document.createElement("button");
+    confirm.type = "button"; confirm.textContent = "확인";
+    confirm.style.cssText = "background:var(--primary-color,#27ae60);color:#fff;";
+    const finish = value => { overlay.remove(); resolve(value); };
+    cancel.addEventListener("click", () => finish(null));
+    confirm.addEventListener("click", () => finish(input.value || null));
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); confirm.click(); }
+      if (event.key === "Escape") finish(null);
+    });
+    buttons.append(cancel, confirm);
+    panel.append(heading, input, buttons);
+    overlay.append(panel);
+    overlay.addEventListener("click", event => { if (event.target === overlay) finish(null); });
+    document.body.append(overlay); input.focus();
+  });
+}
+
 async function verifyAdminAgain() {
   const { authUser, pointsDb, authApi } = await waitForSignedInUser();
   const { EmailAuthProvider, reauthenticateWithCredential } = authApi;
@@ -101,7 +137,7 @@ async function verifyAdminAgain() {
     return false;
   }
 
-  const password = prompt("관리자 2차 인증\n현재 계정 비밀번호를 다시 입력하세요.");
+  const password = await askPasswordMasked("관리자 2차 인증\n현재 계정 비밀번호를 다시 입력하세요.");
   if (password === null || !password) return false;
 
   try {
