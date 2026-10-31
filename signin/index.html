@@ -178,7 +178,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
@@ -247,7 +247,12 @@ window.login = async () => {
   loginBtn.innerHTML = '<div class="spinner"></div>';
   try {
     // Explicitly persist the Firebase session before navigating to another page.
-    await setPersistence(auth, browserLocalPersistence);
+    let preferredPersistence=browserLocalPersistence;
+    try{
+      const savedSettings=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");
+      if(savedSettings.keepLogin===false)preferredPersistence=browserSessionPersistence;
+    }catch{}
+    await setPersistence(auth, preferredPersistence);
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
     const verifiedStudentId = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1] || "";
     if (verifiedStudentId !== id) throw new Error("AUTH_STUDENT_ID_MISMATCH");
