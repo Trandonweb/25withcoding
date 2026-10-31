@@ -252,7 +252,13 @@ window.login = async () => {
       const savedSettings=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");
       if(savedSettings.keepLogin===false)preferredPersistence=browserSessionPersistence;
     }catch{}
-    await setPersistence(auth, preferredPersistence);
+    try{
+      await setPersistence(auth, preferredPersistence);
+    }catch(persistenceError){
+      if(preferredPersistence!==browserLocalPersistence)throw persistenceError;
+      console.warn("브라우저의 장기 로그인 저장을 사용할 수 없어 현재 탭 로그인으로 전환합니다.",persistenceError);
+      await setPersistence(auth,browserSessionPersistence);
+    }
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
     const verifiedStudentId = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1] || "";
     if (verifiedStudentId !== id) throw new Error("AUTH_STUDENT_ID_MISMATCH");
