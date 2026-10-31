@@ -38,8 +38,79 @@
 </div>
 <div id="copyToast"><span class="check">✓</span><span>복사됨</span></div>
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";import{getFirestore,doc,getDoc,setDoc,updateDoc}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-const firebaseConfig={apiKey:"AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",authDomain:"memo-5123c.firebaseapp.com",projectId:"memo-5123c"};const app=initializeApp(firebaseConfig);const db=getFirestore(app);const id=new URLSearchParams(location.search).get("id");let memoRef,memoData,copyToastTimer;const SETTINGS_KEY="coding_with_ramen_settings";const defaultSettings={darkMode:false,primaryColor:"#27ae60",keepLogin:true};
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import { getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+const pointsApp = initializeApp({
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain: "points2026-f5e50.firebaseapp.com",
+  projectId: "points2026-f5e50",
+  storageBucket: "points2026-f5e50.firebasestorage.app",
+  messagingSenderId: "248724251417",
+  appId: "1:248724251417:web:02d85cdc4addac98069b88"
+}, "points-auth-check");
+const pointsAuth = getAuth(pointsApp);
+const pointsDb = getFirestore(pointsApp);
+
+function waitForSignedInUser() {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(pointsAuth, user => {
+      unsubscribe();
+      resolve(user);
+    }, error => {
+      unsubscribe();
+      reject(error);
+    });
+  });
+}
+
+async function verifyAdminAgain() {
+  const authUser = await waitForSignedInUser();
+  const studentId = (authUser?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i)?.[1];
+  if (!authUser || !studentId) {
+    alert("로그인이 필요합니다. 다시 로그인해 주세요.");
+    location.href = "/signin/?redirect=" + encodeURIComponent(location.pathname + location.search);
+    return false;
+  }
+
+  let profile;
+  try {
+    const profileSnap = await getDoc(doc(pointsDb, "users", studentId));
+    if (!profileSnap.exists()) {
+      alert("계정 정보를 확인할 수 없습니다.");
+      return false;
+    }
+    profile = profileSnap.data();
+  } catch (error) {
+    console.error("관리자 권한 조회 실패:", error);
+    alert("관리자 권한을 확인할 수 없습니다. 계정 데이터베이스 접근 규칙을 확인해 주세요.");
+    return false;
+  }
+
+  if (profile.role !== "president" && profile.role !== "vice") {
+    alert("회장 또는 부회장만 공지 메모를 수정·삭제할 수 있습니다.");
+    return false;
+  }
+
+  const password = prompt("관리자 2차 인증\n현재 계정 비밀번호를 다시 입력하세요.");
+  if (password === null || !password) return false;
+
+  try {
+    await reauthenticateWithCredential(
+      authUser,
+      EmailAuthProvider.credential(authUser.email, password)
+    );
+    return true;
+  } catch (error) {
+    console.error("2차 인증 실패:", error);
+    alert("비밀번호가 올바르지 않거나 재인증에 실패했습니다.");
+    return false;
+  }
+}
+
+const firebaseConfig={apiKey:"AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",authDomain:"memo-5123c.firebaseapp.com",projectId:"memo-5123c"};const app=initializeApp(firebaseConfig,"memo-database");const db=getFirestore(app);const id=new URLSearchParams(location.search).get("id");let memoRef,memoData,copyToastTimer;const SETTINGS_KEY="coding_with_ramen_settings";const defaultSettings={darkMode:false,primaryColor:"#27ae60",keepLogin:true};
 function getStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{return{...defaultSettings,...JSON.parse(saved)}}catch(e){return defaultSettings}}return defaultSettings}function saveStoredSettings(settings){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}function applySettings(settings){document.body.classList.toggle("dark-mode",!!settings.darkMode);if(settings.primaryColor)document.documentElement.style.setProperty('--primary-color',settings.primaryColor)}const initialSettings=getStoredSettings();applySettings(initialSettings);
 const currentUser = localStorage.getItem("userId");
 function isNotice(title){return!!title&&title.startsWith("!@#")&&title.endsWith("#@!")}
@@ -48,8 +119,13 @@ const pinInput=document.getElementById("pinInput");pinInput.addEventListener("in
 function checkPin(){const pin=pinInput.value;if(pin!==memoData.pin){alert("PIN 틀림");return}document.getElementById("pinBox").style.display="none";document.getElementById("actions").style.display="flex";document.getElementById("content").style.display="block";document.getElementById("content").innerText=memoData.content||""}
 function showCopyToast(){const toast=document.getElementById("copyToast");clearTimeout(copyToastTimer);toast.classList.remove("show");void toast.offsetWidth;toast.classList.add("show");copyToastTimer=setTimeout(()=>toast.classList.remove("show"),2000)}
 async function copyMemo(){const content=memoData?.content||"";let copied=false;try{await navigator.clipboard.writeText(content);copied=true}catch(error){const textarea=document.createElement("textarea");textarea.value=content;textarea.style.position="fixed";textarea.style.left="-9999px";document.body.appendChild(textarea);textarea.focus();textarea.select();try{copied=document.execCommand("copy")}catch(fallbackError){copied=false}finally{document.body.removeChild(textarea)}}if(copied)showCopyToast()}
-async function deleteMemo(){if(isNotice(memoData.title)){alert("공지 메모는 여기서 삭제할 수 없습니다.");return}if(!confirm("삭제할까요?"))return;await updateDoc(memoRef,{deleted:true});location.href="index.html"}
-function goEdit(){if(isNotice(memoData.title)){alert("공지 메모는 여기서 수정할 수 없습니다.");return}location.href="edit.html?id="+id}function goBack(){location.href="index.html"}window.checkPin=checkPin;window.copyMemo=copyMemo;window.deleteMemo=deleteMemo;window.goEdit=goEdit;window.goBack=goBack;load();
+async function deleteMemo(){
+  if (isNotice(memoData.title) && !(await verifyAdminAgain())) return;
+  if (!confirm("삭제할까요?")) return;
+  await updateDoc(memoRef,{deleted:true});
+  location.href="index.html";
+}
+function goEdit(){location.href="edit.html?id="+id}function goBack(){location.href="index.html"}window.checkPin=checkPin;window.copyMemo=copyMemo;window.deleteMemo=deleteMemo;window.goEdit=goEdit;window.goBack=goBack;load();
 </script>
 <div id="version">v26.6.27.2</div>
 </body></html>
