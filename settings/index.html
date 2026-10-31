@@ -37,12 +37,14 @@ main{width:min(760px,92%);margin:42px auto 70px}.eyebrow{color:var(--primary);fo
 </main>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import {getAuth} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {getAuth,setPersistence,browserLocalPersistence,browserSessionPersistence} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,setDoc} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 import {waitForStudentSession} from "/firebase-session.js";
 const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
 const app=initializeApp(firebaseConfig);const auth=getAuth(app);const db=getFirestore(app);const KEY="coding_with_ramen_settings";
-const authSession=await waitForStudentSession(auth);
+let authSession=null;
+let authCheckError=null;
+try{authSession=await waitForStudentSession(auth)}catch(error){authCheckError=error;console.error("Firebase 인증 상태 확인 실패",error)}
 const authenticatedUserId=authSession?.studentId||"";
 const defaults={darkMode:false,primaryColor:"#27ae60",keepLogin:true,avatarConfig:{icon:"code",iconColor:"#27ae60",background:"#e7f7ed",backgroundEffect:"glow"}};
 
@@ -50,7 +52,13 @@ function avatarSvg(config={}){const c={...defaults.avatarConfig,...(config||{})}
 function readLocal(){try{return {...defaults,...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch{return {...defaults}}}
 function apply(s){document.body.classList.toggle("dark",!!s.darkMode);document.documentElement.style.setProperty("--primary",s.primaryColor||defaults.primaryColor);document.querySelectorAll(".color").forEach(b=>b.classList.toggle("selected",b.dataset.color===(s.primaryColor||defaults.primaryColor)));document.getElementById("darkMode").checked=!!s.darkMode;document.getElementById("keepLogin").checked=!!s.keepLogin;const a={...defaults.avatarConfig,...(s.avatarConfig||{})};document.getElementById("avatarIcon").value=a.icon;document.getElementById("avatarIconColor").value=a.iconColor;document.getElementById("avatarBackground").value=a.background;document.getElementById("avatarEffect").value=a.backgroundEffect;renderAvatar(a)}
 let settings=readLocal();apply(settings);
+let settingsReady=!authenticatedUserId;
 async function save(key,value){
+  if(!settingsReady){document.getElementById("settingsStatus").textContent="계정 설정을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.";return;}
+  if(key==="keepLogin"&&authenticatedUserId){
+    try{await setPersistence(auth,value?browserLocalPersistence:browserSessionPersistence)}
+    catch(error){console.error("로그인 유지 방식 변경 실패",error);document.getElementById("keepLogin").checked=!!settings.keepLogin;document.getElementById("settingsStatus").textContent="로그인 유지 설정을 적용하지 못했습니다 ("+(error.code||"unknown")+").";return;}
+  }
   settings[key]=value;
   localStorage.setItem(KEY,JSON.stringify(settings));
   apply(settings);
@@ -86,20 +94,23 @@ if(userId){
       if(snap.exists()){
         const remote=snap.data().settings||{};
         settings={...defaults,...remote,avatarConfig:{...defaults.avatarConfig,...(remote.avatarConfig||{})}};
+        await setPersistence(auth,settings.keepLogin?browserLocalPersistence:browserSessionPersistence);
         localStorage.setItem(KEY,JSON.stringify(settings));
         apply(settings);
         document.getElementById("settingsStatus").textContent="Firebase 계정 설정을 불러왔습니다.";
       }else{
+        await setPersistence(auth,settings.keepLogin?browserLocalPersistence:browserSessionPersistence);
         document.getElementById("settingsStatus").textContent="계정 설정 문서가 아직 없습니다. 변경하면 새로 저장됩니다.";
       }
     }catch(e){
       console.error("Firebase 계정 설정 불러오기 실패",e);
-      document.getElementById("settingsStatus").textContent="Firebase 설정 불러오기 실패 ("+(e.code||"unknown")+"). 로그인은 확인됐지만 Firestore 접근 권한을 확인해 주세요.";
-    }
+      try{await setPersistence(auth,settings.keepLogin?browserLocalPersistence:browserSessionPersistence)}catch(persistenceError){console.error("로그인 유지 방식 적용 실패",persistenceError)}
+      document.getElementById("settingsStatus").textContent="Firebase 설정 불러오기 실패 ("+(e.code||"unknown")+"). 기기에 저장된 설정으로 계속합니다.";
+    }finally{settingsReady=true;}
   })();
 }else{
   area.innerHTML='<p class="status">먼저 로그인해 주세요.</p><a class="primary-btn" href="/signin?redirect=%2Fsettings">로그인</a>';
-  document.getElementById("settingsStatus").textContent="로그인하지 않은 상태입니다. 변경 사항은 이 기기에 저장됩니다.";
+  document.getElementById("settingsStatus").textContent=authCheckError?"인증 상태를 확인하지 못했습니다. 다시 로그인해 주세요.":"로그인하지 않은 상태입니다. 변경 사항은 이 기기에 저장됩니다."; 
 }
 </script>
 </body>
