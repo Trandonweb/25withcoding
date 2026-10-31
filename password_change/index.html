@@ -110,7 +110,7 @@
   </main>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
@@ -136,14 +136,46 @@ try {
 } catch {}
 
 let currentUser = null;
-let authReadyResolve;
-const authReady = new Promise(resolve => { authReadyResolve = resolve; });
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  authReadyResolve();
-  if (!user) {
-    location.replace("/signin?redirect=" + encodeURIComponent("/password_change?redirect=" + encodeURIComponent(redirect)));
+let authError = null;
+const authReady = (async () => {
+  let preferredPersistence = browserLocalPersistence;
+  try {
+    const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+    if (savedSettings.keepLogin === false) preferredPersistence = browserSessionPersistence;
+  } catch {}
+
+  try {
+    await setPersistence(auth, preferredPersistence);
+  } catch (persistenceError) {
+    if (preferredPersistence !== browserLocalPersistence) throw persistenceError;
+    console.warn("장기 로그인 저장을 사용할 수 없어 현재 탭 로그인으로 전환합니다.", persistenceError);
+    await setPersistence(auth, browserSessionPersistence);
   }
+
+  return await new Promise((resolve, reject) => {
+    let unsubscribe = () => {};
+    unsubscribe = onAuthStateChanged(auth, user => {
+      const studentId = (user?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i)?.[1] || "";
+      currentUser = studentId ? user : null;
+      unsubscribe();
+      if (!studentId) {
+        location.replace("/signin?redirect=" + encodeURIComponent("/password_change?redirect=" + encodeURIComponent(redirect)));
+        resolve(null);
+        return;
+      }
+      localStorage.setItem("userId", studentId);
+      resolve(user);
+    }, error => {
+      authError = error;
+      unsubscribe();
+      reject(error);
+    });
+  });
+})();
+
+authReady.catch(error => {
+  console.error("Firebase 인증 상태 확인 실패", error);
+  document.getElementById("message").textContent = "로그인 상태를 확인하지 못했습니다. 페이지를 새로고침하거나 다시 로그인해 주세요.";
 });
 
 window.togglePw = () => {
@@ -155,7 +187,11 @@ window.togglePw = () => {
 };
 
 window.changePassword = async () => {
-  await authReady;
+  try {
+    await authReady;
+  } catch {
+    return;
+  }
   const pw1 = document.getElementById("pw1").value;
   const pw2 = document.getElementById("pw2").value;
   const button = document.getElementById("changeBtn");
@@ -180,8 +216,8 @@ window.changePassword = async () => {
 
   try {
     await updatePassword(currentUser, pw1);
-    const idToken = await currentUser.getIdToken(true);
-    localStorage.setItem("firebaseIdToken", idToken);
+    await currentUser.getIdToken(true);
+    localStorage.removeItem("firebaseIdToken");
     localStorage.removeItem("firebaseRefreshToken");
     document.getElementById("pw1").value = "";
     document.getElementById("pw2").value = "";
