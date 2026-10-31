@@ -134,14 +134,20 @@ header.nav-hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
   <div class="footer">2026 코딩과함께라면 | SINCE 2025</div>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
     import { getStudentId } from "/firebase-session.js";
     import { renderAttendanceButton } from "/attendance.js";
     const firebaseConfig={apiKey:"AIzaSyBgOAO72ArW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50"};
     const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFirestore(app);
     // Keep the same Firebase Auth session available after navigation and reloads.
-    const authPersistenceReady=setPersistence(auth,browserLocalPersistence).catch(error=>{console.error("[AUTH] 로그인 유지 설정 실패",error);return false;});
+    function getPreferredAuthPersistence(){
+      try{
+        const settings=JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}");
+        return settings.keepLogin===false?browserSessionPersistence:browserLocalPersistence;
+      }catch{return browserLocalPersistence;}
+    }
+    const authPersistenceReady=setPersistence(auth,getPreferredAuthPersistence()).catch(error=>{console.error("[AUTH] 로그인 유지 설정 실패",error);return false;});
     const SETTINGS_KEY="coding_with_ramen_settings"; const COBY_LIGHT_LOGO="/AI/COBY_AI_logo.png"; const COBY_DARK_LOGO="/AI/COBY_AI_logo_dark_mode.png";
     const defaultSettings={darkMode:false,primaryColor:"#27ae60",keepLogin:true,avatarConfig:{icon:"code",iconColor:"#27ae60",background:"#e7f7ed",backgroundEffect:"glow"}};
     function getStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{return {...defaultSettings,...JSON.parse(saved)}}catch(e){return {...defaultSettings}}}return {...defaultSettings}}
