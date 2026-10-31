@@ -1,20 +1,9 @@
-import { doc, getDoc, getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence, mainApp, mainDb } from "./firebase.js";
+import { doc, getDoc, getAuth, onAuthStateChanged, mainApp, mainDb } from "./firebase.js";
 
+// /signin과 동일한 points2026 기본 Firebase 앱의 Auth 세션을 그대로 사용한다.
+// 여기서 setPersistence를 다시 호출하면 로그인 직후 페이지 이동 과정에서
+// 기존 로그인 지속성 설정을 재설정할 수 있으므로 COBY에서는 변경하지 않는다.
 const auth = getAuth(mainApp);
-async function prepareAuthPersistence() {
-    let persistence = browserLocalPersistence;
-    try {
-        const settings = JSON.parse(localStorage.getItem("coding_with_ramen_settings") || "{}");
-        if (settings.keepLogin === false) persistence = browserSessionPersistence;
-    } catch {}
-    try {
-        await setPersistence(auth, persistence);
-    } catch (error) {
-        if (persistence !== browserLocalPersistence) throw error;
-        console.warn("장기 로그인 저장을 사용할 수 없어 현재 탭 로그인으로 전환합니다.", error);
-        await setPersistence(auth, browserSessionPersistence);
-    }
-}
 
 function waitForAuthUser() {
     return new Promise((resolve, reject) => {
@@ -40,7 +29,7 @@ import { bindCobyCopy } from "./coby-markup.js";
 import { initCobyInput } from "./input.js";
 
 async function loadUser() {
-    await prepareAuthPersistence();
+    // Firebase가 저장된 로그인 상태를 복원한 뒤 첫 Auth 상태를 전달할 때까지 기다린다.
     const authUser = await waitForAuthUser();
     const match = (authUser?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
     state.currentUserId = match?.[1] || "";
