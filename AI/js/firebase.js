@@ -19,9 +19,12 @@ const cobyFirebaseConfig = {
     appId: "1:248724251417:web:6feaa5781dc538700b18f7"
 };
 
-// Use the default Firebase app so the Auth session created on /signin is shared.
+// points2026 is the single source of truth for users/{studentId} profile data.
 export const mainApp = initializeApp(mainFirebaseConfig);
 export const mainDb = getFirestore(mainApp);
+
+// The COBY project remains only for chat history, conversations and projects.
+// Student identity/profile fields must always be read from mainDb/users/{studentId}.
 export const db = getFirestore(initializeApp(cobyFirebaseConfig, "cobyApp"));
 export const API_URL = "https://two5withcoding.onrender.com/chat";
 
