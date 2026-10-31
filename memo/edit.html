@@ -301,11 +301,6 @@ async function load() {
 
   noteData = snap.data();
 
-  if (noteData.title && noteData.title.startsWith("!@#") && noteData.title.endsWith("#@!")) {
-    const verified = await verifyAdminAgain();
-    if (!verified) { location.href = "view.html?id=" + id; return; }
-  }
-
   document.getElementById("titleInput").value = (noteData.title || "").replace(/^!@#/, "").replace(/#@!$/, "");
   document.getElementById("contentInput").value = noteData.content || "";
 }
@@ -317,6 +312,14 @@ async function saveEdit() {
   if (!title) {
     alert("제목을 입력해주세요.");
     return;
+  }
+
+  // 공지 메모는 조회·편집 화면 진입까지는 자유롭게 하고,
+  // 실제 저장을 누른 시점에만 관리자 로그인 및 비밀번호 재인증을 진행한다.
+  const isNotice = noteData?.title?.startsWith("!@#") && noteData?.title?.endsWith("#@!");
+  if (isNotice) {
+    const verified = await verifyAdminAgain();
+    if (!verified) return;
   }
 
   await updateDoc(
