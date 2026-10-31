@@ -249,7 +249,7 @@ window.login = async () => {
     // Explicitly persist the Firebase session before navigating to another page.
     await setPersistence(auth, browserLocalPersistence);
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
-    const verifiedStudentId = (credential.user?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i)?.[1] || "";
+    const verifiedStudentId = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1] || "";
     if (verifiedStudentId !== id) throw new Error("AUTH_STUDENT_ID_MISMATCH");
     await credential.user.getIdToken();
     localStorage.setItem("userId", verifiedStudentId);
