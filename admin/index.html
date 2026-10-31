@@ -18,13 +18,13 @@
 </div></div>
 <footer>2026 코딩과 함께라면 | 관리자 페이지</footer>
 <script type="module">
-import{requireAdmin}from"./js/auth.js";
+import{requireAdmin,logoutCurrentUser}from"./js/auth.js";
 const SETTINGS_KEY="coding_with_ramen_settings";
 function applyStoredSettings(){try{const s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");document.body.classList.toggle("dark-mode",!!s.darkMode);if(s.primaryColor)document.documentElement.style.setProperty("--primary-color",s.primaryColor)}catch(e){console.error("설정 로드 실패",e)}}
 applyStoredSettings();
 try{const user=await requireAdmin();document.getElementById("welcome").innerHTML=`안녕하세요, <b>${user.name}</b>님 (${user.role})`;document.getElementById("loading").style.display="none"}catch(e){console.error(e)}
 document.getElementById("homeBtn").onclick=()=>location.href="/index.html";
-document.getElementById("logout").onclick=()=>{localStorage.removeItem("userId");location.href="/signin/"};
+document.getElementById("logout").onclick=async()=>{try{await logoutCurrentUser()}catch(e){console.error("로그아웃 실패",e);alert("로그아웃에 실패했습니다. 다시 시도해주세요.")}};
 document.getElementById("mirroring").onclick=()=>location.href="/admin/mirroring.html";
 document.getElementById("users").onclick=()=>location.href="/admin/users.html";
 document.getElementById("attendance").onclick=()=>location.href="/admin/attendance.html";
