@@ -1,5 +1,5 @@
 import { state, $, isAdmin } from "./state.js";
-import { db, getDocs, collection, query, orderBy, deleteDoc, doc, updateDoc, serverTimestamp } from "./firebase.js";
+import { db, mainDb, getDocs, collection, query, orderBy, deleteDoc, doc, updateDoc, serverTimestamp } from "./firebase.js";
 import { escapeHtml, formatDate, closeMenu } from "./ui.js";
 import { conversationsRoot, deleteConversationFromDb, loadChats } from "./conversations.js";
 import { loadTrash } from "./trash.js";
@@ -14,7 +14,7 @@ export async function loadAdminLogs() {
     userList.innerHTML = '<div class="settings-empty">사용자 목록을 불러오는 중...</div>';
     conversationList.hidden = true;
     try {
-        const users = await getDocs(collection(db, "people"));
+        const users = await getDocs(collection(mainDb, "users"));
         adminUserGroups = [];
         for (const user of users.docs) {
             const uid = user.id, userData = user.data();
