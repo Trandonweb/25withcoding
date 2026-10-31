@@ -1,18 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+import { doc, getDoc, mainDb } from "./firebase.js";
 import { state, $ } from "./state.js";
 import { openAdminLogs } from "./admin-logs.js";
 
-const mainFirebaseConfig = {
-    apiKey: "AIzaSyBgAf4JrArW8dO7OSYsTVEQtRHT049U20",
-    authDomain: "points2026-f5e50.firebaseapp.com",
-    projectId: "points2026-f5e50",
-    storageBucket: "points2026-f5e50.firebasestorage.app",
-    messagingSenderId: "248724251417",
-    appId: "1:248724251417:web:02d85cdc4addac98069b88"
-};
-
-const mainDb = getFirestore(initializeApp(mainFirebaseConfig, "cobySettings"));
 const TONE_KEY = "coby_settings";
 const TONES = {
     friendly: "😊 친근하게",
