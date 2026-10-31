@@ -12,12 +12,31 @@ import {
 import {
     getAuth,
     onAuthStateChanged,
-    signOut
+    signOut,
+    setPersistence,
+    browserLocalPersistence,
+    browserSessionPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 import { app, db } from "./firebase.js";
 
 const auth = getAuth(app);
+
+function getPreferredPersistence(keepLogin) {
+    if (typeof keepLogin === "boolean") {
+        return keepLogin ? browserLocalPersistence : browserSessionPersistence;
+    }
+    try {
+        const saved = JSON.parse(localStorage.getItem("coding_with_ramen_settings") || "{}");
+        return saved.keepLogin === false ? browserSessionPersistence : browserLocalPersistence;
+    } catch {
+        return browserLocalPersistence;
+    }
+}
+
+async function applyAuthPersistence(keepLogin) {
+    await setPersistence(auth, getPreferredPersistence(keepLogin));
+}
 
 function waitForAuthUser() {
     return new Promise((resolve, reject) => {
@@ -51,6 +70,9 @@ function getCollectionName(id){
 
 export async function getCurrentUser(){
 
+    // 기기 설정을 우선 적용한 뒤 실제 Firebase Auth 세션을 확인한다.
+    await applyAuthPersistence();
+
     const authUser = await waitForAuthUser();
     const email = authUser?.email || "";
     const match = email.match(/^(\d{5})@auth\.25withcoding\.kr$/i);
@@ -82,12 +104,16 @@ export async function getCurrentUser(){
 
     }
 
-    return{
+    const userData = snap.data();
 
-        id:userId,
+    // Firestore에 저장된 keepLogin 설정이 있으면 기기 캐시보다 우선한다.
+    if (typeof userData.settings?.keepLogin === "boolean") {
+        await applyAuthPersistence(userData.settings.keepLogin);
+    }
 
-        ...snap.data()
-
+    return {
+        id: userId,
+        ...userData
     };
 
 }
@@ -257,4 +283,14 @@ export async function setOffline(userId){
 
     }
 
+}
+
+
+/** 현재 Firebase Auth 세션을 종료한다. */
+export async function logoutCurrentUser() {
+    await signOut(auth);
+    localStorage.removeItem("userId");
+    localStorage.removeItem("firebaseIdToken");
+    localStorage.removeItem("firebaseRefreshToken");
+    location.replace("/signin/");
 }
