@@ -22,8 +22,29 @@ const cobyFirebaseConfig = {
 
 // points2026 is the single source of truth for users/{studentId} profile data.
 export const mainApp = initializeApp(mainFirebaseConfig);
-// 로그인 페이지와 동일한 기본 앱의 Auth 인스턴스를 한 곳에서 생성해 공유한다.
+// 메인 페이지와 동일하게 로그인 유지 방식을 먼저 설정한 뒤 인증 상태를 확인한다.
 export const auth = getAuth(mainApp);
+function getPreferredAuthPersistence() {
+    try {
+        const settings = JSON.parse(localStorage.getItem("coding_with_ramen_settings") || "{}");
+        return settings.keepLogin === false ? browserSessionPersistence : browserLocalPersistence;
+    } catch {
+        return browserLocalPersistence;
+    }
+}
+export const authPersistenceReady = setPersistence(auth, getPreferredAuthPersistence()).catch(async error => {
+    console.error("[COBY AUTH] 기본 로그인 유지 설정 실패", error);
+    try {
+        if (getPreferredAuthPersistence() === browserLocalPersistence) {
+            await setPersistence(auth, browserSessionPersistence);
+            console.warn("[COBY AUTH] 브라우저 저장소 제한으로 현재 탭 로그인 유지 방식으로 전환했습니다.");
+            return true;
+        }
+    } catch (fallbackError) {
+        console.error("[COBY AUTH] 대체 로그인 유지 설정도 실패", fallbackError);
+    }
+    return false;
+});
 export const mainDb = getFirestore(mainApp);
 
 // The COBY project remains only for chat history, conversations and projects.
