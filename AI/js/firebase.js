@@ -22,6 +22,8 @@ const cobyFirebaseConfig = {
 
 // points2026 is the single source of truth for users/{studentId} profile data.
 export const mainApp = initializeApp(mainFirebaseConfig);
+// 로그인 페이지와 동일한 기본 앱의 Auth 인스턴스를 한 곳에서 생성해 공유한다.
+export const auth = getAuth(mainApp);
 export const mainDb = getFirestore(mainApp);
 
 // The COBY project remains only for chat history, conversations and projects.
