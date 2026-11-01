@@ -33,12 +33,17 @@ async function loadUser() {
         const authStorageKey = `firebase:authUser:${auth.app.options.apiKey}:${auth.app.name}`;
         const localAuthSaved = localStorage.getItem(authStorageKey) !== null;
         const sessionAuthSaved = sessionStorage.getItem(authStorageKey) !== null;
+        let signinDebug = null;
+        try {
+            signinDebug = JSON.parse(sessionStorage.getItem("cobyAuthSigninDebug") || "null");
+        } catch {}
         const diagnostic = [
-            `프로젝트: ${auth.app.options.projectId || "확인 불가"}`,
-            `앱 이름: ${auth.app.name}`,
-            `Auth 사용자: 없음`,
-            `로컬 저장소 인증 항목: ${localAuthSaved ? "있음" : "없음"}`,
-            `세션 저장소 인증 항목: ${sessionAuthSaved ? "있음" : "없음"}`
+            `COBY 프로젝트: ${auth.app.options.projectId || "확인 불가"}`,
+            `COBY 앱 이름: ${auth.app.name}`,
+            `COBY Auth 사용자: 없음`,
+            `COBY 로컬 저장소: ${localAuthSaved ? "있음" : "없음"}`,
+            `COBY 세션 저장소: ${sessionAuthSaved ? "있음" : "없음"}`,
+            `로그인 직후 진단: ${signinDebug ? JSON.stringify(signinDebug) : "기록 없음"}`
         ].join(" / ");
 
         console.error("[COBY AUTH DIAGNOSTIC]", {
