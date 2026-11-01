@@ -65,7 +65,6 @@ button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:poin
 const $=id=>document.getElementById(id);
 let sourceFile=null, current=null, collection=[];
 const fileInput=$('file'), drop=$('drop'), convertBtn=$('convert'), widthInput=$('pixelWidth');
-drop.addEventListener('click',()=>fileInput.click());
 fileInput.addEventListener('change',()=>{sourceFile=fileInput.files?.[0]||null;convertBtn.disabled=!sourceFile;if(sourceFile)drop.querySelector('strong').textContent=sourceFile.name;});
 drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag')});
 drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
@@ -99,7 +98,7 @@ function shortId(){return Math.random().toString(36).slice(2,6).padEnd(4,'0')}
 function makeProject(){
  const sceneId=shortId(),objectId=shortId();
  const variables=collection.map((entry,i)=>({id:shortId(),name:('이미지_'+String(i+1).padStart(3,'0')+'_'+entry.width+'x'+entry.height).slice(0,40),variableType:'list',value:'0',visible:true,x:-220+(i%3)*150,y:115-Math.floor(i/3)*12,width:145,height:180,isCloud:false,isRealTime:false,cloudDate:false,object:null,array:entry.pixels.map(p=>({data:p.n+'|'+p.hex}))}));
- return {name:'AI 종합 툴 - 픽셀 데이터',scenes:[{id:sceneId,name:'픽셀 데이터'}],variables,objects:[{id:objectId,name:'AI 픽셀 데이터',text:'AI 픽셀 데이터 보관함',script:'[[]]',selectedPictureId:null,objectType:'textBox',rotateMethod:'free',scene:sceneId,sprite:{pictures:[],sounds:[]},entity:{x:0,y:110,regX:0,regY:0,scaleX:1,scaleY:1,rotation:0,direction:90,width:400,height:34,font:'20px NanumGothic',fontSize:20,lineBreak:false,textAlign:0,colour:'#1F2937',bgColor:'#FFFFFF',visible:true,text:'AI 픽셀 데이터 보관함'},lock:false}],functions:[],messages:[],tables:[],expansionBlocks:[],aiUtilizeBlocks:[],hardwareLiteBlocks:[],externalModules:[],externalModulesLite:[],isPracticalCourse:false,interface:{canvasWidth:640,menuWidth:280,object:objectId},speed:60};
+ return {name:'AI 종합 툴 - 픽셀 데이터',scenes:[{id:sceneId,name:'픽셀 데이터'}],variables,objects:[{id:objectId,name:'AI 픽셀 데이터',text:'AI 픽셀 데이터 보관함',script:'[[]]',objectType:'textBox',rotateMethod:'free',scene:sceneId,sprite:{pictures:[],sounds:[]},entity:{x:0,y:110,regX:0,regY:0,scaleX:1,scaleY:1,rotation:0,direction:90,width:400,height:34,font:'20px NanumGothic',fontSize:20,lineBreak:false,textAlign:0,colour:'#1F2937',bgColor:'#FFFFFF',visible:true,text:'AI 픽셀 데이터 보관함'},lock:false}],functions:[],messages:[],tables:[],expansionBlocks:[],aiUtilizeBlocks:[],hardwareLiteBlocks:[],externalModules:[],externalModulesLite:[],isPracticalCourse:false,interface:{canvasWidth:640,menuWidth:280,object:objectId},speed:60};
 }
 function makeTar(path,bytes){
  const enc=new TextEncoder(),name=enc.encode(path),header=new Uint8Array(512);
