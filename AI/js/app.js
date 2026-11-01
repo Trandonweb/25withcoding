@@ -1,4 +1,4 @@
-import { doc, getDoc, auth, authStateReady, mainDb, onAuthStateChanged } from "./firebase.js";
+import { doc, getDoc, auth, authPersistenceReady, mainDb, onAuthStateChanged } from "./firebase.js";
 
 
 import { state, $ } from "./state.js";
@@ -21,10 +21,13 @@ async function loadUser(authUser) {
         localStorage.removeItem("firebaseIdToken");
         localStorage.removeItem("firebaseRefreshToken");
 
-        setStatus("로그인이 필요합니다");
+        setStatus("로그인 세션을 확인할 수 없습니다");
         updateProfile();
-        const redirect = encodeURIComponent("/AI/");
-        location.replace("/signin/?redirect=" + redirect);
+        const status = $("statusText");
+        if (status) {
+            status.textContent = "COBY가 로그인 세션을 읽지 못했습니다. 메인 사이트에서 로그인 상태를 확인한 뒤 다시 접속해주세요.";
+            status.title = "COBY Firebase Auth 상태가 null로 반환되었습니다.";
+        }
         return false;
     }
     localStorage.setItem("userId", state.currentUserId);
@@ -138,9 +141,8 @@ async function init() {
     bindGlobalEvents();
 
     try {
-        // Firebase Auth가 IndexedDB 등의 기존 로그인 세션 복원을 마칠 때까지 기다린다.
-        // 지속성은 /signin에서 정한 값을 그대로 사용하며 여기서 재설정하지 않는다.
-        await authStateReady;
+        // 메인 홈페이지와 동일하게 지속성 설정을 마친 다음 인증 상태 변경을 구독한다.
+        await authPersistenceReady;
         onAuthStateChanged(auth, async authUser => {
             try {
                 const success = await loadUser(authUser);
