@@ -192,6 +192,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const SETTINGS_KEY = "coding_with_ramen_settings";
 
+let explicitLoginInProgress = false;
+
 function applyStoredSettings() {
   try {
     const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
@@ -210,6 +212,9 @@ const redirect = requestedRedirect.startsWith("/") && !requestedRedirect.startsW
   : "/";
 
 onAuthStateChanged(auth, user => {
+  // signInWithEmailAndPassword 진행 중에는 이 콜백이 login()보다 먼저 실행될 수 있다.
+  // 이때 즉시 이동하면 로그인 직후 저장/검증 코드가 실행되지 않으므로 이동을 보류한다.
+  if (explicitLoginInProgress) return;
   const match = (user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
   if (user && match) {
     // The Firebase Auth session is authoritative; localStorage is only a UI cache.
@@ -259,6 +264,7 @@ window.login = async () => {
       console.warn("브라우저의 장기 로그인 저장을 사용할 수 없어 현재 탭 로그인으로 전환합니다.",persistenceError);
       await setPersistence(auth,browserSessionPersistence);
     }
+    explicitLoginInProgress = true;
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
     const verifiedStudentId = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1] || "";
     if (verifiedStudentId !== id) throw new Error("AUTH_STUDENT_ID_MISMATCH");
@@ -276,6 +282,7 @@ window.login = async () => {
       checkedAt: new Date().toISOString()
     }));
 
+    explicitLoginInProgress = false;
     localStorage.setItem("userId", verifiedStudentId);
     localStorage.removeItem("firebaseIdToken");
     localStorage.removeItem("firebaseRefreshToken");
@@ -297,6 +304,7 @@ window.login = async () => {
     loginStatus.textContent = (messages[code] || "로그인에 실패했습니다. 아래 오류 코드를 관리자에게 전달해 주세요.") + " (오류 코드: " + code + ")";
     alert(loginStatus.textContent);
   } finally {
+    explicitLoginInProgress = false;
     loginBtn.disabled = false;
     loginBtn.textContent = "로그인";
   }
