@@ -1,6 +1,5 @@
-import { doc, getDoc, auth, authPersistenceReady, mainDb, onAuthStateChanged } from "./firebase.js";
+import { doc, getDoc, auth, authStateReady, mainDb, onAuthStateChanged } from "./firebase.js";
 
-// 메인 페이지와 동일하게 로그인 지속성 설정이 끝난 뒤 인증 상태를 확인한다.
 
 import { state, $ } from "./state.js";
 import { setStatus, updateProfile, openMenu, closeMenu } from "./ui.js";
@@ -22,42 +21,10 @@ async function loadUser(authUser) {
         localStorage.removeItem("firebaseIdToken");
         localStorage.removeItem("firebaseRefreshToken");
 
-        // 로그인 페이지와 COBY 사이의 인증 저장소 차이를 확인하기 위한 임시 진단.
-        // 토큰이나 이메일은 화면에 노출하지 않는다.
-        const authStorageKey = `firebase:authUser:${auth.app.options.apiKey}:${auth.app.name}`;
-        const localAuthSaved = localStorage.getItem(authStorageKey) !== null;
-        const sessionAuthSaved = sessionStorage.getItem(authStorageKey) !== null;
-        let signinDebug = null;
-        try {
-            signinDebug = JSON.parse(sessionStorage.getItem("cobyAuthSigninDebug") || "null");
-        } catch {}
-        const diagnostic = [
-            `COBY 프로젝트: ${auth.app.options.projectId || "확인 불가"}`,
-            `COBY 앱 이름: ${auth.app.name}`,
-            `COBY Auth 사용자: 없음`,
-            `COBY 로컬 저장소: ${localAuthSaved ? "있음" : "없음"}`,
-            `COBY 세션 저장소: ${sessionAuthSaved ? "있음" : "없음"}`,
-            `로그인 직후 진단: ${signinDebug ? JSON.stringify(signinDebug) : "기록 없음"}`
-        ].join(" / ");
-
-        console.error("[COBY AUTH DIAGNOSTIC]", {
-            projectId: auth.app.options.projectId,
-            appName: auth.app.name,
-            hasCurrentUser: false,
-            localAuthSaved,
-            sessionAuthSaved
-        });
-        setStatus("로그인 세션을 읽지 못했습니다");
+        setStatus("로그인이 필요합니다");
         updateProfile();
         const status = $("statusText");
-        if (status) {
-            status.textContent = "인증 진단: " + diagnostic;
-            status.title = diagnostic;
-            status.style.whiteSpace = "normal";
-            status.style.maxWidth = "min(92vw, 680px)";
-            status.style.fontSize = "11px";
-            status.style.lineHeight = "1.6";
-        }
+        if (status) status.textContent = "로그인 상태를 확인할 수 없습니다. 로그인 페이지에서 다시 로그인해주세요.";
         return false;
     }
     localStorage.setItem("userId", state.currentUserId);
@@ -171,11 +138,9 @@ async function init() {
     bindGlobalEvents();
 
     try {
-        // 메인 홈페이지와 같은 인증 처리 순서:
-        // 1) 로그인 유지 설정 완료
-        // 2) onAuthStateChanged 구독
-        // 3) 전달된 authUser로 화면 및 사용자 정보를 갱신
-        await authPersistenceReady;
+        // Firebase Auth가 IndexedDB 등의 기존 로그인 세션 복원을 마칠 때까지 기다린다.
+        // 지속성은 /signin에서 정한 값을 그대로 사용하며 여기서 재설정하지 않는다.
+        await authStateReady;
         onAuthStateChanged(auth, async authUser => {
             try {
                 const success = await loadUser(authUser);
