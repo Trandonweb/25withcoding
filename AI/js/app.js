@@ -1,4 +1,4 @@
-import { doc, getDoc, auth, authPersistenceReady, mainDb, onAuthStateChanged } from "./firebase.js";
+import { doc, getDoc, auth, mainDb, onAuthStateChanged } from "./firebase.js";
 
 
 import { state, $ } from "./state.js";
