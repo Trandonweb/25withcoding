@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 종합 툴 · 픽셀 데이터 제작</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#121a2d;--panel2:#18233a;--line:#263653;--text:#eef4ff;--muted:#9aabc6;--green:#55d68b;--blue:#68a8ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#1b3150 0,transparent 42%),var(--bg);color:var(--text);font-family:Inter,Pretendard,"Noto Sans KR",Arial,sans-serif;min-height:100vh}
+.wrap{width:min(1120px,92%);margin:auto;padding:42px 0 70px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:34px}.brand{font-size:13px;letter-spacing:.16em;color:var(--green);font-weight:900}.step{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:8px 12px;border-radius:99px}
+h1{font-size:clamp(32px,6vw,56px);letter-spacing:-.055em;line-height:1.08;margin:0 0 15px}.lead{color:var(--muted);font-size:16px;line-height:1.8;margin:0;max-width:720px}.hero{padding:36px 0 32px}.hero em{font-style:normal;color:var(--green)}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:28px}.panel{background:linear-gradient(155deg,rgba(24,35,58,.96),rgba(16,24,41,.96));border:1px solid var(--line);border-radius:22px;padding:22px;min-width:0;box-shadow:0 18px 50px #0003}.panel h2{font-size:17px;margin:0 0 8px}.sub{font-size:13px;color:var(--muted);line-height:1.65;margin:0 0 18px}
+.drop{border:1.5px dashed #456080;border-radius:17px;padding:28px 18px;text-align:center;background:#0c1424;cursor:pointer;transition:.2s}.drop:hover,.drop.drag{border-color:var(--green);background:#10251f}.drop strong{display:block;margin-bottom:8px}.drop span{font-size:12px;color:var(--muted)}input[type=file]{display:none}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:15px}.field{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}.field input{width:90px;background:#0b1425;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px}
+button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;transition:.18s}.primary{background:linear-gradient(100deg,#47c77f,#4b9bff);color:#071321}.secondary{background:#23334f;color:var(--text);border:1px solid #344969}.danger{background:#392b3b;color:#ffc3d0;border:1px solid #694253}button:disabled{opacity:.4;cursor:not-allowed}button:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.08)}
+.preview{min-height:250px;border-radius:16px;background-color:#0b1220;background-image:linear-gradient(45deg,#172239 25%,transparent 25%),linear-gradient(-45deg,#172239 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#172239 75%),linear-gradient(-45deg,transparent 75%,#172239 75%);background-size:22px 22px;background-position:0 0,0 11px,11px -11px,-11px 0;display:grid;place-items:center;overflow:hidden;padding:12px}.preview canvas{max-width:100%;max-height:320px;image-rendering:pixelated;object-fit:contain}.empty{color:#778aa8;font-size:13px;text-align:center;line-height:1.7}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pill{font-size:11px;padding:7px 10px;border-radius:99px;background:#0d1729;border:1px solid var(--line);color:#b9c9df}
+.collection{margin-top:18px}.list{display:grid;gap:9px;max-height:340px;overflow:auto}.item{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;background:#0c1526;border:1px solid var(--line);border-radius:13px;padding:9px}.thumb{width:54px;height:42px;object-fit:contain;background:#17243a;image-rendering:pixelated;border-radius:7px}.item b{display:block;font-size:13px;overflow-wrap:anywhere}.item small{display:block;color:var(--muted);font-size:11px;margin-top:4px}.item button{padding:7px 9px;font-size:11px}
+.export{margin-top:18px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:18px;border:1px solid #2d6c53;background:linear-gradient(110deg,#153329,#14243b);border-radius:17px}.export strong{font-size:14px}.export p{font-size:12px;color:#b4c8c0;margin:5px 0 0;line-height:1.5}
+.notice{margin-top:18px;color:var(--muted);font-size:12px;line-height:1.75}.notice b{color:#dce8fb}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding-top:26px}.panel{padding:17px}.hero{padding-top:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand">AI TOOLS / ENTRY PROJECT</div><div class="step">PHASE 01 · PIXEL DATA</div></div>
+  <section class="hero">
+    <h1>이미지를 <em>픽셀 데이터</em>로.</h1>
+    <p class="lead">이미지를 작은 픽셀 격자로 변환하고, 각 픽셀에 번호를 붙여 HEX 색상으로 저장합니다. 이미지 한 장은 엔트리 작품의 리스트 하나로 보관됩니다.</p>
+  </section>
+  <div class="grid">
+    <section class="panel">
+      <h2>01 · 이미지 가져오기</h2>
+      <p class="sub">이미지를 선택하면 원본 비율을 유지하며 가로 픽셀 수를 기준으로 변환합니다. 16:9 이미지는 기본적으로 160 × 90 픽셀이 됩니다.</p>
+      <label class="drop" id="drop">
+        <strong>이미지를 선택하거나 여기로 끌어오세요</strong>
+        <span>PNG · JPG · WEBP · GIF (첫 프레임)</span>
+        <input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+      </label>
+      <div class="row">
+        <label class="field">가로 픽셀 <input id="pixelWidth" type="number" min="8" max="320" value="160"></label>
+        <button class="primary" id="convert" disabled>픽셀 데이터로 변환</button>
+      </div>
+      <div class="notice">※ 원본 이미지는 브라우저 안에서 처리됩니다. 업로드 서버로 전송하지 않습니다.</div>
+    </section>
+    <section class="panel">
+      <h2>02 · 픽셀 미리보기</h2>
+      <p class="sub">확대해서 보여주지만 실제 저장 데이터는 작은 픽셀 격자입니다.</p>
+      <div class="preview" id="preview"><div class="empty">이미지를 선택한 뒤 변환해 주세요.</div></div>
+      <div class="stats" id="stats"><span class="pill">대기 중</span></div>
+    </section>
+  </div>
+  <section class="panel collection">
+    <h2>03 · 학습 데이터 보관함</h2>
+    <p class="sub">보관함의 이미지 하나가 엔트리 리스트 하나가 됩니다. 리스트에는 1번 픽셀부터 마지막 픽셀까지 번호와 HEX 색상이 차례대로 저장됩니다.</p>
+    <div class="list" id="list"><div class="empty">아직 보관된 이미지가 없습니다.</div></div>
+    <div class="export">
+      <div><strong>엔트리 작품 파일 만들기</strong><p id="exportInfo">보관한 이미지가 각각 별도의 리스트로 들어갑니다.</p></div>
+      <button class="primary" id="download" disabled> .ent 파일 다운로드 </button>
+    </div>
+    <div class="notice"><b>저장 구조</b><br>각 리스트 항목: <code>픽셀번호|#RRGGBB</code><br>예: <code>1|#FFFFFF</code>, <code>2|#33CC77</code> …<br>픽셀의 가로·세로 크기는 리스트 이름에 함께 기록됩니다.</div>
+  </section>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let sourceFile=null, current=null, collection=[];
+const fileInput=$('file'), drop=$('drop'), convertBtn=$('convert'), widthInput=$('pixelWidth');
+drop.addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',()=>{sourceFile=fileInput.files?.[0]||null;convertBtn.disabled=!sourceFile;if(sourceFile)drop.querySelector('strong').textContent=sourceFile.name;});
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag')});
+drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');sourceFile=e.dataTransfer.files?.[0]||null;convertBtn.disabled=!sourceFile;if(sourceFile)drop.querySelector('strong').textContent=sourceFile.name;});
+function loadImage(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('이미지를 읽지 못했습니다.'))};img.src=url;})}
+function hex(n){return '#'+n.toString(16).padStart(2,'0').toUpperCase()}
+convertBtn.addEventListener('click',async()=>{
+ if(!sourceFile)return;convertBtn.disabled=true;convertBtn.textContent='변환 중…';
+ try{
+  const img=await loadImage(sourceFile),w=Math.max(8,Math.min(320,Number(widthInput.value)||160)),h=Math.max(1,Math.round(w*img.height/img.width));
+  if(h>320)throw new Error('세로 픽셀이 320을 넘습니다. 가로 픽셀 수를 줄여 주세요.');
+  const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=true;ctx.drawImage(img,0,0,w,h);
+  const raw=ctx.getImageData(0,0,w,h).data, pixels=[];
+  for(let i=0;i<w*h;i++){const r=raw[i*4],g=raw[i*4+1],b=raw[i*4+2],a=raw[i*4+3];const rr=Math.round(r*a/255+255*(1-a/255)),gg=Math.round(g*a/255+255*(1-a/255)),bb=Math.round(b*a/255+255*(1-a/255));pixels.push({n:i+1,hex:'#'+[rr,gg,bb].map(hex).map(s=>s.slice(1)).join('')});}
+  current={name:sourceFile.name.replace(/\.[^.]+$/,'').slice(0,32)||'이미지',width:w,height:h,pixels,preview:canvas.toDataURL('image/png')};
+  const show=document.createElement('canvas');show.width=w;show.height=h;show.getContext('2d').drawImage(canvas,0,0);$('preview').replaceChildren(show);
+  $('stats').innerHTML='<span class="pill">'+w+' × '+h+' 픽셀</span><span class="pill">'+pixels.length.toLocaleString()+'개 색상값</span><span class="pill">HEX RGB</span>';
+  addCurrent();
+ }catch(err){alert(err.message||'변환에 실패했습니다.')}finally{convertBtn.disabled=!sourceFile;convertBtn.textContent='픽셀 데이터로 변환'}
+});
+function addCurrent(){if(!current)return;const entry={...current,id:crypto.randomUUID()};collection.push(entry);renderList();current=null;}
+function renderList(){
+ const root=$('list');root.replaceChildren();
+ if(!collection.length){root.innerHTML='<div class="empty">아직 보관된 이미지가 없습니다.</div>'}
+ collection.forEach((entry,index)=>{
+  const row=document.createElement('div');row.className='item';const img=document.createElement('img');img.className='thumb';img.src=entry.preview;const info=document.createElement('div');const title=document.createElement('b');title.textContent=(index+1)+'. '+entry.name;const detail=document.createElement('small');detail.textContent=entry.width+' × '+entry.height+' · '+entry.pixels.length.toLocaleString()+' 픽셀';info.append(title,detail);const remove=document.createElement('button');remove.className='danger';remove.textContent='삭제';remove.onclick=()=>{collection=collection.filter(x=>x.id!==entry.id);renderList()};row.append(img,info,remove);root.append(row);
+ });
+ $('download').disabled=!collection.length;$('exportInfo').textContent=collection.length+'개 이미지 → '+collection.length+'개 엔트리 리스트';
+}
+function shortId(){return Math.random().toString(36).slice(2,6).padEnd(4,'0')}
+function makeProject(){
+ const sceneId=shortId(),objectId=shortId();
+ const variables=collection.map((entry,i)=>({id:shortId(),name:('이미지_'+String(i+1).padStart(3,'0')+'_'+entry.width+'x'+entry.height).slice(0,40),variableType:'list',value:'0',visible:true,x:-220+(i%3)*150,y:115-Math.floor(i/3)*12,width:145,height:180,isCloud:false,isRealTime:false,cloudDate:false,object:null,array:entry.pixels.map(p=>({data:p.n+'|'+p.hex}))}));
+ return {name:'AI 종합 툴 - 픽셀 데이터',scenes:[{id:sceneId,name:'픽셀 데이터'}],variables,objects:[{id:objectId,name:'AI 픽셀 데이터',text:'AI 픽셀 데이터 보관함',script:'[[]]',selectedPictureId:null,objectType:'textBox',rotateMethod:'free',scene:sceneId,sprite:{pictures:[],sounds:[]},entity:{x:0,y:110,regX:0,regY:0,scaleX:1,scaleY:1,rotation:0,direction:90,width:400,height:34,font:'20px NanumGothic',fontSize:20,lineBreak:false,textAlign:0,colour:'#1F2937',bgColor:'#FFFFFF',visible:true,text:'AI 픽셀 데이터 보관함'},lock:false}],functions:[],messages:[],tables:[],expansionBlocks:[],aiUtilizeBlocks:[],hardwareLiteBlocks:[],externalModules:[],externalModulesLite:[],isPracticalCourse:false,interface:{canvasWidth:640,menuWidth:280,object:objectId},speed:60};
+}
+function makeTar(path,bytes){
+ const enc=new TextEncoder(),name=enc.encode(path),header=new Uint8Array(512);
+ header.set(name.slice(0,100),0);
+ const write=(offset,length,value)=>{const s=String(value).padStart(length-1,'0')+'\0';header.set(enc.encode(s).slice(0,length),offset)};
+ write(100,8,'644');write(108,8,'0');write(116,8,'0');write(124,12,bytes.length);write(136,12,0);
+ header.fill(32,148,156);header[156]=48;header.set(enc.encode('ustar\0'),257);header.set(enc.encode('00'),263);
+ let sum=0;for(const b of header)sum+=b;const checksum=sum.toString(8).padStart(6,'0')+'\0 ';header.set(enc.encode(checksum),148);
+ const pad=new Uint8Array(Math.ceil(bytes.length/512)*512);pad.set(bytes);
+ const out=new Uint8Array(512+pad.length+1024);out.set(header);out.set(pad,512);return out;
+}
+async function buildEnt(){
+ const project=makeProject(),json=new TextEncoder().encode(JSON.stringify(project));
+ const tar=makeTar('temp/project.json',json);
+ if(!('CompressionStream'in window))throw new Error('이 브라우저는 .ent 압축 기능을 지원하지 않습니다. 최신 Chrome을 사용해 주세요.');
+ const stream=new Blob([tar]).stream().pipeThrough(new CompressionStream('gzip'));
+ return await new Response(stream).blob();
+}
+$('download').addEventListener('click',async()=>{
+ const btn=$('download');btn.disabled=true;btn.textContent='파일 생성 중…';
+ try{const blob=await buildEnt(),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='AI종합툴_픽셀데이터.ent';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
+ catch(e){alert('ENT 파일 생성 실패: '+e.message)}
+ finally{btn.disabled=!collection.length;btn.textContent='.ent 파일 다운로드'}
+});
+</script>
+</body>
+</html>
