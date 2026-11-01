@@ -13,19 +13,8 @@ import { sendMessage } from "./ai.js";
 import { bindCobyCopy } from "./coby-markup.js";
 import { initCobyInput } from "./input.js";
 
-async function loadUser() {
-    // 메인 페이지와 같은 순서: 지속성 설정 완료 후 Firebase의 첫 인증 상태 이벤트를 기다린다.
-    await authPersistenceReady;
-    const authUser = await new Promise((resolve, reject) => {
-        let unsubscribe = () => {};
-        unsubscribe = onAuthStateChanged(auth, user => {
-            unsubscribe();
-            resolve(user);
-        }, error => {
-            unsubscribe();
-            reject(error);
-        });
-    });
+async function loadUser(authUser) {
+    // 메인 페이지와 동일하게 onAuthStateChanged가 전달한 인증 사용자를 그대로 처리한다.
     const match = (authUser?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i);
     state.currentUserId = match?.[1] || "";
     if (!state.currentUserId) {
@@ -180,9 +169,26 @@ async function init() {
     bindCobyCopy(document);
     initCobyInput({ input: $("userInput"), send: sendMessage });
     bindGlobalEvents();
+
     try {
-        const success = await loadUser();
-        if (success) await initializeConversation();
+        // 메인 홈페이지와 같은 인증 처리 순서:
+        // 1) 로그인 유지 설정 완료
+        // 2) onAuthStateChanged 구독
+        // 3) 전달된 authUser로 화면 및 사용자 정보를 갱신
+        await authPersistenceReady;
+        onAuthStateChanged(auth, async authUser => {
+            try {
+                const success = await loadUser(authUser);
+                if (success) await initializeConversation();
+            } catch (error) {
+                console.error("COBY 인증 상태 처리 실패:", error);
+                setStatus("로그인 확인 실패");
+                alert("로그인 상태를 확인하지 못했습니다.\n\n" + (error?.message || "Firebase 설정을 확인해주세요."));
+            }
+        }, error => {
+            console.error("COBY 인증 상태 감지 실패:", error);
+            setStatus("로그인 상태 확인 실패");
+        });
     } catch (error) {
         console.error("COBY 초기화 실패:", error);
         setStatus("로그인 확인 실패");
