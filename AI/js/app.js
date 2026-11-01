@@ -141,8 +141,7 @@ async function init() {
     bindGlobalEvents();
 
     try {
-        // 메인 홈페이지와 동일하게 지속성 설정을 마친 다음 인증 상태 변경을 구독한다.
-        await authPersistenceReady;
+        // /signin에서 저장한 Firebase Auth 지속성을 변경하지 않고 바로 세션 복원을 구독한다.
         onAuthStateChanged(auth, async authUser => {
             try {
                 const success = await loadUser(authUser);
