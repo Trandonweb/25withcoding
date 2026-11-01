@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, startAfter, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const mainFirebaseConfig = {
@@ -22,29 +22,10 @@ const cobyFirebaseConfig = {
 
 // points2026 is the single source of truth for users/{studentId} profile data.
 export const mainApp = initializeApp(mainFirebaseConfig);
-// 메인 페이지와 동일하게 로그인 유지 방식을 먼저 설정한 뒤 인증 상태를 확인한다.
+// 메인 사이트에서 생성한 기본 Firebase Auth 세션을 그대로 복원한다.
+// COBY에서는 로그인 지속성을 다시 설정하거나 별도 인증 앱을 만들지 않는다.
 export const auth = getAuth(mainApp);
-function getPreferredAuthPersistence() {
-    try {
-        const settings = JSON.parse(localStorage.getItem("coding_with_ramen_settings") || "{}");
-        return settings.keepLogin === false ? browserSessionPersistence : browserLocalPersistence;
-    } catch {
-        return browserLocalPersistence;
-    }
-}
-export const authPersistenceReady = setPersistence(auth, getPreferredAuthPersistence()).catch(async error => {
-    console.error("[COBY AUTH] 기본 로그인 유지 설정 실패", error);
-    try {
-        if (getPreferredAuthPersistence() === browserLocalPersistence) {
-            await setPersistence(auth, browserSessionPersistence);
-            console.warn("[COBY AUTH] 브라우저 저장소 제한으로 현재 탭 로그인 유지 방식으로 전환했습니다.");
-            return true;
-        }
-    } catch (fallbackError) {
-        console.error("[COBY AUTH] 대체 로그인 유지 설정도 실패", fallbackError);
-    }
-    return false;
-});
+export const authStateReady = auth.authStateReady();
 export const mainDb = getFirestore(mainApp);
 
 // The COBY project remains only for chat history, conversations and projects.
@@ -52,4 +33,4 @@ export const mainDb = getFirestore(mainApp);
 export const db = getFirestore(initializeApp(cobyFirebaseConfig, "cobyApp"));
 export const API_URL = "https://two5withcoding.onrender.com/chat";
 
-export { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, startAfter, serverTimestamp, updateDoc, deleteDoc };
+export { getAuth, onAuthStateChanged, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, startAfter, serverTimestamp, updateDoc, deleteDoc };
