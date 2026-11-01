@@ -1,7 +1,6 @@
-import { doc, getDoc, auth, mainDb, onAuthStateChanged } from "./firebase.js";
+import { doc, getDoc, auth, authPersistenceReady, mainDb, onAuthStateChanged } from "./firebase.js";
 
-// /signin과 같은 points2026 기본 앱에서 생성한 Auth 인스턴스를 그대로 공유한다.
-// COBY에서는 로그인 지속성 설정을 변경하지 않는다.
+// 메인 페이지와 동일하게 로그인 지속성 설정이 끝난 뒤 인증 상태를 확인한다.
 
 import { state, $ } from "./state.js";
 import { setStatus, updateProfile, openMenu, closeMenu } from "./ui.js";
@@ -15,8 +14,8 @@ import { bindCobyCopy } from "./coby-markup.js";
 import { initCobyInput } from "./input.js";
 
 async function loadUser() {
-    // 저장된 로그인 정보 복원이 끝난 뒤 전달되는 Auth의 첫 상태 이벤트를 기다린다.
-    // currentUser를 너무 일찍 읽어 로그인 상태를 놓치는 일을 방지한다.
+    // 메인 페이지와 같은 순서: 지속성 설정 완료 후 Firebase의 첫 인증 상태 이벤트를 기다린다.
+    await authPersistenceReady;
     const authUser = await new Promise((resolve, reject) => {
         let unsubscribe = () => {};
         unsubscribe = onAuthStateChanged(auth, user => {
