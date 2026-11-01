@@ -23,8 +23,8 @@ async function loadUser(authUser) {
 
         setStatus("로그인이 필요합니다");
         updateProfile();
-        const status = $("statusText");
-        if (status) status.textContent = "로그인 상태를 확인할 수 없습니다. 로그인 페이지에서 다시 로그인해주세요.";
+        const redirect = encodeURIComponent("/AI/");
+        location.replace("/signin/?redirect=" + redirect);
         return false;
     }
     localStorage.setItem("userId", state.currentUserId);
