@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, startAfter, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const mainFirebaseConfig = {
-    apiKey: "AIzaSyBgOAO72ArWb8dO7OSYsTVEQtRHT049U20",
+    apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
     authDomain: "points2026-f5e50.firebaseapp.com",
     projectId: "points2026-f5e50",
     storageBucket: "points2026-f5e50.firebasestorage.app",
