@@ -263,6 +263,19 @@ window.login = async () => {
     const verifiedStudentId = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1] || "";
     if (verifiedStudentId !== id) throw new Error("AUTH_STUDENT_ID_MISMATCH");
     await credential.user.getIdToken();
+
+    // 임시 인증 진단: 로그인 직후 세션 저장 여부만 기록한다(계정/토큰 값은 저장하지 않음).
+    const authStorageKey = `firebase:authUser:${auth.app.options.apiKey}:${auth.app.name}`;
+    sessionStorage.setItem("cobyAuthSigninDebug", JSON.stringify({
+      projectId: auth.app.options.projectId || "",
+      appName: auth.app.name,
+      currentUserPresent: Boolean(auth.currentUser),
+      localAuthSaved: localStorage.getItem(authStorageKey) !== null,
+      sessionAuthSaved: sessionStorage.getItem(authStorageKey) !== null,
+      studentEmailMatched: verifiedStudentId === id,
+      checkedAt: new Date().toISOString()
+    }));
+
     localStorage.setItem("userId", verifiedStudentId);
     localStorage.removeItem("firebaseIdToken");
     localStorage.removeItem("firebaseRefreshToken");
