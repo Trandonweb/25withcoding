@@ -153,3 +153,4 @@ $("backBtn").onclick=()=>location.href="/admin/";
 window.addEventListener("beforeunload",ev=>{if(connected&&autoSaveTimer){ev.preventDefault();ev.returnValue=""}});
 try{adminUser=await requireAdmin();status("관리자 확인됨 · GitHub 연결 필요")}catch(e){console.error(e);status("권한 확인 실패")}
 </script>
+<script src="/script.js" defer></script>
