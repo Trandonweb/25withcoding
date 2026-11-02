@@ -69,4 +69,6 @@ $("exportCsv").onclick=()=>{const rows=[["timestamp","ip","account","type","path
 $("backBtn").onclick=()=>location.href="/admin/";
 try{const user=await requireAdmin();$("adminName").textContent=(user.name||"관리자")+" · 관리자 인증 완료";await loadAll()}catch(e){console.error(e);$("adminName").textContent="관리자 인증 실패"}
 </script>
+
+<script src="/script.js" defer></script>
 </body></html>
