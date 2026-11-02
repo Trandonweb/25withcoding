@@ -172,97 +172,16 @@ async function recordPageVisit(env, request, pagePath) {
 }
 
 // ----------------------------------------
-// Firebase 서비스 계정 인증
+// Firebase 설정
+// Firebase Web API Key는 공개 클라이언트 설정값이며,
+// Firestore 접근 권한은 ID Token과 Firestore Rules가 결정한다.
 // ----------------------------------------
+const FIREBASE_API_KEY = "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20";
+const FIREBASE_PROJECT_ID = "points2026-f5e50";
 
-async function getGoogleAccessToken(env) {
-  if (cachedAccessToken && Date.now() < cachedTokenExpiry) {
-    return cachedAccessToken;
-  }
-
-  if (
-    !env.FIREBASE_PRIVATE_KEY ||
-    !env.FIREBASE_CLIENT_EMAIL
-  ) {
-    throw new Error("Firebase service account configuration missing");
-  }
-
-  const privateKey = env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
-
-  const pem = privateKey
-    .replace("-----BEGIN PRIVATE KEY-----", "")
-    .replace("-----END PRIVATE KEY-----", "")
-    .replace(/\s/g, "");
-
-  const binary = Uint8Array.from(
-    atob(pem),
-    c => c.charCodeAt(0)
-  );
-
-  const key = await crypto.subtle.importKey(
-    "pkcs8",
-    binary,
-    {
-      name: "RSASSA-PKCS1-v1_5",
-      hash: "SHA-256"
-    },
-    false,
-    ["sign"]
-  );
-
-  const now = Math.floor(Date.now() / 1000);
-
-  const header = base64url(JSON.stringify({
-    alg: "RS256",
-    typ: "JWT"
-  }));
-
-  const claim = base64url(JSON.stringify({
-    iss: env.FIREBASE_CLIENT_EMAIL,
-    scope: "https://www.googleapis.com/auth/datastore",
-    aud: "https://oauth2.googleapis.com/token",
-    iat: now,
-    exp: now + 3600
-  }));
-
-  const unsigned = `${header}.${claim}`;
-
-  const signature = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5",
-    key,
-    new TextEncoder().encode(unsigned)
-  );
-
-  const assertion =
-    `${unsigned}.${base64url(new Uint8Array(signature))}`;
-
-  const response = await fetch(
-    "https://oauth2.googleapis.com/token",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-        assertion
-      })
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Firebase service authentication failed");
-  }
-
-  const result = await response.json();
-
-  cachedAccessToken = result.access_token;
-  cachedTokenExpiry =
-    Date.now() + (result.expires_in - 60) * 1000;
-
-  return cachedAccessToken;
-}
-
+// ----------------------------------------
+// 관리자 인증
+// ----------------------------------------
 // ----------------------------------------
 // 관리자 인증
 // ----------------------------------------
@@ -281,7 +200,7 @@ async function verifyAdmin(request, env) {
 
   // Firebase Authentication 토큰 확인
   const authResponse = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${env.FIREBASE_API_KEY}`,
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
     {
       method: "POST",
       headers: {
@@ -314,16 +233,16 @@ async function verifyAdmin(request, env) {
     return null;
   }
 
-  // Firestore에서 실제 역할 확인
-  const accessToken = await getGoogleAccessToken(env);
-
+  // Firebase ID Token으로 본인 사용자 문서를 조회한다.
+  // Firestore Security Rules가 요청 권한을 검사하므로
+  // 서비스 계정 개인 키나 Admin 권한은 필요하지 않다.
   const documentURL =
-    `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}` +
+    `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}` +
     `/databases/(default)/documents/users/${studentId}`;
 
   const documentResponse = await fetch(documentURL, {
     headers: {
-      Authorization: `Bearer ${accessToken}`
+      Authorization: `Bearer ${idToken}`
     }
   });
 
