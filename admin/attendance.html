@@ -121,5 +121,7 @@ document.getElementById("nextBtn").onclick=()=>{view.setMonth(view.getMonth()+1)
 document.getElementById("todayBtn").onclick=()=>{view=currentMonth();renderCalendar()};
 try{await requireAdmin();await loadData()}catch(e){console.error("[ATTENDANCE ADMIN] 초기화 실패",e);document.getElementById("calendar").innerHTML='<div class="empty" style="grid-column:1/-1">출석 데이터를 불러오지 못했습니다. 콘솔의 [ATTENDANCE ADMIN] 로그를 확인하세요.</div>'}
 </script>
+
+<script src="/script.js" defer></script>
 </body>
 </html>
