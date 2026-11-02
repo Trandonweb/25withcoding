@@ -182,9 +182,6 @@ const FIREBASE_PROJECT_ID = "points2026-f5e50";
 // ----------------------------------------
 // 관리자 인증
 // ----------------------------------------
-// ----------------------------------------
-// 관리자 인증
-// ----------------------------------------
 
 async function verifyAdmin(request, env) {
   const authorization =
@@ -229,7 +226,7 @@ async function verifyAdmin(request, env) {
 
   const studentId = account.email.slice(0, -suffix.length);
 
-  if (!/^\d+$/.test(studentId)) {
+  if (!/^\d{5}$/.test(studentId)) {
     return null;
   }
 
