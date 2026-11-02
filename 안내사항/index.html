@@ -28,5 +28,7 @@ function openPresentation(){if(!makeSlides())return;presentation.style.display='
 document.getElementById('presentationBtn').onclick=openPresentation;document.getElementById('closePresentation').onclick=closePresentation;document.getElementById('prevBtn').onclick=()=>{if(current>0){current--;showSlide()}};document.getElementById('nextBtn').onclick=()=>{if(current<slides.length-1){current++;showSlide()}};
 document.addEventListener('keydown',e=>{if(presentation.style.display!=='block')return;if(e.key==='Escape')closePresentation();if(['ArrowRight','ArrowDown'].includes(e.key)){e.preventDefault();if(current<slides.length-1){current++;showSlide()}}if(['ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();if(current>0){current--;showSlide()}}});load();
 </script>
+
+<script src="/script.js" defer></script>
 </body>
 </html>
