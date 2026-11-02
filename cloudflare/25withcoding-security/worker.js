@@ -1,5 +1,6 @@
-// Recovered from Cloudflare Worker version b7005792-d6de-477d-9a97-c88694a69ad8 (version 8).
-// Backup only: do not deploy until bindings/secrets and authorization are verified.
+// Recovery candidate based on Cloudflare Worker version b7005792-d6de-477d-9a97-c88694a69ad8 (version 8).
+// Uses Firebase ID Token + Firestore Security Rules; no service-account private key is required.
+// Do not deploy until SECURITY_KV binding and production authorization flow are verified.
 // Cloudflare Worker: 25withcoding-security
 
 
