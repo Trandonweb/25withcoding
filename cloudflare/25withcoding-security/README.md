@@ -1,25 +1,35 @@
 # 25withcoding-security Worker
 
-This directory contains a recovery candidate based on Cloudflare Worker version `b7005792-d6de-477d-9a97-c88694a69ad8` (version 8), recovered on 2026-11-02.
+## Production status
 
-## Current recovery design
+- Production Worker: `25withcoding-security`
+- Active production version: `13`
+- Active version ID: `c75ec276-15e5-455b-bb6b-422154ad92a1`
+- Deployment ID: `182c4e2f-e88d-48db-8411-5eca6065cf10`
+- Route: `25withcoding.kr/api/security/*`
+- Verified production binding: `SECURITY_KV` → existing namespace `81bf43ec03e94d9e88f6235a029cc15e`
 
-- `worker.js` validates the Firebase ID token through Firebase Authentication.
-- It then reads only the signed-in student's `users/{studentId}` document through the Firestore REST API using that same Firebase ID token.
-- Firestore Security Rules remain in force for this read. The current rules allow authenticated five-digit student accounts to read user documents.
+## Authentication design
+
+- The Worker validates Firebase ID tokens through Firebase Authentication.
+- It reads `users/{studentId}` through the Firestore REST API using the same Firebase ID token.
+- Firestore Security Rules remain in force for the read.
 - The Worker checks the document's `role` against the allowed administrator roles.
-- A service-account private key is no longer required. Do not add service-account credentials to this repository.
+- The student ID must contain exactly five digits.
+- No service-account private key or service-account secrets are required by this implementation.
 - The Firebase Web API key is a public client configuration value already used by the website; it is not a substitute for authentication or authorization.
-- The production Worker requires the `SECURITY_KV` KV binding, mapped to the existing namespace ID `81bf43ec03e94d9e88f6235a029cc15e`.
 
-## Deployment safety
+## Recovery and deployment
 
-- Cloudflare production version 11 was observed with an empty bindings list and no listed Worker secrets.
-- The production route remains `25withcoding.kr/api/security/*`.
-- The recovered source is a candidate, not proof of the current production source. The active production code could not be retrieved through the connector.
-- Do not deploy until the current production source has been reconciled, the `SECURITY_KV` binding is configured, and the authenticated read path has been tested.
-- Never commit private keys, ID tokens, or other secret values to this repository.
+- Version 13 was uploaded and deployed on 2026-11-03.
+- Version 13 contains the recovered Worker handler plus the Firebase ID-token/Firestore Rules authorization change.
+- The active deployment is configured with 100% traffic to version 13.
+- The Cloudflare settings and active version metadata both confirm the `SECURITY_KV` binding.
+- No Worker secrets are currently configured; this is expected for the current authentication design.
+- The route remains connected to the correct Worker.
+- A successful authenticated admin request still needs an end-to-end test with a signed-in administrator account.
 
-## Recovery
+## Safety
 
-The source backup was recovered from Cloudflare Worker version 8. Production was not changed as part of the source refactor.
+- Never commit ID tokens, private keys, or other secret values to this repository.
+- Do not change the site's sign-in/sign-out pages or Firestore rules as part of this Worker recovery.
