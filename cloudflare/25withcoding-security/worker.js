@@ -177,74 +177,174 @@ async function recordPageVisit(env, request, pagePath) {
 // Firebase Web API Key는 공개 클라이언트 설정값이며,
 // Firestore 접근 권한은 ID Token과 Firestore Rules가 결정한다.
 // ----------------------------------------
-const FIREBASE_API_KEY = "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20";
 const FIREBASE_PROJECT_ID = "points2026-f5e50";
 
 // ----------------------------------------
 // 관리자 인증
 // ----------------------------------------
 
-async function verifyAdmin(request, env) {
-  const authorization =
-    request.headers.get("Authorization") || "";
+// Firebase ID Token is verified locally with Google's Secure Token signing certificates.
+// This avoids calling Identity Toolkit with a browser-restricted Firebase Web API key.
+let cachedFirebaseCerts = null;
+let cachedFirebaseCertsExpiry = 0;
 
-  const idToken = authorization.startsWith("Bearer ")
-    ? authorization.slice(7)
-    : "";
+function decodeBase64Url(value) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
 
-  if (!idToken) {
+function readDerNode(bytes, offset) {
+  if (offset + 2 > bytes.length) throw new Error("Invalid certificate encoding");
+  const tag = bytes[offset++];
+  let length = bytes[offset++];
+  if (length & 0x80) {
+    const count = length & 0x7f;
+    if (!count || count > 4 || offset + count > bytes.length) throw new Error("Invalid certificate length");
+    length = 0;
+    for (let i = 0; i < count; i++) length = length * 256 + bytes[offset++];
+  }
+  const start = offset;
+  const end = start + length;
+  if (end > bytes.length) throw new Error("Truncated certificate");
+  return { tag, start, end, next: end };
+}
+
+function certificateSpki(pem) {
+  const base64 = pem.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\s/g, "");
+  const binary = atob(base64);
+  const der = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) der[i] = binary.charCodeAt(i);
+
+  const certificate = readDerNode(der, 0);
+  const tbs = readDerNode(der, certificate.start);
+  let offset = tbs.start;
+  let node = readDerNode(der, offset);
+  if (node.tag === 0xa0) offset = node.next;
+
+  // TBSCertificate fields: serial, signature, issuer, validity, subject, SubjectPublicKeyInfo.
+  for (let i = 0; i < 6; i++) {
+    node = readDerNode(der, offset);
+    if (i === 5 && node.tag === 0x30) return der.slice(offset, node.next);
+    offset = node.next;
+  }
+  throw new Error("Certificate public key not found");
+}
+
+async function getFirebaseSigningCerts() {
+  if (cachedFirebaseCerts && Date.now() < cachedFirebaseCertsExpiry) return cachedFirebaseCerts;
+
+  const response = await fetch("https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com");
+  if (!response.ok) {
+    console.warn("SECURITY_AUTH_DIAG: firebase_cert_fetch_failed", response.status);
     return null;
   }
 
-  // Firebase Authentication 토큰 확인
-  const authResponse = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ idToken })
+  const certs = await response.json();
+  const cacheControl = response.headers.get("Cache-Control") || "";
+  const maxAge = Number(cacheControl.match(/max-age=(\d+)/i)?.[1] || 3600);
+  cachedFirebaseCerts = certs;
+  cachedFirebaseCertsExpiry = Date.now() + Math.max(60, maxAge) * 1000;
+  return certs;
+}
+
+async function verifyFirebaseIdToken(idToken) {
+  try {
+    const parts = idToken.split(".");
+    if (parts.length !== 3) return null;
+
+    const header = JSON.parse(new TextDecoder().decode(decodeBase64Url(parts[0])));
+    if (header.alg !== "RS256" || typeof header.kid !== "string") return null;
+
+    const certs = await getFirebaseSigningCerts();
+    const certificate = certs?.[header.kid];
+    if (!certificate) {
+      cachedFirebaseCerts = null;
+      cachedFirebaseCertsExpiry = 0;
+      console.warn("SECURITY_AUTH_DIAG: firebase_signing_key_missing");
+      return null;
     }
-  );
 
-  if (!authResponse.ok) {
-    console.warn("SECURITY_AUTH_DIAG: firebase_token_lookup_failed", authResponse.status);
+    const publicKey = await crypto.subtle.importKey(
+      "spki",
+      certificateSpki(certificate),
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+
+    const validSignature = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      publicKey,
+      decodeBase64Url(parts[2]),
+      new TextEncoder().encode(parts[0] + "." + parts[1])
+    );
+    if (!validSignature) {
+      console.warn("SECURITY_AUTH_DIAG: firebase_signature_invalid");
+      return null;
+    }
+
+    const claims = JSON.parse(new TextDecoder().decode(decodeBase64Url(parts[1])));
+    const now = Math.floor(Date.now() / 1000);
+    if (
+      claims.iss !== "https://securetoken.google.com/" + FIREBASE_PROJECT_ID ||
+      claims.aud !== FIREBASE_PROJECT_ID ||
+      typeof claims.sub !== "string" ||
+      !claims.sub ||
+      typeof claims.exp !== "number" ||
+      claims.exp <= now ||
+      typeof claims.iat !== "number" ||
+      claims.iat > now + 300
+    ) {
+      console.warn("SECURITY_AUTH_DIAG: firebase_claims_invalid");
+      return null;
+    }
+    return claims;
+  } catch (error) {
+    console.warn("SECURITY_AUTH_DIAG: firebase_jwt_verification_error", String(error?.message || "unknown").slice(0, 120));
     return null;
   }
+}
 
-  const authData = await authResponse.json();
-  const account = authData.users?.[0];
+// ----------------------------------------
+// 관리자 인증
+// ----------------------------------------
 
-  if (!account?.email) {
+async function verifyAdmin(request, env) {
+  const authorization = request.headers.get("Authorization") || "";
+  const idToken = authorization.startsWith("Bearer ")
+    ? authorization.slice(7).trim()
+    : "";
+  if (!idToken) return null;
+
+  const claims = await verifyFirebaseIdToken(idToken);
+  if (!claims?.email) {
     console.warn("SECURITY_AUTH_DIAG: firebase_account_email_missing");
     return null;
   }
 
   const suffix = "@auth.25withcoding.kr";
-
-  if (!account.email.endsWith(suffix)) {
+  const email = String(claims.email).toLowerCase();
+  if (!email.endsWith(suffix)) {
     console.warn("SECURITY_AUTH_DIAG: email_domain_mismatch");
     return null;
   }
 
-  const studentId = account.email.slice(0, -suffix.length);
-
+  const studentId = email.slice(0, -suffix.length);
   if (!/^\d{5}$/.test(studentId)) {
+    console.warn("SECURITY_AUTH_DIAG: student_id_format_mismatch");
     return null;
   }
 
-  // Firebase ID Token으로 본인 사용자 문서를 조회한다.
-  // Firestore Security Rules가 요청 권한을 검사하므로
-  // 서비스 계정 개인 키나 Admin 권한은 필요하지 않다.
+  // Firebase ID Token reads only the caller's own user document; Firestore Rules remain authoritative.
   const documentURL =
     `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}` +
     `/databases/(default)/documents/users/${studentId}`;
-
   const documentResponse = await fetch(documentURL, {
-    headers: {
-      Authorization: `Bearer ${idToken}`
-    }
+    headers: { Authorization: `Bearer ${idToken}` }
   });
 
   if (!documentResponse.ok) {
@@ -254,24 +354,13 @@ async function verifyAdmin(request, env) {
 
   const document = await documentResponse.json();
   const role = document.fields?.role?.stringValue;
-
-  const allowedRoles = [
-    "admin",
-    "president",
-    "vice",
-    "committee_chair"
-  ];
-
+  const allowedRoles = ["admin", "president", "vice", "committee_chair"];
   if (!allowedRoles.includes(role)) {
     console.warn("SECURITY_AUTH_DIAG: role_not_allowed", role || "missing");
     return null;
   }
 
-  return {
-    studentId,
-    email: account.email,
-    role
-  };
+  return { studentId, email, role };
 }
 
 // ----------------------------------------
