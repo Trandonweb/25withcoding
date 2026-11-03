@@ -209,6 +209,7 @@ async function verifyAdmin(request, env) {
   );
 
   if (!authResponse.ok) {
+    console.warn("SECURITY_AUTH_DIAG: firebase_token_lookup_failed", authResponse.status);
     return null;
   }
 
@@ -216,12 +217,14 @@ async function verifyAdmin(request, env) {
   const account = authData.users?.[0];
 
   if (!account?.email) {
+    console.warn("SECURITY_AUTH_DIAG: firebase_account_email_missing");
     return null;
   }
 
   const suffix = "@auth.25withcoding.kr";
 
   if (!account.email.endsWith(suffix)) {
+    console.warn("SECURITY_AUTH_DIAG: email_domain_mismatch");
     return null;
   }
 
@@ -245,6 +248,7 @@ async function verifyAdmin(request, env) {
   });
 
   if (!documentResponse.ok) {
+    console.warn("SECURITY_AUTH_DIAG: firestore_user_read_failed", documentResponse.status);
     return null;
   }
 
@@ -259,6 +263,7 @@ async function verifyAdmin(request, env) {
   ];
 
   if (!allowedRoles.includes(role)) {
+    console.warn("SECURITY_AUTH_DIAG: role_not_allowed", role || "missing");
     return null;
   }
 
