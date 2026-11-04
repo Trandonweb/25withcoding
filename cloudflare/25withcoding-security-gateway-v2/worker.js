@@ -160,18 +160,20 @@ async function getSession(request, env) {
   const raw = cookies(request)[SESSION_COOKIE];
   const decoded = await verifyValue(raw, env);
   if (!decoded || !env.SECURITY_KV) return null;
+  let data;
   try {
-    const data = JSON.parse(decoded);
-    if (!data.sid || !data.uid || !data.exp || data.exp <= Date.now()) return null;
-    const requestDevice = await getDevice(request, env);
-    if (!requestDevice || requestDevice !== data.deviceId) return null;
-    // The server-side session record is the revocation source. Deleting it invalidates
-    // the signed cookie on the next request (subject to KV propagation).
-    const record = await env.SECURITY_KV.get("v2:session:" + data.sid, "json");
-    if (!record || record.status !== "active" || record.uid !== data.uid ||
-        record.deviceId !== data.deviceId) return null;
-    return data;
-  } catch { return null; }
+    data = JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+  if (!data.sid || !data.uid || !data.exp || data.exp <= Date.now()) return null;
+  const requestDevice = await getDevice(request, env);
+  if (!requestDevice || requestDevice !== data.deviceId) return null;
+  // Do not swallow KV errors here: callers must know when revocation state is unavailable.
+  const record = await env.SECURITY_KV.get("v2:session:" + data.sid, "json");
+  if (!record || record.status !== "active" || record.uid !== data.uid ||
+      record.deviceId !== data.deviceId) return null;
+  return data;
 }
 
 async function firebaseCerts() {
@@ -320,14 +322,21 @@ async function handleApi(request, env, ctx) {
   if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) {
     return json({ error: "Gateway not configured" }, 503);
   }
-  const currentDevice = await getDevice(request, env);
-  const currentSession = await getSession(request, env);
-  const isSessionCleanup = path === API + "/session" && request.method === "DELETE";
-  const blockReason = isSessionCleanup ? null :
-    await blockedReason(env, request, currentDevice, currentSession);
+  let currentDevice = null;
+  let currentSession = null;
+  let blockReason = null;
+  try {
+    currentDevice = await getDevice(request, env);
+    currentSession = await getSession(request, env);
+    const isSessionCleanup = path === API + "/session" && request.method === "DELETE";
+    blockReason = isSessionCleanup ? null :
+      await blockedReason(env, request, currentDevice, currentSession);
+  } catch (error) {
+    console.error("Gateway API security-state lookup failed", String(error?.message || error));
+    return json({ error: "Security state unavailable" }, 503);
+  }
   if (ctx?.waitUntil) ctx.waitUntil(writeEvent(env, request, currentDevice, currentSession).catch(() => {}));
   if (blockReason) {
-    if (ctx?.waitUntil) ctx.waitUntil(writeEvent(env, request, currentDevice, currentSession).catch(() => {}));
     return json({ error: "ACCESS_BLOCKED", message: "This request is blocked by security policy." }, 403);
   }
 
@@ -460,8 +469,12 @@ async function handleApi(request, env, ctx) {
       if (type === "session" && !/^ses_[a-f0-9-]{36}$/i.test(target)) return json({ error: "Invalid session ID" }, 400);
       const key = type === "ip" ? "block:" + target : "v2:block:" + type + ":" + target;
       if (await env.SECURITY_KV.get(key)) return json({ error: "Already blocked" }, 409);
-      const record = { type, target, reason, blockedBy: admin.studentId,
-        createdAt: new Date().toISOString(), active: true };
+      const now = new Date().toISOString();
+      const record = {
+        type, target, reason, blockedBy: admin.studentId,
+        createdAt: now, active: true,
+        ...(type === "ip" ? { ip: target, blockedAt: now, permanent: true } : {})
+      };
       await env.SECURITY_KV.put(key, JSON.stringify(record));
       const audit = { id: crypto.randomUUID(), action: type + "_blocked", target,
         adminUid: admin.uid, adminStudentId: admin.studentId, reason,
