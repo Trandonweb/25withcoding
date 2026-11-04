@@ -57,6 +57,11 @@ export function installSecurityGatewayBridge(auth) {
         if (!response.ok) {
           const result = await response.json().catch(() => ({}));
           console.warn("[25wc-security] Gateway session was not registered:", result.error || response.status);
+          if (response.status === 403 && result.error === "ACCESS_BLOCKED") {
+            // The gateway has set a signed session cookie so the next document request
+            // can be rejected server-side; do not interfere with Firebase sign-in itself.
+            location.replace("/");
+          }
         }
       } catch (error) {
         // Security telemetry must never break the existing login experience.
