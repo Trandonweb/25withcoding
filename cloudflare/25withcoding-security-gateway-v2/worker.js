@@ -351,17 +351,25 @@ async function handleApi(request, env, ctx) {
     if (!auth.startsWith("Bearer ")) return json({ error: "Firebase token required" }, 401);
     const identity = await verifyFirebaseToken(auth.slice(7).trim());
     if (!identity) return json({ error: "Invalid Firebase session" }, 401);
+    if (await env.SECURITY_KV.get("v2:block:account:" + identity.uid)) {
+      return json({ error: "ACCESS_BLOCKED", message: "This account is blocked." }, 403);
+    }
     const device = await ensureDevice(request, env);
-    const sid = "ses_" + crypto.randomUUID();
     const now = Date.now();
+    const existingSession = currentSession?.uid === identity.uid &&
+      currentSession.deviceId === device.id ? currentSession : null;
+    const sid = existingSession?.sid || ("ses_" + crypto.randomUUID());
     const session = {
       sid, uid: identity.uid, studentId: identity.studentId, deviceId: device.id,
-      iat: now, exp: now + SESSION_TTL * 1000
+      iat: existingSession?.iat || now, exp: now + SESSION_TTL * 1000
     };
     const cookie = await signValue(JSON.stringify(session), env);
+    const previousRecord = existingSession
+      ? await env.SECURITY_KV.get("v2:session:" + sid, "json")
+      : null;
     await env.SECURITY_KV.put("v2:session:" + sid, JSON.stringify({
       sessionId: sid, uid: identity.uid, accountId: identity.studentId,
-      deviceId: device.id, createdAt: new Date(now).toISOString(),
+      deviceId: device.id, createdAt: previousRecord?.createdAt || new Date(now).toISOString(),
       lastSeenAt: new Date(now).toISOString(), status: "active"
     }), { expirationTtl: SESSION_TTL });
     const response = json({ success: true, sessionId: sid, expiresIn: SESSION_TTL });
