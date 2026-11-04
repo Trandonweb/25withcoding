@@ -358,9 +358,6 @@ async function handleApi(request, env, ctx) {
     if (!auth.startsWith("Bearer ")) return json({ error: "Firebase token required" }, 401);
     const identity = await verifyFirebaseToken(auth.slice(7).trim());
     if (!identity) return json({ error: "Invalid Firebase session" }, 401);
-    if (await env.SECURITY_KV.get("v2:block:account:" + identity.uid)) {
-      return json({ error: "ACCESS_BLOCKED", message: "This account is blocked." }, 403);
-    }
     const device = await ensureDevice(request, env);
     const now = Date.now();
     const existingSession = currentSession?.uid === identity.uid &&
@@ -383,6 +380,16 @@ async function handleApi(request, env, ctx) {
     const headers = new Headers(response.headers);
     headers.append("Set-Cookie", cookieHeader(SESSION_COOKIE, cookie, SESSION_TTL));
     if (device.setCookie) headers.append("Set-Cookie", device.setCookie);
+    const accountBlocked = await env.SECURITY_KV.get("v2:block:account:" + identity.uid);
+    if (accountBlocked) {
+      const blockedResponse = json({ error: "ACCESS_BLOCKED", message: "This account is blocked." }, 403);
+      const blockedHeaders = new Headers(blockedResponse.headers);
+      headers.forEach((value, key) => blockedHeaders.set(key, value));
+      // Preserve both Set-Cookie headers; Headers.set above may combine them in some runtimes.
+      blockedHeaders.append("Set-Cookie", cookieHeader(SESSION_COOKIE, cookie, SESSION_TTL));
+      if (device.setCookie) blockedHeaders.append("Set-Cookie", device.setCookie);
+      return new Response(blockedResponse.body, { status: 403, headers: blockedHeaders });
+    }
     return new Response(response.body, { status: response.status, headers });
   }
 
