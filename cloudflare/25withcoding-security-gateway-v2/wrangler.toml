@@ -1,0 +1,9 @@
+name = "25withcoding-security-gateway-v2"
+main = "worker.js"
+compatibility_date = "2026-11-05"
+
+# Bind the existing SECURITY_KV namespace when deploying this Worker.
+# Do not paste secrets into this file.
+[[kv_namespaces]]
+binding = "SECURITY_KV"
+id = "81bf43ec03e94d9e88f6235a029cc15e"
