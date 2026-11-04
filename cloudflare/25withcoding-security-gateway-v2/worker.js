@@ -301,7 +301,7 @@ function isHtmlNavigation(request) {
     !new URL(request.url).pathname.startsWith(API + "/");
 }
 
-async function handleApi(request, env) {
+async function handleApi(request, env, ctx) {
   const url = new URL(request.url);
   const path = url.pathname;
   if (request.method === "OPTIONS") {
@@ -312,6 +312,17 @@ async function handleApi(request, env) {
       "Access-Control-Max-Age": "86400",
       "Vary": "Origin"
     }});
+  }
+
+  if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) {
+    return json({ error: "Gateway not configured" }, 503);
+  }
+  const currentDevice = await getDevice(request, env);
+  const currentSession = await getSession(request, env);
+  const blockReason = await blockedReason(env, request, currentDevice, currentSession);
+  if (blockReason) {
+    if (ctx?.waitUntil) ctx.waitUntil(writeEvent(env, request, currentDevice, currentSession).catch(() => {}));
+    return json({ error: "ACCESS_BLOCKED", message: "This request is blocked by security policy." }, 403);
   }
 
   if (path === API + "/device" && request.method === "POST") {
@@ -503,7 +514,7 @@ export default {
     const path = url.pathname;
 
     // The gateway's API is explicitly namespaced; unrelated paths remain origin pass-through.
-    if (path.startsWith(API + "/")) return handleApi(request, env);
+    if (path.startsWith(API + "/")) return handleApi(request, env, ctx);
 
     // Fail open if configuration is incomplete: this worker must not take the school site offline.
     if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) {
