@@ -330,6 +330,10 @@ async function handleApi(request, env, ctx) {
     return json({ error: "ACCESS_BLOCKED", message: "This request is blocked by security policy." }, 403);
   }
 
+  if (path === API + "/status" && request.method === "GET") {
+    return json({ success: true, active: true, retentionDays: 90, deviceIdEnabled: true, accountSessionsEnabled: true });
+  }
+
   if (path === API + "/device" && request.method === "POST") {
     if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) return json({ error: "Gateway not configured" }, 503);
     const device = await ensureDevice(request, env);
