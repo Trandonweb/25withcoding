@@ -16,3 +16,11 @@ service = "25withcoding-security"
 # Optional staging origin:
 # [vars]
 # ALLOWED_ORIGIN = "https://staging.25withcoding.kr"
+
+[observability]
+enabled = true
+head_sampling_rate = 0.1
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.01
