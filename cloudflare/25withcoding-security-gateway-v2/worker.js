@@ -38,6 +38,11 @@ function json(data, status = 200, headers = {}) {
   });
 }
 
+function signingSecretReady(env) {
+  return typeof env.DEVICE_SIGNING_SECRET === "string" &&
+    env.DEVICE_SIGNING_SECRET.length >= 32;
+}
+
 function b64url(bytes) {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -322,7 +327,7 @@ async function handleApi(request, env, ctx) {
     }});
   }
 
-  if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) {
+  if (!env.SECURITY_KV || !signingSecretReady(env)) {
     return json({ error: "Gateway not configured" }, 503);
   }
   let currentDevice = null;
@@ -348,7 +353,7 @@ async function handleApi(request, env, ctx) {
   }
 
   if (path === API + "/device" && request.method === "POST") {
-    if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) return json({ error: "Gateway not configured" }, 503);
+    if (!env.SECURITY_KV || !signingSecretReady(env)) return json({ error: "Gateway not configured" }, 503);
     const device = await ensureDevice(request, env);
     const ua = request.headers.get("User-Agent") || "";
     const profile = {
@@ -366,7 +371,7 @@ async function handleApi(request, env, ctx) {
   }
 
   if (path === API + "/session" && request.method === "POST") {
-    if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) return json({ error: "Gateway not configured" }, 503);
+    if (!env.SECURITY_KV || !signingSecretReady(env)) return json({ error: "Gateway not configured" }, 503);
     const origin = request.headers.get("Origin") || "";
     if (origin !== (env.ALLOWED_ORIGIN || "https://25withcoding.kr")) {
       return json({ error: "Forbidden origin" }, 403);
@@ -560,7 +565,7 @@ export default {
     if (path.startsWith(API + "/")) return handleApi(request, env, ctx);
 
     // Fail open if configuration is incomplete: this worker must not take the school site offline.
-    if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) {
+    if (!env.SECURITY_KV || !signingSecretReady(env)) {
       return passThrough(request, env, ctx);
     }
 
