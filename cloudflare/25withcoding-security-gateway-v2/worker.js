@@ -382,13 +382,10 @@ async function handleApi(request, env, ctx) {
     if (device.setCookie) headers.append("Set-Cookie", device.setCookie);
     const accountBlocked = await env.SECURITY_KV.get("v2:block:account:" + identity.uid);
     if (accountBlocked) {
-      const blockedResponse = json({ error: "ACCESS_BLOCKED", message: "This account is blocked." }, 403);
-      const blockedHeaders = new Headers(blockedResponse.headers);
-      headers.forEach((value, key) => blockedHeaders.set(key, value));
-      // Preserve both Set-Cookie headers; Headers.set above may combine them in some runtimes.
-      blockedHeaders.append("Set-Cookie", cookieHeader(SESSION_COOKIE, cookie, SESSION_TTL));
-      if (device.setCookie) blockedHeaders.append("Set-Cookie", device.setCookie);
-      return new Response(blockedResponse.body, { status: 403, headers: blockedHeaders });
+      return new Response(JSON.stringify({
+        error: "ACCESS_BLOCKED",
+        message: "This account is blocked."
+      }), { status: 403, headers });
     }
     return new Response(response.body, { status: response.status, headers });
   }
