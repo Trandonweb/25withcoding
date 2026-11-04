@@ -287,7 +287,10 @@ async function writeEvent(env, request, deviceId, session) {
     sessionId: session?.sid || null,
     eventType: "request"
   };
-  await env.SECURITY_KV.put("v2:event:" + event.id, JSON.stringify(event), { expirationTtl: EVENT_TTL });
+  // Inverted, fixed-width timestamp keeps the newest events first in KV's lexicographic listing.
+  const newestFirst = String(9999999999999 - Date.now()).padStart(13, "0");
+  await env.SECURITY_KV.put("v2:event:" + newestFirst + ":" + event.id,
+    JSON.stringify(event), { expirationTtl: EVENT_TTL });
 }
 
 async function blockedReason(env, request, deviceId, session) {
