@@ -33,4 +33,17 @@
   }).catch(() => {
     // Tracking must never interfere with the page itself.
   });
+
+  // Optional account/device bridge. Auth entry/exit, password-change, and COBY
+  // pages are intentionally excluded so their existing authentication logic stays untouched.
+  const currentPath = window.location.pathname.toLowerCase();
+  const excluded = [
+    "/signin", "/signout", "/password_change", "/ai", "/coby"
+  ].some(path => currentPath === path || currentPath.startsWith(path + "/"));
+  if (!excluded && !window.__25withcodingSecurityBridgeRequested) {
+    window.__25withcodingSecurityBridgeRequested = true;
+    import("/cloudflare/25withcoding-security-gateway-v2/client-loader.js").catch(() => {
+      // Gateway integration is optional until its route is enabled.
+    });
+  }
 })();
