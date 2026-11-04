@@ -38,7 +38,7 @@
   // pages are intentionally excluded so their existing authentication logic stays untouched.
   const currentPath = window.location.pathname.toLowerCase();
   const excluded = [
-    "/signin", "/signout", "/password_change", "/ai", "/coby"
+    "/signin", "/signout", "/password_change", "/ai", "/coby", "/memo"
   ].some(path => currentPath === path || currentPath.startsWith(path + "/"));
   if (!excluded && !window.__25withcodingSecurityBridgeRequested) {
     window.__25withcodingSecurityBridgeRequested = true;
