@@ -366,6 +366,9 @@ async function handleApi(request, env, ctx) {
     const now = Date.now();
     const existingSession = currentSession?.uid === identity.uid &&
       currentSession.deviceId === device.id ? currentSession : null;
+    if (currentSession && !existingSession) {
+      await env.SECURITY_KV.delete("v2:session:" + currentSession.sid);
+    }
     const sid = existingSession?.sid || ("ses_" + crypto.randomUUID());
     const session = {
       sid, uid: identity.uid, studentId: identity.studentId, deviceId: device.id,
