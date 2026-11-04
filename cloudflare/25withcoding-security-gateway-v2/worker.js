@@ -51,7 +51,7 @@ function decodeB64url(value) {
 }
 
 async function getHmacKey(env) {
-  if (!env.DEVICE_SIGNING_SECRET) return null;
+  if (typeof env.DEVICE_SIGNING_SECRET !== "string" || env.DEVICE_SIGNING_SECRET.length < 32) return null;
   if (!hmacKeyPromise) {
     hmacKeyPromise = crypto.subtle.importKey(
       "raw",
@@ -143,7 +143,8 @@ async function getDevice(request, env) {
   const [id, issued] = decoded.split("|");
   if (!/^dev_[a-f0-9-]{36}$/i.test(id || "")) return null;
   const issuedAt = Number(issued);
-  if (!Number.isFinite(issuedAt) || Date.now() - issuedAt > DEVICE_TTL * 1000) return null;
+  if (!Number.isFinite(issuedAt) || issuedAt > Date.now() + 300000 ||
+      Date.now() - issuedAt > DEVICE_TTL * 1000) return null;
   return id;
 }
 
@@ -544,7 +545,7 @@ export default {
 
     // Fail open if configuration is incomplete: this worker must not take the school site offline.
     if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) {
-      return fetch(request);
+      return passThrough(request, env, ctx);
     }
 
     const deviceId = await getDevice(request, env);
@@ -555,7 +556,7 @@ export default {
     } catch (error) {
       console.error("Gateway block lookup failed", String(error?.message || error));
       // Availability-first fallback. Monitoring must alert because blocks may not be enforced.
-      return fetch(request);
+      return passThrough(request, env, ctx);
     }
 
     if (reason) {
