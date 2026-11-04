@@ -17,7 +17,7 @@ const DEVICE_COOKIE = "__Host-25wc_device";
 const SESSION_COOKIE = "__Host-25wc_session";
 const EVENT_TTL = 90 * 24 * 60 * 60;
 const DEVICE_TTL = 180 * 24 * 60 * 60;
-const SESSION_TTL = 12 * 60 * 60;
+const SESSION_TTL = 60 * 60; // align gateway session lifetime with Firebase ID token lifetime
 const FIREBASE_PROJECT_ID = "points2026-f5e50";
 const AUTH_SUFFIX = "@auth.25withcoding.kr";
 const ALLOWED_ADMIN_ROLES = ["admin", "president", "vice", "committee_chair"];
@@ -158,10 +158,14 @@ async function ensureDevice(request, env) {
 async function getSession(request, env) {
   const raw = cookies(request)[SESSION_COOKIE];
   const decoded = await verifyValue(raw, env);
-  if (!decoded) return null;
+  if (!decoded || !env.SECURITY_KV) return null;
   try {
     const data = JSON.parse(decoded);
     if (!data.sid || !data.uid || !data.exp || data.exp <= Date.now()) return null;
+    // The server-side session record is the revocation source. Deleting it invalidates
+    // the signed cookie on the next request (subject to KV propagation).
+    const record = await env.SECURITY_KV.get("v2:session:" + data.sid, "json");
+    if (!record || record.status !== "active" || record.uid !== data.uid) return null;
     return data;
   } catch { return null; }
 }
@@ -349,9 +353,11 @@ async function handleApi(request, env) {
       deviceId: device.id, createdAt: new Date(now).toISOString(),
       lastSeenAt: new Date(now).toISOString(), status: "active"
     }), { expirationTtl: SESSION_TTL });
-    const headers = { "Set-Cookie": cookieHeader(SESSION_COOKIE, cookie, SESSION_TTL) };
-    if (device.setCookie) headers["Set-Cookie"] += ", " + device.setCookie;
-    return json({ success: true, sessionId: sid, expiresIn: SESSION_TTL }, 200, headers);
+    const response = json({ success: true, sessionId: sid, expiresIn: SESSION_TTL });
+    const headers = new Headers(response.headers);
+    headers.append("Set-Cookie", cookieHeader(SESSION_COOKIE, cookie, SESSION_TTL));
+    if (device.setCookie) headers.append("Set-Cookie", device.setCookie);
+    return new Response(response.body, { status: response.status, headers });
   }
 
   if (path === API + "/session" && request.method === "DELETE") {
@@ -486,7 +492,27 @@ export default {
       );
     }
 
-    if (ctx?.waitUntil) ctx.waitUntil(writeEvent(env, request, deviceId, session).catch(() => {}));
+    if (ctx?.waitUntil) {
+      ctx.waitUntil(writeEvent(env, request, deviceId, session).catch(() => {}));
+      if (deviceId) {
+        ctx.waitUntil((async () => {
+          const key = "v2:device:" + deviceId;
+          const profile = await env.SECURITY_KV.get(key, "json");
+          if (profile) {
+            profile.lastSeenAt = new Date().toISOString();
+            await env.SECURITY_KV.put(key, JSON.stringify(profile), { expirationTtl: DEVICE_TTL });
+          }
+          if (session) {
+            const sessionKey = "v2:session:" + session.sid;
+            const record = await env.SECURITY_KV.get(sessionKey, "json");
+            if (record && record.status === "active") {
+              record.lastSeenAt = new Date().toISOString();
+              await env.SECURITY_KV.put(sessionKey, JSON.stringify(record), { expirationTtl: SESSION_TTL });
+            }
+          }
+        })().catch(() => {}));
+      }
+    }
 
     let newCookie = null;
     if (!deviceId && isHtmlNavigation(request)) {
