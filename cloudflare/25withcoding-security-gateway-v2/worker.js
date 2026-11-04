@@ -561,10 +561,12 @@ export default {
       return passThrough(request, env, ctx);
     }
 
-    const deviceId = await getDevice(request, env);
-    const session = await getSession(request, env);
+    let deviceId = null;
+    let session = null;
     let reason;
     try {
+      deviceId = await getDevice(request, env);
+      session = await getSession(request, env);
       reason = await blockedReason(env, request, deviceId, session);
     } catch (error) {
       console.error("Gateway block lookup failed", String(error?.message || error));
