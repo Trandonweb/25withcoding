@@ -374,6 +374,28 @@ async function handleApi(request, env) {
     const admin = await verifyAdmin(request, env);
     if (!admin) return json({ error: "Unauthorized" }, 401);
 
+    if (path === API + "/admin/devices" && request.method === "GET") {
+      const listed = await env.SECURITY_KV.list({ prefix: "v2:device:", limit: 1000 });
+      const devices = [];
+      for (const item of listed.keys) {
+        const value = await env.SECURITY_KV.get(item.name, "json");
+        if (value) devices.push(value);
+      }
+      devices.sort((a, b) => Date.parse(b.lastSeenAt) - Date.parse(a.lastSeenAt));
+      return json({ success: true, devices });
+    }
+
+    if (path === API + "/admin/sessions" && request.method === "GET") {
+      const listed = await env.SECURITY_KV.list({ prefix: "v2:session:", limit: 1000 });
+      const sessions = [];
+      for (const item of listed.keys) {
+        const value = await env.SECURITY_KV.get(item.name, "json");
+        if (value) sessions.push(value);
+      }
+      sessions.sort((a, b) => Date.parse(b.lastSeenAt) - Date.parse(a.lastSeenAt));
+      return json({ success: true, sessions });
+    }
+
     if (path === API + "/admin/events" && request.method === "GET") {
       const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 100, 1), 500);
       const listed = await env.SECURITY_KV.list({ prefix: "v2:event:", limit: 1000 });
@@ -411,11 +433,17 @@ async function handleApi(request, env) {
     }
 
     if (path === API + "/admin/blocks" && request.method === "GET") {
-      const listed = await env.SECURITY_KV.list({ prefix: "v2:block:", limit: 1000 });
       const blocks = [];
+      const listed = await env.SECURITY_KV.list({ prefix: "v2:block:", limit: 1000 });
       for (const item of listed.keys) {
         const value = await env.SECURITY_KV.get(item.name, "json");
         if (value) blocks.push(value);
+      }
+      // Include existing legacy IP blocks without changing their storage format.
+      const legacy = await env.SECURITY_KV.list({ prefix: "block:", limit: 1000 });
+      for (const item of legacy.keys) {
+        const value = await env.SECURITY_KV.get(item.name, "json");
+        if (value) blocks.push({ type: "ip", target: value.ip || item.name.slice(6), ...value });
       }
       return json({ success: true, blocks });
     }
@@ -447,7 +475,16 @@ async function handleApi(request, env) {
 async function passThrough(request, env, ctx, deviceCookie = null) {
   let response;
   try {
-    response = await fetch(request);
+    const path = new URL(request.url).pathname;
+    if (path.startsWith("/api/security/") && !path.startsWith(API + "/")) {
+      // Preserve the legacy security API behind a Cloudflare service binding.
+      if (!env.LEGACY_SECURITY) {
+        return json({ error: "Legacy security service binding is not configured" }, 503);
+      }
+      response = await env.LEGACY_SECURITY.fetch(request);
+    } else {
+      response = await fetch(request);
+    }
   } catch (error) {
     console.error("Gateway origin fetch failed", String(error?.message || error));
     return new Response("일시적으로 서비스를 이용할 수 없습니다.", {
