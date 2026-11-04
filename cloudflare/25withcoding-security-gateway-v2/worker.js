@@ -231,7 +231,6 @@ async function verifyFirebaseToken(token) {
       typeof claims.sub !== "string" || !claims.sub ||
       !Number.isFinite(claims.exp) || claims.exp <= now ||
       !Number.isFinite(claims.iat) || claims.iat > now + 300 ||
-      claims.email_verified !== true ||
       !email.endsWith(AUTH_SUFFIX) ||
       !/^\d{5}$/.test(email.slice(0, -AUTH_SUFFIX.length))
     ) return null;
@@ -309,7 +308,7 @@ async function handleApi(request, env, ctx) {
   const path = url.pathname;
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: {
-      "Access-Control-Allow-Origin": "https://25withcoding.kr",
+      "Access-Control-Allow-Origin": env.ALLOWED_ORIGIN || "https://25withcoding.kr",
       "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "Authorization, Content-Type",
       "Access-Control-Max-Age": "86400",
@@ -322,7 +321,9 @@ async function handleApi(request, env, ctx) {
   }
   const currentDevice = await getDevice(request, env);
   const currentSession = await getSession(request, env);
-  const blockReason = await blockedReason(env, request, currentDevice, currentSession);
+  const isSessionCleanup = path === API + "/session" && request.method === "DELETE";
+  const blockReason = isSessionCleanup ? null :
+    await blockedReason(env, request, currentDevice, currentSession);
   if (ctx?.waitUntil) ctx.waitUntil(writeEvent(env, request, currentDevice, currentSession).catch(() => {}));
   if (blockReason) {
     if (ctx?.waitUntil) ctx.waitUntil(writeEvent(env, request, currentDevice, currentSession).catch(() => {}));
