@@ -162,10 +162,13 @@ async function getSession(request, env) {
   try {
     const data = JSON.parse(decoded);
     if (!data.sid || !data.uid || !data.exp || data.exp <= Date.now()) return null;
+    const requestDevice = await getDevice(request, env);
+    if (!requestDevice || requestDevice !== data.deviceId) return null;
     // The server-side session record is the revocation source. Deleting it invalidates
     // the signed cookie on the next request (subject to KV propagation).
     const record = await env.SECURITY_KV.get("v2:session:" + data.sid, "json");
-    if (!record || record.status !== "active" || record.uid !== data.uid) return null;
+    if (!record || record.status !== "active" || record.uid !== data.uid ||
+        record.deviceId !== data.deviceId) return null;
     return data;
   } catch { return null; }
 }
@@ -320,6 +323,7 @@ async function handleApi(request, env, ctx) {
   const currentDevice = await getDevice(request, env);
   const currentSession = await getSession(request, env);
   const blockReason = await blockedReason(env, request, currentDevice, currentSession);
+  if (ctx?.waitUntil) ctx.waitUntil(writeEvent(env, request, currentDevice, currentSession).catch(() => {}));
   if (blockReason) {
     if (ctx?.waitUntil) ctx.waitUntil(writeEvent(env, request, currentDevice, currentSession).catch(() => {}));
     return json({ error: "ACCESS_BLOCKED", message: "This request is blocked by security policy." }, 403);
@@ -346,7 +350,9 @@ async function handleApi(request, env, ctx) {
   if (path === API + "/session" && request.method === "POST") {
     if (!env.SECURITY_KV || !env.DEVICE_SIGNING_SECRET) return json({ error: "Gateway not configured" }, 503);
     const origin = request.headers.get("Origin") || "";
-    if (origin !== "https://25withcoding.kr") return json({ error: "Forbidden origin" }, 403);
+    if (origin !== (env.ALLOWED_ORIGIN || "https://25withcoding.kr")) {
+      return json({ error: "Forbidden origin" }, 403);
+    }
     const auth = request.headers.get("Authorization") || "";
     if (!auth.startsWith("Bearer ")) return json({ error: "Firebase token required" }, 401);
     const identity = await verifyFirebaseToken(auth.slice(7).trim());
