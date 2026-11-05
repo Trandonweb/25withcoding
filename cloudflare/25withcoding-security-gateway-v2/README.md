@@ -54,7 +54,7 @@ Requests under the old /api/security/* path (except /api/security/v2/*) are forw
 
 ## Enforcement details
 
-- IP blocks use the existing block:<ip> KV keys.
+- IP blocks use the existing block:<ip> KV keys. The current production KV namespace was inspected without exposing the stored address: one legacy IP block exists, and its value is a JSON object containing ip, reason, blockedBy, blockedAt, and permanent. The v2 admin listing and enforcement path are compatible with this existing record shape.
 - Device/account/session blocks use v2:block:<type>:<target> keys.
 - Signed cookies are Secure, HttpOnly, SameSite=Lax and Path=/.
 - Gateway sessions last one hour and are bound to the signed device cookie. The KV session record is checked on every request, so deleting it revokes the cookie after KV propagation.
