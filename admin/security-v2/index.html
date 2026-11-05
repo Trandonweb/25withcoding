@@ -74,7 +74,7 @@ async function api(path,options={}){
 }
 function rows(id,items,cols,empty){
   const body=$(id);
-  body.innerHTML=items.length?items.map(item=>"<tr>"+cols.map(fn=>"<td>"+fn(item)+"</td>").join("")+"</tr>").join(""):'<tr><td colspan="'+(id==="blocksBody"?6:id==="eventsBody"?5:id==="sessionsBody"?5:4)+'" class="muted">'+empty+"</td></tr>";
+  body.innerHTML=items.length?items.map(item=>"<tr>"+cols.map(fn=>"<td>"+fn(item)+"</td>").join("")+"</tr>").join(""):'<tr><td colspan="'+(id==="blocksBody"?6:id==="eventsBody"?6:id==="sessionsBody"?5:4)+'" class="muted">'+empty+"</td></tr>";
 }
 function render(){
   $("deviceCount").textContent=data.devices.length;$("eventCount").textContent=data.events.length;
