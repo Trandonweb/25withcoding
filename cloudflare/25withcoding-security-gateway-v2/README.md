@@ -71,7 +71,7 @@ Before attaching production routes:
 3. Test origin passthrough for HTML, JS and image assets in staging (basic GET/HEAD path is covered); separately test CSS, redirects, uploads and POST requests before production.
 4. Verify the Firebase bridge on ordinary pages only. Do not modify COBY, /signin, /signout, password_change, or memo.
 5. Add and verify the visible privacy notice explaining the detailed 90-day access log. The prepared notice is at /privacy/security/.
-6. Obtain the school's responsible adult's approval for collecting students' access records.
+6. Confirm that the published privacy notice accurately describes every active collection field, purpose, recipient, and retention period before enabling production collection.
 7. Verify the exact production route list, including www if used, before changing any route.
 
 Current status (2026-11-05): the staging Worker is deployed at https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev with the dedicated staging KV namespace and a Cloudflare-managed DEVICE_SIGNING_SECRET. GitHub Actions syntax checks and live staging smoke tests pass, including homepage HTML, shared JavaScript and PNG asset passthrough, persistent device-cookie reuse, 90-day status, unauthenticated session rejection, CORS preflight, 401 responses from all admin read endpoints, and a safe OPTIONS request forwarded through the legacy Worker service binding. The Worker is not attached to any production route. No production route, DNS setting, existing Worker, or Firestore rule has been changed. Production deployment and end-to-end origin/service-binding regression tests remain pending.
