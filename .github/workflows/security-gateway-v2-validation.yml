@@ -1,0 +1,91 @@
+name: Security Gateway v2 validation
+
+on:
+  push:
+    branches:
+      - feat/security-gateway-v2
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: |
+          node --check cloudflare/25withcoding-security-gateway-v2/worker.js
+          cp cloudflare/25withcoding-security-gateway-v2/client-bridge.js /tmp/client-bridge.mjs
+          cp cloudflare/25withcoding-security-gateway-v2/client-loader.js /tmp/client-loader.mjs
+          node --check /tmp/client-bridge.mjs
+          node --check /tmp/client-loader.mjs
+          node --check script.js
+      - name: Test IP block enforcement
+        run: node --test tests/security-gateway-ip-block.test.mjs
+      - name: Check admin page module syntax
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          class Scripts(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.capture = False
+                  self.parts = []
+              def handle_starttag(self, tag, attrs):
+                  if tag == "script" and dict(attrs).get("type") == "module":
+                      self.capture = True
+              def handle_endtag(self, tag):
+                  if tag == "script":
+                      self.capture = False
+              def handle_data(self, data):
+                  if self.capture:
+                      self.parts.append(data)
+          parser = Scripts()
+          parser.feed(Path("admin/security-v2/index.html").read_text())
+          Path("/tmp/security-admin.mjs").write_text("\n".join(parser.parts))
+          PY
+          node --check /tmp/security-admin.mjs
+      - name: Validate Wrangler TOML
+        run: |
+          python3 - <<'PY'
+          import tomllib
+          with open("cloudflare/25withcoding-security-gateway-v2/wrangler.toml", "rb") as f:
+              config = tomllib.load(f)
+          assert config["name"] == "25withcoding-security-gateway-v2-staging"
+          assert config["env"]["production"]["name"] == "25withcoding-security-gateway-v2"
+          assert config["kv_namespaces"][0]["binding"] == "SECURITY_KV"
+          assert config["services"][0]["binding"] == "LEGACY_SECURITY"
+          PY
+
+      - name: Smoke test isolated staging Worker
+        run: |
+          WORKER_ORIGIN="https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev"
+          BASE="$WORKER_ORIGIN/api/security/v2"
+          ROOT_STATUS="$(curl --silent --show-error --output /tmp/25wc-home.html --write-out '%{http_code}' "$WORKER_ORIGIN/")"
+          test "$ROOT_STATUS" = "200"
+          grep -qi '<html' /tmp/25wc-home.html
+          SCRIPT_STATUS="$(curl --silent --show-error --output /tmp/25wc-script.js --write-out '%{http_code}' "$WORKER_ORIGIN/script.js")"
+          test "$SCRIPT_STATUS" = "200"
+          grep -q 'shared page-visit tracker' /tmp/25wc-script.js
+          IMAGE_TYPE="$(curl --fail --silent --show-error --output /tmp/25wc-logo.png --write-out '%{content_type}' "$WORKER_ORIGIN/logo1.png")"
+          case "$IMAGE_TYPE" in image/png*) ;; *) echo "Unexpected image content type: $IMAGE_TYPE"; exit 1 ;; esac
+          STATUS="$(curl --fail --silent --show-error "$BASE/status")"
+          echo "$STATUS" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["active"] is True; assert d["retentionDays"] == 90; assert d["deviceIdEnabled"] is True'
+          FIRST="$(curl --silent --show-error --cookie-jar /tmp/25wc-cookies.txt --cookie /tmp/25wc-cookies.txt --request POST "$BASE/device")"
+          SECOND="$(curl --silent --show-error --cookie-jar /tmp/25wc-cookies.txt --cookie /tmp/25wc-cookies.txt --request POST "$BASE/device")"
+          python3 -c 'import json,sys; a=json.loads(sys.argv[1]); b=json.loads(sys.argv[2]); assert a["success"] is True; assert b["success"] is True; assert a["deviceId"].startswith("dev_"); assert a["deviceId"] == b["deviceId"]' "$FIRST" "$SECOND"
+          SESSION_STATUS="$(curl --silent --output /tmp/25wc-session-response.json --write-out '%{http_code}' --request POST --header 'Origin: https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev' "$BASE/session")"
+          test "$SESSION_STATUS" = "401"
+          OPTIONS_STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' --request OPTIONS --header 'Origin: https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev' "$BASE/session")"
+          test "$OPTIONS_STATUS" = "204"
+          LEGACY_OPTIONS_STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' --request OPTIONS --header 'Origin: https://25withcoding.kr' "https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev/api/security/visit")"
+          test "$LEGACY_OPTIONS_STATUS" = "204"
+          for endpoint in devices sessions events blocks; do
+            ADMIN_STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' "$BASE/admin/$endpoint")"
+            test "$ADMIN_STATUS" = "401"
+          done

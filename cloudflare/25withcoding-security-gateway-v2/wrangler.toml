@@ -1,0 +1,53 @@
+name = "25withcoding-security-gateway-v2-staging"
+main = "worker.js"
+compatibility_date = "2026-11-05"
+workers_dev = true
+preview_urls = false
+
+# Default deployment is staging and uses a dedicated, empty namespace.
+[[kv_namespaces]]
+binding = "SECURITY_KV"
+id = "3d2a25573f2c462f8aca91c675d8c224"
+
+[[services]]
+binding = "LEGACY_SECURITY"
+service = "25withcoding-security"
+
+[vars]
+ALLOWED_ORIGIN = "https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev"
+STAGING_ORIGIN = "https://25withcoding.kr"
+
+[observability]
+enabled = true
+head_sampling_rate = 0.1
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.01
+
+# Production is intentionally separate and requires an explicit --env production.
+[env.production]
+name = "25withcoding-security-gateway-v2"
+workers_dev = false
+
+[env.production.vars]
+ALLOWED_ORIGIN = "https://25withcoding.kr"
+
+[[env.production.kv_namespaces]]
+binding = "SECURITY_KV"
+id = "81bf43ec03e94d9e88f6235a029cc15e"
+
+[[env.production.services]]
+binding = "LEGACY_SECURITY"
+service = "25withcoding-security"
+
+[env.production.observability]
+enabled = true
+head_sampling_rate = 0.1
+
+[env.production.observability.traces]
+enabled = true
+head_sampling_rate = 0.01
+
+# Set DEVICE_SIGNING_SECRET separately with Wrangler secrets; never commit it.
+# Optional staging origin override: ALLOWED_ORIGIN = "https://staging.25withcoding.kr"
