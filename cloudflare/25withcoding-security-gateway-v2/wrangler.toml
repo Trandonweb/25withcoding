@@ -15,6 +15,7 @@ service = "25withcoding-security"
 
 [vars]
 ALLOWED_ORIGIN = "https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev"
+STAGING_ORIGIN = "https://25withcoding.kr"
 
 [observability]
 enabled = true
