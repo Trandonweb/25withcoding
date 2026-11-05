@@ -19,8 +19,10 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check cloudflare/25withcoding-security-gateway-v2/worker.js
-          node --check cloudflare/25withcoding-security-gateway-v2/client-bridge.js
-          node --check cloudflare/25withcoding-security-gateway-v2/client-loader.js
+          cp cloudflare/25withcoding-security-gateway-v2/client-bridge.js /tmp/client-bridge.mjs
+          cp cloudflare/25withcoding-security-gateway-v2/client-loader.js /tmp/client-loader.mjs
+          node --check /tmp/client-bridge.mjs
+          node --check /tmp/client-loader.mjs
           node --check script.js
       - name: Check admin page module syntax
         run: |
@@ -52,7 +54,8 @@ jobs:
           import tomllib
           with open("cloudflare/25withcoding-security-gateway-v2/wrangler.toml", "rb") as f:
               config = tomllib.load(f)
-          assert config["name"] == "25withcoding-security-gateway-v2"
+          assert config["name"] == "25withcoding-security-gateway-v2-staging"
+          assert config["env"]["production"]["name"] == "25withcoding-security-gateway-v2"
           assert config["kv_namespaces"][0]["binding"] == "SECURITY_KV"
           assert config["services"][0]["binding"] == "LEGACY_SECURITY"
           PY
