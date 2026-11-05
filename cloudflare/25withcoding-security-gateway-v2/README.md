@@ -73,4 +73,4 @@ Before attaching production routes:
 6. Obtain the school's responsible adult's approval for collecting students' access records.
 7. Verify the exact production route list, including www if used, before changing any route.
 
-Current status: code, staging KV namespace, and draft PR are prepared. No Worker has been deployed, no signing secret has been set, no Cloudflare route has been changed, and no Firestore rule has been changed.
+Current status (2026-11-05): the staging Worker is deployed at https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev with the dedicated staging KV namespace and a Cloudflare-managed DEVICE_SIGNING_SECRET. GitHub Actions syntax checks and live staging smoke tests pass, including persistent device-cookie reuse, 90-day status, unauthenticated session rejection, CORS preflight, and 401 responses from all admin read endpoints. The Worker is not attached to any production route. No production route, DNS setting, existing Worker, or Firestore rule has been changed. Production deployment and end-to-end origin/service-binding regression tests remain pending.
