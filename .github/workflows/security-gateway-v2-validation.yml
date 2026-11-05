@@ -24,6 +24,8 @@ jobs:
           node --check /tmp/client-bridge.mjs
           node --check /tmp/client-loader.mjs
           node --check script.js
+      - name: Test IP block enforcement
+        run: node --test tests/security-gateway-ip-block.test.mjs
       - name: Check admin page module syntax
         run: |
           python3 - <<'PY'
