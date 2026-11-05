@@ -72,6 +72,8 @@ jobs:
           test "$SESSION_STATUS" = "401"
           OPTIONS_STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' --request OPTIONS --header 'Origin: https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev' "$BASE/session")"
           test "$OPTIONS_STATUS" = "204"
+          LEGACY_OPTIONS_STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' --request OPTIONS --header 'Origin: https://25withcoding.kr' "https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev/api/security/visit")"
+          test "$LEGACY_OPTIONS_STATUS" = "204"
           for endpoint in devices sessions events blocks; do
             ADMIN_STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' "$BASE/admin/$endpoint")"
             test "$ADMIN_STATUS" = "401"
