@@ -12,6 +12,18 @@
 
   const pagePath = window.location.pathname || "/";
 
+  // Show the IP-collection notice only on the main homepage.
+  if (pagePath === "/") {
+    const footer = document.querySelector(".footer");
+    if (footer && !footer.querySelector(".ip-collection-notice")) {
+      const notice = document.createElement("p");
+      notice.className = "ip-collection-notice";
+      notice.textContent = "저희는 여러분의 IP주소를 수집합니다.";
+      notice.style.cssText = "margin:8px 0 0;color:#aaa;font-size:11px;font-weight:400;line-height:1.5;opacity:1;";
+      footer.appendChild(notice);
+    }
+  }
+
   // Do not track browser-local special schemes or malformed paths.
   if (
     !pagePath.startsWith("/") ||
