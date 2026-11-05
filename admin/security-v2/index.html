@@ -41,21 +41,21 @@ input[type=search]{flex:1;min-width:180px}table{width:100%;border-collapse:colla
     <button class="tab" data-tab="blocks">차단 관리</button>
   </nav>
   <section class="panel" id="devicesPanel"><h2>등록된 브라우저 기기</h2><div class="toolbar"><input type="search" id="deviceSearch" placeholder="기기 ID, 브라우저, 운영체제 검색"></div><div class="table-wrap"><table><thead><tr><th>기기 ID</th><th>환경</th><th>최초 접속</th><th>최근 접속</th></tr></thead><tbody id="devicesBody"><tr><td colspan="4">데이터를 불러오는 중…</td></tr></tbody></table></div></section>
-  <section class="panel hidden" id="eventsPanel"><h2>상세 접속 기록 (최근 500건)</h2><div class="toolbar"><input type="search" id="eventSearch" placeholder="IP, 학번, 기기, 경로 검색"></div><div class="table-wrap"><table><thead><tr><th>시각</th><th>IP / 추정 위치</th><th>계정</th><th>기기 / 브라우저</th><th>요청</th></tr></thead><tbody id="eventsBody"><tr><td colspan="5">데이터를 불러오는 중…</td></tr></tbody></table></div></section>
+  <section class="panel hidden" id="eventsPanel"><h2>상세 접속 기록 (최근 500건)</h2><div class="toolbar"><input type="search" id="eventSearch" placeholder="IP, 학번, 기기, 경로 검색"></div><div class="table-wrap"><table><thead><tr><th>시각</th><th>IP / 추정 위치</th><th>계정</th><th>기기 / 브라우저</th><th>요청</th><th>관리</th></tr></thead><tbody id="eventsBody"><tr><td colspan="5">데이터를 불러오는 중…</td></tr></tbody></table></div></section>
   <section class="panel hidden" id="sessionsPanel"><h2>로그인 세션</h2><div class="table-wrap"><table><thead><tr><th>세션 ID</th><th>학번</th><th>UID</th><th>기기 ID</th><th>최근 접속</th></tr></thead><tbody id="sessionsBody"><tr><td colspan="5">데이터를 불러오는 중…</td></tr></tbody></table></div></section>
   <section class="panel hidden" id="blocksPanel"><h2>차단 등록 및 해제</h2>
     <form class="form" id="blockForm">
       <select id="blockType"><option value="ip">IP 주소</option><option value="device">Device ID</option><option value="account">Firebase UID</option><option value="session">Session ID</option></select>
-      <input id="blockTarget" placeholder="차단 대상" required>
+      <input id="blockTarget" placeholder="IP 주소 / 기기 ID / UID / 세션 ID" maxlength="128" required>
       <input id="blockReason" placeholder="차단 사유" maxlength="300" required>
       <button class="primary" type="submit">차단 등록</button>
     </form>
-    <div class="sub">계정 차단 대상에는 학번이 아니라 Firebase UID를 입력합니다. IP 차단은 같은 공용 네트워크의 다른 이용자에게도 영향을 줄 수 있습니다.</div>
+    <div class="sub">계정 차단 대상에는 학번이 아니라 Firebase UID를 입력합니다. IP 차단은 같은 공용 네트워크를 사용하는 다른 이용자에게도 영향을 줄 수 있으니, 접속 기록과 사유를 확인한 뒤 등록하세요.</div>
     <div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>종류</th><th>대상</th><th>사유</th><th>등록자</th><th>등록 시각</th><th>작업</th></tr></thead><tbody id="blocksBody"><tr><td colspan="6">데이터를 불러오는 중…</td></tr></tbody></table></div>
   </section>
 </main>
 <script type="module">
-import { requireAdmin } from "../js/auth.js";
+import { getCurrentUser } from "../js/auth.js";
 import { app } from "../js/firebase.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 const API="/api/security/v2/admin";
@@ -88,7 +88,8 @@ function render(){
   rows("eventsBody",data.events.filter(x=>JSON.stringify(x).toLowerCase().includes(eq)),[
     x=>date(x.timestamp),x=>esc([x.ip,x.city,x.region,x.country].filter(Boolean).join(" · ")),
     x=>esc(x.accountId||"비로그인"),x=>esc([x.deviceType,x.os,x.browser].filter(Boolean).join(" · ")),
-    x=>esc(x.method+" "+x.path)
+    x=>esc(x.method+" "+x.path),
+    x=>x.ip&&x.ip!=="unknown" ? '<button type="button" data-block-ip="'+esc(x.ip)+'">이 IP 차단</button>' : '<span class="muted">—</span>'
   ],"접속 기록이 없습니다.");
   rows("sessionsBody",data.sessions,[
     x=>"<code>"+esc(x.sessionId)+"</code>",x=>esc(x.accountId),x=>"<code>"+esc(x.uid)+"</code>",
@@ -118,10 +119,16 @@ $("deviceSearch").oninput=render;$("eventSearch").oninput=render;
 $("blockForm").onsubmit=async event=>{
   event.preventDefault();
   const type=$("blockType").value,target=$("blockTarget").value.trim(),reason=$("blockReason").value.trim();
-  if(!confirm(type+" 유형의 대상을 차단할까요?"))return;
+  const warning=type==="ip"?"\n같은 공용 네트워크의 다른 이용자도 영향을 받을 수 있습니다.":"";
+  if(!confirm(type+" 유형의 대상 "+target+"을(를) 차단할까요?"+warning))return;
   try{await api("/blocks",{method:"POST",body:JSON.stringify({type,target,reason})});$("blockTarget").value="";$("blockReason").value="";await load();}
   catch(error){showError(error);}
 };
+$("eventsBody").addEventListener("click",event=>{
+  const button=event.target.closest("[data-block-ip]");if(!button)return;
+  $("blockType").value="ip";$("blockTarget").value=button.dataset.blockIp;$("blockReason").focus();
+  document.querySelector('.tab[data-tab="blocks"]').click();
+});
 $("blocksBody").addEventListener("click",async event=>{
   const button=event.target.closest("[data-unblock]");if(!button)return;
   const reason=prompt("차단 해제 사유를 입력하세요.");if(!reason?.trim())return;
@@ -129,7 +136,7 @@ $("blocksBody").addEventListener("click",async event=>{
   catch(error){showError(error);}
 });
 function showError(error){$("status").textContent="연결 실패";alert("보안 센터: "+error.message);}
-try{const user=await requireAdmin();$("adminName").textContent=(user.name||"관리자")+" · 관리자 인증 완료";await load();}
+try{const user=await getCurrentUser();const allowedRoles=["admin","president","vice","committee_chair"];if(!allowedRoles.includes(user.role)){alert("관리자 권한이 없습니다.");location.href="/";throw new Error("권한 없음");}$("adminName").textContent=(user.name||"관리자")+" · 관리자 인증 완료";await load();}
 catch(error){showError(error);}
 </script>
 <script src="/script.js" defer></script>
