@@ -531,6 +531,28 @@ async function handleApi(request, env, ctx) {
   return json({ error: "Not found" }, 404);
 }
 
+async function fetchOrigin(request, env) {
+  // Staging-only read-only origin mapping lets workers.dev exercise real site assets.
+  // Production never receives STAGING_ORIGIN and uses the request's normal origin.
+  if (env.STAGING_ORIGIN && (request.method === "GET" || request.method === "HEAD")) {
+    const target = new URL(request.url);
+    const origin = new URL(env.STAGING_ORIGIN);
+    target.protocol = origin.protocol;
+    target.hostname = origin.hostname;
+    target.port = origin.port;
+    target.search = "";
+    target.hash = "";
+    const headers = new Headers(request.headers);
+    headers.delete("host");
+    return fetch(new Request(target.toString(), {
+      method: request.method,
+      headers,
+      redirect: "manual"
+    }));
+  }
+  return fetch(request);
+}
+
 async function passThrough(request, env, ctx, deviceCookie = null) {
   let response;
   try {
@@ -542,7 +564,7 @@ async function passThrough(request, env, ctx, deviceCookie = null) {
       }
       response = await env.LEGACY_SECURITY.fetch(request);
     } else {
-      response = await fetch(request);
+      response = await fetchOrigin(request, env);
     }
   } catch (error) {
     console.error("Gateway origin fetch failed", String(error?.message || error));
