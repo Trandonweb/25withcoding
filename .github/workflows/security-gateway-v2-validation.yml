@@ -62,7 +62,14 @@ jobs:
 
       - name: Smoke test isolated staging Worker
         run: |
-          BASE="https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev/api/security/v2"
+          WORKER_ORIGIN="https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev"
+          BASE="$WORKER_ORIGIN/api/security/v2"
+          ROOT_STATUS="$(curl --silent --show-error --output /tmp/25wc-home.html --write-out '%{http_code}' "$WORKER_ORIGIN/")"
+          test "$ROOT_STATUS" = "200"
+          grep -qi '<html' /tmp/25wc-home.html
+          SCRIPT_STATUS="$(curl --silent --show-error --output /tmp/25wc-script.js --write-out '%{http_code}' "$WORKER_ORIGIN/script.js")"
+          test "$SCRIPT_STATUS" = "200"
+          grep -q 'shared page-visit tracker' /tmp/25wc-script.js
           STATUS="$(curl --fail --silent --show-error "$BASE/status")"
           echo "$STATUS" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["active"] is True; assert d["retentionDays"] == 90; assert d["deviceIdEnabled"] is True'
           FIRST="$(curl --silent --show-error --cookie-jar /tmp/25wc-cookies.txt --cookie /tmp/25wc-cookies.txt --request POST "$BASE/device")"
