@@ -1,6 +1,6 @@
 # 25WITHCODING Security Gateway v2
 
-This is an isolated Cloudflare Worker implementation. The default Wrangler target is a staging Worker with its own empty KV namespace. It is not attached to any production route by this change.
+This is an isolated Cloudflare Worker implementation. The default Wrangler target is a staging Worker with a dedicated KV namespace containing only synthetic smoke-test records. It is not attached to any production route by this change.
 
 ## Safety boundaries
 
@@ -20,7 +20,8 @@ This is an isolated Cloudflare Worker implementation. The default Wrangler targe
 - Production KV namespace: 81bf43ec03e94d9e88f6235a029cc15e (only under Wrangler env production).
 - Both environments bind the existing Worker 25withcoding-security as LEGACY_SECURITY.
 - Set DEVICE_SIGNING_SECRET separately as a Worker secret with at least 32 characters of random entropy. Never commit it to Git.
-- Optional staging override: set ALLOWED_ORIGIN to the staging origin. The default is https://25withcoding.kr.
+- Staging ALLOWED_ORIGIN is the workers.dev staging origin. STAGING_ORIGIN is set only for staging and rewrites read-only GET/HEAD requests to https://25withcoding.kr so HTML and static assets can be smoke-tested without a production route. Query strings are stripped in this staging-only path.
+- The production Wrangler environment sets ALLOWED_ORIGIN to https://25withcoding.kr and does not define STAGING_ORIGIN.
 
 ## API
 
@@ -67,10 +68,10 @@ Requests under the old /api/security/* path (except /api/security/v2/*) are forw
 Before attaching production routes:
 1. Deploy and test the default staging Worker using its isolated KV namespace.
 2. Confirm the LEGACY_SECURITY service binding and test the legacy /visit, /events, /blocks and review APIs.
-3. Test origin passthrough for HTML, JS, CSS, images, redirects, uploads and POST requests.
+3. Test origin passthrough for HTML, JS and image assets in staging (basic GET/HEAD path is covered); separately test CSS, redirects, uploads and POST requests before production.
 4. Verify the Firebase bridge on ordinary pages only. Do not modify COBY, /signin, /signout, password_change, or memo.
 5. Add and verify the visible privacy notice explaining the detailed 90-day access log. The prepared notice is at /privacy/security/.
 6. Obtain the school's responsible adult's approval for collecting students' access records.
 7. Verify the exact production route list, including www if used, before changing any route.
 
-Current status (2026-11-05): the staging Worker is deployed at https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev with the dedicated staging KV namespace and a Cloudflare-managed DEVICE_SIGNING_SECRET. GitHub Actions syntax checks and live staging smoke tests pass, including persistent device-cookie reuse, 90-day status, unauthenticated session rejection, CORS preflight, and 401 responses from all admin read endpoints. The Worker is not attached to any production route. No production route, DNS setting, existing Worker, or Firestore rule has been changed. Production deployment and end-to-end origin/service-binding regression tests remain pending.
+Current status (2026-11-05): the staging Worker is deployed at https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev with the dedicated staging KV namespace and a Cloudflare-managed DEVICE_SIGNING_SECRET. GitHub Actions syntax checks and live staging smoke tests pass, including homepage HTML, shared JavaScript and PNG asset passthrough, persistent device-cookie reuse, 90-day status, unauthenticated session rejection, CORS preflight, 401 responses from all admin read endpoints, and a safe OPTIONS request forwarded through the legacy Worker service binding. The Worker is not attached to any production route. No production route, DNS setting, existing Worker, or Firestore rule has been changed. Production deployment and end-to-end origin/service-binding regression tests remain pending.
