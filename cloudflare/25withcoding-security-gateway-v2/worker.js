@@ -472,6 +472,10 @@ async function handleApi(request, env, ctx) {
       const allowed = ["ip", "device", "account", "session"];
       if (!allowed.includes(type) || !target || !reason) return json({ error: "Invalid block request" }, 400);
       if (type === "ip" && !isValidIP(target)) return json({ error: "Invalid IP" }, 400);
+      // Prevent an administrator from accidentally locking out the IP used by this request.
+      if (type === "ip" && target === getIP(request)) {
+        return json({ error: "Cannot block the current administrator IP from this connection." }, 409);
+      }
       if (type === "device" && !/^dev_[a-f0-9-]{36}$/i.test(target)) return json({ error: "Invalid device ID" }, 400);
       if (type === "account" && !/^[\w-]{10,128}$/.test(target)) return json({ error: "Invalid UID" }, 400);
       if (type === "session" && !/^ses_[a-f0-9-]{36}$/i.test(target)) return json({ error: "Invalid session ID" }, 400);
