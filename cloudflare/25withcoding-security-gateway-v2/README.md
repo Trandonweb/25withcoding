@@ -59,6 +59,7 @@ Requests under the old /api/security/* path (except /api/security/v2/*) are forw
 - Signed cookies are Secure, HttpOnly, SameSite=Lax and Path=/.
 - Gateway sessions last one hour and are bound to the signed device cookie. The KV session record is checked on every request, so deleting it revokes the cookie after KV propagation.
 - KV is eventually consistent. Do not promise instantaneous global revocation.
+- The admin API rejects an IP-block request when the target matches the administrator's current request IP, reducing accidental self-lockout.
 - On KV lookup failure, the gateway fails open to preserve availability. Monitoring is required because enforcement may be bypassed during an outage.
 - IP geolocation and ASN/organization metadata are approximate and cannot identify a person.
 - The event index stores the newest records first for the admin view. The dashboard currently displays up to 500 recent events.
