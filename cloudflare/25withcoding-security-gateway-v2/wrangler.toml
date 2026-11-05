@@ -13,6 +13,9 @@ id = "3d2a25573f2c462f8aca91c675d8c224"
 binding = "LEGACY_SECURITY"
 service = "25withcoding-security"
 
+[vars]
+ALLOWED_ORIGIN = "https://25withcoding-security-gateway-v2-staging.trandonwebtoon.workers.dev"
+
 [observability]
 enabled = true
 head_sampling_rate = 0.1
@@ -25,6 +28,9 @@ head_sampling_rate = 0.01
 [env.production]
 name = "25withcoding-security-gateway-v2"
 workers_dev = false
+
+[env.production.vars]
+ALLOWED_ORIGIN = "https://25withcoding.kr"
 
 [[env.production.kv_namespaces]]
 binding = "SECURITY_KV"
