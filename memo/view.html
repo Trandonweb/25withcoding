@@ -157,9 +157,44 @@ const firebaseConfig={apiKey:"AIzaSyCN6oIrvun0LDBJ940l5c7-cfRrJuePIA",authDomain
 function getStoredSettings(){const saved=localStorage.getItem(SETTINGS_KEY);if(saved){try{return{...defaultSettings,...JSON.parse(saved)}}catch(e){return defaultSettings}}return defaultSettings}function saveStoredSettings(settings){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}function applySettings(settings){document.body.classList.toggle("dark-mode",!!settings.darkMode);if(settings.primaryColor)document.documentElement.style.setProperty('--primary-color',settings.primaryColor)}const initialSettings=getStoredSettings();applySettings(initialSettings);
 const currentUser = localStorage.getItem("userId");
 function isNotice(title){return!!title&&title.startsWith("!@#")&&title.endsWith("#@!")}
-async function load(){memoRef=doc(db,"notes",id);const snap=await getDoc(memoRef);if(!snap.exists()){alert("메모 없음");location.href="index.html";return}memoData=snap.data();document.getElementById("title").innerText=(memoData.title||"").replace("!@#","").replace("#@!","").trim()||"제목 없음";let dateString="알 수 없음";if(memoData.createdAt){const d=new Date(memoData.createdAt);if(!isNaN(d.getTime()))dateString=d.toLocaleString()}document.getElementById("meta").innerText=`👤 ${memoData.authorName||"unknown"} &nbsp;|&nbsp; 🕒 ${dateString}`;if(isNotice(memoData.title)){document.getElementById("pinBox").style.display="none";document.getElementById("content").style.display="block";document.getElementById("actions").style.display="flex";document.getElementById("content").innerText=memoData.content||""}}
+async function isAdminViewer(){
+  try {
+    const { authUser, authApi } = await waitForSignedInUser();
+    if (!authUser) return false;
+    const tokenResult = await authApi.getIdTokenResult(authUser, true);
+    return tokenResult.claims.admin === true;
+  } catch (error) {
+    console.warn("관리자 권한 확인 실패:", error);
+    return false;
+  }
+}
+async function load(){
+  memoRef=doc(db,"notes",id);
+  const snap=await getDoc(memoRef);
+  if(!snap.exists()){alert("메모 없음");location.href="index.html";return}
+  memoData=snap.data();
+  document.getElementById("title").innerText=(memoData.title||"").replace("!@#","").replace("#@!","").trim()||"제목 없음";
+  let dateString="알 수 없음";
+  if(memoData.createdAt){const d=new Date(memoData.createdAt);if(!isNaN(d.getTime()))dateString=d.toLocaleString()}
+  document.getElementById("meta").innerText=`👤 ${memoData.authorName||"unknown"} &nbsp;|&nbsp; 🕒 ${dateString}`;
+  if(isNotice(memoData.title)){
+    document.getElementById("pinBox").style.display="none";
+    document.getElementById("content").style.display="block";
+    document.getElementById("actions").style.display="flex";
+    document.getElementById("content").innerText=memoData.content||"";
+    return;
+  }
+  // 관리자 custom claim이 서버에서 확인된 경우에만 PIN 입력을 생략한다.
+  if(await isAdminViewer()) revealMemo();
+}
+function revealMemo(){
+  document.getElementById("pinBox").style.display="none";
+  document.getElementById("actions").style.display="flex";
+  document.getElementById("content").style.display="block";
+  document.getElementById("content").innerText=memoData.content||"";
+}
 const pinInput=document.getElementById("pinInput");pinInput.addEventListener("input",()=>{let value=pinInput.value.replace(/\D/g,"");if(value.length>8)value=value.slice(0,8);pinInput.value=value});pinInput.addEventListener("keydown",e=>{if(e.key==="Enter")checkPin()});
-function checkPin(){const pin=pinInput.value;if(pin!==memoData.pin){alert("PIN 틀림");return}document.getElementById("pinBox").style.display="none";document.getElementById("actions").style.display="flex";document.getElementById("content").style.display="block";document.getElementById("content").innerText=memoData.content||""}
+function checkPin(){const pin=pinInput.value;if(pin!==memoData.pin){alert("PIN 틀림");return}revealMemo()}
 function showCopyToast(){const toast=document.getElementById("copyToast");clearTimeout(copyToastTimer);toast.classList.remove("show");void toast.offsetWidth;toast.classList.add("show");copyToastTimer=setTimeout(()=>toast.classList.remove("show"),2000)}
 async function copyMemo(){const content=memoData?.content||"";let copied=false;try{await navigator.clipboard.writeText(content);copied=true}catch(error){const textarea=document.createElement("textarea");textarea.value=content;textarea.style.position="fixed";textarea.style.left="-9999px";document.body.appendChild(textarea);textarea.focus();textarea.select();try{copied=document.execCommand("copy")}catch(fallbackError){copied=false}finally{document.body.removeChild(textarea)}}if(copied)showCopyToast()}
 async function deleteMemo(){
