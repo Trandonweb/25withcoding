@@ -50,26 +50,20 @@ const pointsConfig = {
   appId: "1:248724251417:web:02d85cdc4addac98069b88"
 };
 
-// 조회 단계에서는 로그인 SDK를 초기화하지 않는다.
-// 실제 공지 삭제를 누른 경우에만 인증 SDK와 계정 DB를 불러온다.
+// 메모 열람용 관리자 확인: 사이트 로그인과 동일한 points2026 Firebase Auth 세션을 사용한다.
 async function waitForSignedInUser() {
-  const [{ getAuth, onAuthStateChanged }, { getFirestore }] = await Promise.all([
+  const [{ getAuth }, authApi] = await Promise.all([
     import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
-    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js")
   ]);
-  const pointsApp = initializeApp(pointsConfig);
+  const pointsApp = initializeApp(pointsConfig, "memo-points-auth");
   const pointsAuth = getAuth(pointsApp);
-  const pointsDb = getFirestore(pointsApp);
-  const authUser = await new Promise((resolve, reject) => {
-    const unsubscribe = onAuthStateChanged(pointsAuth, user => {
-      unsubscribe();
-      resolve(user);
-    }, error => {
-      unsubscribe();
-      reject(error);
-    });
-  });
-  return { authUser, pointsDb, authApi: await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js") };
+  await pointsAuth.authStateReady();
+  return {
+    authUser: pointsAuth.currentUser,
+    pointsDb: getFirestore(pointsApp),
+    authApi
+  };
 }
 
 function askPasswordMasked(message) {
@@ -159,10 +153,19 @@ const currentUser = localStorage.getItem("userId");
 function isNotice(title){return!!title&&title.startsWith("!@#")&&title.endsWith("#@!")}
 async function isAdminViewer(){
   try {
-    const { authUser, authApi } = await waitForSignedInUser();
-    if (!authUser) return false;
-    const tokenResult = await authApi.getIdTokenResult(authUser, true);
-    return tokenResult.claims.admin === true;
+    const { authUser, pointsDb, authApi } = await waitForSignedInUser();
+    const studentId = (authUser?.email || "").match(/^(\\d{5})@auth\\.25withcoding\\.kr$/i)?.[1];
+    if (!authUser || !studentId) return false;
+
+    // 1순위: Firebase Authentication의 서버 발급 admin Custom Claim
+    const tokenResult = await authApi.getIdTokenResult(authUser);
+    if (tokenResult.claims.admin === true) return true;
+
+    // 기존 메모 관리자 권한 체계와 동일하게 회장/부회장 역할도 관리자 열람 허용
+    const profileSnap = await getDoc(doc(pointsDb, "users", studentId));
+    if (!profileSnap.exists()) return false;
+    const role = profileSnap.data()?.role;
+    return role === "president" || role === "vice";
   } catch (error) {
     console.warn("관리자 권한 확인 실패:", error);
     return false;
