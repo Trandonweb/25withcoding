@@ -121,15 +121,23 @@ async function audit(env, action, ip, details = {}) {
 
 async function recordEvent(env, request, action, details = {}) {
   const id = crypto.randomUUID();
-
+  const requestUrl = new URL(request.url);
+  const path = details.path || requestUrl.pathname;
   const event = {
     id,
     action,
+    type: action,
     ip: getClientIP(request),
-    method: request.method,
-    path: new URL(request.url).pathname,
+    url: path,
+    path,
+    method: details.method || request.method,
+    statusCode: Number.isInteger(details.statusCode) ? details.statusCode : null,
     country: request.cf?.country || null,
     userAgent: request.headers.get("User-Agent") || "",
+    studentId: details.studentId || null,
+    loginStatus: details.loginStatus || (details.studentId ? "logged_in" : "logged_out"),
+    loginAttempt: Boolean(details.loginAttempt),
+    apiAttempt: typeof details.apiAttempt === "boolean" ? details.apiAttempt : path.startsWith("/api/"),
     details,
     reviewed: false,
     timestamp: new Date().toISOString()
@@ -144,32 +152,17 @@ async function recordEvent(env, request, action, details = {}) {
   return event;
 }
 
-// ----------------------------------------
-// 페이지 방문 기록
-// ----------------------------------------
-
-async function recordPageVisit(env, request, pagePath) {
-  const id = crypto.randomUUID();
-
-  const event = {
-    id,
-    action: "page_visit",
-    ip: getClientIP(request),
-    method: "PAGE",
+// Backward-compatible page visit recorder.
+async function recordPageVisit(env, request, pagePath, statusCode = null, studentId = null) {
+  return recordEvent(env, request, "page_visit", {
     path: pagePath,
-    country: request.cf?.country || null,
-    details: {},
-    reviewed: false,
-    timestamp: new Date().toISOString()
-  };
-
-  await env.SECURITY_KV.put(
-    `event:${id}`,
-    JSON.stringify(event),
-    { expirationTtl: EVENT_TTL }
-  );
-
-  return event;
+    method: "GET",
+    statusCode,
+    studentId,
+    loginStatus: studentId ? "logged_in" : "logged_out",
+    loginAttempt: false,
+    apiAttempt: false
+  });
 }
 
 // ----------------------------------------
@@ -418,6 +411,14 @@ async function getEvents(env, limit) {
     new Date(b.timestamp) - new Date(a.timestamp)
   );
 
+  const countsByIP = new Map();
+  for (const event of events) {
+    if (event.ip) countsByIP.set(event.ip, (countsByIP.get(event.ip) || 0) + 1);
+  }
+  for (const event of events) {
+    event.ipRequestCount = event.ip ? (countsByIP.get(event.ip) || 0) : 0;
+  }
+
   return events.slice(0, limit);
 }
 
@@ -549,12 +550,97 @@ async function handleRequest(request, env) {
       }, 400);
     }
 
-    await recordPageVisit(env, request, pagePath);
+    let visitStudentId = null;
+    const visitAuthorization = request.headers.get("Authorization") || "";
+    const visitToken = visitAuthorization.startsWith("Bearer ") ? visitAuthorization.slice(7).trim() : "";
+    if (visitToken) {
+      const claims = await verifyFirebaseIdToken(visitToken);
+      const match = String(claims?.email || "").toLowerCase().match(/^(\\d{5})@auth\\.25withcoding\\.kr$/);
+      if (match) visitStudentId = match[1];
+    }
+
+    const visitStatus = Number.isInteger(body.statusCode) && body.statusCode >= 100 && body.statusCode <= 599
+      ? body.statusCode
+      : null;
+    await recordPageVisit(env, request, pagePath, visitStatus, visitStudentId);
 
     return json({
       success: true,
       message: "Visit recorded"
     });
+  }
+
+  // --------------------------------------
+  // Same-origin browser telemetry (page views, API attempts, login attempts)
+  // --------------------------------------
+  if (
+    path === `${API_PREFIX}/telemetry` &&
+    request.method === "POST"
+  ) {
+    const origin = request.headers.get("Origin") || "";
+    if (origin !== "https://25withcoding.kr") {
+      return json({ error: "Forbidden origin" }, 403);
+    }
+    if (!(request.headers.get("Content-Type") || "").toLowerCase().includes("application/json")) {
+      return json({ error: "JSON required" }, 415);
+    }
+
+    const rawBody = await request.text();
+    if (rawBody.length > 2048) return json({ error: "Request too large" }, 413);
+
+    let body;
+    try { body = JSON.parse(rawBody); }
+    catch { return json({ error: "Invalid JSON" }, 400); }
+
+    const pagePath = body?.path;
+    const allowedKinds = ["page_visit", "api_request", "login_attempt", "login_success", "login_failure"];
+    const kind = allowedKinds.includes(body?.kind) ? body.kind : "";
+    const method = String(body?.method || "GET").toUpperCase();
+    const statusCode = Number.isInteger(body?.statusCode) && body.statusCode >= 100 && body.statusCode <= 599
+      ? body.statusCode
+      : null;
+
+    if (
+      !kind ||
+      typeof pagePath !== "string" ||
+      pagePath.length < 1 ||
+      pagePath.length > 200 ||
+      !pagePath.startsWith("/") ||
+      pagePath.startsWith("//") ||
+      pagePath.includes("?") ||
+      pagePath.includes("#") ||
+      pagePath.includes("\\") ||
+      /[\u0000-\u001F\u007F]/.test(pagePath) ||
+      !["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"].includes(method)
+    ) {
+      return json({ error: "Invalid telemetry payload" }, 400);
+    }
+
+    let studentId = null;
+    const authorization = request.headers.get("Authorization") || "";
+    const idToken = authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+    if (idToken) {
+      const claims = await verifyFirebaseIdToken(idToken);
+      const email = String(claims?.email || "").toLowerCase();
+      const match = email.match(/^(\\d{5})@auth\\.25withcoding\\.kr$/);
+      if (match) studentId = match[1];
+    }
+
+    if (kind === "login_success" && !studentId) {
+      return json({ error: "Authenticated token required" }, 401);
+    }
+
+    await recordEvent(env, request, kind, {
+      path: pagePath,
+      method,
+      statusCode,
+      studentId,
+      loginStatus: studentId ? "logged_in" : "logged_out",
+      loginAttempt: kind.startsWith("login_"),
+      apiAttempt: kind === "api_request" || pagePath.startsWith("/api/")
+    });
+
+    return json({ success: true });
   }
 
   // --------------------------------------
@@ -564,12 +650,6 @@ async function handleRequest(request, env) {
   const admin = await verifyAdmin(request, env);
 
   if (!admin) {
-    await recordEvent(
-      env,
-      request,
-      "authentication_denied"
-    );
-
     return json({
       error: "Unauthorized"
     }, 401);
@@ -791,7 +871,37 @@ async function handleRequest(request, env) {
 export default {
   async fetch(request, env) {
     try {
-      return await handleRequest(request, env);
+      const response = await handleRequest(request, env);
+      const path = new URL(request.url).pathname;
+      if (
+        env.SECURITY_KV &&
+        path.startsWith(API_PREFIX) &&
+        path !== `${API_PREFIX}/visit` &&
+        path !== `${API_PREFIX}/telemetry` &&
+        request.method !== "OPTIONS"
+      ) {
+        let studentId = null;
+        const authorization = request.headers.get("Authorization") || "";
+        const idToken = authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+        if (idToken) {
+          const claims = await verifyFirebaseIdToken(idToken);
+          const match = String(claims?.email || "").toLowerCase().match(/^(\\d{5})@auth\\.25withcoding\\.kr$/);
+          if (match) studentId = match[1];
+        }
+        await recordEvent(
+          env,
+          request,
+          response.status === 401 ? "api_authentication_denied" : "api_request",
+          {
+            statusCode: response.status,
+            studentId,
+            loginStatus: studentId ? "logged_in" : "logged_out",
+            loginAttempt: false,
+            apiAttempt: true
+          }
+        );
+      }
+      return response;
     } catch (error) {
       // 상세 오류는 Worker 로그에만 기록
       console.error(
