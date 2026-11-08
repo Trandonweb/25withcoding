@@ -590,8 +590,10 @@ export default {
     // The gateway's API is explicitly namespaced; unrelated paths remain origin pass-through.
     if (path.startsWith(API + "/")) return handleApi(request, env, ctx);
 
-    // Fail open if configuration is incomplete: this worker must not take the school site offline.
-    if (!env.SECURITY_KV || !signingSecretReady(env)) {
+    // IP blocking and request logging only require SECURITY_KV.
+    // Device/session features may remain unavailable until DEVICE_SIGNING_SECRET is configured;
+    // do not disable site-wide IP enforcement just because that optional secret is absent.
+    if (!env.SECURITY_KV) {
       return passThrough(request, env, ctx);
     }
 
