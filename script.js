@@ -32,10 +32,21 @@
 
   authReady = (async () => {
     try {
-      const [{ app }, firebaseAuth] = await Promise.all([
-        import("/admin/js/firebase.js"),
+      const [firebaseApp, firebaseAuth] = await Promise.all([
+        import("https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"),
         import("https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js")
       ]);
+      const config = {
+        apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+        authDomain: "points2026-f5e50.firebaseapp.com",
+        projectId: "points2026-f5e50",
+        storageBucket: "points2026-f5e50.firebasestorage.app",
+        messagingSenderId: "248724251417",
+        appId: "1:248724251417:web:02d85cdc4addac98069b88"
+      };
+      const app = firebaseApp.getApps().length
+        ? firebaseApp.getApp()
+        : firebaseApp.initializeApp(config);
       auth = firebaseAuth.getAuth(app);
       await new Promise(resolve => {
         let unsubscribe = () => {};
