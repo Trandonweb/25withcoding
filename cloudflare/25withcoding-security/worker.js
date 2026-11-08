@@ -555,7 +555,7 @@ async function handleRequest(request, env) {
     const visitToken = visitAuthorization.startsWith("Bearer ") ? visitAuthorization.slice(7).trim() : "";
     if (visitToken) {
       const claims = await verifyFirebaseIdToken(visitToken);
-      const match = String(claims?.email || "").toLowerCase().match(/^(\\d{5})@auth\\.25withcoding\\.kr$/);
+      const match = String(claims?.email || "").toLowerCase().match(/^(\d{5})@auth\.25withcoding\.kr$/);
       if (match) visitStudentId = match[1];
     }
 
@@ -622,7 +622,7 @@ async function handleRequest(request, env) {
     if (idToken) {
       const claims = await verifyFirebaseIdToken(idToken);
       const email = String(claims?.email || "").toLowerCase();
-      const match = email.match(/^(\\d{5})@auth\\.25withcoding\\.kr$/);
+      const match = email.match(/^(\d{5})@auth\.25withcoding\.kr$/);
       if (match) studentId = match[1];
     }
 
@@ -885,7 +885,7 @@ export default {
         const idToken = authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
         if (idToken) {
           const claims = await verifyFirebaseIdToken(idToken);
-          const match = String(claims?.email || "").toLowerCase().match(/^(\\d{5})@auth\\.25withcoding\\.kr$/);
+          const match = String(claims?.email || "").toLowerCase().match(/^(\d{5})@auth\.25withcoding\.kr$/);
           if (match) studentId = match[1];
         }
         await recordEvent(
