@@ -192,6 +192,28 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const SETTINGS_KEY = "coding_with_ramen_settings";
 
+async function reportLoginTelemetry(kind, token = null) {
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = "Bearer " + token;
+    await fetch("/api/security/telemetry", {
+      method: "POST",
+      headers,
+      credentials: "same-origin",
+      keepalive: true,
+      cache: "no-store",
+      body: JSON.stringify({
+        kind,
+        path: "/signin/",
+        method: "POST",
+        statusCode: null
+      })
+    });
+  } catch {
+    // Login must continue even if telemetry is unavailable.
+  }
+}
+
 function applyStoredSettings() {
   try {
     const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
@@ -259,10 +281,12 @@ window.login = async () => {
       console.warn("브라우저의 장기 로그인 저장을 사용할 수 없어 현재 탭 로그인으로 전환합니다.",persistenceError);
       await setPersistence(auth,browserSessionPersistence);
     }
+    await reportLoginTelemetry("login_attempt");
     const credential = await signInWithEmailAndPassword(auth, id + "@auth.25withcoding.kr", password);
     const verifiedStudentId = (credential.user?.email || "").match(/^(\d{5})@auth\.25withcoding\.kr$/i)?.[1] || "";
     if (verifiedStudentId !== id) throw new Error("AUTH_STUDENT_ID_MISMATCH");
-    await credential.user.getIdToken();
+    const loginToken = await credential.user.getIdToken();
+    await reportLoginTelemetry("login_success", loginToken);
 
     // 임시 인증 진단: 로그인 직후 세션 저장 여부만 기록한다(계정/토큰 값은 저장하지 않음).
     const authStorageKey = `firebase:authUser:${auth.app.options.apiKey}:${auth.app.name}`;
@@ -281,6 +305,7 @@ window.login = async () => {
     localStorage.removeItem("firebaseRefreshToken");
     location.replace(redirect);
   } catch (error) {
+    await reportLoginTelemetry("login_failure");
     console.error("Firebase 로그인 실패 코드:", error?.code || "unknown", error);
     const messages = {
       "auth/invalid-credential": "학번 계정이 없거나 비밀번호가 일치하지 않습니다. Firebase Authentication 사용자 목록에서 계정 상태를 확인해야 합니다.",
