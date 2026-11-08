@@ -129,9 +129,7 @@ export async function requireAdmin(){
 
     if(
 
-        user.role!=="president" &&
-
-        user.role!=="vice"
+        !["admin", "president", "vice", "committee_chair"].includes(user.role)
 
     ){
 
