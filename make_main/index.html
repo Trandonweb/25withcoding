@@ -178,11 +178,11 @@ async function saveAll(quiet=false){
   const snapshot=pages.map(saveablePage);
   for(let i=0;i<snapshot.length;i++){const path="make_main/page"+(i+1)+".json";await putFile(path,JSON.stringify(snapshot[i],null,2),"Save homepage design page "+(i+1));}
   const directory=await api("make_main");
-  for(const stale of directory.filter(x=>x.type==="file"&&/^page\\d+\\.json$/.test(x.name)&&Number(x.name.match(/\\d+/)[0])>snapshot.length)){await api("make_main/"+stale.name,"DELETE",{message:"Remove deleted homepage design page "+stale.name,sha:stale.sha});}
+  for(const stale of directory.filter(x=>x.type==="file"&&/^page\d+\.json$/.test(x.name)&&Number(x.name.match(/\\d+/)[0])>snapshot.length)){await api("make_main/"+stale.name,"DELETE",{message:"Remove deleted homepage design page "+stale.name,sha:stale.sha});}
   const latest=await api(MAIN_PATH);mainData=JSON.parse(decode64(latest.content));
   mainData.version=3;mainData.canvasPages=snapshot.map((p,i)=>({id:"canvas-"+p.id,type:"canvas",title:p.title||"페이지 "+(i+1),enabled:p.enabled!==false,startAt:p.startAt||"",endAt:p.endAt||"",canvasBackground:p.background||"#ffffff",objects:p.objects||[],order:i}));
   mainData.updatedAt=new Date().toISOString();mainData.updatedBy=adminUser?.id||"admin";
-  await api(MAIN_PATH,"PUT",{message:"Save homepage canvas project",sha:latest.sha,content:encode64(JSON.stringify(mainData,null,2)+"\\n")});
+  await api(MAIN_PATH,"PUT",{message:"Save homepage canvas project",sha:latest.sha,content:encode64(JSON.stringify(mainData,null,2)+"\n")});
   if(editRevision===savingRevision){lastSavedRevision=savingRevision;lastSavedAt=new Date();setSaveState("저장 완료 · "+lastSavedAt.toLocaleTimeString("ko-KR"),"saved");status("저장 완료 · "+snapshot.length+"개 페이지");}
   else{saveAgain=true;setSaveState("추가 변경 사항 저장 대기 중…","idle");}
   if(!quiet&&!saveAgain)alert("저장 완료! "+snapshot.length+"개 페이지를 GitHub에 저장했습니다.");
