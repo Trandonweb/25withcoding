@@ -239,7 +239,7 @@ async function importProjectFile(file){
   pushHistory();
   pages=incoming.map((p,i)=>({...p,id:p.id||id("page"),title:p.title||"페이지 "+(i+1),objects:p.objects.map(o=>({...o,id:o.id||id("obj")}))}));
   pageIndex=0;selectedId=null;renderAll();changed();setSaveState("프로젝트 파일을 열었습니다 · 사이트 저장 대기","idle");
- }catch(error){alert("프로젝트 파일을 열지 못했습니다.\\n"+error.message)}
+ }catch(error){alert("프로젝트 파일을 열지 못했습니다.\n"+error.message)}
 }
 async function saveAll(quiet=false){
  if(!connected){setSaveState("먼저 GitHub 저장 서버에 연결하세요.","error");if(!quiet)alert("먼저 관리자 인증 및 저장 서버 연결을 해주세요.");return}
@@ -273,7 +273,7 @@ async function loadPages(){
  const draft=readLocalDraft();
  if(draft){
   const when=draft.savedAt?new Date(draft.savedAt).toLocaleString("ko-KR"):"시간 정보 없음";
-  if(confirm("이 브라우저에 저장된 미전송 복구본이 있습니다. ("+when+")\\nGitHub의 최신 내용 대신 복구본을 불러올까요?")){
+  if(confirm("이 브라우저에 저장된 미전송 복구본이 있습니다. ("+when+")\nGitHub의 최신 내용 대신 복구본을 불러올까요?")){
    pages=draft.pages.map((p,i)=>({...p,id:p.id||id("page"),title:p.title||"페이지 "+(i+1),objects:p.objects.map(o=>({...o,id:o.id||id("obj")}))}));
    editRevision=1;lastSavedRevision=0;lastSavedAt=null;
    renderAll();setSaveState("브라우저 복구본 불러옴 · 사이트 저장 대기","idle");status("복구본 불러옴 · GitHub 저장 대기");scheduleSave(700);return;
