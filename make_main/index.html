@@ -32,8 +32,16 @@ body.dark-mode{--bg:#111713;--surface:#1b241e;--text:#eef7f0;--muted:#a3b3a7;--l
 .canvas-object.selected{outline:2px solid #2684ff;outline-offset:0;z-index:999!important}
 .canvas-object img{width:100%;height:100%;object-fit:contain;pointer-events:none}
 .canvas-object .object-text{width:100%;pointer-events:none}
-.canvas-object .resize-handle{position:absolute;right:-1px;bottom:-1px;width:13px;height:13px;background:#2684ff;border:2px solid white;border-radius:3px;cursor:nwse-resize;display:none}
+.canvas-object .resize-handle{position:absolute;width:11px;height:11px;background:#2684ff;border:2px solid #fff;border-radius:50%;z-index:3;display:none;touch-action:none}
 .canvas-object.selected .resize-handle{display:block}
+.canvas-object .handle-nw{left:-6px;top:-6px;cursor:nwse-resize}
+.canvas-object .handle-n{left:calc(50% - 5px);top:-6px;cursor:ns-resize}
+.canvas-object .handle-ne{right:-6px;top:-6px;cursor:nesw-resize}
+.canvas-object .handle-e{right:-6px;top:calc(50% - 5px);cursor:ew-resize}
+.canvas-object .handle-se{right:-6px;bottom:-6px;cursor:nwse-resize}
+.canvas-object .handle-s{left:calc(50% - 5px);bottom:-6px;cursor:ns-resize}
+.canvas-object .handle-sw{left:-6px;bottom:-6px;cursor:nesw-resize}
+.canvas-object .handle-w{left:-6px;top:calc(50% - 5px);cursor:ew-resize}
 .canvas-object.shape-rect{border:2px solid currentColor}.canvas-object.shape-circle{border:2px solid currentColor;border-radius:50%}.canvas-object.shape-line{height:4px!important;min-height:4px;padding:0}
 .canvas-object.shape-button{border-radius:12px;background:#27ae60;color:white;font-weight:800}
 .canvas-object.shape-image{padding:0;background:#f5f5f5}
@@ -74,9 +82,9 @@ body.dark-mode{--bg:#111713;--surface:#1b241e;--text:#eef7f0;--muted:#a3b3a7;--l
 </section>
 <section class="work-panel">
   <div class="savebar">
-    <button class="btn" id="saveBtn">저장 <span class="shortcut-help">Ctrl+S</span></button>
-    <button class="btn ghost" id="exportBtn">내보내기</button>
-    <button class="btn ghost" id="importBtn">파일 열기</button>
+    <button class="btn" id="saveBtn">사이트 저장 <span class="shortcut-help">Ctrl+S</span></button>
+    <button class="btn ghost" id="exportBtn">프로젝트 파일 저장</button>
+    <button class="btn ghost" id="importBtn">프로젝트 파일 열기</button>
     <input id="importFile" type="file" accept="application/json,.json" hidden>
     <span class="save-state" id="saveState" data-state="idle">저장 서버 연결 전</span>
   </div>
@@ -127,7 +135,7 @@ body.dark-mode{--bg:#111713;--surface:#1b241e;--text:#eef7f0;--muted:#a3b3a7;--l
 import { requireAdmin } from "/admin/js/auth.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { app } from "/admin/js/firebase.js";
-const MAIN_PATH="data/main-page.json",WORKER_URL="https://make-main.trandonwebtoon.workers.dev";
+const MAIN_PATH="data/main-page.json",WORKER_URL="https://make-main.trandonwebtoon.workers.dev",LOCAL_DRAFT_KEY="25withcoding.make-main.local-draft.v1";
 const firebaseAuth=getAuth(app);
 const $=id=>document.getElementById(id);
 let adminUser=null,mainData={version:3,settings:{enabled:true,startAt:"",endAt:""},slides:[],elements:[],canvasPages:[]};
@@ -148,15 +156,55 @@ function decode64(s){const binary=atob(String(s||"").replace(/\s/g,""));return n
 function encode64(s){const bytes=new TextEncoder().encode(s);let binary="";bytes.forEach(b=>binary+=String.fromCharCode(b));return btoa(binary)}
 function makeObject(type){const common={id:id("obj"),type,name:type==="text"?"텍스트":type==="image"?"이미지":type==="circle"?"원형 도형":type==="line"?"선":type==="button"?"버튼":"사각형",text:type==="text"?"텍스트를 입력하세요":type==="button"?"자세히 보기":"",imageUrl:"",linkUrl:"",x:20+Math.random()*8,y:20+Math.random()*8,w:type==="text"?32:type==="image"?32:24,h:type==="text"?14:type==="image"?28:18,fontSize:type==="text"?30:18,color:"#17231b",fill:type==="button"?"#27ae60":"#e5f7eb",radius:type==="circle"?100:type==="button"?12:4,align:"center",z:pages[pageIndex]?.objects.length||1};return common}
 function pushHistory(){undoStack.push(clone(pages));if(undoStack.length>60)undoStack.shift();redoStack=[]}
-function changed(){editRevision++;status(connected?"저장되지 않은 변경 사항 · 자동 저장 대기":"편집 중 · GitHub 연결 필요");if(connected)scheduleSave();}
+function saveLocalDraft(){
+ try{localStorage.setItem(LOCAL_DRAFT_KEY,JSON.stringify({format:"25withcoding-make-main-draft",savedAt:new Date().toISOString(),pages}));return true}
+ catch(error){console.warn("브라우저 복구본 저장 실패:",error);return false}
+}
+function readLocalDraft(){
+ try{const draft=JSON.parse(localStorage.getItem(LOCAL_DRAFT_KEY)||"null");return draft?.format==="25withcoding-make-main-draft"&&Array.isArray(draft.pages)&&draft.pages.length&&draft.pages.every(p=>p&&Array.isArray(p.objects))?draft:null}
+ catch(error){console.warn("브라우저 복구본 확인 실패:",error);return null}
+}
+function clearLocalDraft(){try{localStorage.removeItem(LOCAL_DRAFT_KEY)}catch(error){console.warn("복구본 정리 실패:",error)}}
+function changed(){
+ editRevision++;
+ const localSaved=saveLocalDraft();
+ status(connected?"저장되지 않은 변경 사항 · 자동 저장 대기":localSaved?"편집 중 · 브라우저 복구본 저장됨 · GitHub 연결 필요":"편집 중 · GitHub 연결 필요");
+ if(connected)scheduleSave();
+}
 function renderPages(){const root=$("pageList");root.replaceChildren();pages.forEach((p,i)=>{const row=document.createElement("div");row.className="page-row";const b=document.createElement("button");b.className="page-pick"+(i===pageIndex?" active":"");b.textContent=(i+1)+". "+(p.title||"페이지 "+(i+1));b.onclick=()=>{if(currentObject())readProps();pageIndex=i;selectedId=null;renderAll()};const del=document.createElement("button");del.className="mini";del.textContent="×";del.title="페이지 삭제";del.disabled=pages.length<=1;del.onclick=()=>{if(!confirm("이 페이지를 삭제할까요?"))return;pushHistory();pages.splice(i,1);pageIndex=Math.min(pageIndex,pages.length-1);selectedId=null;renderAll();changed()};row.append(b,del);root.append(row)})}
 function renderCanvas(){const stage=$("canvasStage"),p=currentPage();stage.replaceChildren();if(!p)return;stage.style.background=p.background||"#ffffff";stage.style.backgroundImage=p.backgroundImage?"url('"+String(p.backgroundImage).replace(/'/g,"%27")+"')":"none";for(const o of p.objects.slice().sort((a,b)=>(a.z||0)-(b.z||0))){const el=document.createElement("div");el.className="canvas-object"+(o.id===selectedId?" selected":"");el.dataset.id=o.id;el.style.left=(o.x||0)+"%";el.style.top=(o.y||0)+"%";el.style.width=(o.w||20)+"%";el.style.height=(o.h||15)+"%";el.style.zIndex=String(o.z||1);el.style.color=o.color||"#17231b";el.style.background=o.type==="image"?"#f5f5f5":o.type==="line"?"transparent":o.fill||"transparent";el.style.borderRadius=(o.radius||0)+"px";el.style.fontSize=(o.fontSize||18)+"px";el.style.textAlign=o.align||"center";if(o.type==="rect")el.classList.add("shape-rect");if(o.type==="circle")el.classList.add("shape-circle");if(o.type==="line")el.classList.add("shape-line");if(o.type==="button")el.classList.add("shape-button");if(o.type==="image")el.classList.add("shape-image");
  if(o.type==="image"){if(o.imageUrl){const img=document.createElement("img");img.src=safeUrl(o.imageUrl)||o.imageUrl;img.alt=o.name||"이미지";el.append(img)}else{el.textContent="이미지 URL을 입력하세요"}}
  else {const text=document.createElement("div");text.className="object-text";text.textContent=o.text||o.name||"";el.append(text)}
- const handle=document.createElement("span");handle.className="resize-handle";el.append(handle);el.addEventListener("pointerdown",ev=>startPointer(ev,o,el,ev.target===handle));el.addEventListener("click",ev=>{ev.stopPropagation();selectedId=o.id;renderAll()});stage.append(el)}
+ if(o.id===selectedId){
+  for(const direction of ["nw","n","ne","e","se","s","sw","w"]){
+   const handle=document.createElement("span");handle.className="resize-handle handle-"+direction;handle.dataset.handle=direction;el.append(handle);
+  }
+ }
+ el.addEventListener("pointerdown",ev=>startPointer(ev,o,el,ev.target.closest(".resize-handle")?.dataset.handle||null));el.addEventListener("click",ev=>{ev.stopPropagation();selectedId=o.id;renderAll()});stage.append(el)}
  stage.onclick=()=>{selectedId=null;renderAll()};stage.onpointermove=movePointer;stage.onpointerup=endPointer;stage.onpointercancel=endPointer}
-function startPointer(ev,o,el,resizing){if(ev.button!==0)return;ev.preventDefault();ev.stopPropagation();pushHistory();selectedId=o.id;dragState={id:o.id,startX:ev.clientX,startY:ev.clientY,x:o.x,y:o.y,w:o.w,h:o.h,resizing,rect:$("canvasStage").getBoundingClientRect()};$("canvasStage").setPointerCapture?.(ev.pointerId);renderProps()}
-function movePointer(ev){if(!dragState)return;const p=currentPage(),o=p?.objects.find(x=>x.id===dragState.id);if(!o)return;const dx=(ev.clientX-dragState.startX)/dragState.rect.width*100,dy=(ev.clientY-dragState.startY)/dragState.rect.height*100;if(dragState.resizing){o.w=Math.max(2,Math.min(100-dragState.x,dragState.w+dx));o.h=Math.max(2,Math.min(100-dragState.y,dragState.h+dy))}else{o.x=Math.max(0,Math.min(100-o.w,dragState.x+dx));o.y=Math.max(0,Math.min(100-o.h,dragState.y+dy))}renderCanvas();renderProps()}
+function startPointer(ev,o,el,handle=null){
+ if(ev.button!==0)return;ev.preventDefault();ev.stopPropagation();pushHistory();selectedId=o.id;
+ dragState={id:o.id,startX:ev.clientX,startY:ev.clientY,x:o.x,y:o.y,w:o.w,h:o.h,handle,rect:$("canvasStage").getBoundingClientRect()};
+ $("canvasStage").setPointerCapture?.(ev.pointerId);renderProps();
+}
+function movePointer(ev){
+ if(!dragState)return;
+ const p=currentPage(),o=p?.objects.find(x=>x.id===dragState.id);if(!o)return;
+ const dx=(ev.clientX-dragState.startX)/dragState.rect.width*100,dy=(ev.clientY-dragState.startY)/dragState.rect.height*100,d=dragState.handle;
+ if(d){
+  const right=dragState.x+dragState.w,bottom=dragState.y+dragState.h;
+  let x=dragState.x,y=dragState.y,w=dragState.w,h=dragState.h;
+  if(d.includes("e"))w=clamp(dragState.w+dx,2,100-dragState.x);
+  if(d.includes("s"))h=clamp(dragState.h+dy,2,100-dragState.y);
+  if(d.includes("w")){x=clamp(dragState.x+dx,0,right-2);w=right-x}
+  if(d.includes("n")){y=clamp(dragState.y+dy,0,bottom-2);h=bottom-y}
+  o.x=x;o.y=y;o.w=w;o.h=h;
+ }else{
+  o.x=Math.max(0,Math.min(100-o.w,dragState.x+dx));
+  o.y=Math.max(0,Math.min(100-o.h,dragState.y+dy));
+ }
+ renderCanvas();renderProps();
+}
 function endPointer(){if(!dragState)return;dragState=null;changed()}
 function renderProps(){const o=currentObject();const ids=["objectName","objectText","objectImage","objectLink","objectX","objectY","objectW","objectH","objectFontSize","objectRadius","objectColor","objectFill","objectAlign","applyObject","deleteObjectBtn","bringFrontBtn","sendBackBtn"];ids.forEach(k=>{if($(k))$(k).disabled=!o});if(!o)return;$("objectName").value=o.name||"";$("objectText").value=o.text||"";$("objectImage").value=o.imageUrl||"";$("objectLink").value=o.linkUrl||"";$("objectX").value=Math.round(o.x||0);$("objectY").value=Math.round(o.y||0);$("objectW").value=Math.round(o.w||20);$("objectH").value=Math.round(o.h||15);$("objectFontSize").value=o.fontSize||18;$("objectRadius").value=o.radius||0;$("objectColor").value=o.color||"#17231b";$("objectFill").value=o.fill||"#e5f7eb";$("objectAlign").value=o.align||"center"}
 function readProps(){const o=currentObject();if(!o)return;o.name=$("objectName").value;o.text=$("objectText").value;o.imageUrl=$("objectImage").value;o.linkUrl=$("objectLink").value;o.x=clamp($("objectX").value,0,99);o.y=clamp($("objectY").value,0,99);o.w=clamp($("objectW").value,1,100-o.x);o.h=clamp($("objectH").value,1,100-o.y);o.fontSize=clamp($("objectFontSize").value,8,120);o.radius=clamp($("objectRadius").value,0,100);o.color=$("objectColor").value;o.fill=$("objectFill").value;o.align=$("objectAlign").value}
@@ -168,6 +216,31 @@ function saveablePage(p,i){return {...p,id:p.id||"page-"+(i+1),title:String(p.ti
 function canvasPagesAsElements(){return pages.map((p,i)=>({id:"canvas-"+p.id,type:"canvas",title:p.title||"페이지 "+(i+1),enabled:p.enabled!==false,startAt:p.startAt||"",endAt:p.endAt||"",canvasBackground:p.background||"#ffffff",objects:p.objects||[],order:i}))}
 async function putFile(path,content,message){let sha=null;try{sha=(await api(path)).sha}catch(e){if(!String(e.message).includes("Not Found"))throw e}const body={message,content:encode64(content.endsWith("\n")?content:content+"\n")};if(sha)body.sha=sha;return api(path,"PUT",body)}
 async function uploadImage(file){if(!connected)throw Error("먼저 GitHub에 연결해 주세요.");if(file.size>4*1024*1024)throw Error("이미지는 4MB 이하 파일을 선택해 주세요.");const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(Error("이미지를 읽지 못했습니다."));reader.readAsDataURL(file)});const content=dataUrl.split(",")[1];const ext=(file.name.split(".").pop()||"png").toLowerCase().replace(/[^a-z0-9]/g,"")||"png";const filename="image-"+Date.now()+"."+ext;await api("make_main/assets/"+filename,"PUT",{message:"Upload homepage canvas image "+filename,content});return "/make_main/assets/"+filename}
+function makeProjectPayload(){return {format:"25withcoding-make-main",version:1,exportedAt:new Date().toISOString(),pages:clone(pages)}}
+async function saveProjectFile(){
+ const payload=makeProjectPayload(),blob=new Blob([JSON.stringify(payload,null,2)+"\\n"],{type:"application/json"});
+ const filename="25withcoding-main-design-"+new Date().toISOString().slice(0,10)+".json";
+ if(window.showSaveFilePicker){
+  try{
+   const handle=await window.showSaveFilePicker({suggestedName:filename,types:[{description:"코딩과 함께라면 프로젝트",accept:{"application/json":[".json"]}}]});
+   const writable=await handle.createWritable();await writable.write(blob);await writable.close();
+   setSaveState("프로젝트 파일을 지정한 위치에 저장했습니다.","saved");return;
+  }catch(error){if(error?.name==="AbortError")return;console.warn("파일 저장 창을 사용할 수 없어 다운로드로 전환합니다.",error)}
+ }
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+ setSaveState("프로젝트 파일을 다운로드했습니다.","saved");
+}
+async function importProjectFile(file){
+ if(!file)return;
+ try{
+  const parsed=JSON.parse(await file.text()),incoming=Array.isArray(parsed)?parsed:parsed.pages;
+  if(!Array.isArray(incoming)||!incoming.length||incoming.length>100||incoming.some(p=>!p||!Array.isArray(p.objects)||p.objects.length>1000))throw Error("프로젝트 파일의 페이지 또는 개체 구성이 올바르지 않습니다.");
+  if(!confirm("현재 편집 내용을 불러온 프로젝트로 교체할까요? 기존 작업은 실행 취소로 되돌릴 수 있습니다."))return;
+  pushHistory();
+  pages=incoming.map((p,i)=>({...p,id:p.id||id("page"),title:p.title||"페이지 "+(i+1),objects:p.objects.map(o=>({...o,id:o.id||id("obj")}))}));
+  pageIndex=0;selectedId=null;renderAll();changed();setSaveState("프로젝트 파일을 열었습니다 · 사이트 저장 대기","idle");
+ }catch(error){alert("프로젝트 파일을 열지 못했습니다.\\n"+error.message)}
+}
 async function saveAll(quiet=false){
  if(!connected){setSaveState("먼저 GitHub 저장 서버에 연결하세요.","error");if(!quiet)alert("먼저 관리자 인증 및 저장 서버 연결을 해주세요.");return}
  if(saving){saveAgain=true;return}
@@ -178,18 +251,37 @@ async function saveAll(quiet=false){
   const snapshot=pages.map(saveablePage);
   for(let i=0;i<snapshot.length;i++){const path="make_main/page"+(i+1)+".json";await putFile(path,JSON.stringify(snapshot[i],null,2),"Save homepage design page "+(i+1));}
   const directory=await api("make_main");
-  for(const stale of directory.filter(x=>x.type==="file"&&/^page\d+\.json$/.test(x.name)&&Number(x.name.match(/\\d+/)[0])>snapshot.length)){await api("make_main/"+stale.name,"DELETE",{message:"Remove deleted homepage design page "+stale.name,sha:stale.sha});}
+  for(const stale of directory.filter(x=>x.type==="file"&&/^page\d+\.json$/.test(x.name)&&Number(x.name.match(/\d+/)[0])>snapshot.length)){await api("make_main/"+stale.name,"DELETE",{message:"Remove deleted homepage design page "+stale.name,sha:stale.sha});}
   const latest=await api(MAIN_PATH);mainData=JSON.parse(decode64(latest.content));
   mainData.version=3;mainData.canvasPages=snapshot.map((p,i)=>({id:"canvas-"+p.id,type:"canvas",title:p.title||"페이지 "+(i+1),enabled:p.enabled!==false,startAt:p.startAt||"",endAt:p.endAt||"",canvasBackground:p.background||"#ffffff",objects:p.objects||[],order:i}));
   mainData.updatedAt=new Date().toISOString();mainData.updatedBy=adminUser?.id||"admin";
   await api(MAIN_PATH,"PUT",{message:"Save homepage canvas project",sha:latest.sha,content:encode64(JSON.stringify(mainData,null,2)+"\n")});
-  if(editRevision===savingRevision){lastSavedRevision=savingRevision;lastSavedAt=new Date();setSaveState("저장 완료 · "+lastSavedAt.toLocaleTimeString("ko-KR"),"saved");status("저장 완료 · "+snapshot.length+"개 페이지");}
+  if(editRevision===savingRevision){lastSavedRevision=savingRevision;lastSavedAt=new Date();clearLocalDraft();setSaveState("GitHub 저장 완료 · "+lastSavedAt.toLocaleTimeString("ko-KR"),"saved");status("GitHub 저장 완료 · "+snapshot.length+"개 페이지");}
   else{saveAgain=true;setSaveState("추가 변경 사항 저장 대기 중…","idle");}
   if(!quiet&&!saveAgain)alert("저장 완료! "+snapshot.length+"개 페이지를 GitHub에 저장했습니다.");
  }catch(e){console.error(e);setSaveState("저장 실패 · "+e.message,"error");status("저장 실패 · "+e.message);if(!quiet)alert("저장에 실패했습니다.\n"+e.message);}
  finally{saving=false;if(connected&&(saveAgain||isDirty()))scheduleSave(500);}
 }
-async function loadPages(){status("페이지 파일 확인 중…");const listing=await api("make_main");const files=listing.filter(x=>x.type==="file"&&/^page\d+\.json$/.test(x.name)).sort((a,b)=>Number(a.name.match(/\d+/)[0])-Number(b.name.match(/\d+/)[0]));pages=[];for(const file of files){const data=await api("make_main/"+file.name);pages.push(JSON.parse(decode64(data.content)))}if(!pages.length){pages=[{id:"page-1",title:"페이지 1",enabled:true,startAt:"",endAt:"",background:"#ffffff",objects:[]}];await putFile("make_main/page1.json",JSON.stringify(pages[0],null,2),"Create first homepage design page")}pageIndex=0;selectedId=null;editRevision=0;lastSavedRevision=0;lastSavedAt=new Date();renderAll();setSaveState("GitHub 저장소에서 불러옴 · "+pages.length+"개 페이지","saved");status("GitHub 연결됨 · "+pages.length+"개 페이지")}
+async function loadPages(){
+ status("페이지 파일 확인 중…");
+ const listing=await api("make_main");
+ const files=listing.filter(x=>x.type==="file"&&/^page\d+\.json$/.test(x.name)).sort((a,b)=>Number(a.name.match(/\d+/)[0])-Number(b.name.match(/\d+/)[0]));
+ pages=[];
+ for(const file of files){const data=await api("make_main/"+file.name);pages.push(JSON.parse(decode64(data.content)))}
+ if(!pages.length){pages=[{id:"page-1",title:"페이지 1",enabled:true,startAt:"",endAt:"",background:"#ffffff",objects:[]}];await putFile("make_main/page1.json",JSON.stringify(pages[0],null,2),"Create first homepage design page")}
+ pageIndex=0;selectedId=null;editRevision=0;lastSavedRevision=0;lastSavedAt=new Date();
+ const draft=readLocalDraft();
+ if(draft){
+  const when=draft.savedAt?new Date(draft.savedAt).toLocaleString("ko-KR"):"시간 정보 없음";
+  if(confirm("이 브라우저에 저장된 미전송 복구본이 있습니다. ("+when+")\\nGitHub의 최신 내용 대신 복구본을 불러올까요?")){
+   pages=draft.pages.map((p,i)=>({...p,id:p.id||id("page"),title:p.title||"페이지 "+(i+1),objects:p.objects.map(o=>({...o,id:o.id||id("obj")}))}));
+   editRevision=1;lastSavedRevision=0;lastSavedAt=null;
+   renderAll();setSaveState("브라우저 복구본 불러옴 · 사이트 저장 대기","idle");status("복구본 불러옴 · GitHub 저장 대기");scheduleSave(700);return;
+  }
+  clearLocalDraft();
+ }
+ renderAll();setSaveState("GitHub 저장소에서 불러옴 · "+pages.length+"개 페이지","saved");status("GitHub 연결됨 · "+pages.length+"개 페이지");
+}
 $("connectBtn").onclick=async()=>{try{if(!firebaseAuth.currentUser)throw Error("로그인 세션을 찾지 못했습니다. 다시 로그인해 주세요.");await firebaseAuth.currentUser.getIdToken(true);await api("make_main");connected=true;await loadPages();status("Cloudflare 보안 연결됨 · "+pages.length+"개 페이지")}catch(e){connected=false;setSaveState("연결 실패 · "+e.message,"error");status("보안 연결 실패");alert("Cloudflare 연결에 실패했습니다.\n"+e.message)}};
 $("addPage").onclick=()=>{pushHistory();pages.push({id:id("page"),title:"페이지 "+(pages.length+1),enabled:true,startAt:"",endAt:"",background:"#ffffff",objects:[]});pageIndex=pages.length-1;selectedId=null;renderAll();changed()};
 $("duplicatePage").onclick=()=>{const p=currentPage();if(!p)return;pushHistory();const cp=clone(p);cp.id=id("page");cp.title=(p.title||"페이지")+" 복사본";cp.objects=cp.objects.map(o=>({...o,id:id("obj")}));pages.splice(pageIndex+1,0,cp);pageIndex++;selectedId=null;renderAll();changed()};
@@ -206,9 +298,15 @@ $("deleteObjectBtn").onclick=()=>{if(!currentObject())return;pushHistory();curre
 $("bringFrontBtn").onclick=()=>{const o=currentObject();if(!o)return;pushHistory();o.z=Math.max(0,...currentPage().objects.map(x=>x.z||0))+1;renderAll();changed()};
 $("sendBackBtn").onclick=()=>{const o=currentObject();if(!o)return;pushHistory();o.z=Math.min(0,...currentPage().objects.map(x=>x.z||0))-1;renderAll();changed()};
 $("saveBtn").onclick=()=>saveAll(false);
-$("exportBtn").onclick=()=>{const payload={format:"25withcoding-make-main",version:1,exportedAt:new Date().toISOString(),pages};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="25withcoding-main-design-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setSaveState("프로젝트 파일을 내보냈습니다.","saved")};
-$("importBtn").onclick=()=>$("importFile").click();
-$("importFile").onchange=async()=>{const file=$("importFile").files?.[0];if(!file)return;try{const parsed=JSON.parse(await file.text());const incoming=Array.isArray(parsed)?parsed:parsed.pages;if(!Array.isArray(incoming)||!incoming.length||incoming.some(p=>!p||!Array.isArray(p.objects)))throw Error("25withcoding 편집기 프로젝트 파일이 아닙니다.");if(!confirm("현재 편집 내용을 불러온 파일로 교체할까요? 저장 전이라면 기존 내용이 덮어써질 수 있습니다."))return;pushHistory();pages=incoming.map((p,i)=>({...p,id:p.id||id("page"),title:p.title||"페이지 "+(i+1),objects:p.objects.map(o=>({...o,id:o.id||id("obj")}))}));pageIndex=0;selectedId=null;renderAll();changed();setSaveState("파일을 불러왔습니다 · 저장 필요","idle")}catch(e){alert("파일을 불러오지 못했습니다.\\n"+e.message)}finally{$("importFile").value=""}};
+$("exportBtn").onclick=saveProjectFile;
+$("importBtn").onclick=async()=>{
+ if(window.showOpenFilePicker){
+  try{const [handle]=await window.showOpenFilePicker({multiple:false,types:[{description:"코딩과 함께라면 프로젝트",accept:{"application/json":[".json"]}}]});await importProjectFile(await handle.getFile());return}
+  catch(error){if(error?.name==="AbortError")return;console.warn("파일 열기 창을 사용할 수 없어 기본 파일 선택기로 전환합니다.",error)}
+ }
+ $("importFile").click();
+};
+$("importFile").onchange=async()=>{try{await importProjectFile($("importFile").files?.[0])}finally{$("importFile").value=""}};
 $("gridBtn").onclick=()=>{gridVisible=!gridVisible;$("canvasStage").classList.toggle("grid-on",gridVisible);$("gridBtn").textContent=gridVisible?"격자 숨기기":"격자 표시"};
 $("duplicateObjectBtn").onclick=()=>{const o=currentObject();if(!o)return;pushHistory();const copy={...clone(o),id:id("obj"),name:(o.name||"개체")+" 복사본",x:Math.min(100-o.w,(o.x||0)+2),y:Math.min(100-o.h,(o.y||0)+2),z:Math.max(0,...currentPage().objects.map(x=>x.z||0))+1};currentPage().objects.push(copy);selectedId=copy.id;renderAll();changed()};
 document.querySelectorAll("[data-align]").forEach(b=>b.onclick=()=>{const o=currentObject();if(!o)return;pushHistory();const mode=b.dataset.align;if(mode==="left")o.x=0;if(mode==="centerX")o.x=(100-o.w)/2;if(mode==="right")o.x=100-o.w;if(mode==="top")o.y=0;if(mode==="centerY")o.y=(100-o.h)/2;if(mode==="bottom")o.y=100-o.h;renderAll();changed()});
