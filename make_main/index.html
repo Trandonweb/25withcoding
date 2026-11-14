@@ -218,7 +218,7 @@ async function putFile(path,content,message){let sha=null;try{sha=(await api(pat
 async function uploadImage(file){if(!connected)throw Error("먼저 GitHub에 연결해 주세요.");if(file.size>4*1024*1024)throw Error("이미지는 4MB 이하 파일을 선택해 주세요.");const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(Error("이미지를 읽지 못했습니다."));reader.readAsDataURL(file)});const content=dataUrl.split(",")[1];const ext=(file.name.split(".").pop()||"png").toLowerCase().replace(/[^a-z0-9]/g,"")||"png";const filename="image-"+Date.now()+"."+ext;await api("make_main/assets/"+filename,"PUT",{message:"Upload homepage canvas image "+filename,content});return "/make_main/assets/"+filename}
 function makeProjectPayload(){return {format:"25withcoding-make-main",version:1,exportedAt:new Date().toISOString(),pages:clone(pages)}}
 async function saveProjectFile(){
- const payload=makeProjectPayload(),blob=new Blob([JSON.stringify(payload,null,2)+"\\n"],{type:"application/json"});
+ const payload=makeProjectPayload(),blob=new Blob([JSON.stringify(payload,null,2)+"\n"],{type:"application/json"});
  const filename="25withcoding-main-design-"+new Date().toISOString().slice(0,10)+".json";
  if(window.showSaveFilePicker){
   try{
