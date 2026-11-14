@@ -104,7 +104,7 @@ body.dark-mode{--bg:#111713;--surface:#1b241e;--text:#eef7f0;--muted:#a3b3a7;--l
     <button class="btn ghost" data-align="left">왼쪽 정렬</button><button class="btn ghost" data-align="centerX">가로 가운데</button><button class="btn ghost" data-align="right">오른쪽 정렬</button>
     <button class="btn ghost" data-align="top">위쪽 정렬</button><button class="btn ghost" data-align="centerY">세로 가운데</button><button class="btn ghost" data-align="bottom">아래쪽 정렬</button>
   </div>
-  <p class="shortcut-help">단축키: Ctrl+S 저장 · Ctrl+Z 실행 취소 · Ctrl+Y 다시 실행 · Ctrl+D 개체 복제 · Delete 선택 삭제 · 방향키 1% 이동 (Shift+방향키 5%)</p>
+  <p class="shortcut-help">단축키: Ctrl+S 사이트 저장 · Ctrl+Shift+S 프로젝트 파일 저장 · Ctrl+O 프로젝트 파일 열기 · Ctrl+Z 실행 취소 · Ctrl+Y 다시 실행 · Ctrl+D 개체 복제 · Delete 선택 삭제 · 방향키 1% 이동 (Shift+방향키 5%)</p>
   <div class="hint"><b>작업 방식</b><br>도형·텍스트·이미지를 추가한 뒤 캔버스에서 직접 드래그하세요. 개체를 선택하면 오른쪽에서 글자, 색상, 크기, 링크를 편집할 수 있습니다. 편집이 끝나면 GitHub에 자동 저장됩니다.</div>
 </section>
 <aside class="prop-panel">
@@ -315,6 +315,8 @@ $("redoBtn").onclick=()=>{if(!redoStack.length)return;undoStack.push(clone(pages
 $("backBtn").onclick=()=>{if(isDirty()&&!confirm("저장되지 않은 변경 사항이 있습니다. 저장하지 않고 나갈까요?"))return;location.href="/admin/"};
 window.addEventListener("keydown",ev=>{
  const tag=ev.target?.tagName?.toLowerCase();const typing=["input","textarea","select"].includes(tag)||ev.target?.isContentEditable;
+ if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="s"&&ev.shiftKey){ev.preventDefault();saveProjectFile();return}
+ if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="o"){ev.preventDefault();$("importBtn").click();return}
  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="s"){ev.preventDefault();saveAll(false);return}
  if(typing)return;
  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="z"){ev.preventDefault();$("undoBtn").click();return}
