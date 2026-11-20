@@ -93,9 +93,9 @@ const SAVE_KEY="pythonAdventureV1:"+student;
 const defaults={gold:0,xp:0,ore:0,potions:0,hp:100,completed:[],owned:[],weapon:"wood",armor:"cloth",zone:0};
 let state={...defaults};try{state={...defaults,...JSON.parse(localStorage.getItem(SAVE_KEY)||"{}")}}catch{}
 const quests=[
-{id:1,zone:0,name:"훈련용 허수아비",icon:"🎯",enemy:"슬라임",description:"변수에 공격력을 저장하고, 그 값을 출력해 허수아비를 쓰러뜨리세요.",goal:"damage 변수에 30을 저장하고 print(damage)로 출력하세요.",starter:"# 공격력을 변수에 저장해 보세요.\ndamage = 10 + 20\nprint(damage)",expected:"30",required:/damage\s*=/,reward:100,ore:1,xp:40,enemyDamage:12},
-{id:2,zone:1,name:"숲의 수호자",icon:"🌲",enemy:"가시 고블린",description:"조건문으로 적의 공격을 막으세요. 조건이 참일 때 방어 성공 메시지를 출력해야 합니다.",goal:"if문을 사용해 shield가 1 이상이면 '방어 성공'을 출력하세요.",starter:"shield = 2\n# if 조건문을 작성하세요.\n",expected:"방어 성공",required:/\bif\b/,reward:150,ore:1,xp:60,enemyDamage:24},
-{id:3,zone:2,name:"고대 유적의 골렘",icon:"🏛️",enemy:"돌 골렘",description:"반복문으로 세 번 연속 공격하세요. 1, 2, 3이 차례대로 출력되면 승리합니다.",goal:"for문과 range()를 사용해 1부터 3까지 출력하세요.",starter:"# for 반복문으로 세 번 공격하세요.\n",expected:"1\n2\n3",required:/\bfor\b[\s\S]*\brange\s*\(/,reward:230,ore:2,xp:100,enemyDamage:38}
+{id:1,zone:0,name:"훈련용 허수아비",icon:"🎯",enemy:"슬라임",description:"변수에 공격력을 저장하고, 그 값을 출력해 허수아비를 쓰러뜨리세요.",goal:"damage 변수에 30을 저장하고 print(damage)로 출력하세요.",starter:"# 공격력을 변수에 저장해 보세요.\ndamage = 10 + 20\nprint(damage)",expected:"30",required:/damage\s*=/,reward:100,ore:1,xp:40,enemyDamage:12,enemyHp:55},
+{id:2,zone:1,name:"숲의 수호자",icon:"🌲",enemy:"가시 고블린",description:"조건문으로 적의 공격을 막으세요. 조건이 참일 때 방어 성공 메시지를 출력해야 합니다.",goal:"if문을 사용해 shield가 1 이상이면 '방어 성공'을 출력하세요.",starter:"shield = 2\n# if 조건문을 작성하세요.\n",expected:"방어 성공",required:/\bif\b/,reward:150,ore:1,xp:60,enemyDamage:24,enemyHp:100},
+{id:3,zone:2,name:"고대 유적의 골렘",icon:"🏛️",enemy:"돌 골렘",description:"반복문으로 세 번 연속 공격하세요. 1, 2, 3이 차례대로 출력되면 승리합니다.",goal:"for문과 range()를 사용해 1부터 3까지 출력하세요.",starter:"# for 반복문으로 세 번 공격하세요.\n",expected:"1\n2\n3",required:/\bfor\b[\s\S]*\brange\s*\(/,reward:230,ore:2,xp:100,enemyDamage:38,enemyHp:160}
 ];
 const items=[
 {id:"iron",name:"철제 검",icon:"⚔️",type:"weapon",price:150,attack:12,desc:"공격력 +12"},
@@ -134,7 +134,7 @@ async function runQuest(q){
   const result=await py.runPythonAsync("import sys, io\n_capture = io.StringIO()\n_old_stdout = sys.stdout\nsys.stdout = _capture\ntry:\n exec(compile(__quest_code, '<quest>', 'exec'), {})\nfinally:\n sys.stdout = _old_stdout\n_capture.getvalue()");
   const output=String(result).replace(/\r\n/g,"\n").trimEnd();if(result&&typeof result.destroy==="function")result.destroy();out.textContent=output||"(출력 없음)";
   if(output===q.expected&&q.required.test(code)){
-   const reward=q.reward+Math.max(0,attack()-10);state.completed.push(q.id);state.gold+=reward;state.ore+=q.ore;state.xp+=q.xp;const received=Math.max(0,q.enemyDamage-defense());state.hp=Math.max(0,state.hp-received);persist();out.textContent+="\n\n⚔️ 승리! "+q.enemy+"을(를) 물리쳤습니다.\n보상: "+reward+" G · 광석 "+q.ore+"개 · "+q.xp+" XP\\n방어구로 피해 "+(q.enemyDamage-received)+" 감소 · 체력 -"+received;toast("의뢰 성공! 보상이 지급되었습니다.");if(q.id<3){state.zone=q.id;persist()}
+   const reward=q.reward+Math.max(0,attack()-10);state.completed.push(q.id);state.gold+=reward;state.ore+=q.ore;state.xp+=q.xp;const received=Math.max(0,q.enemyDamage-defense());const hits=Math.ceil(q.enemyHp/attack());state.hp=Math.max(0,state.hp-received);persist();out.textContent+="\n\n⚔️ 승리! "+q.enemy+"을(를) 물리쳤습니다.\n보상: "+reward+" G · 광석 "+q.ore+"개 · "+q.xp+" XP\\n공격력 "+attack()+" · "+hits+"회 공격으로 처치\\n방어구로 피해 "+(q.enemyDamage-received)+" 감소 · 체력 -"+received;toast("의뢰 성공! 보상이 지급되었습니다.");if(q.id<3){state.zone=q.id;persist()}
   }else{out.textContent+="\n\n아직 목표를 달성하지 못했습니다. 목표 출력과 사용해야 할 문법을 확인해 보세요."}
  }catch(e){out.textContent=String(e)+"\n코드의 들여쓰기와 괄호를 확인해 보세요."}
  finally{if(!state.completed.includes(q.id)){btn.disabled=false;btn.textContent="▶ 코드 실행 · 전투"}}
