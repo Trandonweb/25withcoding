@@ -594,18 +594,13 @@ import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { waitForStudentSession } from "/firebase-session-12.js";
-
 import {
   getFirestore,
   collection,
   onSnapshot,
   doc,
-  updateDoc,
   setDoc,
   increment,
-  getDoc
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 
@@ -624,18 +619,6 @@ const firebaseConfig={
 
 const app=initializeApp(firebaseConfig,"festivalApp");
 const db=getFirestore(app);
-
-
-const loginFirebaseConfig={
-  apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-  authDomain:"points2026-f5e50.firebaseapp.com",
-  projectId:"points2026-f5e50"
-};
-
-const loginApp=initializeApp(loginFirebaseConfig);
-const loginAuth=getAuth(loginApp);
-const loginDB=getFirestore(loginApp);
-const loginSession=await waitForStudentSession(loginAuth);
 
 
 /* =========================
@@ -713,98 +696,7 @@ function applyVisitorRandomTheme(){
 }
 
 
-async function applyMemberTheme(userId){
-
-  try{
-
-    const saved=
-      localStorage.getItem(SETTINGS_KEY);
-
-    let settings={};
-
-    if(saved){
-
-      try{
-        settings=
-          JSON.parse(saved)||{};
-      }catch(e){
-        console.warn(
-          "저장된 컬러 테마를 읽지 못했습니다.",
-          e
-        );
-      }
-
-    }
-
-    let primary=
-      settings.primaryColor;
-
-    const snap=
-      await getDoc(
-        doc(loginDB,"users",userId)
-      );
-
-    if(snap.exists()){
-
-      const firebaseSettings=
-        snap.data().settings||{};
-
-      primary=
-        firebaseSettings.primaryColor||
-        primary;
-
-      if(primary){
-
-        settings={
-          ...settings,
-          ...firebaseSettings
-        };
-
-        localStorage.setItem(
-          SETTINGS_KEY,
-          JSON.stringify(settings)
-        );
-
-      }
-
-    }
-
-    if(
-      !THEME_COLORS.includes(
-        String(primary||"").toLowerCase()
-      )
-    ){
-      primary=THEME_COLORS[0];
-    }
-
-    applyTheme(
-      primary,
-      "member"
-    );
-
-  }catch(error){
-
-    console.error(
-      "부원 컬러 테마 적용 실패:",
-      error
-    );
-
-    applyTheme(
-      "#27ae60",
-      "member-fallback"
-    );
-
-  }
-
-}
-
-
-/* 공개 페이지이므로 이용권 확인 없이 즉시 표시합니다. */
-if(loginSession?.studentId){
-  await applyMemberTheme(loginSession.studentId);
-}else{
-  applyVisitorRandomTheme();
-}
+applyVisitorRandomTheme();
 
 const festivalNotice=document.getElementById("festivalNotice");
 let noticeTimeout=null;
