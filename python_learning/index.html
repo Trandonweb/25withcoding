@@ -314,6 +314,8 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-
 import {getAuth,setPersistence,browserLocalPersistence,browserSessionPersistence} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {waitForStudentSession} from "/firebase-session.js";
 
+window.__pythonStudentReady=new Promise((resolve,reject)=>{window.__pythonStudentReadyResolve=resolve;window.__pythonStudentReadyReject=reject;});
+
 const firebaseConfig={
   apiKey:"AIzaSyBgOAO72ArB8WdO7OSYsTVEQtRHT049U20",
   authDomain:"points2026-f5e50.firebaseapp.com",
