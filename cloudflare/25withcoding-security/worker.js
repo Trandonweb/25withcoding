@@ -593,7 +593,7 @@ async function handleRequest(request, env) {
     catch { return json({ error: "Invalid JSON" }, 400); }
 
     const pagePath = body?.path;
-    const allowedKinds = ["page_visit", "api_request", "login_attempt", "login_success", "login_failure"];
+    const allowedKinds = ["page_visit", "api_request", "login_attempt", "login_success", "login_failure", "client_error", "unhandled_rejection"];
     const kind = allowedKinds.includes(body?.kind) ? body.kind : "";
     const method = String(body?.method || "GET").toUpperCase();
     const statusCode = Number.isInteger(body?.statusCode) && body.statusCode >= 100 && body.statusCode <= 599
@@ -637,7 +637,19 @@ async function handleRequest(request, env) {
       studentId,
       loginStatus: studentId ? "logged_in" : "logged_out",
       loginAttempt: kind.startsWith("login_"),
-      apiAttempt: kind === "api_request" || pagePath.startsWith("/api/")
+      apiAttempt: kind === "api_request" || pagePath.startsWith("/api/"),
+      errorMessage: ["client_error", "unhandled_rejection"].includes(kind)
+        ? String(body.errorMessage || "Unknown browser error").slice(0, 240)
+        : "",
+      errorSource: ["client_error", "unhandled_rejection"].includes(kind) &&
+        typeof body.errorSource === "string" &&
+        body.errorSource.startsWith("/") &&
+        !body.errorSource.startsWith("//") &&
+        !body.errorSource.includes("?") &&
+        !body.errorSource.includes("#") &&
+        !body.errorSource.includes("\\\\")
+        ? body.errorSource.slice(0, 200)
+        : ""
     });
 
     return json({ success: true });
