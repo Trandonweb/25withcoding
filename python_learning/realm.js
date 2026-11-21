@@ -394,13 +394,13 @@ function update(dt) {
 function drawArena() {
   const w = 1000, h = 540;
   const bg = ctx.createLinearGradient(0, 0, 0, h);
-  bg.addColorStop(0, "#172a35"); bg.addColorStop(.56, "#1a2730"); bg.addColorStop(1, "#111a20");
+  bg.addColorStop(0, "#34373a"); bg.addColorStop(.56, "#2b2d30"); bg.addColorStop(1, "#242629");
   ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
   ctx.save();
   ctx.globalAlpha = .18;
   for (let i = 0; i < 14; i++) {
     const y = 60 + i * 34;
-    ctx.strokeStyle = i % 2 ? "#8db4bd" : "#5e8491";
+    ctx.strokeStyle = i % 2 ? "#747b82" : "#555b61";
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
   }
@@ -410,7 +410,7 @@ function drawArena() {
   ctx.restore();
   for (let i = 0; i < 24; i++) {
     const x = (i * 173 + 37) % w, y = (i * 97 + 25) % h;
-    ctx.fillStyle = i % 3 ? "#8bd8df22" : "#f6d18c22";
+    ctx.fillStyle = i % 3 ? "#a9b7c622" : "#d7b58a22";
     ctx.beginPath(); ctx.arc(x, y, 2 + (i % 3), 0, Math.PI * 2); ctx.fill();
   }
   // distant monoliths
@@ -418,7 +418,7 @@ function drawArena() {
     const x = 75 + i * 205;
     ctx.fillStyle = "#0c151c";
     ctx.beginPath(); ctx.moveTo(x - 20, 105); ctx.lineTo(x - 9, 35); ctx.lineTo(x + 15, 45); ctx.lineTo(x + 25, 105); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = "#5c8791"; ctx.globalAlpha = .35; ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = "#68737d"; ctx.globalAlpha = .35; ctx.stroke(); ctx.globalAlpha = 1;
   }
   pickups.forEach((p) => {
     if (p.taken) return;
@@ -463,18 +463,18 @@ function drawArena() {
   if (gameState === "battle" || gameState === "loot" || gameState === "reward") {
   ctx.save(); ctx.translate(player.x, player.y + Math.sin(player.anim) * 2);
   ctx.fillStyle = "#0009"; ctx.beginPath(); ctx.ellipse(0, 23, 28, 9, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.shadowColor = "#63d9ed"; ctx.shadowBlur = 18;
-  ctx.fillStyle = player.inv > 0 && Math.floor(player.inv * 18) % 2 ? "#ffffff" : "#4d8f9d";
+  ctx.shadowColor = "#6897bb"; ctx.shadowBlur = 18;
+  ctx.fillStyle = player.inv > 0 && Math.floor(player.inv * 18) % 2 ? "#ffffff" : "#4b6e8a";
   ctx.beginPath(); ctx.moveTo(-18, 10); ctx.lineTo(-14, -20); ctx.lineTo(0, -34); ctx.lineTo(15, -20); ctx.lineTo(19, 10); ctx.closePath(); ctx.fill();
   ctx.shadowBlur = 0; ctx.fillStyle = "#d9c8a5"; ctx.beginPath(); ctx.arc(0, -39, 12, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "#273642"; ctx.fillRect(-10, -44, 20, 7);
   ctx.fillStyle = "#f6d18c"; ctx.fillRect(player.face > 0 ? 4 : -10, -40, 6, 3);
-  ctx.strokeStyle = "#8deaff"; ctx.lineWidth = 5; ctx.lineCap = "round";
+  ctx.strokeStyle = "#a9d0ed"; ctx.lineWidth = 5; ctx.lineCap = "round";
   ctx.beginPath(); ctx.moveTo(player.face * 12, -5); ctx.lineTo(player.face * 27, -15); ctx.stroke();
-  ctx.fillStyle = "#69dce9"; ctx.shadowColor = "#69dce9"; ctx.shadowBlur = 16;
+  ctx.fillStyle = "#6897bb"; ctx.shadowColor = "#6897bb"; ctx.shadowBlur = 16;
   ctx.beginPath(); ctx.arc(player.face * 34, -19, 8, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
   if (attackPulse > 0) {
-    ctx.globalAlpha = attackPulse / .18; ctx.strokeStyle = "#8deaff"; ctx.lineWidth = 8; ctx.shadowColor = "#65d8f2"; ctx.shadowBlur = 22;
+    ctx.globalAlpha = attackPulse / .18; ctx.strokeStyle = "#a9d0ed"; ctx.lineWidth = 8; ctx.shadowColor = "#6897bb"; ctx.shadowBlur = 22;
     ctx.beginPath(); ctx.arc(player.face * 34, -19, 42, player.face > 0 ? -.95 : Math.PI - .95, player.face > 0 ? .95 : Math.PI + .95); ctx.stroke();
   }
   ctx.restore();
