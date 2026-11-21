@@ -119,6 +119,8 @@ let codeEditor = null;
 let currentChallenge = null;
 let candidates = [];
 let selectedCandidate = null;
+let pendingCandidateSlot = null;
+let lootFallback = false;
 let attemptLeft = 3;
 let hintsUsed = 0;
 let hintLimit = 0;
@@ -173,7 +175,7 @@ function startQuest() {
   if (gameState === "battle") return;
   gameState = "battle";
   questProgress = 0;
-  player = { x: 500, y: 380, hp: Math.min(save.maxHp, Math.max(65, save.hp)), maxHp: save.maxHp, attack: save.attack, defense: save.defense, face: 1, attackCd: 0, dashCd: 0, inv: 0, anim: 0 };
+  player = { x: 500, y: 270, hp: Math.min(save.maxHp, Math.max(65, save.hp)), maxHp: save.maxHp, attack: save.attack, defense: save.defense, face: 1, attackCd: 0, dashCd: 0, inv: 0, anim: 0 };
   enemies = [];
   pickups = [];
   particles = [];
@@ -327,7 +329,7 @@ function update(dt) {
   particles = particles.filter((p) => p.life > 0);
 }
 function drawArena() {
-  const w = canvas.width, h = canvas.height;
+  const w = 1000, h = 540;
   const bg = ctx.createLinearGradient(0, 0, 0, h);
   bg.addColorStop(0, "#172a35"); bg.addColorStop(.56, "#1a2730"); bg.addColorStop(1, "#111a20");
   ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
@@ -521,28 +523,42 @@ function openLoot() {
   lootRound++;
   candidates = [0, 1, 2, 3].map((slot) => makeCandidate(slot));
   selectedCandidate = null;
+  pendingCandidateSlot = null;
   renderLoot(false);
 }
 function renderLoot(fallback) {
+  lootFallback = fallback;
+  if (pendingCandidateSlot !== null && !candidates.some((c) => c.slot === pendingCandidateSlot && c.status === "available")) pendingCandidateSlot = null;
   $("rLootModal").classList.remove("hidden");
   $("rLootEyebrow").textContent = fallback ? "REWARD RETRY" : "REWARD DROP";
   $("rLootTitle").textContent = fallback ? "하위 등급에 재도전" : "전리품이 발견됐다";
   $("rLootDesc").textContent = fallback
-    ? "실패한 등급보다 낮은 등급만 남았어. 하나를 선택해 다시 도전해."
-    : "후보 4개가 각각 25% 확률로 등장했어. 획득하고 싶은 전리품을 선택해.";
+    ? "실패한 등급보다 낮은 등급만 남았어. 카드를 한 번 클릭해 미리 선택하고, 같은 카드를 한 번 더 클릭해 확정해."
+    : "후보 4개가 각각 25% 확률로 등장했어. 카드를 한 번 클릭해 미리 선택하고, 같은 카드를 한 번 더 클릭해 확정해.";
   $("rLootCards").innerHTML = candidates.map((candidate) => {
     const available = candidate.status === "available";
     const chosen = candidate.status === "chosen";
     const crossed = !available && !chosen;
     const grade = candidate.grade;
-    return '<button class="r-loot-card ' + (available ? "" : "disabled") + '" data-slot="' + candidate.slot + '" style="--grade:' + gradeColor(grade) + '" ' + (available ? "" : "disabled") + '>' +
+    const pending = pendingCandidateSlot === candidate.slot;
+    return '<button class="r-loot-card ' + (available ? (pending ? "pending" : "") : "disabled") + '" data-slot="' + candidate.slot + '" style="--grade:' + gradeColor(grade) + '" ' + (available ? "" : "disabled") + '>' +
       (crossed ? '<span class="r-cross">×</span>' : "") +
       '<span class="r-loot-grade">' + grade + '등급</span><span class="r-loot-rarity">' + gradeName(grade) + '</span>' +
       '<span class="r-loot-icon">' + candidate.item.icon + '</span><b>' + escapeHTML(candidate.item.name) + '</b><small>' + escapeHTML(candidate.item.effect) + '</small>' +
-      '<span class="r-loot-stage">문제 ' + (5 - grade) + '단계</span></button>';
+      '<span class="r-loot-stage">문제 ' + (5 - grade) + '단계</span>' + (pending ? '<span class="r-loot-confirm">한 번 더 클릭해 확정</span>' : '<span class="r-loot-confirm">한 번 클릭해 미리 선택</span>') + '</button>';
   }).join("");
   document.querySelectorAll(".r-loot-card:not(.disabled)").forEach((button) => {
-    button.addEventListener("click", () => chooseCandidate(Number(button.dataset.slot)));
+    button.addEventListener("click", () => {
+      const slot = Number(button.dataset.slot);
+      if (pendingCandidateSlot === slot) {
+        pendingCandidateSlot = null;
+        chooseCandidate(slot);
+      } else {
+        pendingCandidateSlot = slot;
+        renderLoot(lootFallback);
+        toast("선택 후보를 표시했어. 같은 카드를 한 번 더 클릭하면 확정돼.");
+      }
+    });
   });
   $("rLootContinue").classList.add("hidden");
   $("rLootContinue").onclick = null;
@@ -553,6 +569,7 @@ function chooseCandidate(slot) {
   candidates.forEach((c) => {
     if (c.status === "available" && c.slot !== slot && c.grade <= candidate.grade) c.status = "blocked";
   });
+  pendingCandidateSlot = null;
   candidate.status = "chosen";
   selectedCandidate = candidate;
   $("rLootModal").classList.add("hidden");
