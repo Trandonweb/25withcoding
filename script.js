@@ -148,4 +148,39 @@
     }
     return xhrSend.apply(this, args);
   };
+
+  // JavaScript runtime errors and unhandled promise rejections.
+  // Never collect stack traces, form contents, query strings, or full URLs.
+  function safeErrorMessage(value) {
+    return String(value || "Unknown browser error")
+      .replace(/Bearer\\s+\\S+/gi, "Bearer [redacted]")
+      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi, "[email]")
+      .replace(/\\b\\d{5}\\b/g, "[id]")
+      .slice(0, 240);
+  }
+
+  function reportClientError(kind, message, source) {
+    const path = validPath(location.pathname) ? location.pathname : "/";
+    sendTelemetry({
+      kind,
+      path,
+      method: "GET",
+      statusCode: null,
+      errorMessage: safeErrorMessage(message),
+      errorSource: source || ""
+    });
+  }
+
+  window.addEventListener("error", event => {
+    if (event.target && event.target !== window) return;
+    reportClientError("client_error", event.message || "JavaScript runtime error", safePath(event.filename || ""));
+  });
+
+  window.addEventListener("unhandledrejection", event => {
+    const reason = event.reason;
+    const message = reason && typeof reason === "object" && "message" in reason
+      ? reason.message
+      : String(reason ?? "Unhandled promise rejection");
+    reportClientError("unhandled_rejection", message, "");
+  });
 })();
