@@ -46,7 +46,7 @@ async function loadDashboardStats(){
  const set=(id,value)=>{document.getElementById(id).textContent=value};
  try{
   const snapshot=await getDocs(collection(db,"users"));
-  set("statUsers",snapshot.docs.filter(d=>/^\\d{5}$/.test(d.id)).length.toLocaleString("ko-KR"));
+  set("statUsers",snapshot.docs.filter(d=>/^\d{5}$/.test(d.id)).length.toLocaleString("ko-KR"));
  }catch(e){console.warn("회원 수 집계 실패",e);set("statUsers","—")}
  try{
   const user=auth.currentUser;
