@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: 25withcoding-make-main
+    runtime: node
+    region: singapore
+    plan: free
+    branch: main
+    rootDir: render/make-main-api
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
