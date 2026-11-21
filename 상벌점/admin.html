@@ -68,10 +68,8 @@ function roleToText(role){if(role==="president")return "회장";if(role==="vice"
 
 /* 뒤로가기: 상벌점에서 들어왔으면 상벌점으로, 관리자에서 들어왔으면 관리자로 */
 window.goBack=()=>{
- const referrer=document.referrer;
- if(referrer.includes("/상벌점/")){location.href="/상벌점/";return;}
- if(referrer.includes("/admin/")){location.href="/admin/";return;}
- location.href="/admin/";
+ // 이 관리 화면은 /상벌점/ 전용이다. referrer에 의존하지 않고 항상 상벌점 홈으로 돌아간다.
+ location.href="/상벌점/";
 };
 
 window.createUser=()=>{alert("보안 업데이트 중입니다. 계정 생성은 Firebase Authentication 계정 생성 절차가 준비될 때까지 일시 중단되었습니다. 비밀번호를 Firestore에 저장하지 않습니다.")}
