@@ -81,6 +81,7 @@ let lastTime = 0;
 let keys = {};
 let attackPulse = 0;
 let pyodidePromise = null;
+let codeEditor = null;
 let currentChallenge = null;
 let candidates = [];
 let selectedCandidate = null;
@@ -395,9 +396,9 @@ function setCanvasSize() {
 function burstPlaceholder() {}
 window.addEventListener("resize", setCanvasSize);
 window.addEventListener("keydown", (event) => {
-  const target = event.target;
-  const editing = target instanceof HTMLElement &&
-    (target.isContentEditable || target.tagName === "TEXTAREA" || target.tagName === "INPUT");
+  const target = event.target, active = document.activeElement;
+  const isEditor = (el) => el instanceof HTMLElement && (el.isContentEditable || el.tagName === "TEXTAREA" || el.tagName === "INPUT" || !!el.closest(".CodeMirror"));
+  const editing = isEditor(target) || isEditor(active);
   if (editing) {
     if (target.id === "rCodeEditor" && event.key === "Tab") {
       event.preventDefault();
@@ -623,7 +624,20 @@ function renderChallenge() {
     ).join("") + '</div>';
     document.querySelectorAll(".r-option").forEach((button) => button.addEventListener("click", () => checkChoice(Number(button.dataset.option))));
   } else {
-    $("rChallengeInput").innerHTML = '<textarea id="rCodeEditor" class="r-code" spellcheck="false" autocapitalize="off" autocomplete="off">' + escapeHTML(c.starter) + '</textarea><div class="r-code-foot">Python 3 · 브라우저에서 실행 · 출력 결과로 자동 채점</div>';
+    $("rChallengeInput").innerHTML = '<div class="r-ide-shell"><aside class="r-ide-sidebar"><div class="r-ide-side-title">PROJECT</div><div class="r-ide-file"><span>🐍</span> main.py</div><div class="r-ide-modules"><div class="r-ide-modules-title">PYTHON MODULES</div><button class="r-ide-module" data-module="random"><b>◈</b> random</button><button class="r-ide-module" data-module="math"><b>◈</b> math</button><button class="r-ide-module" data-module="datetime"><b>◈</b> datetime</button></div></aside><section class="r-ide-main"><div class="r-ide-toolbar"><strong>🐍 main.py</strong><span>Python 3 · UTF-8</span></div><div class="r-ide-editor"><textarea id="rCodeEditor" spellcheck="false" autocapitalize="off" autocomplete="off">' + escapeHTML(c.starter) + '</textarea></div><div class="r-ide-console"><div class="r-ide-console-head">RUN · CONSOLE</div><pre id="rConsoleOutput"></pre></div></section></div><div class="r-code-foot">모듈 이름을 누르면 import 문이 입력돼. Tab으로 들여쓰기 · Shift+Tab으로 내어쓰기</div>';
+    codeEditor = null;
+    if (window.CodeMirror) {
+      codeEditor = CodeMirror.fromTextArea($("rCodeEditor"), {mode:"python",theme:"darcula",lineNumbers:true,indentUnit:4,tabSize:4,indentWithTabs:false,smartIndent:true,matchBrackets:true,autoCloseBrackets:true,styleActiveLine:true,lineWrapping:false,autofocus:true,extraKeys:{"Tab":"indentMore","Shift-Tab":"indentLess"}});
+      codeEditor.setSize("100%","clamp(230px, 34vh, 390px)");
+      codeEditor.refresh(); codeEditor.focus();
+    }
+    document.querySelectorAll(".r-ide-module").forEach((button) => button.addEventListener("click", () => {
+      if (!codeEditor) return;
+      const name = button.dataset.module, statement = "import " + name + "\n";
+      if (!new RegExp("^\\s*(import|from)\\s+" + name + "\\b","m").test(codeEditor.getValue())) {
+        codeEditor.replaceRange(statement,{line:0,ch:0}); codeEditor.focus();
+      }
+    }));
   }
 }
 function showChallengeFeedback(message, good) {
@@ -742,7 +756,13 @@ async function executeUserCode(code) {
     "_out = io.StringIO()\n" +
     "_old = sys.stdout\n" +
     "_allowed = ('print','range','len','str','int','float','bool','list','dict','tuple','set','sum','min','max','abs','round','enumerate','zip','sorted','reversed','all','any','type')\n" +
+    "_modules = ('random','math','datetime')\n" +
+    "def _safe_import(name, globals=None, locals=None, fromlist=(), level=0):\n" +
+    "    if level != 0 or name.split('.')[0] not in _modules:\n" +
+    "        raise ImportError('허용된 모듈: random, math, datetime')\n" +
+    "    return builtins.__import__(name, globals, locals, fromlist, level)\n" +
     "_safe = {name: getattr(builtins, name) for name in _allowed}\n" +
+    "_safe['__import__'] = _safe_import\n" +
     "sys.stdout = _out\n" +
     "try:\n" +
     "    exec(compile(user_code, '<quest>', 'exec'), {'__builtins__': _safe})\n" +
@@ -759,7 +779,9 @@ $("rChallengeRun").addEventListener("click", async () => {
   button.disabled = true;
   button.textContent = "파이썬 실행 중...";
   try {
-    const actual = await executeUserCode($("rCodeEditor").value);
+    const code = codeEditor ? codeEditor.getValue() : $("rCodeEditor").value;
+    const actual = await executeUserCode(code);
+    if ($("rConsoleOutput")) $("rConsoleOutput").textContent = actual || "(출력 없음)";
     if (actual === currentChallenge.expected) {
       challengeLocked = true;
       showChallengeFeedback("코드 실행 성공! 목표 출력이 정확해.", true);
