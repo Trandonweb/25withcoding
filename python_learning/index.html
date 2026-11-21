@@ -311,10 +311,13 @@ body>.top,body>.wrap,body>header.top{display:none!important}
 </script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import {getAuth,setPersistence,browserLocalPersistence,browserSessionPersistence} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import {waitForStudentSession} from "/firebase-session.js";
+import {getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence,browserSessionPersistence} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {getStudentId} from "/firebase-session.js";
 
-window.__pythonStudentReady=new Promise((resolve,reject)=>{window.__pythonStudentReadyResolve=resolve;window.__pythonStudentReadyReject=reject;});
+window.__pythonStudentReady=new Promise((resolve,reject)=>{
+  window.__pythonStudentReadyResolve=resolve;
+  window.__pythonStudentReadyReject=reject;
+});
 
 const firebaseConfig={
   apiKey:"AIzaSyBgOAO72ArB8WdO7OSYsTVEQtRHT049U20",
@@ -335,76 +338,26 @@ try {
     document.documentElement.style.setProperty("--green",settings.primaryColor);
   }
   await setPersistence(auth,settings.keepLogin===false?browserSessionPersistence:browserLocalPersistence).catch(()=>{});
-  const session=await waitForStudentSession(auth);
-  if(!session?.studentId) {
+  const user=await new Promise((resolve,reject)=>{
+    let unsubscribe=()=>{};
+    unsubscribe=onAuthStateChanged(auth,value=>{unsubscribe();resolve(value);},reject);
+  });
+  const studentId=getStudentId(user);
+  if(!studentId) {
     location.replace("/signin?redirect=%2Fpython_learning");
-  } else {
-    document.getElementById("studentLabel").textContent=session.studentId+" 학생";
-    document.getElementById("app").hidden=false;
-    document.getElementById("authLoading").hidden=true;
-    window.__pythonStudentReadyResolve?.(session.studentId);
+    return;
   }
+  document.getElementById("studentLabel").textContent=studentId+" 학생";
+  document.getElementById("app").hidden=false;
+  document.getElementById("authLoading").hidden=true;
+  window.__pythonStudentReadyResolve(studentId);
 } catch(error) {
   const loading=document.getElementById("authLoading");
   loading.hidden=false;
   loading.textContent="로그인 확인에 실패했습니다: "+String(error?.message||error);
-  window.__pythonStudentReadyReject?.(error);
+  window.__pythonStudentReadyReject(error);
 }
 </script>
 
-<script type="module">
-const student=(document.getElementById("studentLabel")?.textContent||"guest").replace(/\s학생$/,"");
-const SAVE_KEY="pythonAdventureV1:"+student;
-const defaults={gold:0,xp:0,ore:0,potions:0,hp:100,completed:[],owned:[],weapon:"wood",armor:"cloth",zone:0};
-let state={...defaults};try{state={...defaults,...JSON.parse(localStorage.getItem(SAVE_KEY)||"{}")}}catch{}
-const quests=[
-{id:1,zone:0,name:"훈련용 허수아비",icon:"🎯",enemy:"슬라임",description:"변수에 공격력을 저장하고, 그 값을 출력해 허수아비를 쓰러뜨리세요.",goal:"damage 변수에 30을 저장하고 print(damage)로 출력하세요.",starter:"# 공격력을 변수에 저장해 보세요.\ndamage = 10 + 20\nprint(damage)",expected:"30",required:/damage\s*=/,reward:100,ore:1,xp:40,enemyDamage:12,enemyHp:55},
-{id:2,zone:1,name:"숲의 수호자",icon:"🌲",enemy:"가시 고블린",description:"조건문으로 적의 공격을 막으세요. 조건이 참일 때 방어 성공 메시지를 출력해야 합니다.",goal:"if문을 사용해 shield가 1 이상이면 '방어 성공'을 출력하세요.",starter:"shield = 2\n# if 조건문을 작성하세요.\n",expected:"방어 성공",required:/\bif\b/,reward:150,ore:1,xp:60,enemyDamage:24,enemyHp:100},
-{id:3,zone:2,name:"고대 유적의 골렘",icon:"🏛️",enemy:"돌 골렘",description:"반복문으로 세 번 연속 공격하세요. 1, 2, 3이 차례대로 출력되면 승리합니다.",goal:"for문과 range()를 사용해 1부터 3까지 출력하세요.",starter:"# for 반복문으로 세 번 공격하세요.\n",expected:"1\n2\n3",required:/\bfor\b[\s\S]*\brange\s*\(/,reward:230,ore:2,xp:100,enemyDamage:38,enemyHp:160}
-];
-const items=[
-{id:"iron",name:"철제 검",icon:"⚔️",type:"weapon",price:150,attack:12,desc:"공격력 +12"},
-{id:"knight",name:"수호자 대검",icon:"🗡️",price:360,type:"weapon",attack:25,desc:"공격력 +25 · 유적 의뢰 완료 후 해금",unlock:3},
-{id:"leather",name:"가죽 갑옷",icon:"🥋",type:"armor",price:120,defense:8,desc:"방어력 +8"},
-{id:"guardian",name:"수호자의 갑옷",icon:"🛡️",type:"armor",price:300,defense:20,desc:"방어력 +20 · 숲 의뢰 완료 후 해금",unlock:2},
-{id:"potion",name:"회복 물약",icon:"🧪",type:"potion",price:60,desc:"소모품 · 보유 수량에 추가"}
-];
-const $=id=>document.getElementById(id);
-function persist(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));render()}
-function attack(){return 10+(state.weapon==="wood"?0:(items.find(x=>x.id===state.weapon)?.attack||0))}
-function defense(){return state.armor==="cloth"?0:(items.find(x=>x.id===state.armor)?.defense||0)}
-function toast(t){const el=$("gameToast");el.textContent=t;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),3800)}
-function render(){
- $("gGold").textContent=state.gold+" G";$("gLevel").textContent="Lv. "+(Math.floor(state.xp/100)+1);$("gClears").textContent=state.completed.length+" / 3";$("gHp").textContent=state.hp+" / 100";$("gAttack").textContent=attack();$("gDefense").textContent=defense();$("gOre").textContent=state.ore+"개";$("gPotion").textContent=state.potions+"개";$("gTitle").textContent=state.completed.length===3?"코드의 전설":state.completed.length===0?"초보 모험가":"모험가 · "+state.completed.length+"개 의뢰 완료";
- $("worldMap").innerHTML=[{name:"초록 들판",icon:"🌿",sub:"첫 모험의 시작"},{name:"속삭임의 숲",icon:"🌲",sub:"조건문 시험"},{name:"잊힌 유적",icon:"🏛️",sub:"반복문의 시련"}].map((z,i)=>'<button class="world-zone '+(state.zone===i?"active":"")+'" data-zone="'+i+'" '+(i>state.completed.length?"disabled":"")+'><span>'+z.icon+'</span><b>'+z.name+'</b><small>'+(i>state.completed.length?"🔒 잠김":z.sub)+'</small></button>').join("");
- document.querySelectorAll(".world-zone").forEach(b=>b.onclick=()=>{state.zone=Number(b.dataset.zone);persist()});
- $("questList").innerHTML=quests.map(q=>{const done=state.completed.includes(q.id),locked=q.zone>state.completed.length;return '<div class="quest '+(q.zone===state.zone?"active":"")+'"><div class="quest-icon">'+q.icon+'</div><div class="quest-copy"><b>'+q.name+'</b><small>'+q.enemy+' · 보상 '+q.reward+' G</small></div><span class="quest-state">'+(done?"완료":locked?"잠김":"도전 가능")+'</span></div>'}).join("");
- const q=quests[state.zone]||quests[0],done=state.completed.includes(q.id);
- $("questDetail").innerHTML='<h4>'+q.icon+' '+q.name+' · '+q.enemy+'</h4><p>'+q.description+'</p><b style="font-size:11px">🎯 달성 목표</b><p>'+q.goal+'</p><textarea id="gameCode" class="quest-editor" spellcheck="false">'+(done?"# 이미 완료한 의뢰입니다.\n# 자유롭게 코드를 연습해 보세요.":q.starter)+'</textarea><div class="quest-actions"><button class="game-btn" id="gameRun" '+(done||state.hp<=0?"disabled":"")+'>'+(done?"✓ 의뢰 완료":state.hp<=0?"체력 부족 · 물약 필요":"▶ 코드 실행 · 전투")+'</button><button class="game-btn alt" id="gameReset">초기 코드</button></div><div class="quest-output" id="gameOutput">코드를 실행하면 파이썬으로 전투를 진행합니다.</div><div class="game-note">보상: '+q.reward+' G · 💎 광석 '+q.ore+'개 · '+q.xp+' XP</div>';
- $("gameRun").onclick=()=>runQuest(q);$("gameReset").onclick=()=>{$("gameCode").value=q.starter;$("gameOutput").textContent="초기 코드로 되돌렸습니다."};
- $("shopList").innerHTML=items.filter(it=>!it.unlock||state.completed.length>=it.unlock).map(it=>{const owned=state.owned.includes(it.id);return '<div class="shop-item"><span class="item-emoji">'+it.icon+'</span><div class="item-copy"><b>'+it.name+'</b><small>'+it.desc+'</small></div><button class="game-btn '+(owned?"alt":"")+'" data-buy="'+it.id+'" '+(owned||state.gold<it.price?"disabled":"")+'>'+(owned?"보유":it.price+" G")+'</button></div>'}).join("");
- document.querySelectorAll("[data-buy]").forEach(b=>b.onclick=()=>buy(b.dataset.buy));
- $("bagList").innerHTML='<div class="inventory-item"><span>🪵 낡은 나무 검 '+(state.weapon==="wood"?"(장착 중)":"")+'</span><span>기본</span></div>'+state.owned.filter(id=>id!=="potion").map(id=>{const it=items.find(x=>x.id===id);if(!it)return "";const equipped=state.weapon===id||state.armor===id;return '<div class="inventory-item"><span>'+it.icon+' '+it.name+(equipped?" · 장착 중":"")+'</span><button class="game-btn alt" data-equip="'+id+'">'+(equipped?"장착됨":"장착")+'</button></div>'}).join("")+'<div class="inventory-item"><span>🧪 회복 물약</span><b>'+state.potions+'개</b></div><button class="game-btn alt" id="usePotion" '+(state.potions<1||state.hp>=100?"disabled":"")+'>물약 사용 (+50 체력)</button>';
- $("usePotion").onclick=()=>{if(state.potions<1||state.hp>=100)return;state.potions--;state.hp=Math.min(100,state.hp+50);persist();toast("회복 물약을 사용했습니다. 체력 +50")};
- document.querySelectorAll("[data-equip]").forEach(b=>b.onclick=()=>{const it=items.find(x=>x.id===b.dataset.equip);if(it.type==="weapon")state.weapon=it.id;else if(it.type==="armor")state.armor=it.id;persist();toast(it.name+" 장착 완료!")});
- $("tradeBtn").disabled=state.ore<3;$("tradeNote").textContent="보유 광석 "+state.ore+"개 · 3개를 모으면 100 G로 교환";
- document.querySelectorAll(".game-tab").forEach(b=>{b.classList.toggle("active",b.dataset.tab==="shop");b.onclick=()=>{document.querySelectorAll(".game-tab").forEach(x=>x.classList.toggle("active",x===b));$("shopPanel").classList.toggle("game-hidden",b.dataset.tab!=="shop");$("bagPanel").classList.toggle("game-hidden",b.dataset.tab!=="bag")}});
-}
-function buy(id){const it=items.find(x=>x.id===id);if(!it||state.gold<it.price||state.owned.includes(id))return;state.gold-=it.price;if(it.type==="potion")state.potions++;else state.owned.push(id);persist();toast(it.name+" 구매 완료!")}
-async function runQuest(q){
- const btn=$("gameRun"),out=$("gameOutput"),code=$("gameCode").value;btn.disabled=true;btn.textContent="파이썬 실행 준비 중…";out.textContent="브라우저에서 Python 실행 환경을 준비하고 있습니다. 처음에는 조금 걸릴 수 있어요.";
- try{
-  if(!window.__adventurePy){const script=document.createElement("script");script.src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js";document.head.append(script);await new Promise((ok,no)=>{script.onload=ok;script.onerror=()=>no(Error("파이썬 실행 환경을 불러오지 못했습니다."))});window.__adventurePy=await loadPyodide({indexURL:"https://cdn.jsdelivr.net/pyodide/v0.27.7/full/"})}
-  const py=window.__adventurePy;py.globals.set("__quest_code",code);
-  const result=await py.runPythonAsync("import sys, io\n_capture = io.StringIO()\n_old_stdout = sys.stdout\nsys.stdout = _capture\ntry:\n exec(compile(__quest_code, '<quest>', 'exec'), {})\nfinally:\n sys.stdout = _old_stdout\n_capture.getvalue()");
-  const output=String(result).replace(/\r\n/g,"\n").trimEnd();if(result&&typeof result.destroy==="function")result.destroy();out.textContent=output||"(출력 없음)";
-  if(output===q.expected&&q.required.test(code)){
-   const reward=q.reward+Math.max(0,attack()-10);state.completed.push(q.id);state.gold+=reward;state.ore+=q.ore;state.xp+=q.xp;const received=Math.max(0,q.enemyDamage-defense());const hits=Math.ceil(q.enemyHp/attack());state.hp=Math.max(0,state.hp-received);persist();out.textContent+="\n\n⚔️ 승리! "+q.enemy+"을(를) 물리쳤습니다.\n보상: "+reward+" G · 광석 "+q.ore+"개 · "+q.xp+" XP\\n공격력 "+attack()+" · "+hits+"회 공격으로 처치\\n방어구로 피해 "+(q.enemyDamage-received)+" 감소 · 체력 -"+received;toast("의뢰 성공! 보상이 지급되었습니다.");if(q.id<3){state.zone=q.id;persist()}
-  }else{out.textContent+="\n\n아직 목표를 달성하지 못했습니다. 목표 출력과 사용해야 할 문법을 확인해 보세요."}
- }catch(e){out.textContent=String(e)+"\n코드의 들여쓰기와 괄호를 확인해 보세요."}
- finally{if(!state.completed.includes(q.id)){btn.disabled=false;btn.textContent="▶ 코드 실행 · 전투"}}
-}
-$("tradeBtn").onclick=()=>{if(state.ore<3)return;state.ore-=3;state.gold+=100;persist();toast("광석 3개를 100 G로 교환했습니다.")};
-render();
-</script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script><script type="module" src="/python_learning/realm.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script><script type="module" src="/python_learning/realm.js"></script>
 </body></html>
