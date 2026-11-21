@@ -153,9 +153,9 @@
   // Never collect stack traces, form contents, query strings, or full URLs.
   function safeErrorMessage(value) {
     return String(value || "Unknown browser error")
-      .replace(/Bearer\\s+\\S+/gi, "Bearer [redacted]")
-      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi, "[email]")
-      .replace(/\\b\\d{5}\\b/g, "[id]")
+      .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
+      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email]")
+      .replace(/\b\d{5}\b/g, "[id]")
       .slice(0, 240);
   }
 
