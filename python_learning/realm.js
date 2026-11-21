@@ -54,7 +54,7 @@ if (!canvas || !ctx) throw new Error("게임 화면의 캔버스를 찾을 수 �
 const SAVE_KEY = "pythonRealmV2:" + studentId;
 const defaults = {
   gold: 0, xp: 0, hp: 100, maxHp: 100, attack: 28, defense: 0, goldBonus: 0, xpBonus: 0,
-  wins: 0, fails: 0, items: [], adaptive: { choice: 1, fix: 1, coding: 1 },
+  wins: 0, fails: 0, items: [], weapon: "blade", adaptive: { choice: 1, fix: 1, coding: 1 },
   stats: { quests: 0, grade1: 0, grade2: 0, grade3: 0, grade4: 0 }
 };
 const curriculum = [
@@ -97,6 +97,12 @@ try {
   save = { ...defaults, ...raw, adaptive: { ...defaults.adaptive, ...(raw.adaptive || {}) }, stats: { ...defaults.stats, ...(raw.stats || {}) } };
   curriculumDone = Array.isArray(raw.curriculumDone) ? raw.curriculumDone : [];
 } catch {}
+const weapons = [
+  { id:"blade", name:"에너지 블레이드", icon:"⚔", desc:"빠른 근접 베기", cooldown:.34, range:105, multiplier:1, kind:"melee" },
+  { id:"bow", name:"코드 보우", icon:"➶", desc:"먼 거리 단일 사격", cooldown:.62, range:520, multiplier:1.35, kind:"arrow" },
+  { id:"staff", name:"연산 스태프", icon:"✧", desc:"관통하는 에너지 구체", cooldown:.78, range:600, multiplier:1.15, kind:"orb" },
+  { id:"hammer", name:"픽셀 해머", icon:"⚒", desc:"느리지만 강력한 범위 충격", cooldown:.9, range:145, multiplier:2.15, kind:"slam" }
+];
 const modes = [
   { id: "rift", name: "균열 토벌", icon: "⚔", desc: "균열에서 몰려오는 적을 정리한다.", goal: "적 4마리 격퇴", color: "#ff8c68" },
   { id: "explore", name: "유적 탐사", icon: "🧭", desc: "고대 유적에 흩어진 룬을 회수한다.", goal: "룬 4개 회수", color: "#65d8f2" },
@@ -109,6 +115,9 @@ let player = { x: 500, y: 370, hp: 100, attack: 28, defense: 0, face: 1, attackC
 let enemies = [];
 let pickups = [];
 let particles = [];
+let projectiles = [];
+let currentWeapon = save.weapon || "blade";
+let questTier = 0;
 let questProgress = 0;
 let questTarget = 4;
 let lastTime = 0;
@@ -138,6 +147,9 @@ function renderHUD() {
   $("rXp").textContent = save.xp.toLocaleString() + " XP";
   $("rWins").textContent = save.stats.quests + "회";
   $("rRank").textContent = save.stats.grade1 + "회";
+  $("rWeaponName").textContent = (weapons.find((w) => w.id === currentWeapon) || weapons[0]).name;
+  $("rRoadTier").textContent = "티어 " + (Math.floor(save.stats.quests / 2) + 1);
+  $("rRoadProgress").textContent = (save.stats.quests % 2) + " / 2 의뢰 완료 · 다음 티어까지 " + (2 - save.stats.quests % 2) + "회";
   $("rAtk").textContent = String(save.attack);
   $("rDef").textContent = String(save.defense);
   $("rGoldBonus").textContent = "+" + save.goldBonus + "%";
@@ -157,6 +169,21 @@ function toast(message) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
 }
+function renderWeapons() {
+  const root = $("rWeapons");
+  if (!root) return;
+  root.innerHTML = weapons.map((weapon) =>
+    '<button type="button" class="r-weapon ' + (currentWeapon === weapon.id ? 'active' : '') + '" data-weapon="' + weapon.id + '">' +
+    '<span>' + weapon.icon + '</span><b>' + weapon.name + '</b><small>' + weapon.desc + '</small></button>'
+  ).join("");
+  root.querySelectorAll(".r-weapon").forEach((button) => button.addEventListener("click", () => {
+    currentWeapon = button.dataset.weapon;
+    save.weapon = currentWeapon;
+    persist();
+    renderWeapons();
+    toast("무기 변경: " + weapons.find((w) => w.id === currentWeapon).name);
+  }));
+}
 function renderModes() {
   $("rModes").innerHTML = modes.map((m) =>
     '<button class="r-mode ' + (selectedMode === m.id ? "active" : "") + '" data-mode="' + m.id + '" style="--mode:' + m.color + '">' +
@@ -175,17 +202,21 @@ function startQuest() {
   if (gameState === "battle") return;
   gameState = "battle";
   questProgress = 0;
-  player = { x: 500, y: 270, hp: Math.min(save.maxHp, Math.max(65, save.hp)), maxHp: save.maxHp, attack: save.attack, defense: save.defense, face: 1, attackCd: 0, dashCd: 0, inv: 0, anim: 0 };
+  currentWeapon = save.weapon || currentWeapon || "blade";
+  questTier = Math.min(12, Math.floor(save.stats.quests / 2));
+  const tierScale = 1 + questTier * .17;
+  player = { x: 500, y: 300, hp: Math.min(save.maxHp, Math.max(65, save.hp)), maxHp: save.maxHp, attack: save.attack, defense: save.defense, face: 1, attackCd: 0, dashCd: 0, inv: 0, anim: 0 };
   enemies = [];
   pickups = [];
   particles = [];
+  projectiles = [];
   const count = selectedMode === "rift" ? 4 : selectedMode === "boss" ? 1 : 2;
   for (let i = 0; i < count; i++) {
     enemies.push({
       x: 180 + i * (selectedMode === "boss" ? 0 : 205),
       y: 150 + (i % 2) * 70,
-      hp: selectedMode === "boss" ? 440 : 65 + (i % 2) * 18,
-      maxHp: selectedMode === "boss" ? 440 : 65 + (i % 2) * 18,
+      hp: Math.round((selectedMode === "boss" ? 440 : 65 + (i % 2) * 18) * tierScale),
+      maxHp: Math.round((selectedMode === "boss" ? 440 : 65 + (i % 2) * 18) * tierScale),
       boss: selectedMode === "boss", flash: 0,
       cd: 0.7 + i * 0.25,
       phase: Math.random() * 6.28,
@@ -209,9 +240,10 @@ function startQuest() {
   $("rSelectPanel").classList.add("hidden");
   $("rStartScreen").classList.add("hidden");
   $("rArenaPanel").classList.remove("hidden");
-  requestAnimationFrame(setCanvasSize);
+  requestAnimationFrame(() => requestAnimationFrame(setCanvasSize));
   $("rArenaTitle").textContent = modes.find((m) => m.id === selectedMode).name;
-  $("rArenaGoal").textContent = modes.find((m) => m.id === selectedMode).goal;
+  $("rArenaGoal").textContent = "티어 " + (questTier + 1) + " · " + modes.find((m) => m.id === selectedMode).goal;
+  $("rArenaGoal").dataset.tier = String(questTier + 1);
   $("rArenaHint").textContent = selectedMode === "explore" || selectedMode === "forge"
     ? "WASD / 방향키로 이동해 빛나는 목표물을 접촉해."
     : "WASD 이동 · J 공격 · K 대시. 적의 공격 범위에서 벗어나며 반격해.";
@@ -225,7 +257,7 @@ function endQuest() {
   save.hp = Math.max(1, Math.min(save.maxHp, player.hp));
   save.stats.quests += 1;
   persist();
-  $("rArenaResult").textContent = "의뢰 완료 · 전리품을 선택해.";
+  $("rArenaResult").textContent = "전투 완료 · 전리품 선택 단계";
   openLoot();
 }
 function hitEnemy(enemy) {
@@ -252,15 +284,32 @@ function burst(x, y, color, amount) {
 }
 function attack() {
   if (gameState !== "battle" || player.attackCd > 0) return;
-  player.attackCd = .34;
+  const weapon = weapons.find((w) => w.id === currentWeapon) || weapons[0];
+  player.attackCd = weapon.cooldown;
   attackPulse = .18;
-  const reach = 105;
-  enemies.forEach((enemy) => {
-    if (enemy.dead) return;
-    const dx = enemy.x - player.x;
-    const dy = enemy.y - player.y;
-    if (Math.hypot(dx, dy) < reach + (enemy.boss ? 28 : 0)) hitEnemy(enemy);
-  });
+  if (weapon.kind === "arrow" || weapon.kind === "orb") {
+    projectiles.push({
+      x: player.x + player.face * 28, y: player.y - 18,
+      vx: player.face * (weapon.kind === "arrow" ? 610 : 420), vy: 0,
+      damage: player.attack * weapon.multiplier, life: 1.25,
+      kind: weapon.kind, color: weapon.kind === "arrow" ? "#f6d18c" : "#83d7e7",
+      pierce: weapon.kind === "orb"
+    });
+  } else {
+    const reach = weapon.range;
+    enemies.forEach((enemy) => {
+      if (enemy.dead) return;
+      const dx = enemy.x - player.x, dy = enemy.y - player.y;
+      const distance = Math.hypot(dx, dy);
+      const inFront = weapon.kind === "slam" || dx * player.face > -12;
+      if (distance < reach + (enemy.boss ? 28 : 0) && inFront) {
+        enemy.hp -= player.attack * weapon.multiplier;
+        if (enemy.hp <= 0) hitEnemy(enemy);
+        else { enemy.flash = .16; burst(enemy.x, enemy.y, weapon.kind === "slam" ? "#f2c36b" : "#8deaff", 7); }
+      }
+    });
+    if (weapon.kind === "slam") burst(player.x + player.face * 45, player.y, "#f2c36b", 24);
+  }
   if (selectedMode === "forge") {
     pickups.forEach((p) => {
       if (!p.taken && p.kind === "ore" && Math.hypot(p.x - player.x, p.y - player.y) < 110) {
@@ -291,6 +340,19 @@ function update(dt) {
   }
   player.x = Math.max(58, Math.min(942, player.x));
   player.y = Math.max(95, Math.min(478, player.y));
+  projectiles.forEach((shot) => {
+    shot.x += shot.vx * dt; shot.y += shot.vy * dt; shot.life -= dt;
+    enemies.forEach((enemy) => {
+      if (enemy.dead || shot.hit) return;
+      if (Math.hypot(enemy.x - shot.x, enemy.y - shot.y) < (enemy.boss ? 43 : 30)) {
+        enemy.hp -= shot.damage; enemy.flash = .16;
+        burst(shot.x, shot.y, shot.color, 9);
+        if (enemy.hp <= 0) hitEnemy(enemy);
+        if (!shot.pierce) shot.hit = true;
+      }
+    });
+  });
+  projectiles = projectiles.filter((shot) => shot.life > 0 && !shot.hit && shot.x > 0 && shot.x < 1000);
   enemies.forEach((enemy) => {
     if (enemy.dead) return;
     enemy.phase += dt * 2;
@@ -299,11 +361,11 @@ function update(dt) {
     const dy = player.y - enemy.y;
     const distance = Math.hypot(dx, dy);
     if (distance > (enemy.boss ? 112 : 74)) {
-      enemy.x += dx / Math.max(1, distance) * (enemy.boss ? 55 : 78) * dt;
-      enemy.y += dy / Math.max(1, distance) * (enemy.boss ? 43 : 62) * dt;
+      enemy.x += dx / Math.max(1, distance) * (enemy.boss ? 55 : 78) * (1 + questTier * .035) * dt;
+      enemy.y += dy / Math.max(1, distance) * (enemy.boss ? 43 : 62) * (1 + questTier * .035) * dt;
     } else if (enemy.cd <= 0 && player.inv <= 0) {
       enemy.cd = enemy.boss ? 1.15 : 1.45;
-      player.hp = Math.max(0, player.hp - Math.max(4, 9 - player.defense));
+      player.hp = Math.max(0, player.hp - Math.max(4, Math.round((9 + questTier * 1.15) - player.defense)));
       player.inv = .45;
       $("rArenaResult").textContent = "적의 공격을 받았어 · HP " + player.hp;
       burst(player.x, player.y, "#ff7288", 8);
@@ -387,7 +449,17 @@ function drawArena() {
     if (e.flash > 0) { ctx.globalAlpha = Math.min(1, e.flash * 5); ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(0, -5, e.boss ? 43 : 27, 0, Math.PI * 2); ctx.fill(); e.flash -= .04; }
     ctx.restore();
   });
+  // ranged projectiles
+  projectiles.forEach((shot) => {
+    ctx.save(); ctx.translate(shot.x, shot.y);
+    ctx.shadowColor = shot.color; ctx.shadowBlur = 18;
+    ctx.strokeStyle = shot.color; ctx.fillStyle = shot.color; ctx.lineWidth = shot.kind === "arrow" ? 4 : 0;
+    if (shot.kind === "arrow") { ctx.beginPath(); ctx.moveTo(-13, 0); ctx.lineTo(13, 0); ctx.stroke(); ctx.beginPath(); ctx.moveTo(13,0); ctx.lineTo(6,-6); ctx.lineTo(6,6); ctx.closePath(); ctx.fill(); }
+    else { ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill(); }
+    ctx.restore();
+  });
   // player
+  if (gameState === "battle" || gameState === "loot" || gameState === "reward") {
   ctx.save(); ctx.translate(player.x, player.y + Math.sin(player.anim) * 2);
   ctx.fillStyle = "#0009"; ctx.beginPath(); ctx.ellipse(0, 23, 28, 9, 0, 0, Math.PI * 2); ctx.fill();
   ctx.shadowColor = "#63d9ed"; ctx.shadowBlur = 18;
@@ -405,6 +477,16 @@ function drawArena() {
     ctx.beginPath(); ctx.arc(player.face * 34, -19, 42, player.face > 0 ? -.95 : Math.PI - .95, player.face > 0 ? .95 : Math.PI + .95); ctx.stroke();
   }
   ctx.restore();
+  // weapon silhouette
+  ctx.save(); ctx.translate(player.x + player.face * 37, player.y - 22);
+  ctx.strokeStyle = currentWeapon === "hammer" ? "#f2c36b" : currentWeapon === "bow" ? "#d7b58a" : "#83d7e7";
+  ctx.fillStyle = ctx.strokeStyle; ctx.lineWidth = 5; ctx.lineCap = "round";
+  if (currentWeapon === "bow") { ctx.beginPath(); ctx.arc(0,0,18,-1.25,1.25); ctx.stroke(); }
+  else if (currentWeapon === "hammer") { ctx.fillRect(-4,-22,8,38); ctx.fillRect(-15,-25,30,9); }
+  else if (currentWeapon === "staff") { ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(0,-24); ctx.stroke(); ctx.beginPath(); ctx.arc(0,-27,7,0,Math.PI*2); ctx.fill(); }
+  else { ctx.beginPath(); ctx.moveTo(-4,13); ctx.lineTo(7,-24); ctx.stroke(); }
+  ctx.restore();
+  }
   particles.forEach((p) => { ctx.globalAlpha = Math.max(0, p.life / p.max); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
   ctx.globalAlpha = 1;
   // HUD overlay
@@ -736,8 +818,9 @@ function correctChallenge() {
     $("rSuccessModal").classList.add("hidden");
     gameState = "select";
     $("rArenaPanel").classList.add("hidden");
-    $("rSelectPanel").classList.remove("hidden");
-    toast("전리품 획득! 다음 의뢰를 선택해.");
+    $("rSelectPanel").classList.add("hidden");
+    $("rStartScreen").classList.remove("hidden");
+    toast("의뢰 완료! 게임 홈으로 돌아왔어.");
   };
 }
 function failedChallenge() {
@@ -762,8 +845,9 @@ function failedChallenge() {
       $("rFailModal").classList.add("hidden");
       gameState = "select";
       $("rArenaPanel").classList.add("hidden");
-      $("rSelectPanel").classList.remove("hidden");
-      toast("이번 전리품은 놓쳤어. 다음 의뢰에서 다시 도전해!");
+      $("rSelectPanel").classList.add("hidden");
+      $("rStartScreen").classList.remove("hidden");
+      toast("이번 의뢰를 마쳤어. 게임 홈으로 돌아왔어.");
     };
   }
 }
@@ -861,6 +945,7 @@ $("rLootContinue").addEventListener("click", () => {
   $("rFailModal").classList.remove("hidden");
 });
 renderModes();
+renderWeapons();
 renderHUD();
 setCanvasSize();
 requestAnimationFrame(loop);
