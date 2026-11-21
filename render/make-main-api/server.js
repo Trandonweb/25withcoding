@@ -11,7 +11,7 @@ const GITHUB_API = "https://api.github.com";
 const FIRESTORE_API = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
 const ALLOWED_FILE =
-  /^(?:make_main\\/page[1-9][0-9]*\\.json|make_main\\/assets\\/[A-Za-z0-9._-]{1,120}|data\\/main-page\\.json)$/;
+  /^(?:make_main\/page[1-9][0-9]*\.json|make_main\/assets\/[A-Za-z0-9._-]{1,120}|data\/main-page\.json)$/;
 const ALLOWED_DIRECTORY = new Set(["make_main", "make_main/assets"]);
 const ADMIN_ROLES = new Set(["admin", "president", "vice", "committee_chair"]);
 
@@ -68,7 +68,7 @@ async function verifyFirebaseToken(token) {
   }
 
   const emailMatch = String(payload.email || "").match(
-    /^(\\d{5})@auth\\.25withcoding\\.kr$/i
+    /^(\d{5})@auth\.25withcoding\.kr$/i
   );
   if (!emailMatch) {
     throw new Error("동아리 계정으로 로그인해 주세요.");
@@ -139,7 +139,7 @@ app.all("/github/contents/*", async (req, res) => {
   }
 
   const authorization = req.get("Authorization") || "";
-  const match = authorization.match(/^Bearer\\s+(.+)$/i);
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
   if (!match) {
     return res.status(401).json({ error: "Firebase 로그인이 필요합니다." });
   }
