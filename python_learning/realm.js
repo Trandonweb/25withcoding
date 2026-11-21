@@ -294,7 +294,7 @@ function attack() {
       vx: player.face * (weapon.kind === "arrow" ? 610 : 420), vy: 0,
       damage: player.attack * weapon.multiplier, life: 1.25,
       kind: weapon.kind, color: weapon.kind === "arrow" ? "#f6d18c" : "#83d7e7",
-      pierce: weapon.kind === "orb"
+      pierce: weapon.kind === "orb", hitEnemies: []
     });
   } else {
     const reach = weapon.range;
@@ -343,8 +343,10 @@ function update(dt) {
   projectiles.forEach((shot) => {
     shot.x += shot.vx * dt; shot.y += shot.vy * dt; shot.life -= dt;
     enemies.forEach((enemy) => {
-      if (enemy.dead || shot.hit) return;
+      const enemyIndex = enemies.indexOf(enemy);
+      if (enemy.dead || shot.hit || shot.hitEnemies.includes(enemyIndex)) return;
       if (Math.hypot(enemy.x - shot.x, enemy.y - shot.y) < (enemy.boss ? 43 : 30)) {
+        shot.hitEnemies.push(enemyIndex);
         hitEnemy(enemy, shot.damage);
         burst(shot.x, shot.y, shot.color, 9);
         if (!shot.pierce) shot.hit = true;
