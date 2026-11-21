@@ -148,8 +148,9 @@ function renderHUD() {
   $("rWins").textContent = save.stats.quests + "회";
   $("rRank").textContent = save.stats.grade1 + "회";
   $("rWeaponName").textContent = (weapons.find((w) => w.id === currentWeapon) || weapons[0]).name;
-  $("rRoadTier").textContent = "티어 " + (Math.floor(save.stats.quests / 2) + 1);
+  $("rRoadTier").textContent = "티어 " + Math.min(13, Math.floor(save.stats.quests / 2) + 1);
   $("rRoadProgress").textContent = (save.stats.quests % 2) + " / 2 의뢰 완료 · 다음 티어까지 " + (2 - save.stats.quests % 2) + "회";
+  $("rRoadFill").style.width = ((save.stats.quests % 2) / 2 * 100) + "%";
   $("rAtk").textContent = String(save.attack);
   $("rDef").textContent = String(save.defense);
   $("rGoldBonus").textContent = "+" + save.goldBonus + "%";
