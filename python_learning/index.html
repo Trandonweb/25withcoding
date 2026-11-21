@@ -137,6 +137,21 @@ body>.top,body>.wrap,body>header.top{display:none!important}
 .r-modal{z-index:70!important}.r-modal-box{max-height:88svh;overflow:auto}
 @media(max-width:760px){.r-start-screen{padding:100px 24px 75px;align-items:flex-end}.r-start-copy{width:100%;padding-bottom:35px}.r-start-title{font-size:clamp(62px,17vw,100px)}.r-start-art{width:82vw;right:-18%;top:32%;opacity:.58}.r-start-copy p{font-size:13px}.r-start-meta{max-width:300px;line-height:1.8}.r-start-bottom{font-size:7px}.r-modes{grid-template-columns:1fr}.r-mode{min-height:68px}#rSelectPanel{padding:17px;max-height:86svh}#rArenaPanel{inset:58px 0 0;padding:8px!important}.r-game-topbar{height:58px}.r-top-btn{padding:8px 10px}.r-arena-controls{font-size:10px;flex-wrap:wrap}}
 @media(max-height:650px) and (min-width:761px){.r-start-title{font-size:76px}.r-start-art{width:42vw}.r-start-screen{padding-top:80px}.r-start-button{margin-top:18px}}
+
+/* TEXTBOOK ROADMAP + PYTHON EDITOR */
+.r-curriculum-wrap{margin:0 0 17px;padding:12px 12px 10px;border:1px solid #345463;border-radius:12px;background:#091923}
+.r-curriculum-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#d9f3f7;font-size:11px}
+.r-curriculum-head span{color:#78b9c8;font-size:9px;font-weight:800}
+.r-curriculum-track{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin;scrollbar-color:#477789 #102632}
+.r-curriculum-node{position:relative;flex:0 0 86px;min-height:54px;padding:7px 6px;border:1px solid #304c5b;border-radius:9px;background:#10232f;color:#7893a0;text-align:center}
+.r-curriculum-node b{display:block;font:900 9px/1.3 system-ui}.r-curriculum-node small{display:block;margin-top:4px;font-size:8px;line-height:1.2}
+.r-curriculum-node.done{border-color:#3d9477;background:#12372e;color:#9ce7c6}
+.r-curriculum-node.current{border-color:#75dff0;background:#163c4c;color:#e1fbff;box-shadow:0 0 0 1px #75dff044,0 0 18px #50cce522}
+.r-curriculum-node.current:before{content:"진행 중";display:block;margin-bottom:4px;color:#8deeff;font-size:7px;font-weight:1000}
+.r-code{min-height:230px;resize:vertical;white-space:pre;overflow:auto;tab-size:4;line-height:1.65;letter-spacing:0;word-spacing:normal;ime-mode:normal;user-select:text;-webkit-user-select:text;touch-action:pan-y}
+#rChallengeModal .r-modal-box{width:min(900px,calc(100vw - 28px));max-width:900px}
+#rChallengeModal .r-code{min-height:clamp(220px,34vh,390px)}
+@media(max-width:600px){.r-curriculum-node{flex-basis:78px}.r-curriculum-wrap{padding:9px}.r-code{min-height:190px}}
 </style>
 </head>
 <body>
@@ -241,6 +256,10 @@ body>.top,body>.wrap,body>header.top{display:none!important}
   </div>
   <div class="r-modal hidden" id="rChallengeModal" role="dialog" aria-modal="true">
     <div class="r-modal-box narrow">
+      <div class="r-curriculum-wrap">
+        <div class="r-curriculum-head"><b>교재 학습 로드맵</b><span id="rCurriculumProgress">0 / 12 개념</span></div>
+        <div class="r-curriculum-track" id="rCurriculumTrack" aria-label="파이썬 교재 학습 순서"></div>
+      </div>
       <div class="r-challenge-top"><span class="r-grade-pill" id="rChallengeGrade">1등급 · 4단계</span><span class="r-attempt-pill" id="rAttempts">도전 기회 3 / 3</span></div>
       <div class="r-modal-eyebrow" id="rChallengeStage">무힌트 코딩</div>
       <h2 id="rChallengeTitle">문제</h2>
