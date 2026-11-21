@@ -348,35 +348,5 @@ async function loadRecommendations(){
 loadRecommendations();
 </script>
 
-<div id="viewerRemainingTimer" role="status" aria-live="off" aria-label="축제 이용 남은 시간">
-  <span>남은 시간</span><strong id="viewerRemainingTimerValue">--:--</strong>
-</div>
-<script>
-(function(){
-  const box=document.getElementById("viewerRemainingTimer");
-  const value=document.getElementById("viewerRemainingTimerValue");
-  const KEY="festival2026AccessExpiresAt";
-  function update(){
-    const expiresAt=Number(sessionStorage.getItem(KEY));
-    if(!Number.isFinite(expiresAt)||expiresAt<=0){
-      box.hidden=true;
-      return;
-    }
-    box.hidden=false;
-    const remaining=Math.max(0,expiresAt-Date.now());
-    const seconds=Math.ceil(remaining/1000);
-    const minutes=Math.floor(seconds/60);
-    const rest=seconds%60;
-    value.textContent=String(minutes).padStart(2,"0")+":"+String(rest).padStart(2,"0");
-    box.classList.toggle("warning",remaining<=5*60*1000&&remaining>60*1000);
-    box.classList.toggle("danger",remaining<=60*1000);
-    if(remaining<=0) value.textContent="00:00";
-  }
-  update();
-  setInterval(update,250);
-  window.addEventListener("storage",update);
-})();
-</script>
-
 </body>
 </html>
