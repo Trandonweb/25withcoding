@@ -311,41 +311,43 @@ body>.top,body>.wrap,body>header.top{display:none!important}
 </script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import {getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence,browserSessionPersistence} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import {getStudentId} from "/firebase-session.js";
+import {getAuth,setPersistence,browserLocalPersistence,browserSessionPersistence} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {waitForStudentSession} from "/firebase-session.js";
 
-window.__pythonStudentReady=(async()=>{
-  const loading=document.getElementById("authLoading");
-  const appRoot=document.getElementById("app");
-  try{
-    const firebaseConfig={apiKey:"AIzaSyBgOAO72ArB8WdO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
-    const firebaseApp=initializeApp(firebaseConfig);
-    const auth=getAuth(firebaseApp);
-    let settings={};
-    try{settings=JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}")||{};}catch{}
-    if(settings.darkMode)document.body.classList.add("dark");
-    if(settings.primaryColor&&/^#[0-9a-f]{6}$/i.test(settings.primaryColor))document.documentElement.style.setProperty("--green",settings.primaryColor);
-    await setPersistence(auth,settings.keepLogin===false?browserSessionPersistence:browserLocalPersistence).catch(()=>{});
-    const user=await new Promise((resolve,reject)=>{
-      let unsubscribe=()=>{};
-      unsubscribe=onAuthStateChanged(auth,value=>{unsubscribe();resolve(value);},error=>{unsubscribe();reject(error);});
-    });
-    const studentId=getStudentId(user);
-    if(!studentId){
-      location.replace("/signin?redirect=%2Fpython_learning");
-      return null;
-    }
-    document.getElementById("studentLabel").textContent=studentId+" 학생";
-    appRoot.hidden=false;
-    loading.hidden=true;
-    document.dispatchEvent(new CustomEvent("python-session-ready",{detail:{studentId}}));
-    return studentId;
-  }catch(error){
-    loading.hidden=false;
-    loading.innerHTML="<b>로그인 확인에 실패했습니다.</b>"+String(error&&error.message||error);
-    throw error;
+const firebaseConfig={
+  apiKey:"AIzaSyBgOAO72ArB8WdO7OSYsTVEQtRHT049U20",
+  authDomain:"points2026-f5e50.firebaseapp.com",
+  projectId:"points2026-f5e50",
+  storageBucket:"points2026-f5e50.firebasestorage.app",
+  messagingSenderId:"248724251417",
+  appId:"1:248724251417:web:02d85cdc4addac98069b88"
+};
+
+try {
+  const app=initializeApp(firebaseConfig);
+  const auth=getAuth(app);
+  let settings={};
+  try { settings=JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}")||{}; } catch {}
+  if(settings.darkMode) document.body.classList.add("dark");
+  if(settings.primaryColor&&/^#[0-9a-f]{6}$/i.test(settings.primaryColor)) {
+    document.documentElement.style.setProperty("--green",settings.primaryColor);
   }
-})();
+  await setPersistence(auth,settings.keepLogin===false?browserSessionPersistence:browserLocalPersistence).catch(()=>{});
+  const session=await waitForStudentSession(auth);
+  if(!session?.studentId) {
+    location.replace("/signin?redirect=%2Fpython_learning");
+  } else {
+    document.getElementById("studentLabel").textContent=session.studentId+" 학생";
+    document.getElementById("app").hidden=false;
+    document.getElementById("authLoading").hidden=true;
+    window.__pythonStudentReadyResolve?.(session.studentId);
+  }
+} catch(error) {
+  const loading=document.getElementById("authLoading");
+  loading.hidden=false;
+  loading.textContent="로그인 확인에 실패했습니다: "+String(error?.message||error);
+  window.__pythonStudentReadyReject?.(error);
+}
 </script>
 
 <script type="module">
