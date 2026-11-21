@@ -19,6 +19,99 @@ a{color:inherit;text-decoration:none}.top{height:70px;display:flex;align-items:c
 #app>.hero,#app>.layout{display:none}.game-mode{display:block}
 .game-mode{margin-top:22px}.game-hero{padding:25px;border-radius:22px;background:linear-gradient(120deg,#172f26,#315b3c);color:#fff;display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap}.game-hero h2{font-size:clamp(25px,4vw,38px);margin:5px 0}.game-hero p{color:#d2e6d6;margin:0;font-size:13px;line-height:1.7}.game-kicker{font-size:10px;letter-spacing:.16em;font-weight:900;color:#a9e5b6}.game-hud{display:flex;gap:8px;flex-wrap:wrap}.game-chip{padding:10px 13px;border:1px solid #ffffff38;border-radius:12px;background:#ffffff12;min-width:88px}.game-chip b{display:block;font-size:19px}.game-chip small{font-size:10px;color:#d3e8d8}.game-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(270px,.65fr);gap:16px;margin-top:16px;align-items:start}.game-card{background:var(--surface);border:1px solid var(--line);border-radius:19px;padding:19px;box-shadow:var(--shadow);min-width:0}.game-card h3{margin:0 0 13px;font-size:16px}.world-map{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.world-zone{min-height:118px;border:1px solid var(--line);border-radius:15px;padding:13px;text-align:left;background:var(--bg);color:var(--text);cursor:pointer;display:flex;flex-direction:column;justify-content:space-between}.world-zone:disabled{opacity:.45;cursor:not-allowed}.world-zone.active{border:2px solid var(--green);background:var(--soft)}.world-zone span{font-size:27px}.world-zone b{font-size:12px}.world-zone small{font-size:10px;color:var(--muted)}.quest-list{display:grid;gap:9px}.quest{border:1px solid var(--line);border-radius:14px;padding:13px;display:flex;gap:11px;align-items:center;background:var(--surface)}.quest.active{border-color:var(--green);background:var(--soft)}.quest-icon{width:39px;height:39px;display:grid;place-items:center;border-radius:12px;background:var(--bg);font-size:20px;flex:none}.quest-copy{flex:1;min-width:0}.quest-copy b{display:block;font-size:12px}.quest-copy small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.quest-state{font-size:10px;font-weight:900;color:var(--green-dark)}.quest-detail{margin-top:14px;padding:16px;border-radius:15px;background:var(--bg);border:1px solid var(--line)}.quest-detail h4{margin:0 0 7px;font-size:15px}.quest-detail p{font-size:12px;line-height:1.7;color:var(--muted);margin:0 0 10px}.quest-editor{width:100%;min-height:145px;padding:14px;border:1px solid #293b30;border-radius:12px;background:#101a14;color:#d8f6df;font:12px/1.75 Consolas,monospace;resize:vertical}.quest-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.game-btn{border:0;border-radius:10px;padding:10px 13px;background:var(--green);color:#fff;font-size:11px;font-weight:900;cursor:pointer}.game-btn.alt{background:var(--soft);color:var(--green-dark)}.game-btn:disabled{opacity:.5;cursor:wait}.quest-output{white-space:pre-wrap;min-height:48px;margin-top:10px;padding:12px;border-radius:11px;background:#101a14;color:#d8f6df;font:11px/1.7 Consolas,monospace;overflow-wrap:anywhere}.game-note{font-size:11px;line-height:1.65;color:var(--muted);margin-top:9px}.game-side{display:grid;gap:16px}.player-card{display:flex;gap:13px;align-items:center}.player-avatar{width:62px;height:62px;display:grid;place-items:center;border-radius:18px;background:var(--soft);font-size:35px}.player-card b{font-size:14px}.player-card small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.stat-bars{display:grid;gap:9px;margin-top:15px}.stat-line{display:flex;justify-content:space-between;font-size:11px}.stat-line span{color:var(--muted)}.shop-list,.bag-list{display:grid;gap:8px}.shop-item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px}.shop-item .item-emoji{font-size:23px;width:32px;text-align:center}.shop-item .item-copy{flex:1;min-width:0}.shop-item b{font-size:11px;display:block}.shop-item small{font-size:10px;color:var(--muted)}.shop-item button{white-space:nowrap}.inventory-item{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:11px}.inventory-item:last-child{border:0}.game-toast{padding:11px 13px;border-radius:11px;background:var(--soft);color:var(--green-dark);font-size:11px;line-height:1.6;display:none}.game-toast.show{display:block}.game-tabs{display:flex;gap:7px;margin-bottom:12px}.game-tab{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:8px 11px;border-radius:9px;font-size:10px;font-weight:900;cursor:pointer}.game-tab.active{background:var(--soft);border-color:var(--green);color:var(--green-dark)}.game-hidden{display:none!important}
 @media(max-width:850px){.game-grid{grid-template-columns:1fr}.game-side{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.world-map{grid-template-columns:repeat(2,1fr)}.game-side{grid-template-columns:1fr}.game-hero{padding:20px}.game-chip{min-width:75px}.game-card{padding:15px}}
+
+/* CODE REALM */
+#app>.hero,#app>.layout,#pythonAdventure{display:none!important}
+#realmGame{display:block;color:#eaf1f5;margin-top:0}
+#realmGame *{box-sizing:border-box}
+.r-hero{position:relative;overflow:hidden;padding:clamp(22px,4vw,42px);border:1px solid #344d59;border-radius:22px;background:radial-gradient(circle at 80% 15%,#3b6373 0,transparent 34%),linear-gradient(120deg,#101c29,#1d3442 55%,#172631);color:#f2f7fa;box-shadow:0 24px 55px #07131d55}
+.r-hero:after{content:"CODE / RIFT";position:absolute;right:20px;bottom:-18px;font:950 clamp(42px,9vw,110px)/1 system-ui;letter-spacing:-.08em;color:#ffffff09;pointer-events:none}
+.r-kicker{font:900 10px/1.4 ui-monospace,monospace;letter-spacing:.2em;color:#83d7e7}
+.r-hero h1{position:relative;z-index:1;margin:10px 0 8px;font-size:clamp(30px,5vw,50px);letter-spacing:-.055em}
+.r-hero p{position:relative;z-index:1;max-width:650px;margin:0;color:#c2d5de;font-size:13px;line-height:1.8}
+.r-hud{position:relative;z-index:1;display:flex;gap:9px;flex-wrap:wrap;margin-top:22px}
+.r-hud-chip{min-width:105px;padding:10px 13px;border:1px solid #ffffff24;border-radius:12px;background:#ffffff0c}
+.r-hud-chip b{display:block;font-size:18px}.r-hud-chip small{font-size:10px;color:#aec5d0}
+.r-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(260px,.65fr);gap:16px;margin-top:16px;align-items:start}
+.r-main,.r-side{display:grid;gap:16px;min-width:0}
+.r-card{padding:18px;border:1px solid #304653;border-radius:18px;background:linear-gradient(150deg,#1a2a35,#15232c);box-shadow:0 16px 40px #07131d44;color:#eaf1f5;min-width:0}
+.r-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.r-card h2,.r-card h3{margin:0;font-size:16px;letter-spacing:-.02em}
+.r-muted{color:#9fb3bd;font-size:11px;line-height:1.7}
+.r-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.r-mode{display:flex;align-items:center;gap:11px;min-height:76px;padding:12px;border:1px solid #344b57;border-radius:13px;background:#101d26;color:#eaf1f5;text-align:left;cursor:pointer;transition:.16s}
+.r-mode:hover{transform:translateY(-2px);border-color:var(--mode)}
+.r-mode.active{border:1px solid var(--mode);background:linear-gradient(110deg,color-mix(in srgb,var(--mode) 16%,#14232d),#14232d);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--mode) 30%,transparent)}
+.r-mode-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#ffffff0c;color:var(--mode);font-size:23px;flex:none}
+.r-mode-copy{min-width:0;flex:1}.r-mode-copy b{display:block;font-size:12px}.r-mode-copy small{display:block;margin-top:4px;color:#9fb3bd;font-size:10px;line-height:1.5}
+.r-mode-go{font-size:24px;color:var(--mode)}
+.r-objective{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:13px 14px;border:1px solid #344b57;border-radius:12px;background:#0e1a22}
+.r-objective span{font-size:11px;color:#9fb3bd}.r-objective b{font-size:12px}
+.r-btn{border:1px solid #73d4e6;border-radius:10px;padding:11px 16px;background:linear-gradient(110deg,#237d91,#2d9eaa);color:#fff;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 7px 20px #07131d55}
+.r-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.r-btn.secondary{border-color:#425b67;background:#243945;color:#d9e7ed;box-shadow:none}
+.r-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.r-arena-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.r-arena-head b{font-size:15px}.r-arena-head small{display:block;color:#9fb3bd;font-size:10px;margin-top:4px}
+.r-arena-wrap{position:relative;overflow:hidden;border:1px solid #3a5360;border-radius:15px;background:#101c25}
+#realmCanvas{display:block;width:100%;height:auto;aspect-ratio:1000/540;touch-action:none}
+.r-arena-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px}
+.r-key{display:inline-flex;align-items:center;gap:5px;color:#a9bec8;font-size:10px}
+.r-key kbd{padding:4px 7px;border:1px solid #506774;border-radius:5px;background:#0e1921;color:#e5f2f6;font:800 10px ui-monospace,monospace}
+.r-side-profile{display:flex;align-items:center;gap:12px}
+.r-avatar{display:grid;place-items:center;width:55px;height:55px;border:1px solid #52727f;border-radius:16px;background:linear-gradient(145deg,#284a58,#172b36);font-size:29px}
+.r-side-profile b{font-size:13px}.r-side-profile small{display:block;color:#9fb3bd;font-size:10px;margin-top:4px}
+.r-stat-list{display:grid;gap:11px;margin-top:16px}
+.r-stat{display:flex;justify-content:space-between;gap:10px;font-size:11px}.r-stat span{color:#9fb3bd}
+.r-record{margin-top:14px;padding:11px;border-radius:10px;background:#101d26;color:#9fb3bd;font-size:10px;line-height:1.7}
+.r-bag{display:grid;gap:8px;margin-top:12px}
+.r-bag-item{display:flex;align-items:center;gap:9px;padding:8px;border:1px solid #304653;border-radius:10px;background:#101d26}
+.r-item-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#263c48;color:#9fe6f0;font-size:18px;flex:none}
+.r-bag-item b{display:block;font-size:10px}.r-bag-item small{display:block;margin-top:3px;color:#9fb3bd;font-size:9px}
+.r-empty{padding:14px;text-align:center;color:#8299a4;font-size:10px}
+.r-toast{display:none;padding:10px 12px;border:1px solid #3b6774;border-radius:10px;background:#173441;color:#b8eff7;font-size:11px;line-height:1.6}
+.r-toast.show{display:block}
+.r-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:18px;background:#050b10d9;backdrop-filter:blur(8px);overflow:auto}
+.r-modal.hidden,.hidden{display:none!important}
+.r-modal-box{width:min(900px,100%);max-height:min(92vh,900px);overflow:auto;padding:22px;border:1px solid #45616e;border-radius:20px;background:linear-gradient(145deg,#1b2e39,#101c25);color:#edf5f8;box-shadow:0 30px 100px #000b}
+.r-modal-box.narrow{width:min(650px,100%)}
+.r-modal-eyebrow{font:900 10px ui-monospace,monospace;letter-spacing:.18em;color:#7ed6e5}
+.r-modal-box h2{margin:9px 0 6px;font-size:clamp(23px,4vw,32px);letter-spacing:-.04em}
+.r-modal-desc{margin:0 0 17px;color:#a9bec8;font-size:12px;line-height:1.7}
+.r-loot-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.r-loot-card{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;min-height:220px;padding:15px 10px;border:1px solid var(--grade);border-radius:14px;background:linear-gradient(160deg,color-mix(in srgb,var(--grade) 13%,#172630),#101b24 65%);color:#edf5f8;cursor:pointer;transition:.16s}
+.r-loot-card:hover:not(:disabled){transform:translateY(-5px);box-shadow:0 10px 30px color-mix(in srgb,var(--grade) 25%,transparent)}
+.r-loot-card.disabled{opacity:.28;filter:grayscale(1);cursor:not-allowed}
+.r-loot-grade{font-size:13px;font-weight:950;color:var(--grade)}
+.r-loot-rarity{margin-top:3px;font:900 9px ui-monospace,monospace;letter-spacing:.13em;color:var(--grade)}
+.r-loot-icon{display:grid;place-items:center;width:64px;height:64px;margin:13px 0 10px;border:1px solid color-mix(in srgb,var(--grade) 60%,transparent);border-radius:18px;background:color-mix(in srgb,var(--grade) 14%,#0d1820);color:var(--grade);font-size:34px;text-shadow:0 0 18px var(--grade)}
+.r-loot-card b{font-size:12px;text-align:center}.r-loot-card small{margin-top:6px;color:#a9bec8;font-size:10px;text-align:center;line-height:1.5}
+.r-loot-stage{margin-top:auto;padding-top:12px;color:#d7e4e9;font-size:9px}
+.r-cross{position:absolute;inset:0;display:grid;place-items:center;color:#ff687e;font-size:100px;font-weight:300;text-shadow:0 0 25px #ff687e;z-index:2;pointer-events:none}
+.r-challenge-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:13px}
+.r-grade-pill{padding:7px 10px;border:1px solid #52717e;border-radius:8px;background:#132630;color:#8fe2ed;font-size:11px;font-weight:900}
+.r-attempt-pill{padding:7px 10px;border:1px solid #735d43;border-radius:8px;background:#30291e;color:#f4cf91;font-size:11px;font-weight:900}
+.r-challenge-prompt{padding:15px;border:1px solid #39535f;border-radius:12px;background:#0d1a23;color:#e7f0f4;font-size:13px;line-height:1.8;white-space:pre-wrap}
+.r-options{display:grid;gap:8px;margin-top:14px}
+.r-option{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #3a5360;border-radius:10px;background:#142630;color:#e7f0f4;text-align:left;font:12px/1.6 ui-monospace,monospace;cursor:pointer;overflow-wrap:anywhere}
+.r-option:hover{border-color:#75d5e5;background:#1b3541}
+.r-option kbd{display:grid;place-items:center;width:25px;height:25px;border-radius:7px;background:#294653;color:#a9ecf3;flex:none}
+.r-code{display:block;width:100%;min-height:180px;margin-top:14px;padding:15px;border:1px solid #48616c;border-radius:12px;background:#09151c;color:#c8f4dd;font:13px/1.8 ui-monospace,Consolas,monospace;resize:vertical;tab-size:4;outline:none}
+.r-code:focus{border-color:#73d4e6;box-shadow:0 0 0 3px #73d4e622}
+.r-code-foot{margin-top:7px;color:#829ba6;font-size:9px}
+.r-challenge-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.r-feedback{display:none;margin-top:12px;padding:12px;border-radius:10px;font-size:11px;line-height:1.7}
+.r-feedback.show{display:block}.r-feedback.good{border:1px solid #39795d;background:#163629;color:#a8ebc5}.r-feedback.bad{border:1px solid #7c5743;background:#35251d;color:#ffd0a2}
+.r-hints{display:grid;gap:6px;margin-top:10px}
+.r-hint-line{padding:9px 11px;border-left:2px solid #6ccedf;border-radius:0 8px 8px 0;background:#102630;color:#c3eaf0;font-size:10px;line-height:1.6}
+.r-success-item{display:flex;align-items:center;gap:13px;padding:14px;border:1px solid #526c78;border-radius:13px;background:#12252e}
+.r-success-icon{display:grid;place-items:center;width:55px;height:55px;border-radius:14px;background:#263d49;color:#f1d08a;font-size:30px}
+.r-success-item b{display:block;font-size:14px}.r-success-item small{display:block;margin-top:5px;color:#a9bec8;font-size:10px}
+.r-success-reward{margin-top:12px;color:#9be6c3;font-size:12px;font-weight:900}
+.r-modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}
+@media(max-width:850px){.r-layout{grid-template-columns:1fr}.r-side{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.r-modes{grid-template-columns:1fr}.r-loot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.r-side{grid-template-columns:1fr}.r-card{padding:14px}.r-modal{padding:8px}.r-modal-box{padding:16px}.r-loot-card{min-height:195px}.r-hero{border-radius:16px}}
+
 </style>
 </head>
 <body>
@@ -38,6 +131,102 @@ a{color:inherit;text-decoration:none}.top{height:70px;display:flex;align-items:c
   <section class="game-card"><div class="game-tabs"><button class="game-tab active" data-tab="shop">🏪 상점</button><button class="game-tab" data-tab="bag">🎒 가방</button></div><div id="shopPanel"><div class="shop-list" id="shopList"></div><p class="game-note">장비는 구매 즉시 장착되지 않습니다. 가방에서 장착할 수 있어요.</p></div><div id="bagPanel" class="game-hidden"><div class="bag-list" id="bagList"></div></div><div class="game-note" id="tradeNote">광석 3개를 모으면 100 G로 교환할 수 있습니다.</div><button class="game-btn alt" id="tradeBtn" style="width:100%;margin-top:10px">💱 광석 3개 → 100 G 교환</button></section>
   <div class="game-toast" id="gameToast" role="status" aria-live="polite"></div>
  </aside></div>
+</section>
+<section id="realmGame">
+  <div class="r-hero">
+    <div class="r-kicker">CODE REALM // ACTION QUEST SYSTEM</div>
+    <h1>코드 균열</h1>
+    <p>균열을 탐험하고 의뢰를 완수해 전리품을 발견해. 원하는 등급에 도전하려면 파이썬 실력을 증명해야 한다. 실패해도 더 낮은 등급에 다시 도전할 수 있지만, 세 번의 기회가 전부야.</p>
+    <div class="r-hud">
+      <div class="r-hud-chip"><b id="rGold">0 G</b><small>보유 골드</small></div>
+      <div class="r-hud-chip"><b id="rXp">0 XP</b><small>경험치</small></div>
+      <div class="r-hud-chip"><b id="rWins">0회</b><small>완료 의뢰</small></div>
+      <div class="r-hud-chip"><b id="rRank">0회</b><small>1등급 획득</small></div>
+    </div>
+  </div>
+  <div class="r-layout">
+    <div class="r-main">
+      <section class="r-card" id="rSelectPanel">
+        <div class="r-card-head"><h2>⚑ 의뢰 선택</h2><span class="r-muted">원하는 모험을 선택해</span></div>
+        <div class="r-modes" id="rModes"></div>
+        <div class="r-objective"><div><span>현재 목표</span><br><b id="rQuestGoal">적 4마리 격퇴</b></div><button class="r-btn" id="rStartQuest">의뢰 시작 →</button></div>
+        <p class="r-muted" style="margin:12px 0 0">의뢰를 완료하면 전리품 후보 4개가 등장해. 후보마다 1~4등급 중 하나가 동일한 확률로 정해지고, 선택한 등급에 맞는 파이썬 문제가 출제돼.</p>
+      </section>
+      <section class="r-card hidden" id="rArenaPanel">
+        <div class="r-arena-head"><div><b id="rArenaTitle">균열 토벌</b><small id="rArenaGoal">목표 진행 중</small></div><button class="r-btn secondary" id="rBackSelect">의뢰 포기</button></div>
+        <div class="r-arena-wrap"><canvas id="realmCanvas" width="1000" height="540"></canvas></div>
+        <div class="r-arena-controls"><span class="r-key"><kbd>WASD</kbd> 이동 <kbd>J</kbd> 공격 <kbd>K</kbd> 대시</span><span class="r-muted" id="rArenaHint">전장을 돌파해.</span></div>
+        <div class="r-record" id="rArenaResult">의뢰 진행 중</div>
+      </section>
+      <div class="r-toast" id="rToast" role="status" aria-live="polite"></div>
+    </div>
+    <aside class="r-side">
+      <section class="r-card">
+        <div class="r-card-head"><h3>모험가 정보</h3><span class="r-muted">PROFILE</span></div>
+        <div class="r-side-profile"><div class="r-avatar">⚔</div><div><b>코드 레이더</b><small>파이썬으로 균열을 공략하는 모험가</small></div></div>
+        <div class="r-stat-list">
+          <div class="r-stat"><b>⚔ 공격력</b><span id="rAtk">28</span></div>
+          <div class="r-stat"><b>🛡 방어력</b><span id="rDef">0</span></div>
+          <div class="r-stat"><b>기록</b><span id="rRecord">성공 0 · 실패 0</span></div>
+        </div>
+      </section>
+      <section class="r-card">
+        <div class="r-card-head"><h3>전리품 보관함</h3><span class="r-muted">RECENT 5</span></div>
+        <div class="r-bag" id="rBag"><div class="r-empty">아직 획득한 전리품이 없어.</div></div>
+      </section>
+      <section class="r-card">
+        <div class="r-card-head"><h3>등급 규칙</h3><span class="r-muted">DROP RULE</span></div>
+        <div class="r-stat-list">
+          <div class="r-stat"><b style="color:#f3c76c">1등급</b><span>4단계 · 힌트 없음</span></div>
+          <div class="r-stat"><b style="color:#c69aff">2등급</b><span>3단계 · 직접 코딩</span></div>
+          <div class="r-stat"><b style="color:#6bcdf0">3등급</b><span>2단계 · 오류 수정</span></div>
+          <div class="r-stat"><b style="color:#9aaab3">4등급</b><span>1단계 · 선택형</span></div>
+        </div>
+        <p class="r-muted" style="margin:12px 0 0">각 등급 도전은 3회. 실패하면 더 낮은 등급만 다시 선택할 수 있어.</p>
+      </section>
+    </aside>
+  </div>
+  <div class="r-modal hidden" id="rLootModal" role="dialog" aria-modal="true">
+    <div class="r-modal-box">
+      <div class="r-modal-eyebrow" id="rLootEyebrow">REWARD DROP</div>
+      <h2 id="rLootTitle">전리품이 발견됐다</h2>
+      <p class="r-modal-desc" id="rLootDesc">후보 4개 중 하나를 선택해.</p>
+      <div class="r-loot-grid" id="rLootCards"></div>
+      <div class="r-modal-footer"><button class="r-btn secondary hidden" id="rLootContinue">계속</button></div>
+    </div>
+  </div>
+  <div class="r-modal hidden" id="rChallengeModal" role="dialog" aria-modal="true">
+    <div class="r-modal-box narrow">
+      <div class="r-challenge-top"><span class="r-grade-pill" id="rChallengeGrade">1등급 · 4단계</span><span class="r-attempt-pill" id="rAttempts">도전 기회 3 / 3</span></div>
+      <div class="r-modal-eyebrow" id="rChallengeStage">무힌트 코딩</div>
+      <h2 id="rChallengeTitle">문제</h2>
+      <p class="r-challenge-prompt" id="rChallengePrompt"></p>
+      <div id="rChallengeInput"></div>
+      <div class="r-hints" id="rHintArea"></div>
+      <div class="r-challenge-actions">
+        <button class="r-btn secondary" id="rHintButton">힌트 보기</button>
+        <button class="r-btn" id="rChallengeRun">▶ 코드 실행 · 정답 확인</button>
+        <button class="r-btn secondary" id="rCloseChallenge">도전 포기</button>
+      </div>
+      <div class="r-feedback" id="rChallengeFeedback"></div>
+    </div>
+  </div>
+  <div class="r-modal hidden" id="rSuccessModal" role="dialog" aria-modal="true">
+    <div class="r-modal-box narrow">
+      <div class="r-modal-eyebrow">REWARD ACQUIRED</div><h2>전리품 획득 성공!</h2>
+      <p class="r-modal-desc">파이썬 문제를 해결하고 선택한 보상을 획득했어.</p>
+      <div class="r-success-item" id="rSuccessItem"></div>
+      <div class="r-success-reward" id="rSuccessReward"></div>
+      <div class="r-modal-footer"><button class="r-btn" id="rSuccessContinue">이어가기 →</button></div>
+    </div>
+  </div>
+  <div class="r-modal hidden" id="rFailModal" role="dialog" aria-modal="true">
+    <div class="r-modal-box narrow">
+      <div class="r-modal-eyebrow">REWARD LOST</div><h2>전리품 획득 실패</h2>
+      <p class="r-modal-desc">남아 있는 낮은 등급 후보가 없어. 이번 보상은 놓쳤지만 다음 의뢰에 다시 도전할 수 있어.</p>
+      <div class="r-modal-footer"><button class="r-btn" id="rFailContinue">다음 의뢰로 →</button></div>
+    </div>
+  </div>
 </section></main>
 <div class="loading" id="authLoading"><b>로그인 상태를 확인하고 있어요.</b>잠시만 기다려 주세요.</div>
 <script type="module">
@@ -141,4 +330,5 @@ async function runQuest(q){
 }
 $("tradeBtn").onclick=()=>{if(state.ore<3)return;state.ore-=3;state.gold+=100;persist();toast("광석 3개를 100 G로 교환했습니다.")};
 render();
-</script></body></html>
+</script><script type="module" src="/python_learning/realm.js"></script>
+</body></html>
