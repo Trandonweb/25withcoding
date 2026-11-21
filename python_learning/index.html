@@ -167,26 +167,13 @@ body>.top,body>.wrap,body>header.top{display:none!important}
 .r-ide-editor .cm-keyword{color:#cc7832!important}.r-ide-editor .cm-string,.r-ide-editor .cm-string-2{color:#6a8759!important}.r-ide-editor .cm-number{color:#6897bb!important}.r-ide-editor .cm-builtin{color:#9876aa!important}.r-ide-editor .cm-def{color:#ffc66d!important}.r-ide-editor .cm-comment{color:#808080!important;font-style:italic}.r-ide-editor .cm-operator{color:#a9b7c6!important}
 .r-ide-console{border-top:1px solid #414345;background:#252526}.r-ide-console-head{padding:7px 11px;color:#a9b7c6;font-size:9px;font-weight:900;letter-spacing:.08em}.r-ide-console pre{min-height:40px;max-height:110px;overflow:auto;margin:0;padding:8px 11px 11px;color:#a9b7c6;font:11px/1.6 ui-monospace,monospace;white-space:pre-wrap}.r-ide-console pre:empty:before{content:"코드를 실행하면 결과가 여기에 표시됩니다.";color:#70777e}
 @media(max-width:600px){.r-ide-shell{grid-template-columns:112px minmax(0,1fr)}.r-ide-sidebar{padding:8px 5px}.r-ide-module{font-size:9px;padding:7px 4px}.r-ide-editor .CodeMirror{font-size:12px;height:250px}}
+
+#app[hidden]{display:none!important}#app:not([hidden]){display:block!important}#realmGame .r-start-screen{display:flex!important}
 </style>
 </head>
 <body>
 <header class="top"><a class="brand" href="/"><img src="/logo1.png" alt=""><span>코딩과 함께라면</span></a><div class="top-right"><span id="studentLabel">로그인 확인 중</span><a href="/">홈으로 ↗</a></div></header>
 <main class="wrap" id="app" hidden>
-<section class="hero"><div class="eyebrow">PYTHON LEARNING QUEST · 2026</div><h1>파이썬의 세계에<br>도전해 보자.</h1><p>교재의 순서대로 개념을 익히고, 직접 코드를 작성해 미션을 완료하세요. 한 단계씩 클리어할수록 경험치와 레벨이 올라갑니다.</p><div class="stats"><div class="stat"><b id="level">Lv. 1</b><span>현재 레벨</span></div><div class="stat"><b id="xp">0 XP</b><span>획득 경험치</span></div><div class="stat"><b id="done">0 / 12</b><span>완료한 미션</span></div></div></section>
-<div class="layout"><aside class="panel roadmap"><h3 class="panel-title">학습 여정 <span>🧭</span></h3><div class="progress-track"><div class="progress-fill" id="progressFill"></div></div><div class="progress-meta"><span>전체 진행도</span><b id="progressText">0%</b></div><div class="roadmap-list" id="roadmap"></div></aside>
-<section class="workspace"><div id="lessonArea"><div class="panel loading"><b>학습 환경을 준비하고 있어요.</b>잠시만 기다려 주세요.</div></div></section></div>
-
-<section class="game-mode" id="pythonAdventure">
- <div class="game-hero"><div><div class="game-kicker">PYTHON ADVENTURE · THE CODE REALM</div><h2>코드로 여는 모험의 세계</h2><p>직접 작성한 파이썬 코드로 몬스터를 상대하고, 재료와 골드를 모아 장비를 강화하세요.</p></div><div class="game-hud"><div class="game-chip"><b id="gGold">0 G</b><small>보유 골드</small></div><div class="game-chip"><b id="gLevel">Lv. 1</b><small>모험 레벨</small></div><div class="game-chip"><b id="gClears">0 / 3</b><small>완료한 의뢰</small></div></div></div>
- <div class="game-grid"><div class="game-main">
-  <section class="game-card"><h3>🗺️ 모험 지역</h3><div class="world-map" id="worldMap"></div></section>
-  <section class="game-card" style="margin-top:16px"><h3>📜 모험 의뢰</h3><div class="quest-list" id="questList"></div><div class="quest-detail" id="questDetail"></div></section>
- </div><aside class="game-side">
-  <section class="game-card"><h3>🧙 모험가 정보</h3><div class="player-card"><div class="player-avatar">🧑‍💻</div><div><b>코드 모험가</b><small id="gTitle">초보 모험가</small></div></div><div class="stat-bars"><div class="stat-line"><b>❤️ 체력</b><span id="gHp">100 / 100</span></div><div class="stat-line"><b>⚔️ 공격력</b><span id="gAttack">10</span></div><div class="stat-line"><b>🛡️ 방어력</b><span id="gDefense">0</span></div><div class="stat-line"><b>💎 광석</b><span id="gOre">0개</span></div><div class="stat-line"><b>🧪 물약</b><span id="gPotion">0개</span></div></div></section>
-  <section class="game-card"><div class="game-tabs"><button class="game-tab active" data-tab="shop">🏪 상점</button><button class="game-tab" data-tab="bag">🎒 가방</button></div><div id="shopPanel"><div class="shop-list" id="shopList"></div><p class="game-note">장비는 구매 즉시 장착되지 않습니다. 가방에서 장착할 수 있어요.</p></div><div id="bagPanel" class="game-hidden"><div class="bag-list" id="bagList"></div></div><div class="game-note" id="tradeNote">광석 3개를 모으면 100 G로 교환할 수 있습니다.</div><button class="game-btn alt" id="tradeBtn" style="width:100%;margin-top:10px">💱 광석 3개 → 100 G 교환</button></section>
-  <div class="game-toast" id="gameToast" role="status" aria-live="polite"></div>
- </aside></div>
-</section>
 <section id="realmGame">
   <div class="r-game-topbar">
     <a class="r-home-link" href="/" aria-label="사이트 홈으로">25WITHCODING <span>↗ 홈</span></a>
@@ -306,51 +293,59 @@ body>.top,body>.wrap,body>header.top{display:none!important}
   </div>
 </section></main>
 <div class="loading" id="authLoading"><b>로그인 상태를 확인하고 있어요.</b>잠시만 기다려 주세요.</div>
+<script>
+(function(){
+  function showRuntimeError(message){
+    let panel=document.getElementById("pythonRuntimeError");
+    if(!panel){
+      panel=document.createElement("section");
+      panel.id="pythonRuntimeError";
+      panel.style.cssText="position:fixed;z-index:99999;left:16px;right:16px;bottom:16px;max-width:850px;margin:auto;padding:16px 18px;border:1px solid #e28b75;border-radius:12px;background:#241a1b;color:#ffe8e2;font:13px/1.65 system-ui;box-shadow:0 12px 45px #0009";
+      document.body.appendChild(panel);
+    }
+    panel.textContent="페이지 초기화 중 오류가 발생했습니다: "+String(message||"알 수 없는 오류");
+  }
+  window.addEventListener("error",function(event){showRuntimeError(event.message||event.error||"JavaScript 오류");});
+  window.addEventListener("unhandledrejection",function(event){showRuntimeError(event.reason&&event.reason.message||event.reason||"비동기 처리 오류");});
+})();
+</script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence,browserSessionPersistence} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {getStudentId} from "/firebase-session.js";
-const firebaseConfig={apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app);
-const settings=(()=>{try{return JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}")}catch{return {}}})();
-if(settings.darkMode)document.body.classList.add("dark");
-if(settings.primaryColor&&/^#[0-9a-f]{6}$/i.test(settings.primaryColor))document.documentElement.style.setProperty("--green",settings.primaryColor);
-await setPersistence(auth,settings.keepLogin===false?browserSessionPersistence:browserLocalPersistence).catch(()=>{});
-const session=await new Promise(resolve=>{const off=onAuthStateChanged(auth,user=>{off();resolve(user)},()=>resolve(null))});
-const studentId=getStudentId(session);
-if(!studentId){location.replace("/signin?redirect=%2Fpython_learning");throw new Error("로그인이 필요합니다.")}
-document.getElementById("studentLabel").textContent=studentId+" 학생";
-document.getElementById("authLoading").hidden=true;document.getElementById("app").hidden=false;
 
-const lessons=[
-{id:1,chapter:"01 · 파이썬 첫걸음",title:"화면에 글자 출력하기",time:"print()",concept:"print()는 괄호 안의 값을 화면에 출력하는 명령어입니다. 글자를 출력할 때는 작은따옴표 또는 큰따옴표로 감싸 주세요.",detail:"문자열은 따옴표 안에 작성합니다. 숫자는 따옴표 없이 작성하면 숫자 자료형으로 처리됩니다.",starter:"# 화면에 Hello, Python!을 출력해 보세요.\n",expected:"Hello, Python!",hint:"print('Hello, Python!') 형태로 작성해 보세요.",goal:"Hello, Python!을 정확하게 출력하세요."},
-{id:2,chapter:"01 · 파이썬 첫걸음",title:"여러 줄 출력하기",time:"print() 여러 번 사용",concept:"print()를 여러 번 실행하면 기본적으로 줄을 바꾸어 출력합니다. 한 줄에 이어 쓰고 싶을 때는 end 옵션을 사용할 수 있습니다.",detail:"print('A', end=' ')처럼 작성하면 출력 뒤에 줄바꿈 대신 공백이 들어갑니다.",starter:"# 아래 두 문장을 각각 한 줄에 출력하세요.\n",expected:"코딩과 함께라면\n파이썬 도전!",hint:"print()를 두 번 사용하면 됩니다.",goal:"두 문장을 순서대로 두 줄에 출력하세요."},
-{id:3,chapter:"02 · 변수와 자료형",title:"변수에 값 저장하기",time:"변수 · 대입 연산자",concept:"변수는 값을 저장하는 이름표입니다. = 기호를 사용해 오른쪽 값을 왼쪽 변수에 저장합니다.",detail:"예: score = 100 처럼 저장하고 print(score)로 값을 확인할 수 있습니다.",starter:"# message 변수에 '변수 성공!'을 저장하고 출력하세요.\n",expected:"변수 성공!",hint:"message = '변수 성공!' 다음 줄에 print(message)를 작성하세요.",goal:"message 변수에 문자열을 저장하고 출력하세요."},
-{id:4,chapter:"02 · 변수와 자료형",title:"자료형과 형 변환",time:"str · int · float",concept:"문자열은 str, 정수는 int, 실수는 float 자료형입니다. int('25')처럼 형 변환 함수를 사용하면 값의 형태를 바꿀 수 있습니다.",detail:"문자열 '25'와 정수 25는 서로 다른 자료형입니다. 숫자처럼 보이는 문자열을 계산하려면 먼저 정수로 바꿔야 합니다.",starter:"age_text = '14'\nage = int(age_text)\n# age에 1을 더한 결과를 출력하세요.\n",expected:"15",hint:"print(age + 1)을 실행하세요.",goal:"문자열을 정수로 변환한 뒤 1을 더하세요."},
-{id:5,chapter:"03 · 문자열 다루기",title:"문자열 이어 붙이기",time:"+ 연산자 · f-string",concept:"문자열끼리는 + 연산자로 이어 붙일 수 있습니다. f-string을 사용하면 문자열 안에 변수 값을 편리하게 넣을 수 있습니다.",detail:"f'안녕, {name}!'처럼 문자열 앞에 f를 붙이고 중괄호 안에 변수 이름을 씁니다.",starter:"name = '파이썬'\n# '안녕, 파이썬!'을 출력하세요.\n",expected:"안녕, 파이썬!",hint:"print(f'안녕, {name}!')을 사용해 보세요.",goal:"f-string으로 변수 name을 문장에 넣으세요."},
-{id:6,chapter:"04 · 연산과 조건문",title:"숫자 계산하기",time:"+ - * / // %",concept:"파이썬은 사칙연산과 나머지 연산을 지원합니다. /는 나눗셈 결과를 실수로, //는 몫을, %는 나머지를 구합니다.",detail:"17 % 5의 결과는 2입니다. 연산 순서는 수학의 기본 규칙을 따릅니다.",starter:"# 17을 5로 나눈 나머지를 출력하세요.\n",expected:"2",hint:"나머지를 구하는 기호는 % 입니다.",goal:"나머지 연산자를 사용해 2를 출력하세요."},
-{id:7,chapter:"04 · 연산과 조건문",title:"if 조건문",time:"if · else",concept:"if는 조건이 참일 때 들여쓰기 된 코드를 실행합니다. 조건이 거짓일 때는 else 블록을 실행할 수 있습니다.",detail:"조건문 끝에는 콜론(:)을 쓰고, 실행할 코드는 들여쓰기해야 합니다.",starter:"score = 95\n# score가 90 이상이면 '합격'을 출력하세요.\n",expected:"합격",hint:"if score >= 90: 다음 줄에 들여쓰기 후 print('합격')을 작성하세요.",goal:"if 조건문으로 합격을 판정하세요."},
-{id:8,chapter:"05 · 반복문",title:"for와 range()",time:"for · range()",concept:"for 반복문은 정해진 횟수만큼 코드를 반복합니다. range(1, 4)는 1, 2, 3을 차례로 만들어 냅니다.",detail:"range(a, b)는 a부터 b보다 작은 수까지 생성합니다. 반복할 코드는 반드시 들여쓰기해야 합니다.",starter:"# 1부터 5까지 숫자를 한 줄씩 출력하세요.\n",expected:"1\n2\n3\n4\n5",hint:"for i in range(1, 6): 형태로 작성하세요.",goal:"for 반복문으로 1부터 5까지 출력하세요."},
-{id:9,chapter:"05 · 반복문",title:"while 반복문",time:"while · 조건 반복",concept:"while은 조건이 참인 동안 코드를 반복합니다. 반복문 안에서 조건에 영향을 주는 값을 바꾸지 않으면 끝나지 않을 수 있습니다.",detail:"n = 1로 시작하고 while n <= 3: 안에서 출력한 뒤 n += 1로 값을 증가시켜 보세요.",starter:"n = 1\n# while을 사용해 1, 2, 3을 출력하세요.\n",expected:"1\n2\n3",hint:"while n <= 3: 반복문 안에서 print(n)과 n += 1을 실행하세요.",goal:"while 반복문을 안전하게 종료시키세요."},
-{id:10,chapter:"06 · 리스트와 함수",title:"리스트 활용하기",time:"list · append()",concept:"리스트는 여러 값을 순서대로 저장하는 자료형입니다. 대괄호로 만들고, append()로 값을 추가할 수 있습니다.",detail:"numbers = [1, 2, 3]처럼 만들고 print(numbers[0])으로 첫 번째 값을 가져옵니다. 인덱스는 0부터 시작합니다.",starter:"numbers = [10, 20, 30]\n# 리스트의 첫 번째 값을 출력하세요.\n",expected:"10",hint:"첫 번째 요소의 인덱스는 0입니다.",goal:"인덱스로 첫 번째 요소를 출력하세요."},
-{id:11,chapter:"06 · 리스트와 함수",title:"나만의 함수 만들기",time:"def · return",concept:"def로 함수를 정의하면 필요한 코드를 이름으로 묶어 재사용할 수 있습니다. return은 함수의 결과를 돌려줍니다.",detail:"def double(x): 다음 줄에 return x * 2를 작성하고 print(double(6))을 실행해 보세요.",starter:"# double 함수가 입력값의 2배를 돌려주도록 만드세요.\n# double(6)의 결과를 출력하세요.\n",expected:"12",hint:"def double(x): / return x * 2 / print(double(6)) 순서로 작성하세요.",goal:"매개변수와 return을 사용하는 함수를 만드세요."},
-{id:12,chapter:"07 · 내장 함수와 모듈",title:"내장 함수와 모듈",time:"len() · sum() · import",concept:"len(), max(), min(), sum() 등은 import 없이 바로 쓸 수 있는 내장 함수입니다. random, math, time, datetime 같은 모듈은 import로 불러옵니다.",detail:"numbers = [2, 4, 6]에서 sum(numbers)를 출력하면 12가 됩니다. len(numbers)는 요소의 개수인 3을 돌려줍니다.",starter:"numbers = [2, 4, 6]\n# 리스트의 합계와 요소 개수를 순서대로 출력하세요.\n",expected:"12\n3",hint:"sum(numbers)와 len(numbers)를 각각 출력하세요.",goal:"내장 함수 두 가지를 사용하세요."}
-];
-const KEY="pythonQuestProgress:"+studentId;
-let progress={completed:[],xp:0};try{const saved=JSON.parse(localStorage.getItem(KEY)||"{}");progress={completed:Array.isArray(saved.completed)?saved.completed:[],xp:Number(saved.xp)||0}}catch{}
-let current=lessons.findIndex(x=>!progress.completed.includes(x.id));if(current<0)current=lessons.length-1;
-let pyodide=null,loadingPython=null;
-async function loadPython(){if(pyodide)return pyodide;if(loadingPython)return loadingPython;loadingPython=(async()=>{const script=document.createElement("script");script.src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js";document.head.append(script);await new Promise((resolve,reject)=>{script.onload=resolve;script.onerror=()=>reject(new Error("파이썬 실행 환경을 불러오지 못했습니다. 네트워크를 확인해 주세요."))});pyodide=await loadPyodide({indexURL:"https://cdn.jsdelivr.net/pyodide/v0.27.7/full/"});return pyodide})();return loadingPython}
-const $=id=>document.getElementById(id);
-function save(){localStorage.setItem(KEY,JSON.stringify(progress));renderStats();renderRoadmap()}
-function renderStats(){$("level").textContent="Lv. "+(Math.floor(progress.xp/100)+1);$("xp").textContent=progress.xp+" XP";$("done").textContent=progress.completed.length+" / "+lessons.length;const pct=Math.round(progress.completed.length/lessons.length*100);$("progressFill").style.width=pct+"%";$("progressText").textContent=pct+"%"}
-function renderRoadmap(){const root=$("roadmap");root.replaceChildren();let last="";lessons.forEach((lesson,index)=>{if(lesson.chapter!==last){const h=document.createElement("div");h.className="chapter";h.textContent=lesson.chapter;root.append(h);last=lesson.chapter}const done=progress.completed.includes(lesson.id),locked=index>0&&!progress.completed.includes(lessons[index-1].id);const b=document.createElement("button");b.className="lesson"+(index===current?" active":"")+(locked?" locked":"");b.disabled=locked;b.innerHTML='<span class="lesson-num">'+(done?"✓":String(lesson.id).padStart(2,"0"))+'</span><span class="lesson-info"><b>'+lesson.title+'</b><small>'+lesson.time+'</small></span><span class="lesson-check">'+(done?"✓":"")+'</span>';b.addEventListener("click",()=>{current=index;renderLesson()});root.append(b)})}
-function renderLesson(){const l=lessons[current],done=progress.completed.includes(l.id);$("lessonArea").innerHTML='<div class="panel lesson-head"><span class="tag">'+l.chapter+'</span><h2>'+l.title+'</h2><p>'+l.goal+'</p></div><div class="panel lesson-body"><div class="explain"><strong>핵심 개념</strong><br>'+l.concept+'<br><br>'+l.detail+'</div><div class="code-label"><span>⌨️ 나의 코드</span><small>직접 입력하고 실행해 보세요</small></div><textarea class="editor" id="codeEditor" spellcheck="false" autocapitalize="off" autocomplete="off">'+l.starter.replace(/</g,"&lt;")+'</textarea><div class="actions"><button class="btn" id="runBtn">▶ 코드 실행</button><button class="btn secondary" id="hintBtn">힌트 보기</button><button class="btn secondary" id="resetBtn">초기 코드</button></div><div class="code-label"><span>실행 결과</span><small>Python 3 · 브라우저에서 실행</small></div><div class="output" id="output">코드를 작성하고 [코드 실행]을 눌러 보세요.</div><div class="feedback" id="feedback"></div><div class="complete-banner '+(done?"show":"")+'" id="completeBanner">🎉 이미 완료한 미션입니다. 코드를 다시 연습해도 좋아요.</div><div class="next-row"><span class="hint">미션 보상: +25 XP<br>진도는 현재 사용 중인 브라우저에 저장됩니다.</span><button class="btn" id="nextBtn" '+(done&&current<lessons.length-1?"":"hidden")+'>'+(current===lessons.length-1?"완료":"다음 미션 →")+'</button></div></div>';
-$("runBtn").addEventListener("click",runCode);$("hintBtn").addEventListener("click",()=>showFeedback(l.hint,"bad"));$("resetBtn").addEventListener("click",()=>{$("codeEditor").value=l.starter;$("output").textContent="초기 코드로 되돌렸습니다.";$("feedback").className="feedback";});$("nextBtn").addEventListener("click",()=>{if(current<lessons.length-1){current++;renderLesson();window.scrollTo({top:0,behavior:"smooth"})}});
-}
-function showFeedback(message,type){const f=$("feedback");f.textContent=message;f.className="feedback show "+type}
-async function runCode(){const btn=$("runBtn"),out=$("output"),code=$("codeEditor").value;btn.disabled=true;btn.textContent="실행 환경 준비 중…";out.textContent="Python 실행 환경을 준비하고 있습니다. 처음 실행할 때는 조금 걸릴 수 있어요.";try{const py=await loadPython();btn.textContent="실행 중…";const result=await py.runPythonAsync("import sys, io\n_output = io.StringIO()\n_old_stdout = sys.stdout\nsys.stdout = _output\ntry:\n exec("+JSON.stringify(code)+", {})\nfinally:\n sys.stdout = _old_stdout\n_output.getvalue()");const actual=String(result).replace(/\r\n/g,"\n").trimEnd();out.textContent=actual||"(출력된 내용이 없습니다.)";const expected=lessons[current].expected;if(actual===expected){if(!progress.completed.includes(lessons[current].id)){progress.completed.push(lessons[current].id);progress.xp+=25;save()}showFeedback("정답입니다! 미션을 완료했어요. 경험치 25 XP를 획득했습니다. 🎉","good");$("completeBanner").classList.add("show");$("nextBtn").hidden=current===lessons.length-1;renderRoadmap();renderStats()}else{showFeedback("실행은 성공했지만 목표 출력과 달라요. 공백, 줄바꿈, 출력 순서를 확인해 보세요.","bad")}}catch(error){out.textContent=String(error);showFeedback("오류가 발생했어요. 따옴표, 괄호, 콜론(:), 들여쓰기를 확인해 보세요.","bad")}finally{btn.disabled=false;btn.textContent="▶ 코드 실행"}}
-renderStats();renderRoadmap();renderLesson();
+window.__pythonStudentReady=(async()=>{
+  const loading=document.getElementById("authLoading");
+  const appRoot=document.getElementById("app");
+  try{
+    const firebaseConfig={apiKey:"AIzaSyBgOAO72ArB8WdO7OSYsTVEQtRHT049U20",authDomain:"points2026-f5e50.firebaseapp.com",projectId:"points2026-f5e50",storageBucket:"points2026-f5e50.firebasestorage.app",messagingSenderId:"248724251417",appId:"1:248724251417:web:02d85cdc4addac98069b88"};
+    const firebaseApp=initializeApp(firebaseConfig);
+    const auth=getAuth(firebaseApp);
+    let settings={};
+    try{settings=JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}")||{};}catch{}
+    if(settings.darkMode)document.body.classList.add("dark");
+    if(settings.primaryColor&&/^#[0-9a-f]{6}$/i.test(settings.primaryColor))document.documentElement.style.setProperty("--green",settings.primaryColor);
+    await setPersistence(auth,settings.keepLogin===false?browserSessionPersistence:browserLocalPersistence).catch(()=>{});
+    const user=await new Promise((resolve,reject)=>{
+      let unsubscribe=()=>{};
+      unsubscribe=onAuthStateChanged(auth,value=>{unsubscribe();resolve(value);},error=>{unsubscribe();reject(error);});
+    });
+    const studentId=getStudentId(user);
+    if(!studentId){
+      location.replace("/signin?redirect=%2Fpython_learning");
+      return null;
+    }
+    document.getElementById("studentLabel").textContent=studentId+" 학생";
+    appRoot.hidden=false;
+    loading.hidden=true;
+    document.dispatchEvent(new CustomEvent("python-session-ready",{detail:{studentId}}));
+    return studentId;
+  }catch(error){
+    loading.hidden=false;
+    loading.innerHTML="<b>로그인 확인에 실패했습니다.</b>"+String(error&&error.message||error);
+    throw error;
+  }
+})();
 </script>
 
 <script type="module">
