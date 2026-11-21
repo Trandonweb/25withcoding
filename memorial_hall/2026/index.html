@@ -420,6 +420,34 @@ body{
   color:#ffb0b0
 }
 
+#musicToggle{
+  position:fixed;
+  top:14px;
+  right:18px;
+  z-index:1500;
+  min-width:112px;
+  padding:10px 14px;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:999px;
+  background:rgba(21,21,28,.88);
+  color:#fff;
+  font-size:13px;
+  font-weight:bold;
+  cursor:pointer;
+  backdrop-filter:blur(10px);
+  box-shadow:0 5px 18px rgba(0,0,0,.25);
+  transition:background .2s,transform .2s,border-color .2s
+}
+#musicToggle:hover{
+  background:rgba(39,174,96,.28);
+  border-color:var(--primary-color);
+  transform:translateY(-1px)
+}
+#musicToggle:focus-visible{
+  outline:2px solid var(--secondary-color);
+  outline-offset:3px
+}
+
 header{
   text-align:center;
   padding:12px 20px;
@@ -569,6 +597,8 @@ header{
 >
   기념관 홈
 </a>
+
+<button id="musicToggle" type="button" aria-label="배경 음악 재생">♫ 음악 재생</button>
 
 <header>
   코딩과 함께라면 2026
@@ -976,6 +1006,131 @@ loadProjects();
 
 </script>
 
+
+<script>
+/*
+ * 2026 기념관 오리지널 배경음악
+ * Web Audio API로 실시간 생성하며 외부 음원이나 2025년 음원을 사용하지 않습니다.
+ */
+(() => {
+  const button = document.getElementById("musicToggle");
+  if (!button) return;
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    button.textContent = "음악 미지원";
+    button.disabled = true;
+    return;
+  }
+
+  let audioContext = null;
+  let musicTimer = null;
+  let step = 0;
+
+  const beatSeconds = 0.56;
+  const melody = [
+    587.33, null, 440.00, null, 493.88, null, 659.25, null,
+    587.33, null, 440.00, 392.00, null, 440.00, null, null,
+    493.88, null, 587.33, null, 783.99, null, 659.25, null,
+    587.33, null, 493.88, 440.00, null, 392.00, null, null
+  ];
+
+  const chords = [
+    [146.83, 220.00, 277.18, 369.99], // Dmaj7
+    [123.47, 185.00, 220.00, 293.66], // Bm7
+    [98.00, 146.83, 185.00, 246.94],  // Gmaj7
+    [110.00, 164.81, 196.00, 293.66]  // Asus4
+  ];
+
+  function tone(frequency, start, duration, volume, type, attack) {
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const filter = audioContext.createBiquadFilter();
+
+    oscillator.type = type || "sine";
+    oscillator.frequency.setValueAtTime(frequency, start);
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1800, start);
+
+    const peak = volume || 0.025;
+    const fadeIn = attack || 0.35;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(peak, start + fadeIn);
+    gain.gain.setValueAtTime(peak, start + Math.max(fadeIn, duration - 0.5));
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    oscillator.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.03);
+  }
+
+  function playChord(chordIndex, start) {
+    chords[chordIndex].forEach((frequency, index) => {
+      tone(frequency, start, beatSeconds * 8, index === 0 ? 0.018 : 0.012, "sine", 1.1);
+    });
+  }
+
+  function tick() {
+    const now = audioContext.currentTime + 0.04;
+    if (step % 8 === 0) {
+      playChord(Math.floor(step / 8) % chords.length, now);
+    }
+
+    const note = melody[step % melody.length];
+    if (note) {
+      tone(note, now, 0.9, 0.026, "sine", 0.08);
+      tone(note * 2, now, 0.48, 0.004, "triangle", 0.05);
+    }
+    step++;
+  }
+
+  async function startMusic() {
+    if (!audioContext) {
+      audioContext = new AudioContextClass();
+    }
+    await audioContext.resume();
+    if (musicTimer) return;
+
+    button.textContent = "♫ 음악 끄기";
+    button.setAttribute("aria-label", "배경 음악 끄기");
+    tick();
+    musicTimer = window.setInterval(tick, beatSeconds * 1000);
+  }
+
+  async function stopMusic() {
+    if (musicTimer) {
+      window.clearInterval(musicTimer);
+      musicTimer = null;
+    }
+    if (audioContext && audioContext.state === "running") {
+      await audioContext.suspend();
+    }
+    button.textContent = "♫ 음악 재생";
+    button.setAttribute("aria-label", "배경 음악 재생");
+  }
+
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      if (musicTimer) await stopMusic();
+      else await startMusic();
+    } catch (error) {
+      console.error("배경 음악을 재생하지 못했습니다:", error);
+      button.textContent = "다시 재생";
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && musicTimer) {
+      stopMusic();
+    }
+  });
+})();
+</script>
 
 <script src="/script.js" defer></script>
 </body>
