@@ -128,3 +128,39 @@ Worker 설정이나 Secret 변경이 필요하지 않다.
 - 프로젝트 파일 내보내기에는 `format: 25withcoding-project`, `version: 1`, `components`, `pages`가 포함된다.
 - 이전 `25withcoding-make-main` 형식의 프로젝트 파일도 계속 불러올 수 있다.
 - 새 속성은 기존 홈페이지 데이터에 추가되며 기존 데이터 필드를 교체하지 않는다.
+
+
+## 9. 프로젝트 관리형 편집기
+
+편집기는 관리자 인증 후 data/main-page.json을 자동으로 읽고 프로젝트 목록을 표시한다.
+프로젝트 데이터는 기존 파일 경로를 추가하지 않고 통합 데이터의 makeMainProject 영역에 보관한다.
+
+```json
+{
+  "makeMainProject": {
+    "format": "25withcoding-project",
+    "version": 1,
+    "publishedProjectId": "project-id",
+    "components": [],
+    "projects": [
+      {
+        "id": "project-id",
+        "name": "프로젝트 이름",
+        "description": "",
+        "pages": [],
+        "components": [],
+        "createdAt": "ISO-8601 timestamp",
+        "updatedAt": "ISO-8601 timestamp"
+      }
+    ]
+  }
+}
+```
+
+- 프로젝트 목록에서 프로젝트를 선택한 뒤 편집한다.
+- 자동 저장과 임시 저장은 프로젝트 원본만 갱신하며 홈페이지 공개 데이터인 canvasPages는 변경하지 않는다.
+- 배포하기를 눌렀을 때만 선택한 프로젝트의 페이지를 canvasPages에 반영한다.
+- 기존 settings, slides, elements, canvasPages와 기존 pageN.json은 임시 저장 과정에서 변경하지 않는다.
+- 프로젝트 목록, 프로젝트별 페이지, 재사용 컴포넌트는 makeMainProject 아래에서 관리한다.
+- 새 저장 경로가 필요하지 않으므로 Cloudflare Worker의 허용 경로, Secret, 설정은 변경하지 않는다.
+- 화면은 뷰포트 높이에 맞춰 고정하고, 페이지 전체 스크롤 대신 패널 내부에서 내용을 관리한다.
