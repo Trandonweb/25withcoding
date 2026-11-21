@@ -23,10 +23,45 @@ const defaults = {
   wins: 0, fails: 0, items: [], adaptive: { choice: 1, fix: 1, coding: 1 },
   stats: { quests: 0, grade1: 0, grade2: 0, grade3: 0, grade4: 0 }
 };
+const curriculum = [
+  { id:"variables", label:"변수", sub:"값 저장", keys:["변수","대입"] },
+  { id:"print", label:"print()", sub:"출력", keys:["출력","print","문장"] },
+  { id:"input", label:"input()", sub:"입력", keys:["input","입력","f-string","이름표"] },
+  { id:"types", label:"자료형", sub:"형 변환", keys:["자료형","정수","실수","int","float","type"] },
+  { id:"operators", label:"연산자", sub:"계산", keys:["연산","사칙","나머지","합계"] },
+  { id:"if", label:"if", sub:"조건문", keys:["조건","if","짝수","홀수","학점"] },
+  { id:"while", label:"while", sub:"반복 ①", keys:["while","반복","break","카운트다운"] },
+  { id:"random", label:"random", sub:"난수", keys:["random","랜덤","가위","숫자 맞히기"] },
+  { id:"for", label:"for/range", sub:"반복 ②", keys:["for","range","중첩 반복"] },
+  { id:"list", label:"리스트", sub:"목록", keys:["리스트","인덱스","list","배열"] },
+  { id:"builtins", label:"내장 함수·모듈", sub:"len · split", keys:["함수","모듈","len","split","sum","max","min","datetime","math","time"] },
+  { id:"custom", label:"사용자 함수", sub:"def · return", keys:["사용자","def","return","계산기"] }
+];
+let curriculumDone = [];
+function curriculumIndex(challenge) {
+  const source = [challenge.title, challenge.prompt, challenge.starter].join(" ").toLowerCase();
+  for (let i = 0; i < curriculum.length; i++) {
+    if (curriculum[i].keys.some((key) => source.includes(key.toLowerCase()))) return i;
+  }
+  return 0;
+}
+function renderCurriculum(activeIndex) {
+  const root = $("rCurriculumTrack");
+  if (!root) return;
+  root.innerHTML = curriculum.map((topic, index) => {
+    const done = curriculumDone.includes(topic.id);
+    const active = index === activeIndex;
+    return '<div class="r-curriculum-node ' + (done ? "done " : "") + (active ? "current" : "") + '"><b>' + escapeHTML(topic.label) + '</b><small>' + escapeHTML(topic.sub) + '</small></div>';
+  }).join("");
+  $("rCurriculumProgress").textContent = curriculumDone.length + " / " + curriculum.length + " 개념";
+  const active = root.children[activeIndex];
+  if (active) active.scrollIntoView({ block:"nearest", inline:"center", behavior:"smooth" });
+}
 let save = { ...defaults };
 try {
   const raw = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
   save = { ...defaults, ...raw, adaptive: { ...defaults.adaptive, ...(raw.adaptive || {}) }, stats: { ...defaults.stats, ...(raw.stats || {}) } };
+  curriculumDone = Array.isArray(raw.curriculumDone) ? raw.curriculumDone : [];
 } catch {}
 const modes = [
   { id: "rift", name: "균열 토벌", icon: "⚔", desc: "균열에서 몰려오는 적을 정리한다.", goal: "적 4마리 격퇴", color: "#ff8c68" },
@@ -360,6 +395,30 @@ function setCanvasSize() {
 function burstPlaceholder() {}
 window.addEventListener("resize", setCanvasSize);
 window.addEventListener("keydown", (event) => {
+  const target = event.target;
+  const editing = target instanceof HTMLElement &&
+    (target.isContentEditable || target.tagName === "TEXTAREA" || target.tagName === "INPUT");
+  if (editing) {
+    if (target.id === "rCodeEditor" && event.key === "Tab") {
+      event.preventDefault();
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const value = target.value;
+      if (event.shiftKey) {
+        const lineStart = value.lastIndexOf("\\n", Math.max(0, start - 1)) + 1;
+        const before = value.slice(lineStart, start);
+        if (before.startsWith("    ")) {
+          target.setRangeText("", lineStart, lineStart + 4, "end");
+        } else if (before.startsWith("\\t")) {
+          target.setRangeText("", lineStart, lineStart + 1, "end");
+        }
+      } else {
+        target.setRangeText("    ", start, end, "end");
+      }
+      target.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    return;
+  }
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
   keys[event.key] = true;
   const k = event.key.toLowerCase();
@@ -542,6 +601,7 @@ function startChallenge(candidate) {
 }
 function renderChallenge() {
   const c = currentChallenge;
+  renderCurriculum(curriculumIndex(c));
   const stageName = ["", "선택형", "오류 수정", "직접 코딩", "무힌트 코딩"][c.stage];
   const difficulty = c.stage === 4 ? "최상" : ["하", "중", "상"][c.level];
   $("rChallengeGrade").textContent = selectedCandidate.grade + "등급 · " + c.stage + "단계";
@@ -577,6 +637,9 @@ function adjustDifficulty(key, success) {
 }
 function correctChallenge() {
   challengeLocked = true;
+  const topicId = curriculum[curriculumIndex(currentChallenge)].id;
+  if (!curriculumDone.includes(topicId)) curriculumDone.push(topicId);
+  save.curriculumDone = curriculumDone;
   const grade = selectedCandidate.grade;
   save.wins++;
   save.stats["grade" + grade] = (save.stats["grade" + grade] || 0) + 1;
