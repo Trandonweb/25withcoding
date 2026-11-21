@@ -112,6 +112,31 @@ a{color:inherit;text-decoration:none}.top{height:70px;display:flex;align-items:c
 @media(max-width:850px){.r-layout{grid-template-columns:1fr}.r-side{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.r-modes{grid-template-columns:1fr}.r-loot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.r-side{grid-template-columns:1fr}.r-card{padding:14px}.r-modal{padding:8px}.r-modal-box{padding:16px}.r-loot-card{min-height:195px}.r-hero{border-radius:16px}}
 
+
+/* FULLSCREEN GAME EXPERIENCE */
+html,body{width:100%;min-height:100%;overflow-x:hidden}
+body{background:#080e16!important;color:#edf5fa}
+body>.top,body>.wrap,body>header.top{display:none!important}
+#app{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;min-height:100vh}
+#realmGame{position:relative;display:block!important;width:100%;min-height:100vh;margin:0!important;padding:0!important;overflow:hidden;background:radial-gradient(ellipse at 70% 35%,#17364a 0%,#0b1925 43%,#070c14 100%);color:#edf5fa}
+#realmGame .r-hero,#realmGame .r-side,#realmGame .r-toast{display:none!important}
+.r-game-topbar{position:absolute;z-index:30;top:0;left:0;right:0;height:64px;padding:0 clamp(16px,4vw,54px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #bceaff16;background:#07111dbb;backdrop-filter:blur(14px)}
+.r-home-link{font:900 12px/1 ui-monospace,monospace;letter-spacing:.12em;color:#dff6ff;text-decoration:none}.r-home-link span{margin-left:10px;color:#78cce2;font:700 11px system-ui}
+.r-top-actions{display:flex;gap:8px}.r-top-btn{border:1px solid #8bc8df44;background:#102333;color:#dff5ff;border-radius:9px;padding:9px 13px;font-weight:800;font-size:11px;cursor:pointer}
+.r-start-screen{position:relative;min-height:100svh;display:flex;align-items:center;padding:100px clamp(24px,9vw,130px) 70px;overflow:hidden;background:radial-gradient(ellipse at 75% 48%,#1c5065a8 0,transparent 36%),linear-gradient(115deg,#07111c 0%,#102536 52%,#0a1722 100%)}
+.r-start-screen:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#9edcf20b 1px,transparent 1px),linear-gradient(90deg,#9edcf20b 1px,transparent 1px);background-size:54px 54px;mask-image:linear-gradient(90deg,transparent,#000 50%,#000)}
+.r-start-copy{position:relative;z-index:2;width:min(610px,58%)}.r-start-title{margin:18px 0 20px;font:1000 clamp(64px,10vw,132px)/.78 system-ui,sans-serif;letter-spacing:-.085em;color:#f4fbff;text-shadow:0 12px 60px #0008}.r-start-title span{color:#70d9ed;text-shadow:0 0 38px #42c9e755}.r-start-copy p{font-size:clamp(14px,1.5vw,18px);line-height:1.9;color:#b9d0dc;margin:0 0 25px}.r-start-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:#88aebb;font-size:10px;font-weight:800;letter-spacing:.04em}.r-start-meta i{width:4px;height:4px;border-radius:50%;background:#69d6ec}.r-start-button{display:flex;align-items:center;justify-content:space-between;gap:70px;margin-top:34px;padding:17px 22px;min-width:220px;border:1px solid #a8f1ff;border-radius:10px;background:linear-gradient(105deg,#65d9ec,#b4f4f4);color:#071721;font-size:15px;font-weight:1000;cursor:pointer;box-shadow:0 12px 40px #39c8e533;transition:.18s}.r-start-button:hover{transform:translateY(-3px);box-shadow:0 18px 50px #39c8e566}.r-start-button span{font-size:22px}.r-start-foot{margin-top:28px;color:#5f8595;font:800 9px ui-monospace,monospace;letter-spacing:.2em}.r-start-bottom{position:absolute;bottom:22px;left:clamp(24px,4vw,54px);right:clamp(24px,4vw,54px);display:flex;justify-content:space-between;color:#547486;font:800 9px ui-monospace,monospace;letter-spacing:.13em}
+.r-start-art{position:absolute;right:5%;top:50%;width:min(48vw,650px);aspect-ratio:1;transform:translateY(-48%);display:grid;place-items:center;pointer-events:none}.r-start-art:before,.r-start-art:after{content:"";position:absolute;width:75%;height:75%;border:1px solid #65d8ed22;border-radius:50%;box-shadow:0 0 70px #36a9c51c,inset 0 0 70px #36a9c51c}.r-start-art:after{width:54%;height:54%;border-color:#b5e9ff35;transform:rotateX(68deg) rotate(25deg)}.r-orbit{position:absolute;border:1px solid #75d9eb4a;border-radius:50%;width:95%;height:35%;transform:rotate(-32deg)}.orbit-two{width:90%;height:55%;transform:rotate(55deg);border-color:#b8d8f533}.r-core{width:28%;aspect-ratio:1;display:grid;place-items:center;border:1px solid #b8f5ff9c;border-radius:28%;transform:rotate(45deg);background:linear-gradient(145deg,#285f76,#0a1d2b);box-shadow:0 0 35px #5be0f588,0 0 120px #2ca8d355,inset 0 0 30px #b6f4ff55;color:#c8faff;font-size:clamp(48px,7vw,90px);text-shadow:0 0 25px #7deaff}.r-shard{position:absolute;color:#a9f3ff;text-shadow:0 0 20px #66dfffa8;font-size:clamp(26px,4vw,48px)}.shard-one{top:16%;right:20%}.shard-two{bottom:17%;left:19%;color:#e3c8ff}.shard-three{top:47%;left:7%;color:#f4d58c}
+.r-layout{display:block!important;margin:0!important}.r-main{display:block!important}.r-card{background:#102332!important;border-color:#315366!important;color:#edf7fa!important}
+#rSelectPanel{position:fixed;z-index:25;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,calc(100vw - 28px));max-height:min(82svh,760px);overflow:auto;padding:24px;background:linear-gradient(150deg,#172f40,#0d1c29)!important;box-shadow:0 30px 120px #000b;border-radius:20px}
+#rSelectPanel:not(.hidden):before{content:"";position:fixed;z-index:-1;inset:-100vh -100vw;background:#02070dcc;backdrop-filter:blur(8px)}
+.r-modes{grid-template-columns:repeat(2,minmax(0,1fr))}.r-mode{min-height:86px;background:#0b1a26;border-color:#345467}.r-mode.active{background:#183b4b;border-color:#70d9ed;box-shadow:0 0 0 1px #70d9ed55}.r-objective{background:#0a1b27;border-color:#35586a}
+#rArenaPanel{position:fixed;z-index:22;inset:64px 0 0;border:0!important;border-radius:0!important;padding:14px clamp(10px,2vw,28px)!important;background:#07111c!important;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+#rArenaPanel.hidden{display:none!important}.r-arena-head{flex:none}.r-arena-wrap{flex:1;min-height:0;height:auto!important;max-height:none!important}.r-arena-wrap canvas{width:100%;height:100%;display:block;object-fit:contain;border-radius:14px}.r-arena-controls{flex:none}
+.r-profile-scrim{position:fixed;z-index:60;inset:0;display:grid;place-items:center;padding:16px;background:#020811c9;backdrop-filter:blur(8px)}.r-profile-scrim.hidden{display:none!important}.r-profile-pop{position:relative;width:min(430px,100%);max-height:85svh;overflow:auto;padding:25px;border:1px solid #416578;border-radius:18px;background:linear-gradient(145deg,#193548,#0d1d2a);box-shadow:0 30px 100px #000b}.r-pop-close{position:absolute;right:14px;top:12px;border:0;background:transparent;color:#dff7ff;font-size:27px;cursor:pointer}.r-profile-subtitle{margin:18px 0 8px;color:#a8d7e4;font-size:12px;font-weight:900}
+.r-modal{z-index:70!important}.r-modal-box{max-height:88svh;overflow:auto}
+@media(max-width:760px){.r-start-screen{padding:100px 24px 75px;align-items:flex-end}.r-start-copy{width:100%;padding-bottom:35px}.r-start-title{font-size:clamp(62px,17vw,100px)}.r-start-art{width:82vw;right:-18%;top:32%;opacity:.58}.r-start-copy p{font-size:13px}.r-start-meta{max-width:300px;line-height:1.8}.r-start-bottom{font-size:7px}.r-modes{grid-template-columns:1fr}.r-mode{min-height:68px}#rSelectPanel{padding:17px;max-height:86svh}#rArenaPanel{inset:58px 0 0;padding:8px!important}.r-game-topbar{height:58px}.r-top-btn{padding:8px 10px}.r-arena-controls{font-size:10px;flex-wrap:wrap}}
+@media(max-height:650px) and (min-width:761px){.r-start-title{font-size:76px}.r-start-art{width:42vw}.r-start-screen{padding-top:80px}.r-start-button{margin-top:18px}}
 </style>
 </head>
 <body>
@@ -133,6 +158,23 @@ a{color:inherit;text-decoration:none}.top{height:70px;display:flex;align-items:c
  </aside></div>
 </section>
 <section id="realmGame">
+  <div class="r-game-topbar">
+    <a class="r-home-link" href="/" aria-label="사이트 홈으로">25WITHCODING <span>↗ 홈</span></a>
+    <div class="r-top-actions"><button type="button" id="rProfileToggle" class="r-top-btn">내 정보</button><button type="button" id="rHomeButton" class="r-top-btn">게임 홈</button></div>
+  </div>
+  <section class="r-start-screen" id="rStartScreen">
+    <div class="r-start-art" aria-hidden="true"><div class="r-orbit orbit-one"></div><div class="r-orbit orbit-two"></div><div class="r-core">⌘</div><div class="r-shard shard-one">✦</div><div class="r-shard shard-two">◇</div><div class="r-shard shard-three">⌬</div></div>
+    <div class="r-start-copy">
+      <div class="r-kicker">A PYTHON ACTION ADVENTURE</div>
+      <div class="r-start-title">CODE<br><span>FRONTIER</span></div>
+      <p>균열을 돌파하고, 전리품을 선택하고,<br>코드로 자신의 실력을 증명하라.</p>
+      <div class="r-start-meta"><span>4가지 의뢰 모드</span><i></i><span>랜덤 등급 보상</span><i></i><span>파이썬 실전 도전</span></div>
+      <button type="button" id="rOpenQuests" class="r-start-button">게임 시작 <span>→</span></button>
+      <div class="r-start-foot">YOUR CODE. YOUR BUILD. YOUR FRONTIER.</div>
+    </div>
+    <div class="r-start-bottom"><span>CODE FRONTIER / SEASON 01</span><span>PYTHON LEARNING QUEST</span></div>
+  </section>
+  <div class="r-profile-scrim hidden" id="rProfileScrim"><section class="r-profile-pop" aria-label="모험가 정보"><button type="button" class="r-pop-close" id="rProfileClose">×</button><div class="r-card-head"><h3>모험가 정보</h3><span class="r-muted">PROFILE</span></div><div class="r-side-profile"><div class="r-avatar">◈</div><div><b>코드 레이더</b><small>파이썬으로 균열을 공략하는 모험가</small></div></div><div class="r-stat-list"><div class="r-stat"><b>✦ 파동력</b><span id="rAtk">28</span></div><div class="r-stat"><b>🛡 방어력</b><span id="rDef">0</span></div><div class="r-stat"><b>💰 골드 획득 보너스</b><span id="rGoldBonus">+0%</span></div><div class="r-stat"><b>✨ 경험치 획득 보너스</b><span id="rXpBonus">+0%</span></div><div class="r-stat"><b>기록</b><span id="rRecord">성공 0 · 실패 0</span></div></div><h3 class="r-profile-subtitle">전리품 보관함</h3><div class="r-bag" id="rBag"><div class="r-empty">아직 획득한 전리품이 없어.</div></div><div class="r-profile-subtitle">재화 <span id="rGold">0 G</span> · 경험치 <span id="rXp">0 XP</span> · 완료 의뢰 <span id="rWins">0회</span> · 1등급 <span id="rRank">0회</span></div></section></div>
   <div class="r-hero">
     <div class="r-kicker">CODE REALM // ACTION QUEST SYSTEM</div>
     <h1>코드 균열</h1>
@@ -146,7 +188,7 @@ a{color:inherit;text-decoration:none}.top{height:70px;display:flex;align-items:c
   </div>
   <div class="r-layout">
     <div class="r-main">
-      <section class="r-card" id="rSelectPanel">
+      <section class="r-card hidden" id="rSelectPanel">
         <div class="r-card-head"><h2>⚑ 의뢰 선택</h2><span class="r-muted">원하는 모험을 선택해</span></div>
         <div class="r-modes" id="rModes"></div>
         <div class="r-objective"><div><span>현재 목표</span><br><b id="rQuestGoal">적 4마리 격퇴</b></div><button class="r-btn" id="rStartQuest">의뢰 시작 →</button></div>
