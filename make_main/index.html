@@ -19,6 +19,7 @@ body.dark-mode{--bg:#111713;--surface:#1b241e;--text:#eef7f0;--muted:#a3b3a7;--l
 .save-state[data-state="saved"]{color:#23884a}.save-state[data-state="error"]{color:var(--danger)}
 .canvas-stage.grid-on:after{content:"";position:absolute;inset:0;z-index:1000;pointer-events:none;background-image:linear-gradient(to right,#64756a24 1px,transparent 1px),linear-gradient(to bottom,#64756a24 1px,transparent 1px);background-size:5% 5%}
 .layer-panel{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.component-library{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.component-row{display:flex;align-items:center;gap:6px;margin:7px 0}.component-name{flex:1;min-width:0;font-size:12px;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.component-actions{display:flex;gap:4px}.component-actions button{border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--text);padding:6px 8px;font-size:11px}.component-actions button:first-child{color:var(--primary)}
 .layer-row{display:flex;gap:5px;align-items:center;margin:5px 0}
 .layer-pick{flex:1;min-width:0;text-align:left;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .layer-pick.active{border-color:var(--primary);background:var(--soft);color:var(--primary);font-weight:800}
@@ -74,6 +75,12 @@ body.dark-mode{--bg:#111713;--surface:#1b241e;--text:#eef7f0;--muted:#a3b3a7;--l
     <p class="auto-note">시간을 비우면 즉시 노출하거나 종료 예약 없이 유지합니다.</p>
   </div>
   <div class="layer-panel"><h3>레이어 · 개체 순서</h3><div id="layerList"><div class="empty">개체가 없습니다.</div></div><p class="shortcut-help">레이어를 선택하면 해당 개체를 편집할 수 있습니다.</p></div>
+  <div class="component-library">
+    <h3>재사용 컴포넌트</h3>
+    <p class="auto-note">자주 쓰는 개체를 저장해 다른 페이지에서 다시 사용할 수 있습니다.</p>
+    <button class="btn secondary" id="saveComponentBtn" style="width:100%">＋ 선택 개체를 컴포넌트로 저장</button>
+    <div id="componentList"><div class="empty">저장된 컴포넌트가 없습니다.</div></div>
+  </div>
   <div class="token-box">
     <h3>GitHub 저장</h3>
     <button class="btn" id="connectBtn" style="width:100%">관리자 인증 및 자동 저장 연결</button>
@@ -139,7 +146,7 @@ const MAIN_PATH="data/main-page.json",WORKER_URL="https://make-main.trandonwebto
 const firebaseAuth=getAuth(app);
 const $=id=>document.getElementById(id);
 let adminUser=null,mainData={version:3,settings:{enabled:true,startAt:"",endAt:""},slides:[],elements:[],canvasPages:[]};
-let pages=[],pageIndex=0,selectedId=null,connected=false,autoSaveTimer=null,saving=false,saveAgain=false,editRevision=0,lastSavedRevision=0,lastSavedAt=null,undoStack=[],redoStack=[],dragState=null,gridVisible=false;
+let componentLibrary=[],pages=[],pageIndex=0,selectedId=null,connected=false,autoSaveTimer=null,saving=false,saveAgain=false,editRevision=0,lastSavedRevision=0,lastSavedAt=null,undoStack=[],redoStack=[],dragState=null,gridVisible=false;
 const clone=v=>JSON.parse(JSON.stringify(v));
 const id=prefix=>prefix+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
 const safeUrl=value=>{const v=String(value||"").trim();return v.startsWith("/")&&!v.startsWith("//")?v:/^https?:\/\/[^\s]+$/i.test(v)?v:""};
@@ -147,6 +154,34 @@ const kstDate=value=>value?new Date(String(value)+"+09:00"):null;
 const visibleNow=item=>item&&item.enabled!==false&&(!kstDate(item.startAt)||Date.now()>=kstDate(item.startAt))&&(!kstDate(item.endAt)||Date.now()<kstDate(item.endAt));
 const currentPage=()=>pages[pageIndex]||null;
 const currentObject=()=>currentPage()?.objects.find(o=>o.id===selectedId)||null;
+function normalizeComponentLibrary(value){return Array.isArray(value)?value.filter(c=>c&&typeof c.id==="string"&&c.object&&typeof c.object==="object"&&typeof c.object.type==="string").slice(0,500):[]}
+function renderComponentLibrary(){
+ const root=$("componentList");if(!root)return;root.replaceChildren();
+ if(!componentLibrary.length){const empty=document.createElement("div");empty.className="empty";empty.textContent="저장된 컴포넌트가 없습니다.";root.append(empty);return}
+ for(const component of componentLibrary){
+  const row=document.createElement("div");row.className="component-row";
+  const name=document.createElement("span");name.className="component-name";name.textContent=component.name||"이름 없는 컴포넌트";name.title=name.textContent;
+  const actions=document.createElement("div");actions.className="component-actions";
+  const insert=document.createElement("button");insert.type="button";insert.textContent="사용";insert.title="현재 페이지에 추가";insert.onclick=()=>insertComponent(component.id);
+  const remove=document.createElement("button");remove.type="button";remove.textContent="삭제";remove.title="라이브러리에서 삭제";
+  remove.onclick=()=>{if(!confirm("선택한 컴포넌트를 라이브러리에서 삭제할까요? 이미 페이지에 배치된 개체는 유지됩니다."))return;componentLibrary=componentLibrary.filter(c=>c.id!==component.id);renderComponentLibrary();changed()};
+  actions.append(insert,remove);row.append(name,actions);root.append(row);
+ }
+}
+function saveSelectedAsComponent(){
+ const object=currentObject();if(!object){alert("먼저 캔버스에서 저장할 개체를 선택해 주세요.");return}
+ const name=prompt("컴포넌트 이름을 입력하세요.",object.name||"새 컴포넌트");if(name===null)return;
+ const cleanName=name.trim();if(!cleanName){alert("컴포넌트 이름을 입력해 주세요.");return}
+ const definition=clone(object);delete definition.id;
+ componentLibrary.push({id:id("component"),name:cleanName,object:definition,createdAt:new Date().toISOString()});
+ renderComponentLibrary();changed();setSaveState("컴포넌트 저장됨 · GitHub 자동 저장 대기","idle");
+}
+function insertComponent(componentId){
+ const component=componentLibrary.find(c=>c.id===componentId);if(!component||!currentPage())return;
+ pushHistory();const object={...clone(component.object),id:id("obj"),componentId:component.id,name:component.name||component.object.name||"컴포넌트"};
+ object.x=Math.max(0,Math.min(100-(object.w||20),(object.x||0)+3));object.y=Math.max(0,Math.min(100-(object.h||15),(object.y||0)+3));
+ object.z=Math.max(0,...currentPage().objects.map(o=>o.z||0))+1;currentPage().objects.push(object);selectedId=object.id;renderAll();changed();
+}
 function status(text){$("status").textContent=text;$("canvasStatus").textContent=text;const state=$("saveState");if(state){state.textContent=text;state.dataset.state=/실패|오류/.test(text)?"error":/저장 완료/.test(text)?"saved":"idle"}}
 function isDirty(){return editRevision!==lastSavedRevision}
 function setSaveState(text,state="idle"){$("saveState").textContent=text;$("saveState").dataset.state=state}
@@ -210,13 +245,13 @@ function renderProps(){const o=currentObject();const ids=["objectName","objectTe
 function readProps(){const o=currentObject();if(!o)return;o.name=$("objectName").value;o.text=$("objectText").value;o.imageUrl=$("objectImage").value;o.linkUrl=$("objectLink").value;o.x=clamp($("objectX").value,0,99);o.y=clamp($("objectY").value,0,99);o.w=clamp($("objectW").value,1,100-o.x);o.h=clamp($("objectH").value,1,100-o.y);o.fontSize=clamp($("objectFontSize").value,8,120);o.radius=clamp($("objectRadius").value,0,100);o.color=$("objectColor").value;o.fill=$("objectFill").value;o.align=$("objectAlign").value}
 function clamp(v,min,max){const n=Number(v);return Math.max(min,Math.min(max,Number.isFinite(n)?n:min))}
 function renderSchedule(){const p=currentPage();$("pageEnabled").checked=p?.enabled!==false;$("pageStartAt").value=String(p?.startAt||"").slice(0,16);$("pageEndAt").value=String(p?.endAt||"").slice(0,16)}
-function renderAll(){renderPages();renderCanvas();renderProps();renderSchedule();renderLayers();$("pageTitle").value=currentPage()?.title||"";$("pageBackground").value=currentPage()?.background||"#ffffff"}
+function renderAll(){renderPages();renderCanvas();renderProps();renderSchedule();renderLayers();renderComponentLibrary();$("pageTitle").value=currentPage()?.title||"";$("pageBackground").value=currentPage()?.background||"#ffffff"}
 function renderLayers(){const root=$("layerList");root.replaceChildren();const objects=(currentPage()?.objects||[]).slice().sort((a,b)=>(b.z||0)-(a.z||0));if(!objects.length){root.innerHTML='<div class="empty">개체가 없습니다.</div>';return}for(const o of objects){const row=document.createElement("div");row.className="layer-row";const pick=document.createElement("button");pick.className="layer-pick"+(o.id===selectedId?" active":"");pick.textContent=(o.name||o.type||"개체")+" · "+o.type;pick.title=pick.textContent;pick.onclick=()=>{selectedId=o.id;renderCanvas();renderProps();renderLayers()};const up=document.createElement("button");up.className="layer-order";up.textContent="↑";up.title="앞으로";up.onclick=()=>{pushHistory();o.z=Math.max(0,...currentPage().objects.map(x=>x.z||0))+1;renderAll();changed()};const down=document.createElement("button");down.className="layer-order";down.textContent="↓";down.title="뒤로";down.onclick=()=>{pushHistory();o.z=Math.min(0,...currentPage().objects.map(x=>x.z||0))-1;renderAll();changed()};row.append(pick,up,down);root.append(row)}}
 function saveablePage(p,i){return {...p,id:p.id||"page-"+(i+1),title:String(p.title||"페이지 "+(i+1)),enabled:p.enabled!==false,startAt:p.startAt||"",endAt:p.endAt||"",background:p.background||"#ffffff",objects:(p.objects||[]).map(o=>({...o,x:clamp(o.x,0,99),y:clamp(o.y,0,99),w:clamp(o.w,1,100),h:clamp(o.h,1,100)})),updatedAt:new Date().toISOString()}}
 function canvasPagesAsElements(){return pages.map((p,i)=>({id:"canvas-"+p.id,type:"canvas",title:p.title||"페이지 "+(i+1),enabled:p.enabled!==false,startAt:p.startAt||"",endAt:p.endAt||"",canvasBackground:p.background||"#ffffff",objects:p.objects||[],order:i}))}
 async function putFile(path,content,message){let sha=null;try{sha=(await api(path)).sha}catch(e){if(!String(e.message).includes("Not Found"))throw e}const body={message,content:encode64(content.endsWith("\n")?content:content+"\n")};if(sha)body.sha=sha;return api(path,"PUT",body)}
 async function uploadImage(file){if(!connected)throw Error("먼저 GitHub에 연결해 주세요.");if(file.size>4*1024*1024)throw Error("이미지는 4MB 이하 파일을 선택해 주세요.");const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(Error("이미지를 읽지 못했습니다."));reader.readAsDataURL(file)});const content=dataUrl.split(",")[1];const ext=(file.name.split(".").pop()||"png").toLowerCase().replace(/[^a-z0-9]/g,"")||"png";const filename="image-"+Date.now()+"."+ext;await api("make_main/assets/"+filename,"PUT",{message:"Upload homepage canvas image "+filename,content});return "/make_main/assets/"+filename}
-function makeProjectPayload(){return {format:"25withcoding-make-main",version:1,exportedAt:new Date().toISOString(),pages:clone(pages)}}
+function makeProjectPayload(){return {format:"25withcoding-project",version:1,project:{name:"25withcoding 메인페이지",description:"기존 캔버스 페이지와 재사용 컴포넌트 라이브러리"},exportedAt:new Date().toISOString(),components:clone(componentLibrary),pages:clone(pages)}}
 async function saveProjectFile(){
  const payload=makeProjectPayload(),blob=new Blob([JSON.stringify(payload,null,2)+"\n"],{type:"application/json"});
  const filename="25withcoding-main-design-"+new Date().toISOString().slice(0,10)+".json";
@@ -237,6 +272,7 @@ async function importProjectFile(file){
   if(!Array.isArray(incoming)||!incoming.length||incoming.length>100||incoming.some(p=>!p||!Array.isArray(p.objects)||p.objects.length>1000))throw Error("프로젝트 파일의 페이지 또는 개체 구성이 올바르지 않습니다.");
   if(!confirm("현재 편집 내용을 불러온 프로젝트로 교체할까요? 기존 작업은 실행 취소로 되돌릴 수 있습니다."))return;
   pushHistory();
+  componentLibrary=normalizeComponentLibrary(parsed.components||parsed.project?.components||[]);
   pages=incoming.map((p,i)=>({...p,id:p.id||id("page"),title:p.title||"페이지 "+(i+1),objects:p.objects.map(o=>({...o,id:o.id||id("obj")}))}));
   pageIndex=0;selectedId=null;renderAll();changed();setSaveState("프로젝트 파일을 열었습니다 · 사이트 저장 대기","idle");
  }catch(error){alert("프로젝트 파일을 열지 못했습니다.\n"+error.message)}
@@ -254,6 +290,7 @@ async function saveAll(quiet=false){
   for(const stale of directory.filter(x=>x.type==="file"&&/^page\d+\.json$/.test(x.name)&&Number(x.name.match(/\d+/)[0])>snapshot.length)){await api("make_main/"+stale.name,"DELETE",{message:"Remove deleted homepage design page "+stale.name,sha:stale.sha});}
   const latest=await api(MAIN_PATH);mainData=JSON.parse(decode64(latest.content));
   mainData.version=3;mainData.canvasPages=snapshot.map((p,i)=>({id:"canvas-"+p.id,type:"canvas",title:p.title||"페이지 "+(i+1),enabled:p.enabled!==false,startAt:p.startAt||"",endAt:p.endAt||"",canvasBackground:p.background||"#ffffff",objects:p.objects||[],order:i}));
+  mainData.makeMainProject={format:"25withcoding-project",version:1,components:clone(componentLibrary),updatedAt:new Date().toISOString(),updatedBy:adminUser?.id||"admin"};
   mainData.updatedAt=new Date().toISOString();mainData.updatedBy=adminUser?.id||"admin";
   await api(MAIN_PATH,"PUT",{message:"Save homepage canvas project",sha:latest.sha,content:encode64(JSON.stringify(mainData,null,2)+"\n")});
   if(editRevision===savingRevision){lastSavedRevision=savingRevision;lastSavedAt=new Date();clearLocalDraft();setSaveState("GitHub 저장 완료 · "+lastSavedAt.toLocaleTimeString("ko-KR"),"saved");status("GitHub 저장 완료 · "+snapshot.length+"개 페이지");}
@@ -264,6 +301,7 @@ async function saveAll(quiet=false){
 }
 async function loadPages(){
  status("페이지 파일 확인 중…");
+ const mainFile=await api(MAIN_PATH);mainData=JSON.parse(decode64(mainFile.content));componentLibrary=normalizeComponentLibrary(mainData.makeMainProject?.components);renderComponentLibrary();
  const listing=await api("make_main");
  const files=listing.filter(x=>x.type==="file"&&/^page\d+\.json$/.test(x.name)).sort((a,b)=>Number(a.name.match(/\d+/)[0])-Number(b.name.match(/\d+/)[0]));
  pages=[];
@@ -282,6 +320,7 @@ async function loadPages(){
  }
  renderAll();setSaveState("GitHub 저장소에서 불러옴 · "+pages.length+"개 페이지","saved");status("GitHub 연결됨 · "+pages.length+"개 페이지");
 }
+$("saveComponentBtn").onclick=saveSelectedAsComponent;
 $("connectBtn").onclick=async()=>{try{if(!firebaseAuth.currentUser)throw Error("로그인 세션을 찾지 못했습니다. 다시 로그인해 주세요.");await firebaseAuth.currentUser.getIdToken(true);await api("make_main");connected=true;await loadPages();status("Cloudflare 보안 연결됨 · "+pages.length+"개 페이지")}catch(e){connected=false;setSaveState("연결 실패 · "+e.message,"error");status("보안 연결 실패");alert("Cloudflare 연결에 실패했습니다.\n"+e.message)}};
 $("addPage").onclick=()=>{pushHistory();pages.push({id:id("page"),title:"페이지 "+(pages.length+1),enabled:true,startAt:"",endAt:"",background:"#ffffff",objects:[]});pageIndex=pages.length-1;selectedId=null;renderAll();changed()};
 $("duplicatePage").onclick=()=>{const p=currentPage();if(!p)return;pushHistory();const cp=clone(p);cp.id=id("page");cp.title=(p.title||"페이지")+" 복사본";cp.objects=cp.objects.map(o=>({...o,id:id("obj")}));pages.splice(pageIndex+1,0,cp);pageIndex++;selectedId=null;renderAll();changed()};
