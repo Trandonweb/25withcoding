@@ -305,7 +305,7 @@ function attack() {
       const inFront = weapon.kind === "slam" || dx * player.face > -12;
       if (distance < reach + (enemy.boss ? 28 : 0) && inFront) {
         hitEnemy(enemy, player.attack * weapon.multiplier);
-        else { enemy.flash = .16; burst(enemy.x, enemy.y, weapon.kind === "slam" ? "#f2c36b" : "#8deaff", 7); }
+        if (!enemy.dead) burst(enemy.x, enemy.y, weapon.kind === "slam" ? "#f2c36b" : "#8deaff", 7);
       }
     });
     if (weapon.kind === "slam") burst(player.x + player.face * 45, player.y, "#f2c36b", 24);
