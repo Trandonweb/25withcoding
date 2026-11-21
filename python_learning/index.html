@@ -309,55 +309,7 @@ body>.top,body>.wrap,body>header.top{display:none!important}
   window.addEventListener("unhandledrejection",function(event){showRuntimeError(event.reason&&event.reason.message||event.reason||"비동기 처리 오류");});
 })();
 </script>
-<script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import {getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence,browserSessionPersistence} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import {getStudentId} from "/firebase-session.js";
 
-window.__pythonStudentReady=new Promise((resolve,reject)=>{
-  window.__pythonStudentReadyResolve=resolve;
-  window.__pythonStudentReadyReject=reject;
-});
 
-const firebaseConfig={
-  apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
-  authDomain:"points2026-f5e50.firebaseapp.com",
-  projectId:"points2026-f5e50",
-  storageBucket:"points2026-f5e50.firebasestorage.app",
-  messagingSenderId:"248724251417",
-  appId:"1:248724251417:web:02d85cdc4addac98069b88"
-};
-
-try {
-  const app=initializeApp(firebaseConfig);
-  const auth=getAuth(app);
-  let settings={};
-  try { settings=JSON.parse(localStorage.getItem("coding_with_ramen_settings")||"{}")||{}; } catch {}
-  if(settings.darkMode) document.body.classList.add("dark");
-  if(settings.primaryColor&&/^#[0-9a-f]{6}$/i.test(settings.primaryColor)) {
-    document.documentElement.style.setProperty("--green",settings.primaryColor);
-  }
-  await setPersistence(auth,settings.keepLogin===false?browserSessionPersistence:browserLocalPersistence).catch(()=>{});
-  const user=await new Promise((resolve,reject)=>{
-    let unsubscribe=()=>{};
-    unsubscribe=onAuthStateChanged(auth,value=>{unsubscribe();resolve(value);},reject);
-  });
-  const studentId=getStudentId(user);
-  if(!studentId) {
-    location.replace("/signin?redirect=%2Fpython_learning");
-    return;
-  }
-  document.getElementById("studentLabel").textContent=studentId+" 학생";
-  document.getElementById("app").hidden=false;
-  document.getElementById("authLoading").hidden=true;
-  window.__pythonStudentReadyResolve(studentId);
-} catch(error) {
-  const loading=document.getElementById("authLoading");
-  loading.hidden=false;
-  loading.textContent="로그인 확인에 실패했습니다: "+String(error?.message||error);
-  window.__pythonStudentReadyReject(error);
-}
-</script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script><script type="module" src="/python_learning/realm.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script><script type="module" src="/python_learning/realm.js?v=20261121-2"></script>
 </body></html>
