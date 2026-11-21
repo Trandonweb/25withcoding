@@ -54,6 +54,7 @@ let hintsUsed = 0;
 let hintLimit = 0;
 let lootRound = 0;
 let challengeBusy = false;
+let challengeLocked = false;
 let toastTimer = null;
 
 function persist() {
@@ -520,6 +521,7 @@ function startChallenge(candidate) {
   hintsUsed = 0;
   hintLimit = currentChallenge.hintLimit || 0;
   challengeBusy = false;
+  challengeLocked = false;
   renderChallenge();
   $("rChallengeModal").classList.remove("hidden");
 }
@@ -559,6 +561,7 @@ function adjustDifficulty(key, success) {
   persist();
 }
 function correctChallenge() {
+  challengeLocked = true;
   const grade = selectedCandidate.grade;
   save.wins++;
   save.stats["grade" + grade] = (save.stats["grade" + grade] || 0) + 1;
@@ -594,6 +597,7 @@ function correctChallenge() {
   };
 }
 function failedChallenge() {
+  challengeLocked = true;
   save.fails++;
   const key = currentChallenge.stage === 1 ? "choice" : currentChallenge.stage === 2 ? "fix" : currentChallenge.stage === 3 ? "coding" : null;
   if (key) adjustDifficulty(key, false);
@@ -620,8 +624,9 @@ function failedChallenge() {
   }
 }
 function checkChoice(index) {
-  if (challengeBusy) return;
+  if (challengeBusy || challengeLocked) return;
   if (index === currentChallenge.data.answer) {
+    challengeLocked = true;
     showChallengeFeedback("정답! " + currentChallenge.data.explain, true);
     setTimeout(correctChallenge, 650);
   } else wrongAttempt("아쉽지만 정답이 아니야. 다시 생각해 봐.");
@@ -630,6 +635,7 @@ function wrongAttempt(message) {
   attemptLeft--;
   $("rAttempts").textContent = "도전 기회 " + attemptLeft + " / 3";
   if (attemptLeft <= 0) {
+    challengeLocked = true;
     showChallengeFeedback("기회를 모두 사용했어. 이번 등급은 놓쳤어.", false);
     setTimeout(failedChallenge, 650);
   } else {
@@ -668,7 +674,7 @@ async function executeUserCode(code) {
   return String(result).replace(/\r\n/g, "\n").trimEnd();
 }
 $("rChallengeRun").addEventListener("click", async () => {
-  if (challengeBusy) return;
+  if (challengeBusy || challengeLocked) return;
   challengeBusy = true;
   const button = $("rChallengeRun");
   button.disabled = true;
