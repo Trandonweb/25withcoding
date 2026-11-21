@@ -1,22 +1,9 @@
 const $ = (id) => document.getElementById(id);
 const canvas = $("realmCanvas");
-const ctx = canvas.getContext("2d");
-const studentLabel = $("studentLabel");
-async function waitForStudent() {
-  if (studentLabel && studentLabel.textContent !== "로그인 확인 중") return;
-  await new Promise((resolve) => {
-    const observer = new MutationObserver(() => {
-      if (studentLabel && studentLabel.textContent !== "로그인 확인 중") {
-        observer.disconnect();
-        resolve();
-      }
-    });
-    if (studentLabel) observer.observe(studentLabel, { childList: true, characterData: true, subtree: true });
-    setTimeout(() => { observer.disconnect(); resolve(); }, 12000);
-  });
-}
-await waitForStudent();
-const studentId = (studentLabel?.textContent || "guest").replace(/\s학생$/, "");
+const ctx = canvas && canvas.getContext("2d");
+if (!canvas || !ctx) throw new Error("게임 화면의 캔버스를 찾을 수 없습니다.");
+const studentId = await window.__pythonStudentReady;
+if (!studentId) throw new Error("학생 로그인 정보를 확인하지 못했습니다.");
 const SAVE_KEY = "pythonRealmV2:" + studentId;
 const defaults = {
   gold: 0, xp: 0, hp: 100, maxHp: 100, attack: 28, defense: 0, goldBonus: 0, xpBonus: 0,
