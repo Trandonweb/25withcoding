@@ -96,3 +96,35 @@ Worker는 Firebase ID 토큰을 검증하고 Firestore `users/{학번}`의 `role
 4. 페이지 JSON 저장, 통합 데이터 동기화, 재접속 불러오기를 모두 점검한다.
 5. Worker 설정을 수정할 때 Secret, 바인딩, 호스트명, 트리거, 관찰성 설정을 먼저 조회하고
    코드 업로드 과정에서 기존 설정이 유지되는지 확인한다.
+
+
+## 8. 확장 프로젝트 형식 (v1)
+
+새 프로젝트 형식은 별도 파일 경로를 추가하지 않고 `data/main-page.json` 안에
+`makeMainProject` 속성으로 저장한다. 현재 Worker의 허용 경로를 그대로 사용하기 때문에
+Worker 설정이나 Secret 변경이 필요하지 않다.
+
+```json
+{
+  "makeMainProject": {
+    "format": "25withcoding-project",
+    "version": 1,
+    "components": [
+      {
+        "id": "component-id",
+        "name": "공통 버튼",
+        "object": { "type": "button", "text": "자세히 보기" }
+      }
+    ],
+    "updatedAt": "ISO-8601 timestamp",
+    "updatedBy": "관리자 식별자"
+  }
+}
+```
+
+- 기존 `settings`, `slides`, `elements`, `canvasPages`와 기존 페이지 JSON은 유지한다.
+- `makeMainProject.components`는 다른 페이지에서 재사용할 개체 템플릿 모음이다.
+- 컴포넌트를 삽입하면 독립된 개체 복사본이 페이지에 추가된다. 원본 라이브러리 항목을 삭제해도 이미 배치된 개체는 유지된다.
+- 프로젝트 파일 내보내기에는 `format: 25withcoding-project`, `version: 1`, `components`, `pages`가 포함된다.
+- 이전 `25withcoding-make-main` 형식의 프로젝트 파일도 계속 불러올 수 있다.
+- 새 속성은 기존 홈페이지 데이터에 추가되며 기존 데이터 필드를 교체하지 않는다.
