@@ -1010,7 +1010,8 @@ loadProjects();
 <script>
 /*
  * 2026 기념관 오리지널 배경음악
- * Web Audio API로 실시간 생성하며 외부 음원이나 2025년 음원을 사용하지 않습니다.
+ * 신나는 신스팝 느낌의 멜로디를 Web Audio API로 실시간 생성합니다.
+ * 브라우저가 허용하면 자동 재생하고, 차단되면 첫 화면 클릭으로 시작합니다.
  */
 (() => {
   const button = document.getElementById("musicToggle");
@@ -1024,114 +1025,168 @@ loadProjects();
   }
 
   let audioContext = null;
-  let musicTimer = null;
+  let scheduler = null;
+  let nextNoteTime = 0;
   let step = 0;
+  let playing = false;
+  let waitingForClick = false;
 
-  const beatSeconds = 0.56;
-  const melody = [
-    587.33, null, 440.00, null, 493.88, null, 659.25, null,
-    587.33, null, 440.00, 392.00, null, 440.00, null, null,
-    493.88, null, 587.33, null, 783.99, null, 659.25, null,
-    587.33, null, 493.88, 440.00, null, 392.00, null, null
+  const tempo = 116;
+  const beat = 60 / tempo;
+  const lookAhead = 0.12;
+  const scheduleInterval = 25;
+
+  // D - A - Bm - G 진행을 바탕으로 한 밝은 신스팝 멜로디
+  const progression = [
+    { bass: 73.42, chord: [293.66, 369.99, 440.00], notes: [587.33, 659.25, 739.99, 880.00, 739.99, 659.25, 587.33, 493.88] },
+    { bass: 55.00, chord: [220.00, 261.63, 329.63], notes: [659.25, 739.99, 880.00, 987.77, 880.00, 739.99, 659.25, 587.33] },
+    { bass: 61.74, chord: [246.94, 293.66, 369.99], notes: [493.88, 587.33, 659.25, 739.99, 659.25, 587.33, 493.88, 440.00] },
+    { bass: 49.00, chord: [196.00, 246.94, 293.66], notes: [587.33, 659.25, 739.99, 880.00, 739.99, 659.25, 587.33, 523.25] }
   ];
 
-  const chords = [
-    [146.83, 220.00, 277.18, 369.99], // Dmaj7
-    [123.47, 185.00, 220.00, 293.66], // Bm7
-    [98.00, 146.83, 185.00, 246.94],  // Gmaj7
-    [110.00, 164.81, 196.00, 293.66]  // Asus4
-  ];
-
-  function tone(frequency, start, duration, volume, type, attack) {
+  function makeTone(frequency, time, duration, volume, wave, attack = 0.015, endFrequency = frequency) {
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
     const filter = audioContext.createBiquadFilter();
 
-    oscillator.type = type || "sine";
-    oscillator.frequency.setValueAtTime(frequency, start);
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(1800, start);
+    oscillator.type = wave;
+    oscillator.frequency.setValueAtTime(frequency, time);
+    if (endFrequency !== frequency) {
+      oscillator.frequency.exponentialRampToValueAtTime(endFrequency, time + duration);
+    }
 
-    const peak = volume || 0.025;
-    const fadeIn = attack || 0.35;
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(peak, start + fadeIn);
-    gain.gain.setValueAtTime(peak, start + Math.max(fadeIn, duration - 0.5));
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(wave === "sawtooth" ? 2400 : 4200, time);
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.exponentialRampToValueAtTime(volume, time + attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
 
     oscillator.connect(filter);
     filter.connect(gain);
     gain.connect(audioContext.destination);
-    oscillator.start(start);
-    oscillator.stop(start + duration + 0.03);
+    oscillator.start(time);
+    oscillator.stop(time + duration + 0.02);
   }
 
-  function playChord(chordIndex, start) {
-    chords[chordIndex].forEach((frequency, index) => {
-      tone(frequency, start, beatSeconds * 8, index === 0 ? 0.018 : 0.012, "sine", 1.1);
-    });
+  function scheduleStep(index, time) {
+    const bar = Math.floor(index / 8) % progression.length;
+    const position = index % 8;
+    const part = progression[bar];
+
+    // 부드러운 화음 패드
+    if (position === 0) {
+      part.chord.forEach((frequency, i) => {
+        makeTone(frequency, time, beat * 7.7, i === 0 ? 0.012 : 0.009, "triangle", 0.45);
+      });
+      // 박자를 잡아 주는 베이스
+      makeTone(part.bass, time, beat * 1.7, 0.045, "sawtooth", 0.025, part.bass * 1.01);
+      makeTone(part.bass * 2, time + beat * 2, beat * 1.4, 0.025, "triangle", 0.02);
+      makeTone(part.bass, time + beat * 4, beat * 1.7, 0.04, "sawtooth", 0.025);
+      makeTone(part.bass * 2, time + beat * 6, beat * 1.3, 0.024, "triangle", 0.02);
+    }
+
+    // 경쾌한 8분음표 멜로디
+    const note = part.notes[position];
+    makeTone(note, time, beat * 0.72, 0.035, "square", 0.012);
+    makeTone(note * 2, time, beat * 0.35, 0.008, "sine", 0.008);
+
+    // 가벼운 리듬 펄스
+    if (position % 2 === 0) {
+      makeTone(110, time, 0.055, 0.012, "sine", 0.005, 55);
+    }
   }
 
-  function tick() {
-    const now = audioContext.currentTime + 0.04;
-    if (step % 8 === 0) {
-      playChord(Math.floor(step / 8) % chords.length, now);
+  function schedule() {
+    while (nextNoteTime < audioContext.currentTime + lookAhead) {
+      scheduleStep(step, nextNoteTime);
+      nextNoteTime += beat / 2;
+      step++;
     }
+  }
 
-    const note = melody[step % melody.length];
-    if (note) {
-      tone(note, now, 0.9, 0.026, "sine", 0.08);
-      tone(note * 2, now, 0.48, 0.004, "triangle", 0.05);
+  function updateButton() {
+    button.textContent = playing ? "♫ 음악 끄기" : "♫ 음악 켜기";
+    button.setAttribute("aria-label", playing ? "배경 음악 끄기" : "배경 음악 켜기");
+  }
+
+  function removeFirstClickListener() {
+    if (waitingForClick) {
+      document.removeEventListener("click", startFromFirstClick);
+      waitingForClick = false;
     }
-    step++;
   }
 
   async function startMusic() {
-    if (!audioContext) {
-      audioContext = new AudioContextClass();
-    }
+    if (!audioContext) audioContext = new AudioContextClass();
     await audioContext.resume();
-    if (musicTimer) return;
 
-    button.textContent = "♫ 음악 끄기";
-    button.setAttribute("aria-label", "배경 음악 끄기");
-    tick();
-    musicTimer = window.setInterval(tick, beatSeconds * 1000);
+    if (audioContext.state !== "running") {
+      throw new Error("오디오 재생이 브라우저에서 아직 허용되지 않았습니다.");
+    }
+
+    removeFirstClickListener();
+    if (!playing) {
+      playing = true;
+      nextNoteTime = audioContext.currentTime + 0.08;
+      scheduler = window.setInterval(schedule, scheduleInterval);
+      schedule();
+    }
+    updateButton();
   }
 
   async function stopMusic() {
-    if (musicTimer) {
-      window.clearInterval(musicTimer);
-      musicTimer = null;
+    if (scheduler) {
+      window.clearInterval(scheduler);
+      scheduler = null;
     }
+    playing = false;
     if (audioContext && audioContext.state === "running") {
       await audioContext.suspend();
     }
-    button.textContent = "♫ 음악 재생";
-    button.setAttribute("aria-label", "배경 음악 재생");
+    updateButton();
   }
 
-  button.addEventListener("click", async () => {
+  async function startFromFirstClick() {
+    if (!playing) {
+      try {
+        await startMusic();
+      } catch (error) {
+        console.warn("첫 클릭 후에도 음악을 시작하지 못했습니다:", error);
+      }
+    }
+  }
+
+  function waitForFirstClick() {
+    if (waitingForClick || playing) return;
+    waitingForClick = true;
+    button.textContent = "화면을 클릭하면 음악 재생";
+    document.addEventListener("click", startFromFirstClick);
+  }
+
+  button.addEventListener("click", async (event) => {
+    event.stopPropagation();
     button.disabled = true;
     try {
-      if (musicTimer) await stopMusic();
+      if (playing) await stopMusic();
       else await startMusic();
     } catch (error) {
-      console.error("배경 음악을 재생하지 못했습니다:", error);
-      button.textContent = "다시 재생";
+      console.warn("배경 음악 재생 실패:", error);
+      waitForFirstClick();
     } finally {
       button.disabled = false;
     }
   });
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden && musicTimer) {
-      stopMusic();
-    }
+  // 탭을 이동해도 음악을 멈추지 않습니다.
+  // 페이지가 백그라운드에 있어도 AudioContext가 계속 재생하도록 둡니다.
+
+  // 페이지 진입 즉시 자동 재생을 시도합니다.
+  startMusic().catch(() => {
+    waitForFirstClick();
   });
 })();
 </script>
 
-<script src="/script.js" defer></script>
+<script src="/script.js" defer></script><script src="/script.js" defer></script>
 </body>
 </html>
