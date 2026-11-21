@@ -262,11 +262,10 @@ body{
   color:white
 }
 
-/* =========================
-   축제 타이머
-========================= */
+/* 축제 이용 시간은 내부 세션 관리에만 사용하며 화면에는 표시하지 않습니다. */
 
 #festivalTimer{
+  display:none!important;
   position:fixed;
   top:16px;
   right:18px;
@@ -358,11 +357,10 @@ body{
   }
 }
 
-/* =========================
-   일시정지 화면
-========================= */
+/* 일시정지 화면은 공개 뷰어에서 표시하지 않습니다. */
 
 #festivalPauseOverlay{
+  display:none!important;
   position:fixed;
   inset:0;
   z-index:10000;
@@ -575,7 +573,7 @@ header{
       class="gate-description"
       id="gateDescription"
     >
-      축제 입장 정보를 확인하고 있습니다...
+      
     </div>
 
     <div id="guestArea" style="display:none">
@@ -683,12 +681,7 @@ header{
 
     </div>
 
-    <div
-      id="loadingArea"
-      class="gate-loading"
-    >
-      확인 중...
-    </div>
+    <div id="loadingArea" class="gate-loading"></div>
 
   </div>
 </div>
