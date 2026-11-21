@@ -61,8 +61,7 @@ async function verifyFirebaseToken(token) {
     typeof payload.auth_time !== "number" ||
     payload.exp <= now ||
     payload.iat > now + 60 ||
-    payload.auth_time > now + 60 ||
-    payload.email_verified !== true
+    payload.auth_time > now + 60
   ) {
     throw new Error("Firebase 로그인 정보가 유효하지 않습니다.");
   }
