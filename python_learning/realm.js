@@ -1,9 +1,56 @@
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getStudentId } from "/firebase-session.js";
+
+// 인증 초기화는 이 모듈 한 곳에서만 수행하고 기존 브라우저 세션을 복원한다.
+const firebaseConfig = {
+  apiKey: "AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain: "points2026-f5e50.firebaseapp.com",
+  projectId: "points2026-f5e50",
+  storageBucket: "points2026-f5e50.firebasestorage.app",
+  messagingSenderId: "248724251417",
+  appId: "1:248724251417:web:02d85cdc4addac98069b88"
+};
+const app = getApps().some(item => item.name === "[DEFAULT]") ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const authLoading = document.getElementById("authLoading");
+let authUser;
+try {
+  authUser = await new Promise((resolve, reject) => {
+    let unsubscribe = () => {};
+    const timeout = setTimeout(() => {
+      unsubscribe();
+      reject(new Error("Firebase 로그인 상태 확인 시간 초과"));
+    }, 12000);
+    unsubscribe = onAuthStateChanged(auth, user => {
+      clearTimeout(timeout);
+      unsubscribe();
+      resolve(user);
+    }, error => {
+      clearTimeout(timeout);
+      unsubscribe();
+      reject(error);
+    });
+  });
+} catch (error) {
+  if (authLoading) authLoading.textContent = "로그인 상태 확인 실패: " + String(error?.message || error);
+  throw error;
+}
+const studentId = getStudentId(authUser);
+if (!studentId) {
+  location.replace("/signin?redirect=%2Fpython_learning");
+  await new Promise(() => {});
+}
+const studentLabel = document.getElementById("studentLabel");
+const appRoot = document.getElementById("app");
+if (studentLabel) studentLabel.textContent = studentId + " 학생";
+if (appRoot) appRoot.hidden = false;
+if (authLoading) authLoading.hidden = true;
+
 const $ = (id) => document.getElementById(id);
 const canvas = $("realmCanvas");
 const ctx = canvas && canvas.getContext("2d");
 if (!canvas || !ctx) throw new Error("게임 화면의 캔버스를 찾을 수 없습니다.");
-const studentId = await window.__pythonStudentReady;
-if (!studentId) throw new Error("학생 로그인 정보를 확인하지 못했습니다.");
 const SAVE_KEY = "pythonRealmV2:" + studentId;
 const defaults = {
   gold: 0, xp: 0, hp: 100, maxHp: 100, attack: 28, defense: 0, goldBonus: 0, xpBonus: 0,
