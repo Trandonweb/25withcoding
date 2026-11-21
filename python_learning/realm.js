@@ -381,6 +381,8 @@ $("rHomeButton").addEventListener("click", () => {
   gameState = "select";
   $("rArenaPanel").classList.add("hidden");
   $("rSelectPanel").classList.add("hidden");
+  ["rLootModal","rChallengeModal","rSuccessModal","rFailModal"].forEach((id) => $(id).classList.add("hidden"));
+  $("rProfileScrim").classList.add("hidden");
   $("rStartScreen").classList.remove("hidden");
 });
 $("rProfileToggle").addEventListener("click", () => $("rProfileScrim").classList.remove("hidden"));
