@@ -682,6 +682,7 @@ $("rChallengeRun").addEventListener("click", async () => {
   try {
     const actual = await executeUserCode($("rCodeEditor").value);
     if (actual === currentChallenge.expected) {
+      challengeLocked = true;
       showChallengeFeedback("코드 실행 성공! 목표 출력이 정확해.", true);
       setTimeout(correctChallenge, 650);
     } else {
@@ -706,9 +707,6 @@ $("rHintButton").addEventListener("click", () => {
 $("rLootContinue").addEventListener("click", () => {
   $("rLootModal").classList.add("hidden");
   $("rFailModal").classList.remove("hidden");
-});
-$("rCloseChallenge").addEventListener("click", () => {
-  if (confirm("도전을 중단하면 선택한 보상은 사라져. 중단할까?")) failedChallenge();
 });
 renderModes();
 renderHUD();
