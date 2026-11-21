@@ -79,11 +79,12 @@
 - 프로젝트 JSON 내보내기/불러오기는 백업 및 다른 기기 간 이동에 사용한다.
 - GitHub 커밋 기록은 서버에 저장된 파일의 버전 이력이다.
 
-## 6. Worker 접근 제한
+## 6. 저장 API 접근 제한
 
-브라우저는 `https://make-main.trandonwebtoon.workers.dev/github/contents/<path>`로 요청한다.
-Worker는 Firebase ID 토큰을 검증하고 Firestore `users/{학번}`의 `role`을 확인한 뒤
+브라우저는 `https://two5withcoding-make-main.onrender.com/github/contents/<path>`로 요청한다.
+Render API는 Firebase ID 토큰을 검증하고 Firestore `users/{학번}`의 `role`을 확인한 뒤
 허용된 `make_main/` 및 `data/main-page.json` 경로만 GitHub에 전달한다.
+GitHub 인증 토큰은 Render의 `GITHUB_TOKEN` 환경변수로 관리하며 브라우저에 노출하지 않는다.
 
 허용 관리자 역할은 `admin`, `president`, `vice`, `committee_chair`이며
 `/admin/js/auth.js`와 동일하게 유지한다.
