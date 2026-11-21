@@ -211,11 +211,11 @@ function startQuest() {
   pickups = [];
   particles = [];
   projectiles = [];
-  const count = selectedMode === "rift" ? 4 : selectedMode === "boss" ? 1 : 2;
+  const count = selectedMode === "rift" ? 4 + Math.floor(questTier / 3) : selectedMode === "boss" ? 1 : selectedMode === "forge" ? 2 + Math.floor(questTier / 4) : 2;
   for (let i = 0; i < count; i++) {
     enemies.push({
-      x: 180 + i * (selectedMode === "boss" ? 0 : 205),
-      y: 150 + (i % 2) * 70,
+      x: selectedMode === "boss" ? 500 : 120 + i * (760 / Math.max(1, count - 1)),
+      y: 145 + (i % 2) * 115,
       hp: Math.round((selectedMode === "boss" ? 440 : 65 + (i % 2) * 18) * tierScale),
       maxHp: Math.round((selectedMode === "boss" ? 440 : 65 + (i % 2) * 18) * tierScale),
       boss: selectedMode === "boss", flash: 0,
@@ -225,11 +225,11 @@ function startQuest() {
     });
   }
   if (selectedMode === "explore" || selectedMode === "forge") {
-    const total = selectedMode === "explore" ? 4 : 5;
+    const total = (selectedMode === "explore" ? 4 : 5) + Math.floor(questTier / 3);
     questTarget = total;
     for (let i = 0; i < total; i++) pickups.push({
       x: 130 + (i % 3) * 330 + Math.random() * 45,
-      y: 130 + Math.floor(i / 3) * 220 + Math.random() * 30,
+      y: 110 + Math.floor(i / 3) * 155 + Math.random() * 30,
       kind: selectedMode === "explore" ? "rune" : "ore",
       taken: false,
       phase: Math.random() * 6
