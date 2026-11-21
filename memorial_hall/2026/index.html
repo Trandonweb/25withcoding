@@ -559,170 +559,291 @@ header{
 </style>
 </head>
 
-<body class="gate-open">
-
-<div id="festivalGate">
-  <div class="gate-card">
-
-    <div class="gate-icon">🎉</div>
-
-    <h1 class="gate-title">2026</h1>
-
-    <div
-      class="gate-description"
-      id="gateDescription"
-    >
-      
-    </div>
-
-    <div id="guestArea" style="display:none">
-
-      <button
-        class="gate-button"
-        id="loginButton"
-      >
-        로그인하기
-      </button>
-
-      <div class="gate-divider">
-        또는
-      </div>
-
-      <input
-        id="accessCodeInput"
-        class="gate-input"
-        type="password"
-        maxlength="32"
-        placeholder="이용권 키 또는 5자리 축제 이용 코드를 입력하세요"
-        autocomplete="off"
-        autocapitalize="characters"
-        spellcheck="false"
-      >
-
-      <div class="session-box">
-
-        <label
-          class="session-label"
-          for="accessSessionCount"
-        >
-          이번 입장에서 사용할 횟수
-        </label>
-
-        <select
-          id="accessSessionCount"
-          class="session-select"
-        ></select>
-
-        <div class="session-hint">
-          1회 = 30분 · 기본값은 1회입니다.
-        </div>
-
-      </div>
-
-      <button
-        class="gate-button"
-        id="accessCodeButton"
-      >
-        코드로 입장
-      </button>
-
-      <div
-        class="gate-error"
-        id="gateError"
-      ></div>
-
-    </div>
-
-    <div id="memberCodeArea" style="display:none">
-
-      <input
-        id="memberAccessCodeInput"
-        class="gate-input"
-        type="text"
-        maxlength="32"
-        placeholder="이용권 키 또는 5자리 축제 이용 코드를 입력하세요"
-        autocomplete="off"
-        autocapitalize="characters"
-        spellcheck="false"
-      >
-
-      <div class="session-box">
-
-        <label
-          class="session-label"
-          for="memberSessionCount"
-        >
-          이번 입장에서 사용할 횟수
-        </label>
-
-        <select
-          id="memberSessionCount"
-          class="session-select"
-        ></select>
-
-        <div class="session-hint">
-          1회 = 30분 · 기본값은 1회입니다.
-        </div>
-
-      </div>
-
-      <button
-        class="gate-button"
-        id="memberAccessCodeButton"
-      >
-        코드로 입장
-      </button>
-
-      <div
-        class="gate-error"
-        id="memberGateError"
-      ></div>
-
-    </div>
-
-    <div id="loadingArea" class="gate-loading"></div>
-
-  </div>
-</div>
-
-
-<!-- 남은 시간 + 일시정지 -->
-<div
-  id="festivalTimer"
-  style="display:none"
->
-  <span>남은 시간</span>
-
-  <strong id="festivalTimerValue">
-    30:00
-  </strong>
-
-  <button
-    id="festivalPauseButton"
-    type="button"
-  >
-    일시정지
-  </button>
-
-  <button
-    id="festivalEndButton"
-    type="button"
-    title="현재 이용 세션을 종료하고 입장 화면으로 돌아갑니다."
-  >
-    이용권 사용 종료
-  </button>
-</div>
-
-
-<!-- 일시정지 화면 -->
-<div id="festivalPauseOverlay">
-  <div class="pause-message">
-    일시정지 중입니다.
-  </div>
-</div>
-
+<body>
 
 <div id="festivalNotice"></div>
+
+<a
+  class="home-link"
+  href="/memorial_hall/"
+>
+  기념관 홈
+</a>
+
+<header>
+  코딩과 함께라면 2026
+</header>
+
+<div
+  class="subtitle"
+  id="subtitle"
+>
+  <div>since 2025</div>
+  <div>❤️ 지금까지 0번의 응원이 도착했어요!</div>
+</div>
+
+<div
+  class="grid"
+  id="grid"
+></div>
+
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { waitForStudentSession } from "/firebase-session-12.js";
+
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  doc,
+  updateDoc,
+  setDoc,
+  increment,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+
+/* =========================
+   Firebase
+========================= */
+
+const firebaseConfig={
+  apiKey:"AIzaSyAQccv_jkaNQuy1rOCcoFdUfo0GkxQDv9",
+  authDomain:"festivallikes.firebaseapp.com",
+  projectId:"festivallikes",
+  storageBucket:"festivallikes.firebasestorage.app",
+  messagingSenderId:"782245120700",
+  appId:"1:782245120700:web:c61e16313e9ae688e6deb9"
+};
+
+const app=initializeApp(firebaseConfig,"festivalApp");
+const db=getFirestore(app);
+
+
+const loginFirebaseConfig={
+  apiKey:"AIzaSyBgOAO72ArbW8dO7OSYsTVEQtRHT049U20",
+  authDomain:"points2026-f5e50.firebaseapp.com",
+  projectId:"points2026-f5e50"
+};
+
+const loginApp=initializeApp(loginFirebaseConfig);
+const loginAuth=getAuth(loginApp);
+const loginDB=getFirestore(loginApp);
+const loginSession=await waitForStudentSession(loginAuth);
+
+
+/* =========================
+   기본 설정
+========================= */
+
+const SETTINGS_KEY="coding_with_ramen_settings";
+
+const THEME_COLORS=[
+  "#27ae60",
+  "#3498db",
+  "#e84393",
+  "#9b59b6",
+  "#e74c3c"
+];
+
+const THEME_SECONDARY={
+  "#27ae60":"#64dd17",
+  "#3498db":"#5dade2",
+  "#e84393":"#fd79a8",
+  "#9b59b6":"#c39bd3",
+  "#e74c3c":"#ff7675"
+};
+
+
+function applyTheme(
+  primary,
+  source="visitor"
+){
+  primary=String(primary||"").toLowerCase();
+
+  if(!THEME_COLORS.includes(primary)){
+    primary=THEME_COLORS[0];
+  }
+
+  const secondary=
+    THEME_SECONDARY[primary]||primary;
+
+  document.documentElement.style.setProperty(
+    "--primary-color",
+    primary
+  );
+
+  document.documentElement.style.setProperty(
+    "--secondary-color",
+    secondary
+  );
+
+  document.documentElement.style.setProperty(
+    "--border-color",
+    `color-mix(in srgb, ${primary} 35%, transparent)`
+  );
+
+  document.documentElement.style.setProperty(
+    "--accent-soft",
+    `color-mix(in srgb, ${primary} 18%, transparent)`
+  );
+
+  document.body.dataset.themeSource=source;
+}
+
+
+function applyVisitorRandomTheme(){
+  const primary=
+    THEME_COLORS[
+      Math.floor(
+        Math.random()*THEME_COLORS.length
+      )
+    ];
+
+  applyTheme(
+    primary,
+    "visitor"
+  );
+}
+
+
+async function applyMemberTheme(userId){
+
+  try{
+
+    const saved=
+      localStorage.getItem(SETTINGS_KEY);
+
+    let settings={};
+
+    if(saved){
+
+      try{
+        settings=
+          JSON.parse(saved)||{};
+      }catch(e){
+        console.warn(
+          "저장된 컬러 테마를 읽지 못했습니다.",
+          e
+        );
+      }
+
+    }
+
+    let primary=
+      settings.primaryColor;
+
+    const snap=
+      await getDoc(
+        doc(loginDB,"users",userId)
+      );
+
+    if(snap.exists()){
+
+      const firebaseSettings=
+        snap.data().settings||{};
+
+      primary=
+        firebaseSettings.primaryColor||
+        primary;
+
+      if(primary){
+
+        settings={
+          ...settings,
+          ...firebaseSettings
+        };
+
+        localStorage.setItem(
+          SETTINGS_KEY,
+          JSON.stringify(settings)
+        );
+
+      }
+
+    }
+
+    if(
+      !THEME_COLORS.includes(
+        String(primary||"").toLowerCase()
+      )
+    ){
+      primary=THEME_COLORS[0];
+    }
+
+    applyTheme(
+      primary,
+      "member"
+    );
+
+  }catch(error){
+
+    console.error(
+      "부원 컬러 테마 적용 실패:",
+      error
+    );
+
+    applyTheme(
+      "#27ae60",
+      "member-fallback"
+    );
+
+  }
+
+}
+
+
+/* 공개 페이지이므로 이용권 확인 없이 즉시 표시합니다. */
+if(loginSession?.studentId){
+  await applyMemberTheme(loginSession.studentId);
+}else{
+  applyVisitorRandomTheme();
+}
+
+const festivalNotice=document.getElementById("festivalNotice");
+let noticeTimeout=null;
+
+function showNotice(
+  message,
+  danger=false
+){
+
+  clearTimeout(
+    noticeTimeout
+  );
+
+  festivalNotice.textContent=
+    message;
+
+  festivalNotice.className=
+    danger
+      ? "show notice-danger"
+      : "show";
+
+  noticeTimeout=
+    setTimeout(
+      ()=>{
+        festivalNotice.classList.remove(
+          "show"
+        );
+      },
+      5000
+    );
+
+}
+
+
+/* =========================
+   작품 목록
+========================= */
+
+
 
 <a
   class="home-link"
