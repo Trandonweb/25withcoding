@@ -260,9 +260,9 @@ function endQuest() {
   $("rArenaResult").textContent = "전투 완료 · 전리품 선택 단계";
   openLoot();
 }
-function hitEnemy(enemy) {
+function hitEnemy(enemy, damage = player.attack) {
   if (enemy.dead) return;
-  enemy.hp -= player.attack;
+  enemy.hp -= damage;
   enemy.flash = 0.16;
   const dx = enemy.x - player.x;
   enemy.x += Math.sign(dx || 1) * 24;
@@ -303,8 +303,7 @@ function attack() {
       const distance = Math.hypot(dx, dy);
       const inFront = weapon.kind === "slam" || dx * player.face > -12;
       if (distance < reach + (enemy.boss ? 28 : 0) && inFront) {
-        enemy.hp -= player.attack * weapon.multiplier;
-        if (enemy.hp <= 0) hitEnemy(enemy);
+        hitEnemy(enemy, player.attack * weapon.multiplier);
         else { enemy.flash = .16; burst(enemy.x, enemy.y, weapon.kind === "slam" ? "#f2c36b" : "#8deaff", 7); }
       }
     });
@@ -345,9 +344,8 @@ function update(dt) {
     enemies.forEach((enemy) => {
       if (enemy.dead || shot.hit) return;
       if (Math.hypot(enemy.x - shot.x, enemy.y - shot.y) < (enemy.boss ? 43 : 30)) {
-        enemy.hp -= shot.damage; enemy.flash = .16;
+        hitEnemy(enemy, shot.damage);
         burst(shot.x, shot.y, shot.color, 9);
-        if (enemy.hp <= 0) hitEnemy(enemy);
         if (!shot.pierce) shot.hit = true;
       }
     });
@@ -811,6 +809,7 @@ function correctChallenge() {
   save.hp = Math.min(save.maxHp, save.hp + 15);
   persist();
   $("rChallengeModal").classList.add("hidden");
+  gameState = "reward";
   $("rSuccessItem").innerHTML = '<span class="r-success-icon">' + item.icon + '</span><div><b>' + escapeHTML(item.name) + '</b><small>' + grade + '등급 전리품 · ' + escapeHTML(item.effect) + '</small></div>';
   $("rSuccessReward").textContent = "+" + gold + " G  ·  +" + xp + " XP";
   $("rSuccessModal").classList.remove("hidden");
