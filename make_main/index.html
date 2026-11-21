@@ -93,6 +93,53 @@ body{min-height:0}
 .canvas-footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:11px;margin-top:9px}
 @media(max-width:1050px){.canvas-layout{grid-template-columns:190px minmax(0,1fr)}.prop-panel{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.prop-panel h3{grid-column:1/-1}}
 @media(max-width:650px){.canvas-layout{grid-template-columns:1fr;padding:8px}.tool-panel{order:2}.work-panel{order:1}.prop-panel{order:3;display:block}.tool-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.canvas-scroller{padding:8px}.canvas-stage{min-width:500px}.top-title p{display:none}}
+
+/* 최종 화면 레이아웃: 기존 스타일 선언보다 뒤에서 덮어쓴다 */
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden}
+body{min-height:0}
+.top{height:66px;min-height:66px;padding-top:9px;padding-bottom:9px}
+.project-dashboard{height:calc(100dvh - 66px);overflow:hidden;max-width:1500px;margin:0 auto;padding:24px clamp(14px,3vw,38px);display:flex;flex-direction:column;gap:20px}
+.project-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.project-heading h2{font-size:25px;letter-spacing:-.045em;margin:0 0 5px}
+.project-heading p{margin:0;color:var(--muted);font-size:13px}
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:14px;overflow:auto;align-content:start;padding:2px 2px 12px}
+.project-card{display:flex;flex-direction:column;min-height:190px;padding:18px;border:1px solid var(--line);border-radius:17px;background:var(--surface);box-shadow:var(--shadow)}
+.project-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.project-card h3{font-size:17px;margin:13px 0 6px;letter-spacing:-.03em}
+.project-card p{font-size:12px;line-height:1.6;color:var(--muted);margin:0}
+.project-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:11px}
+.project-card-actions{display:flex;gap:7px;margin-top:auto;padding-top:16px}
+.project-card-actions button{flex:1}
+.project-pill{font-size:10px;font-weight:850;padding:5px 8px;border-radius:999px;background:var(--soft);color:var(--primary)}
+.project-pill.published{background:#e8f1ff;color:#2464b4}
+.project-layout-note{font-size:11px;color:var(--muted)}
+.canvas-layout{display:grid;height:calc(100dvh - 66px);max-width:none;margin:0;padding:10px;overflow:hidden;grid-template-columns:220px minmax(0,1fr) 260px;grid-template-rows:minmax(0,1fr);gap:10px;align-items:stretch}
+.tool-panel,.prop-panel,.work-panel{min-width:0;min-height:0;max-height:100%;overflow:auto;padding:12px;border-radius:14px}
+.work-panel{display:flex;flex-direction:column;overflow:hidden}
+.savebar{flex-shrink:0;flex-wrap:nowrap;overflow:hidden;padding:8px;margin-bottom:8px}
+.savebar .btn{white-space:nowrap;padding:9px 11px;font-size:12px}
+.save-state{font-size:11px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.canvas-toolbar{flex-shrink:0;gap:5px;margin-bottom:8px}
+.canvas-toolbar .btn{padding:7px 9px;font-size:11px}
+.canvas-scroller{flex:1;min-height:0;overflow:hidden;display:grid;place-items:center;padding:5px}
+.canvas-stage{width:min(100%,calc((100dvh - 215px)*1.7778));min-width:0;max-height:100%;aspect-ratio:16/9}
+.canvas-footer{flex-shrink:0;margin-top:6px}
+.work-panel>.canvas-toolbar[style]{flex-shrink:0;margin-top:7px!important;margin-bottom:0}
+.work-panel>.shortcut-help,.work-panel>.hint{display:none}
+.prop-panel h3,.tool-panel h3{font-size:13px}
+.tool-grid{gap:6px}.tool{padding:8px 5px;font-size:11px}
+.page-meta,.page-schedule,.layer-panel,.component-library,.token-box{margin-top:8px;padding-top:8px}
+.side-details{border-top:1px solid var(--line);margin-top:5px}
+.side-details>summary{cursor:pointer;list-style:none;font-size:12px;font-weight:850;padding:9px 2px;color:var(--text)}
+.side-details>summary::-webkit-details-marker{display:none}
+.side-details>summary:after{content:"＋";float:right;color:var(--muted)}
+.side-details[open]>summary:after{content:"−"}
+.side-details[open]{padding-bottom:5px}
+.prop-panel textarea{min-height:54px}
+.token-box{display:none}
+@media(max-width:1100px){.canvas-layout{grid-template-columns:190px minmax(0,1fr) 230px;gap:7px;padding:7px}.tool-panel,.prop-panel{padding:9px}.savebar .btn{padding:8px 9px}}
+@media(max-width:760px){html,body{overflow:auto}.project-dashboard{height:auto;min-height:calc(100dvh - 66px)}.canvas-layout{height:auto;min-height:calc(100dvh - 66px);overflow:visible;grid-template-columns:1fr}.work-panel{min-height:65vh;overflow:visible}.canvas-scroller{min-height:300px}.canvas-stage{width:100%}.tool-panel,.prop-panel{overflow:visible}.savebar{flex-wrap:wrap}.project-grid{overflow:visible}}
 </style>
 </head>
 <body>
