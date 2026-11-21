@@ -135,6 +135,7 @@ function startQuest() {
     questTarget = count;
   }
   $("rSelectPanel").classList.add("hidden");
+  $("rStartScreen").classList.add("hidden");
   $("rArenaPanel").classList.remove("hidden");
   requestAnimationFrame(setCanvasSize);
   $("rArenaTitle").textContent = modes.find((m) => m.id === selectedMode).name;
@@ -374,6 +375,17 @@ window.addEventListener("keydown", (event) => {
 });
 window.addEventListener("keyup", (event) => { keys[event.key] = false; });
 canvas.addEventListener("pointerdown", () => attack());
+$("rOpenQuests").addEventListener("click", () => $("rSelectPanel").classList.remove("hidden"));
+$("rHomeButton").addEventListener("click", () => {
+  if (gameState === "battle" && !confirm("진행 중인 의뢰를 포기하고 게임 홈으로 돌아갈까?")) return;
+  gameState = "select";
+  $("rArenaPanel").classList.add("hidden");
+  $("rSelectPanel").classList.add("hidden");
+  $("rStartScreen").classList.remove("hidden");
+});
+$("rProfileToggle").addEventListener("click", () => $("rProfileScrim").classList.remove("hidden"));
+$("rProfileClose").addEventListener("click", () => $("rProfileScrim").classList.add("hidden"));
+$("rProfileScrim").addEventListener("click", (event) => { if (event.target.id === "rProfileScrim") $("rProfileScrim").classList.add("hidden"); });
 $("rStartQuest").addEventListener("click", startQuest);
 $("rBackSelect").addEventListener("click", () => {
   if (gameState === "battle" && !confirm("진행 중인 의뢰를 포기할까?")) return;
