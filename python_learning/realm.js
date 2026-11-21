@@ -598,6 +598,7 @@ function startChallenge(candidate) {
   challengeLocked = false;
   renderChallenge();
   $("rChallengeModal").classList.remove("hidden");
+  requestAnimationFrame(() => renderCurriculum(curriculumIndex(currentChallenge)));
 }
 function renderChallenge() {
   const c = currentChallenge;
