@@ -1,0 +1,15 @@
+# Production configuration for 25withcoding-security.
+# Deploy ONLY with:
+# npx wrangler deploy --config cloudflare/25withcoding-security/wrangler.toml
+#
+# This explicit binding prevents Wrangler uploads from silently dropping SECURITY_KV.
+# Do not deploy this Worker from another directory or with another config.
+
+name = "25withcoding-security"
+main = "worker.js"
+compatibility_date = "2026-11-05"
+usage_model = "standard"
+
+[[kv_namespaces]]
+binding = "SECURITY_KV"
+id = "81bf43ec03e94d9e88f6235a029cc15e"
