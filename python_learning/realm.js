@@ -19,7 +19,7 @@ await waitForStudent();
 const studentId = (studentLabel?.textContent || "guest").replace(/\s학생$/, "");
 const SAVE_KEY = "pythonRealmV2:" + studentId;
 const defaults = {
-  gold: 0, xp: 0, hp: 100, maxHp: 100, attack: 28, defense: 0,
+  gold: 0, xp: 0, hp: 100, maxHp: 100, attack: 28, defense: 0, goldBonus: 0, xpBonus: 0,
   wins: 0, fails: 0, items: [], adaptive: { choice: 1, fix: 1, coding: 1 },
   stats: { quests: 0, grade1: 0, grade2: 0, grade3: 0, grade4: 0 }
 };
@@ -67,6 +67,8 @@ function renderHUD() {
   $("rRank").textContent = save.stats.grade1 + "회";
   $("rAtk").textContent = String(save.attack);
   $("rDef").textContent = String(save.defense);
+  $("rGoldBonus").textContent = "+" + save.goldBonus + "%";
+  $("rXpBonus").textContent = "+" + save.xpBonus + "%";
   $("rRecord").textContent = "성공 " + save.wins + " · 실패 " + save.fails;
   $("rBag").innerHTML = save.items.length ? save.items.slice(-5).reverse().map((it) =>
     '<div class="r-bag-item"><span class="r-item-icon">' + it.icon + '</span><span><b>' + escapeHTML(it.name) + '</b><small>' + escapeHTML(it.effect) + '</small></span></div>'
@@ -100,7 +102,7 @@ function startQuest() {
   if (gameState === "battle") return;
   gameState = "battle";
   questProgress = 0;
-  player = { x: 500, y: 380, hp: Math.min(save.maxHp, Math.max(65, save.hp)), attack: save.attack, defense: save.defense, face: 1, attackCd: 0, dashCd: 0, inv: 0, anim: 0 };
+  player = { x: 500, y: 380, hp: Math.min(save.maxHp, Math.max(65, save.hp)), maxHp: save.maxHp, attack: save.attack, defense: save.defense, face: 1, attackCd: 0, dashCd: 0, inv: 0, anim: 0 };
   enemies = [];
   pickups = [];
   particles = [];
@@ -111,7 +113,7 @@ function startQuest() {
       y: 150 + (i % 2) * 70,
       hp: selectedMode === "boss" ? 440 : 65 + (i % 2) * 18,
       maxHp: selectedMode === "boss" ? 440 : 65 + (i % 2) * 18,
-      boss: selectedMode === "boss",
+      boss: selectedMode === "boss", flash: 0,
       cd: 0.7 + i * 0.25,
       phase: Math.random() * 6.28,
       dead: false
@@ -133,6 +135,7 @@ function startQuest() {
   }
   $("rSelectPanel").classList.add("hidden");
   $("rArenaPanel").classList.remove("hidden");
+  requestAnimationFrame(setCanvasSize);
   $("rArenaTitle").textContent = modes.find((m) => m.id === selectedMode).name;
   $("rArenaGoal").textContent = modes.find((m) => m.id === selectedMode).goal;
   $("rArenaHint").textContent = selectedMode === "explore" || selectedMode === "forge"
@@ -333,8 +336,8 @@ function drawArena() {
   ctx.fillStyle = "#071018bb"; ctx.fillRect(18, 16, 250, 48);
   ctx.fillStyle = "#e8f5fa"; ctx.font = "800 13px system-ui"; ctx.fillText("VITALITY", 31, 36);
   ctx.fillStyle = "#263a43"; ctx.fillRect(31, 43, 220, 9);
-  ctx.fillStyle = "#69d7d5"; ctx.fillRect(31, 43, 220 * Math.max(0, player.hp / 100), 9);
-  ctx.fillStyle = "#e8f5fa"; ctx.font = "700 11px system-ui"; ctx.fillText(Math.ceil(player.hp) + " / 100", 192, 36);
+  ctx.fillStyle = "#69d7d5"; ctx.fillRect(31, 43, 220 * Math.max(0, player.hp / (player.maxHp || 100)), 9);
+  ctx.fillStyle = "#e8f5fa"; ctx.font = "700 11px system-ui"; ctx.fillText(Math.ceil(player.hp) + " / " + (player.maxHp || 100), 192, 36);
   ctx.fillStyle = "#eaf2f4"; ctx.font = "800 12px system-ui"; ctx.fillText(gameState === "battle" ? "OBJECTIVE  " + questProgress + " / " + questTarget : "CODE REALM", w - 205, 35);
 }
 function loop(time) {
@@ -563,12 +566,16 @@ function correctChallenge() {
   if (currentChallenge.stage === 2) adjustDifficulty("fix", true);
   if (currentChallenge.stage === 3) adjustDifficulty("coding", true);
   const item = selectedCandidate.item;
+  const hintPenalty = hintsUsed * 5;
+  const baseGold = Math.max(15, (5 - grade) * 35 + 35 - hintPenalty);
+  const baseXp = (5 - grade) * 45 + 40;
+  const gold = Math.round(baseGold * (1 + save.goldBonus / 100));
+  const xp = Math.round(baseXp * (1 + save.xpBonus / 100));
   if (item.stat === "attack") save.attack += item.value;
   if (item.stat === "defense") save.defense += item.value;
+  if (item.stat === "gold") save.goldBonus += item.value;
+  if (item.stat === "xp") save.xpBonus += item.value;
   save.items.push({ ...item, grade, icon: item.icon, name: item.name });
-  const hintPenalty = hintsUsed * 5;
-  const gold = Math.max(15, (5 - grade) * 35 + 35 - hintPenalty);
-  const xp = (5 - grade) * 45 + 40;
   save.gold += gold;
   save.xp += xp + (item.stat === "xp" ? item.value : 0);
   save.maxHp = Math.min(180, save.maxHp + (grade === 1 ? 4 : 0));
