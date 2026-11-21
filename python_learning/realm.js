@@ -463,7 +463,8 @@ function challengeFor(grade) {
         { title: "리스트 인덱스", prompt: "nums = [4, 8, 12]에서 8을 가져오는 코드는?", options: ["nums[0]", "nums[1]", "nums[2]", "nums(1)"], answer: 1, explain: "리스트의 첫 번째 인덱스는 0이야." }
       ]
     };
-    return { stage, level, title: pool[level][Math.floor(Math.random() * pool[level].length)].title, data: pool[level][Math.floor(Math.random() * pool[level].length)] };
+    const data = pool[level][Math.floor(Math.random() * pool[level].length)];
+    return { stage, level, title: data.title, data };
   }
   if (stage === 2) {
     const level = save.adaptive.fix;
@@ -590,6 +591,7 @@ function failedChallenge() {
   const key = currentChallenge.stage === 1 ? "choice" : currentChallenge.stage === 2 ? "fix" : currentChallenge.stage === 3 ? "coding" : null;
   if (key) adjustDifficulty(key, false);
   const grade = selectedCandidate.grade;
+  selectedCandidate.status = "blocked";
   candidates.forEach((candidate) => {
     if (candidate.status === "available" && candidate.grade <= grade) candidate.status = "blocked";
   });
@@ -639,6 +641,8 @@ async function loadPyodideEngine() {
   return pyodidePromise;
 }
 async function executeUserCode(code) {
+  if (code.length > 1500) throw new Error("코드가 너무 길어. 1,500자 이내로 작성해 줘.");
+  if (code.split(/\s+/).includes("while") || code.includes("__import__") || code.includes("__builtins__") || code.includes("open(")) throw new Error("이 문제에서는 while문, 파일 접근, 모듈 불러오기를 사용할 수 없어.");
   const py = await loadPyodideEngine();
   py.globals.set("user_code", code);
   const result = await py.runPythonAsync(
