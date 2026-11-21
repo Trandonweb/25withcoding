@@ -54,7 +54,8 @@ body{min-height:0}
 .work-panel>.shortcut-help,.work-panel>.hint{display:none}
 .prop-panel h3,.tool-panel h3{font-size:13px}
 .tool-grid{gap:6px}.tool{padding:8px 5px;font-size:11px}
-.page-meta,.page-schedule,.layer-panel,.component-library,.token-box{margin-top:10px;padding-top:10px}
+.page-meta,.page-schedule,.layer-panel,.component-library,.token-box{margin-top:8px;padding-top:8px}
+.side-details{border-top:1px solid var(--line);margin-top:5px}.side-details>summary{cursor:pointer;list-style:none;font-size:12px;font-weight:850;padding:9px 2px;color:var(--text)}.side-details>summary::-webkit-details-marker{display:none}.side-details>summary:after{content:"＋";float:right;color:var(--muted)}.side-details[open]>summary:after{content:"−"}.side-details[open]{padding-bottom:5px}.prop-panel textarea{min-height:54px}
 .token-box{display:none}
 @media(max-width:1100px){.canvas-layout{grid-template-columns:190px minmax(0,1fr) 230px;gap:7px;padding:7px}.tool-panel,.prop-panel{padding:9px}.savebar .btn{padding:8px 9px}}
 @media(max-width:760px){html,body{overflow:auto}.project-dashboard{height:auto;min-height:calc(100dvh - 66px)}.canvas-layout{height:auto;min-height:calc(100dvh - 66px);overflow:visible;grid-template-columns:1fr}.work-panel{min-height:65vh;overflow:visible}.canvas-scroller{min-height:300px}.canvas-stage{width:100%}.tool-panel,.prop-panel{overflow:visible}.savebar{flex-wrap:wrap}.project-grid{overflow:visible}}
@@ -105,25 +106,23 @@ body{min-height:0}
   <h3>페이지</h3><h3 style="margin-top:18px">추가 도구</h3><div class="tool-grid"><button class="tool" data-tool="text">T 텍스트</button><button class="tool" data-tool="rect">▰ 사각형</button><button class="tool" data-tool="circle">○ 원형</button><button class="tool" data-tool="line">／ 선</button><button class="tool" data-tool="image">▧ 이미지</button><button class="tool" data-tool="button">↗ 버튼</button></div><p class="auto-note">도구를 누르면 캔버스에 개체가 추가됩니다.</p>
   <div id="pageList"></div>
   <div class="buttons"><button class="btn secondary" id="addPage">＋ 새 페이지</button><button class="btn ghost" id="duplicatePage">복제</button></div>
-  <div class="page-meta">
-    <h3>페이지 설정</h3>
+  <details class="side-details"><summary>페이지 설정</summary><div class="page-meta">
     <div class="field"><label for="pageTitle">페이지 이름</label><input id="pageTitle" maxlength="60" placeholder="예: 동아리 소개"></div>
     <div class="field"><label for="pageBackground">캔버스 배경색</label><input id="pageBackground" type="color" value="#ffffff"></div>
-  </div>
-  <div class="page-schedule">
-    <h3>페이지 노출 예약</h3>
+  </div></details>
+  <details class="side-details"><summary>페이지 노출 예약</summary><div class="page-schedule">
     <label class="toggle"><input type="checkbox" id="pageEnabled" checked> 페이지 노출</label>
     <div class="field"><label for="pageStartAt">노출 시작 (KST)</label><input id="pageStartAt" type="datetime-local"></div>
     <div class="field"><label for="pageEndAt">노출 종료 (KST)</label><input id="pageEndAt" type="datetime-local"></div>
     <p class="auto-note">시간을 비우면 즉시 노출하거나 종료 예약 없이 유지합니다.</p>
-  </div>
-  <div class="layer-panel"><h3>레이어 · 개체 순서</h3><div id="layerList"><div class="empty">개체가 없습니다.</div></div><p class="shortcut-help">레이어를 선택하면 해당 개체를 편집할 수 있습니다.</p></div>
-  <div class="component-library">
-    <h3>재사용 컴포넌트</h3>
+  </div></details>
+  <details class="side-details"><summary>레이어 · 개체 순서</summary><div class="layer-panel"><div id="layerList"><div class="empty">개체가 없습니다.</div></div><p class="shortcut-help">레이어를 선택하면 해당 개체를 편집할 수 있습니다.</p></div>
+  </div></details>
+  <details class="side-details"><summary>재사용 컴포넌트</summary><div class="component-library">
     <p class="auto-note">자주 쓰는 개체를 저장해 다른 페이지에서 다시 사용할 수 있습니다.</p>
     <button class="btn secondary" id="saveComponentBtn" style="width:100%">＋ 선택 개체를 컴포넌트로 저장</button>
     <div id="componentList"><div class="empty">저장된 컴포넌트가 없습니다.</div></div>
-  </div>
+  </div></details>
   <div class="token-box">
     <h3>GitHub 저장</h3>
     <button class="btn" id="connectBtn" style="width:100%">관리자 인증 및 자동 저장 연결</button>
