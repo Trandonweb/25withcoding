@@ -241,7 +241,7 @@ function saveLocalDraft(){
  catch(error){console.warn("브라우저 복구본 저장 실패:",error);return false}
 }
 function readLocalDraft(){
- try{const draft=JSON.parse(localStorage.getItem(projectDraftKey())||localStorage.getItem(LOCAL_DRAFT_KEY)||"null");return draft?.format==="25withcoding-make-main-draft"&&Array.isArray(draft.pages)&&draft.pages.length&&draft.pages.every(p=>p&&Array.isArray(p.objects))?draft:null}
+ try{const scoped=localStorage.getItem(projectDraftKey());const legacy=currentProjectId==="legacy-homepage"?localStorage.getItem(LOCAL_DRAFT_KEY):null;const draft=JSON.parse(scoped||legacy||"null");return draft?.format==="25withcoding-make-main-draft"&&Array.isArray(draft.pages)&&draft.pages.length&&draft.pages.every(p=>p&&Array.isArray(p.objects))?draft:null}
  catch(error){console.warn("브라우저 복구본 확인 실패:",error);return null}
 }
 function clearLocalDraft(){try{localStorage.removeItem(projectDraftKey());localStorage.removeItem(LOCAL_DRAFT_KEY)}catch(error){console.warn("복구본 정리 실패:",error)}}
@@ -357,7 +357,8 @@ async function publishProject(){
   mainData.version=Math.max(3,Number(mainData.version)||0);
   mainData.canvasPages=snapshot.map((p,i)=>({id:"canvas-"+p.id,type:"canvas",title:p.title||"페이지 "+(i+1),enabled:p.enabled!==false,startAt:p.startAt||"",endAt:p.endAt||"",canvasBackground:p.background||"#ffffff",objects:p.objects||[],order:i}));
   publishedProjectId=currentProjectId;
-  mainData.makeMainProject={...previous,format:"25withcoding-project",version:1,components:clone(componentLibrary),projects:clone(projectLibrary),publishedProjectId,updatedAt:new Date().toISOString(),updatedBy:adminUser?.id||"admin"};
+  const publishedComponents=projectLibrary.find(p=>p.id===publishedProjectId)?.components||previous.components||componentLibrary;
+ mainData.makeMainProject={...previous,format:"25withcoding-project",version:1,components:clone(publishedComponents),projects:clone(projectLibrary),publishedProjectId,updatedAt:new Date().toISOString(),updatedBy:adminUser?.id||"admin"};
   mainData.updatedAt=new Date().toISOString();mainData.updatedBy=adminUser?.id||"admin";
   await api(MAIN_PATH,"PUT",{message:"Publish make_main project: "+(active.name||active.id),sha:latest.sha,content:encode64(JSON.stringify(mainData,null,2)+"\n")});
   lastSavedRevision=editRevision;lastSavedAt=new Date();clearLocalDraft();setSaveState("배포 완료 · 홈페이지에 반영되었습니다.","saved");status("배포 완료");renderProjectDashboard();
@@ -428,13 +429,16 @@ function createProject(){
 function renameProject(projectId){
  const project=projectLibrary.find(p=>p.id===projectId);if(!project)return;const name=prompt("프로젝트 이름",project.name||"");if(name===null||!name.trim())return;
  project.name=name.trim();project.updatedAt=new Date().toISOString();renderProjectDashboard();if(currentProjectId===projectId){$("headerTitle").textContent=project.name;changed()}
+ else saveProjectManifestOnly("Rename make_main project: "+project.name).catch(e=>alert("이름 변경 저장 실패: "+e.message));
 }
 function duplicateProject(projectId){
  const project=projectLibrary.find(p=>p.id===projectId);if(!project)return;const copy=clone(project);copy.id=id("project");copy.name=(project.name||"프로젝트")+" 복사본";copy.pages=(copy.pages||[]).map(p=>({...p,id:id("page"),objects:(p.objects||[]).map(o=>({...o,id:id("obj")}))}));copy.createdAt=new Date().toISOString();copy.updatedAt=null;projectLibrary.unshift(copy);renderProjectDashboard();
+ saveProjectManifestOnly("Duplicate make_main project: "+copy.name).catch(e=>alert("프로젝트 복제 저장 실패: "+e.message));
 }
 function deleteProject(projectId){
  if(projectLibrary.length<=1){alert("마지막 프로젝트는 삭제할 수 없습니다.");return}
  const project=projectLibrary.find(p=>p.id===projectId);if(!project)return;
+ if(project.id===publishedProjectId){alert("현재 배포 중인 프로젝트는 먼저 다른 프로젝트를 배포한 뒤 삭제할 수 있습니다.");return}
  if(!confirm("'"+(project.name||"이 프로젝트")+"'을(를) 삭제할까요? 이미 홈페이지에 배포된 화면은 그대로 유지됩니다."))return;
  projectLibrary=projectLibrary.filter(p=>p.id!==projectId);if(currentProjectId===projectId)currentProjectId=null;renderProjectDashboard();
  if(connected)saveProjectManifestOnly("Delete make_main project: "+(project.name||project.id)).catch(e=>alert("삭제 저장 실패: "+e.message));
