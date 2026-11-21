@@ -323,12 +323,13 @@ function drawArena() {
   ctx.shadowBlur = 0; ctx.fillStyle = "#d9c8a5"; ctx.beginPath(); ctx.arc(0, -39, 12, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "#273642"; ctx.fillRect(-10, -44, 20, 7);
   ctx.fillStyle = "#f6d18c"; ctx.fillRect(player.face > 0 ? 4 : -10, -40, 6, 3);
-  ctx.strokeStyle = "#d7e7ef"; ctx.lineWidth = 5; ctx.lineCap = "round";
-  ctx.beginPath(); ctx.moveTo(player.face * 12, -5); ctx.lineTo(player.face * 37, -19); ctx.stroke();
-  ctx.strokeStyle = "#e9c36f"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(player.face * 34, -21); ctx.lineTo(player.face * 58, -39); ctx.stroke();
+  ctx.strokeStyle = "#8deaff"; ctx.lineWidth = 5; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(player.face * 12, -5); ctx.lineTo(player.face * 27, -15); ctx.stroke();
+  ctx.fillStyle = "#69dce9"; ctx.shadowColor = "#69dce9"; ctx.shadowBlur = 16;
+  ctx.beginPath(); ctx.arc(player.face * 34, -19, 8, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
   if (attackPulse > 0) {
     ctx.globalAlpha = attackPulse / .18; ctx.strokeStyle = "#8deaff"; ctx.lineWidth = 8; ctx.shadowColor = "#65d8f2"; ctx.shadowBlur = 22;
-    ctx.beginPath(); ctx.arc(player.face * 32, -5, 48, player.face > 0 ? -.9 : Math.PI - .9, player.face > 0 ? .9 : Math.PI + .9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(player.face * 34, -19, 42, player.face > 0 ? -.95 : Math.PI - .95, player.face > 0 ? .95 : Math.PI + .95); ctx.stroke();
   }
   ctx.restore();
   particles.forEach((p) => { ctx.globalAlpha = Math.max(0, p.life / p.max); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
